@@ -30,7 +30,7 @@
   
   // Arithmetic operators.
   DAC::Arbitrary operator + (DAC::Arbitrary const& left, DAC::Arbitrary const& right);
-  //DAC::Arbitrary operator - (DAC::Arbitrary const& left, DAC::Arbitrary const& right);
+  DAC::Arbitrary operator - (DAC::Arbitrary const& left, DAC::Arbitrary const& right);
   DAC::Arbitrary operator * (DAC::Arbitrary const& left, DAC::Arbitrary const& right);
   DAC::Arbitrary operator / (DAC::Arbitrary const& left, DAC::Arbitrary const& right);
   //DAC::Arbitrary operator % (DAC::Arbitrary const& left, DAC::Arbitrary const& right);
@@ -110,7 +110,7 @@
         
         // Arithmetic assignment operators.
         Arbitrary& operator += (Arbitrary const& right);
-        //Arbitrary& operator -= (Arbitrary const& right);
+        Arbitrary& operator -= (Arbitrary const& right);
         Arbitrary& operator *= (Arbitrary const& right);
         Arbitrary& operator /= (Arbitrary const& right);
         //Arbitrary& operator %= (Arbitrary const& right);
@@ -127,11 +127,11 @@
         // Increment / decrement operators.
         Arbitrary& operator ++ ();
         Arbitrary  operator ++ (int);
-        //Arbitrary& operator -- ();
-        //Arbitrary  operator -- (int);
+        Arbitrary& operator -- ();
+        Arbitrary  operator -- (int);
         
         // Negation operator.
-        //Arbitrary operator - () const;
+        Arbitrary operator - () const;
         
         // Type conversion operators.
         operator bool () const;
@@ -139,7 +139,7 @@
         
         // Arithmetic operator backends.
         Arbitrary& op_add (Arbitrary const& right);
-        //Arbitrary& op_sub (Arbitrary const& right);
+        Arbitrary& op_sub (Arbitrary const& right);
         Arbitrary& op_mul (Arbitrary const& right);
         Arbitrary& op_div (Arbitrary const& right);
         //Arbitrary& op_mod (Arbitrary const& right);
@@ -330,7 +330,7 @@
     /*************************************************************************/
     // Arithmetic assignment operators.
     inline Arbitrary& Arbitrary::operator += (Arbitrary const& right) { return op_add(right); }
-    //inline Arbitrary& Arbitrary::operator -= (Arbitrary const& right) { return op_sub(right); }
+    inline Arbitrary& Arbitrary::operator -= (Arbitrary const& right) { return op_sub(right); }
     inline Arbitrary& Arbitrary::operator *= (Arbitrary const& right) { return op_mul(right); }
     inline Arbitrary& Arbitrary::operator /= (Arbitrary const& right) { return op_div(right); }
     //inline Arbitrary& Arbitrary::operator %= (Arbitrary const& right) { return op_mod(right); }
@@ -352,13 +352,13 @@
     // Increment / decrement operators.
     inline Arbitrary& Arbitrary::operator ++ ()    {                                     return op_add(1); }
     inline Arbitrary  Arbitrary::operator ++ (int) { Arbitrary retval(*this); op_add(1); return retval;    }
-    //inline Arbitrary& Arbitrary::operator -- ()    {                                     return op_sub(1); }
-    //inline Arbitrary  Arbitrary::operator -- (int) { Arbitrary retval(*this); op_sub(1); return retval;    }
+    inline Arbitrary& Arbitrary::operator -- ()    {                                     return op_sub(1); }
+    inline Arbitrary  Arbitrary::operator -- (int) { Arbitrary retval(*this); op_sub(1); return retval;    }
     /*************************************************************************/
     
     /*************************************************************************/
     // Negation operator.
-    //inline Arbitrary Arbitrary::operator - () const { Arbitrary retval(*this); retval._data->positive = !(retval._data->positive); return retval; }
+    inline Arbitrary Arbitrary::operator - () const { Arbitrary retval(*this); retval._data->positive = !(retval._data->positive); return retval; }
     /*************************************************************************/
     
     /*************************************************************************/
@@ -572,7 +572,7 @@
   /***************************************************************************/
   // Arithmetic operators.
   inline DAC::Arbitrary operator + (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_add(right); }
-  //inline DAC::Arbitrary operator - (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_sub(right); }
+  inline DAC::Arbitrary operator - (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_sub(right); }
   inline DAC::Arbitrary operator * (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_mul(right); }
   inline DAC::Arbitrary operator / (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_div(right); }
   //inline DAC::Arbitrary operator % (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_div(right); }

@@ -141,6 +141,40 @@ namespace DAC {
   /***************************************************************************/
   
   /***************************************************************************/
+  // Subtract a number from this number.
+  Arbitrary& Arbitrary::op_sub (Arbitrary const& right) {
+    
+    // Reduce typing.
+    typedef _DigsT::size_type DST;
+    
+    // Work area.
+    _DataPT   new_data(new _Data);
+    Arbitrary tmp_right(right);
+    
+    // Convert to two numbers that can be calculated against each other.
+    _normalizeExponent(tmp_right);
+    
+    // Get the max number of digits.
+    DST largest = max(_data->digits.size(), tmp_right._data->digits.size());
+    
+    // Subtract like 1st grade.
+    for (DST i = 0; i != largest; ++i) {
+      
+      // Add another digit if needed.
+      if (i >= new_data->digits.size()) {
+        new_data->digits.push_back(0);
+      }
+      
+      // Subtract with borrowing if needed.
+      if (_data->digits.size() > i) {
+        if (
+      
+    }
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
   Arbitrary& Arbitrary::op_mul (Arbitrary const& right) {
     
     // Reduce typing.
@@ -385,6 +419,9 @@ namespace DAC {
         tmp_right >>= Arbitrary(1);
       }
     }
+    
+    // Set the result.
+    _data = retval._data;
     
     return *this;
     
