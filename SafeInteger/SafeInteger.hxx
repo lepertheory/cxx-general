@@ -289,12 +289,12 @@
         template <class RT> SafeInteger& op_bit_xor (RT              const  number);
 
         // Logical operator backends.
-                            SafeInteger& op_log_and (SafeInteger<T>  const& number);
-        template <class RT> SafeInteger& op_log_and (SafeInteger<RT> const& number);
-        template <class RT> SafeInteger& op_log_and (RT              const  number);
-                            SafeInteger& op_log_ior (SafeInteger<T>  const& number);
-        template <class RT> SafeInteger& op_log_ior (SafeInteger<RT> const& number);
-        template <class RT> SafeInteger& op_log_ior (RT              const  number);
+                            bool op_log_and (SafeInteger<T>  const& number) const;
+        template <class RT> bool op_log_and (SafeInteger<RT> const& number) const;
+        template <class RT> bool op_log_and (RT              const  number) const;
+                            bool op_log_ior (SafeInteger<T>  const& number) const;
+        template <class RT> bool op_log_ior (SafeInteger<RT> const& number) const;
+        template <class RT> bool op_log_ior (RT              const  number) const;
         
       // Private members.
       private:
@@ -1125,12 +1125,12 @@
     template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_bit_xor (RT              const  number) { _number ^= number;         return *this; }
 
     // Logical operator backends.
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::op_log_and (SafeInteger<T>  const& number) { return (_number && number._number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_log_and (SafeInteger<RT> const& number) { return (_number && number._number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_log_and (RT              const  number) { return (_number && number);         }
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::op_log_ior (SafeInteger<T>  const& number) { return (_number || number._number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_log_ior (SafeInteger<RT> const& number) { return (_number || number._number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_log_ior (RT              const  number) { return (_number || number);         }
+    template <class T>                     bool SafeInteger<T>::op_log_and (SafeInteger<T>  const& number) const { return (_number && number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_log_and (SafeInteger<RT> const& number) const { return (_number && number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_log_and (RT              const  number) const { return (_number && number);         }
+    template <class T>                     bool SafeInteger<T>::op_log_ior (SafeInteger<T>  const& number) const { return (_number || number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_log_ior (SafeInteger<RT> const& number) const { return (_number || number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_log_ior (RT              const  number) const { return (_number || number);         }
     
     // Reliable comparison operators.
     template <class T> template <class LT, class RT> bool SafeInteger<T>::s_gt (LT const left, RT const right) {

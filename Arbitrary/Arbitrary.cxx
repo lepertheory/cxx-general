@@ -235,30 +235,72 @@ namespace DAC {
       divisor._data->digits.insert(divisor._data->digits.begin(), dividend._data->digits.size() - divisor._data->digits.size(), 0);
     }
     
-    // Get the maximum number of additional digits of precision to add. For
-    // now we will go with the stupid-simple rule of 10x as many digits.
-    const _DigsT::size_type maxaddl = divisor._data->digits.size() * 10;
-    _DigsT::size_type       addl    = 0;
-    
     // Seed the digit group we will be dividing.
     diggroup._data->digits = _DigsT(divisor._data->digits.end() - dividend._data->digits.size(), divisor._data->digits.end());
-    cout << "diggroup: " << diggroup << "  diggroup._data->digits: ";
-    for (_DigsT::iterator i = diggroup._data->digits.begin(); i != diggroup._data->digits.end(); ++i) {
-      cout << *i;
-      if (i != diggroup._data->digits.end() - 1) {
-        cout << ",";
-      }
-    }
-    cout << endl;
+    
+    // Get the maximum number of additional digits of precision to add. For
+    // now we will go with the stupid-simple rule of 10x as many digits.
+    const SafeInteger<_DigsT::size_type> maxaddl  = divisor._data->digits.size() * 10;
+    SafeInteger<_DigsT::size_type>       addl     = 0;
+    SafeInteger<_DigsT::size_type>       digsleft = SafeInteger<_DigsT::size_type>(divisor._data->digits.size()) - dividend._data->digits.size();
+    SafeInteger<_DigsT::size_type>       curdig   = dividend._data->digits.size();
     
     // Divide like 3rd grade.
     do {
       
+      cout << "diggroup: " << diggroup << "  diggroup._data->digits: ";
+      for (_DigsT::iterator i = diggroup._data->digits.begin(); i != diggroup._data->digits.end(); ++i) {
+        cout << *i;
+        if (i != diggroup._data->digits.end() - 1) {
+          cout << ",";
+        }
+      }
+      cout << endl;
+      
       // Make a guess at what the outcome of this division will be by dividing
       // the high-order digits.
-      _DigT 
+      _DigT guess = diggroup._data->digits.back() / dividend._data->digits.back();
+      cout << "guess: " << guess << endl;
       
-    } while ((remainder != 0) && (addl != maxaddl));
+      // If the guess is zero, and there are no more available digits, wait
+      // until the next iteration for more data.
+      if ((guess != 0) || (diggroup._data->digits.size() > 1)) {
+        
+        // If the guess is zero, retry the guess by using the next available
+        // digit.
+        if (guess == 0) {
+          guess = (diggroup._data->digits[(SafeInteger<_DigsT::size_type>(diggroup._data->digits.size()) - 2).Value()] + (diggroup._data->digits.back() << s_digitbits.Value())) / dividend._data->digits.back();
+          cout << "guess 2: " << guess << endl;
+        }
+        
+        // If the guess is still zero, 
+        
+        // Verify the guess.
+        Arbitrary test(Arbitrary(guess) * dividend);
+        cout << "test: " << test << "  diggroup - test: " << (diggroup - test) << endl;
+        cout << "blah: ((test <= diggroup) && ((diggroup - test) < dividend))" << endl
+             << "blah: ((" << test << " <= " << diggroup << ") && ((" << diggroup << " - " << test << ") < " << dividend << "))" << endl
+             << "blah: ((" << test << " <= " << diggroup << ") && (" << (diggroup - test) << " < " << dividend << "))" << endl
+             << "blah: (" << (test <= diggroup) << " && " << ((diggroup - test) < dividend) << ")" << endl
+             << "blah: " << ((test <= diggroup) && ((diggroup - test) < dividend)) << endl;
+        if ((test <= diggroup) && ((diggroup - test) < dividend)) {
+          cout << "guess is correct!" << endl;
+        } else {
+          cout << "guess is wrong :(" << endl;
+        }
+        
+      }
+      
+      // Prepare for the next iteration by bringing down anothe digit from the
+      // divisor.
+      if (curdig >= divisor._data->digits.size()) {
+        diggroup._data->digits.insert(diggroup._data->digits.begin(), 0);
+      } else {
+        ++curdig;
+        diggroup._data->digits.insert(diggroup._data->digits.begin(), *(divisor._data->digits.end() - curdig.Value()));
+      }
+      
+    } while ((remainder != 0) || (digsleft != 0) || (addl != maxaddl));
     
     // We done.
     return *this;
@@ -496,20 +538,29 @@ namespace DAC {
     Arbitrary tmp_left(*this);
     Arbitrary tmp_right(right);
     
+    cout << "tmp_left: " << tmp_left << "  tmp_right: " << tmp_right << "  ";
+    
     // Convert to two numbers that can be calculated against each other.
     tmp_left._normalizeExponent(tmp_right);
     
     // Test.
     if (tmp_left._data->positive && !(tmp_right._data->positive)) {
+      cout << "true 1!" << endl;
       return true;
     }
     if (!(tmp_left._data->positive) && tmp_right._data->positive) {
+      cout << "false 1!" << endl;
       return false;
     }
     if (tmp_left._data->digits.size() > tmp_right._data->digits.size()) {
+      cout << "true 2!" << endl;
       return true;
     }
     if (tmp_left._data->digits.size() < tmp_right._data->digits.size()) {
+      cout << "tmp_left: " << tmp_left;
+      cout << "  tmp_right: " << tmp_right;
+      cout << "tmp_left size: " << tmp_left._data->digits.size() << "  tmp_right size: " << tmp_right._data->digits.size() << endl;
+      cout << "false 2!" << endl;
       return false;
     }
     {
@@ -517,9 +568,11 @@ namespace DAC {
       _DigsT::reverse_iterator ri = tmp_right._data->digits.rbegin();
       for (; (li != tmp_left._data->digits.rend()) && (ri != tmp_right._data->digits.rend()); li++, ri++) {
         if (*li > *ri) {
+          cout << "true 3!" << endl;
           return true;
         }
         if (*li < *ri) {
+          cout << "false 3!" << endl;
           return false;
         }
       }

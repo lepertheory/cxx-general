@@ -369,11 +369,18 @@
     }
     
     // Comparison operator backends.
+    /*
     inline bool Arbitrary::op_eq (Arbitrary const& right) const { return (!op_gt(right) && !right.op_gt(*this)); }
     inline bool Arbitrary::op_ne (Arbitrary const& right) const { return !op_eq(right);                          }
     inline bool Arbitrary::op_ge (Arbitrary const& right) const { return (op_gt(right) || op_eq(right));         }
     inline bool Arbitrary::op_lt (Arbitrary const& right) const { return (!op_gt(right) && op_ne(right));        }
     inline bool Arbitrary::op_le (Arbitrary const& right) const { return (op_lt(right) || op_eq(right));         }
+    */
+    inline bool Arbitrary::op_eq (Arbitrary const& right) const { return (!op_gt(right) && !right.op_gt(*this)); }
+    inline bool Arbitrary::op_ne (Arbitrary const& right) const { return (op_gt(right) || right.op_gt(*this));   }
+    inline bool Arbitrary::op_ge (Arbitrary const& right) const { return (op_gt(right) || !right.op_gt(this));   }
+    inline bool Arbitrary::op_lt (Arbitrary const& right) const { return right.op_gt(*this);                     }
+    inline bool Arbitrary::op_le (Arbitrary const& right) const { return (right.op_gt(*this) || !op_gt(right));  }
     
     // Set with an arbitrary type.
     template <class T> Arbitrary& Arbitrary::set (SafeInteger<T> const& number, ExponentT const decimal, bool const fixeddecimal) { return set(DAC::toString(number.Value()), decimal, fixeddecimal); }
