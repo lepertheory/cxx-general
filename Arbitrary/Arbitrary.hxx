@@ -604,6 +604,9 @@
       // Temporary, since we will be doing work in place.
       FromT tempfrom(from);
       
+      // Trim insignificant zeros result.
+      s_trimZeros<FromT, FromST, FromIT>(tempfrom, _BEGIN);
+      
       // Convert base by storing the remainder of repeated division.
       while (tempfrom.size() > 0) {
         retval->push_back(s_longdiv<FromT, FromST, FromDT, FromIT, _BaseT>(tempfrom, tobase, frombase));

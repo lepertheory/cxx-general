@@ -222,18 +222,23 @@ namespace DAC {
     // Divide like 3rd grade.
     do {
       
+      SafeInteger<_DigsT::size_type> i = SafeInteger<_DigsT::size_type>(tmp_left._data->digits.size()) - 1;
+      
       // Guess at what this digit may be by dividing high order digits.
-      _DigT guess = tmp_left._data->digits[tmp_left._data->digits.size() - 1] / tmp_right._data->digits[tmp_right._data->digits.size() - 1];
+      _DigT guess = tmp_left._data->digits[i.Value()] / tmp_right._data->digits[tmp_right._data->digits.size() - 1];
       
       cout << "guess: " << guess << endl;
+      
+      // If the guess is 0, we need to add another digit to divide.
+      _DigT digrem = tmp_left._data->digits[i.Value()];
       
       // See if the guess is correct.
       Arbitrary test = tmp_right * Arbitrary(guess);
       
       cout << "test: " << test << endl;
       
-      if (test > tmp_left._data->digits[tmp_left._data->digits.size() - 1]) {
-        
+      if (test > tmp_left._data->digits[i.Value()]) {
+      }
       
     } while (remainder != 0);
     
@@ -435,15 +440,26 @@ namespace DAC {
     // 4.) Swap that into num.
     // Each step is, by itself, ridiculous, but it should be possible to
     // follow if you're good at templates and have six independent eyes.
+    /*
     num.swap(
       *(s_reverse<_DigStrT, _DigStrT::reverse_iterator>(
-        *(s_baseconv<_DigStrT, _DigChrT, _DigsT, _DigStrT::size_type, _DigT, _DigsT::iterator>(
+        *(s_baseconv<_DigStrT, _DigStrT::size_type, _DigStrT::iterator, _DigChrT, _DigsT, _DigStrT::size_type, _DigT, _DigsT::iterator>(
           *(s_reverse<_DigsT, _DigsT::reverse_iterator>(_data->digits)),
           s_digitbase,
           base
         ))
       ))
     );
+    */
+    cout << "poop1!" << endl;
+    _DigsT temp1 = *s_reverse<_DigsT, _DigsT::reverse_iterator>(_data->digits);
+    cout << "poop2!" << endl;
+    _DigStrT temp2 = *s_baseconv<_DigStrT, _DigChrT, _DigsT, _DigStrT::size_type, _DigT, _DigsT::iterator>(temp1, s_digitbase, base);
+    cout << "poop3!" << endl;
+    _DigStrT temp3 = *s_reverse<_DigStrT, _DigStrT::reverse_iterator>(temp2);
+    cout << "poop4!" << endl;
+    num.swap(temp3);
+    cout << "poop5!" << endl;
     
     // Output the number character by character. If a character is not found
     // in the digit table, then output the raw number in single quotes. If num
@@ -877,7 +893,6 @@ namespace DAC {
     
     // Exception safety.
     _DigsT temp;
-    temp.push_back(0);
     originalbase = 10;
     
     // These won't throw.
