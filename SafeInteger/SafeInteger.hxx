@@ -73,12 +73,12 @@
   template <class T>            DAC::SafeInteger<T>  operator & (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
   template <class LT, class RT> DAC::SafeInteger<LT> operator & (DAC::SafeInteger<LT> const& left, RT                   const  right);
   template <class LT, class RT> DAC::SafeInteger<LT> operator & (LT                   const  left, DAC::SafeInteger<RT> const& right);
-  template <class T>            DAC::SafeInteger<T>  operator ^ (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
-  template <class LT, class RT> DAC::SafeInteger<LT> operator ^ (DAC::SafeInteger<LT> const& left, RT                   const  right);
-  template <class LT, class RT> DAC::SafeInteger<LT> operator ^ (LT                   const  left, DAC::SafeInteger<RT> const& right);
   template <class T>            DAC::SafeInteger<T>  operator | (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
   template <class LT, class RT> DAC::SafeInteger<LT> operator | (DAC::SafeInteger<LT> const& left, RT                   const  right);
   template <class LT, class RT> DAC::SafeInteger<LT> operator | (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            DAC::SafeInteger<T>  operator ^ (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator ^ (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator ^ (LT                   const  left, DAC::SafeInteger<RT> const& right);
   
   // Logical operators.
   template <class T>            bool operator && (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
@@ -1181,9 +1181,9 @@
   template <class T>            inline DAC::SafeInteger<T>  operator / (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_div(right);         }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator / (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right);         }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator / (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right.Value()); }
-  template <class T>            inline DAC::SafeInteger<T>  operator % (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_div(right);         }
-  template <class LT, class RT> inline DAC::SafeInteger<LT> operator % (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right);         }
-  template <class LT, class RT> inline DAC::SafeInteger<LT> operator % (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator % (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_mod(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator % (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_mod(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator % (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_mod(right.Value()); }
   template <class T>            inline DAC::SafeInteger<T>  operator + (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_add(right);         }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator + (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_add(right);         }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator + (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_add(right.Value()); }
@@ -1223,12 +1223,12 @@
   template <class T>            inline DAC::SafeInteger<T>  operator & (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_bit_and(right);         }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator & (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_and(right);         }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator & (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_and(right.Value()); }
-  template <class T>            inline DAC::SafeInteger<T>  operator ^ (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_bit_xor(right);         }
-  template <class LT, class RT> inline DAC::SafeInteger<LT> operator ^ (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_xor(right);         }
-  template <class LT, class RT> inline DAC::SafeInteger<LT> operator ^ (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_xor(right.Value()); }
   template <class T>            inline DAC::SafeInteger<T>  operator | (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_bit_ior(right);         }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator | (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_ior(right);         }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator | (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_ior(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator ^ (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_bit_xor(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator ^ (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_xor(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator ^ (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_xor(right.Value()); }
   
   // Logical operators.
   template <class T>            inline bool operator && (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_log_and(right);                               }
