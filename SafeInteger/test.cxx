@@ -178,6 +178,20 @@ int main (int argc, char** argv, char** envp) {
           cout << "      Under minimum: ";
           testOp(test1, SUB, test2.Value());
         }
+        {
+          cout << "    Multiplication:" << endl;
+          test1 = numeric_limits<unsigned char>::max();
+          test2 = numeric_limits<unsigned short int>::max();
+          cout << "      Over maximum: ";
+          testOp(test1, MUL, test2.Value());
+        }
+        {
+          cout << "    Division:" << endl;
+          test1 = 1;
+          test2 = 0;
+          cout << "      Divide by zero: ";
+          testOp(test1, DIV, test2.Value());
+        }
       }
     }
     {
