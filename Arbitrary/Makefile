@@ -22,10 +22,10 @@ all: Arbitrary${EXEEXT}
 Arbitrary${EXEEXT}: main.o Arbitrary.o
 	${BUILDCMD} -o Arbitrary${EXEEXT} Arbitrary.o main.o
 
-main.o: test.cxx Arbitrary.hxx ../Exception.hxx ../ReferencePointer.hxx ../toString.hxx
+main.o: test.cxx Arbitrary.hxx ../Exception.hxx ../ReferencePointer.hxx ../toString.hxx ../SafeInteger.hxx
 	${BUILDCMD} -c -o main.o test.cxx
 
-Arbitrary.o: Arbitrary.cxx Arbitrary.hxx ../Exception.hxx ../ReferencePointer.hxx ../toString.hxx ../rppower.hxx
+Arbitrary.o: Arbitrary.cxx Arbitrary.hxx ../Exception.hxx ../ReferencePointer.hxx ../toString.hxx ../rppower.hxx ../SafeInteger.hxx
 	${BUILDCMD} -c -o Arbitrary.o Arbitrary.cxx
 
 clean:

@@ -14,6 +14,7 @@
 // Internal includes.
 #include "toString.hxx"
 #include "rppower.hxx"
+#include "SafeInteger.hxx"
 
 // Namespaces used.
 using namespace std;
@@ -31,7 +32,7 @@ namespace DAC {
   
   // The characters that make up the digits.
   const Arbitrary::_NumChrT   Arbitrary::s_numdigits = 36;
-  const Arbitrary::_StrChrT   Arbitrary::s_odigits[] = {
+  Arbitrary::_StrChrT   Arbitrary::s_odigits[] = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
     'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
@@ -470,7 +471,7 @@ namespace DAC {
         if (*i > s_numdigits) {
           construct += "'" + DAC::toString(*i) + "'";
         } else {
-          construct += s_odigits[*i];
+          construct += s_odigits[*i].Value();
         }
       }
     }
@@ -707,9 +708,9 @@ namespace DAC {
       // Get the input digits.
       for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {
         _NumChrT digit = 0;
-        if      ((static_cast<_StrChrT>(i) >= '0') && (static_cast<_StrChrT>(i) <= '9')) { digit = i - static_cast<_NumChrT>('0'); }
-        else if ((static_cast<_StrChrT>(i) >= 'A') && (static_cast<_StrChrT>(i) <= 'Z')) { digit = (i - static_cast<_NumChrT>('A')) + 10; }
-        else if ((static_cast<_StrChrT>(i) >= 'a') && (static_cast<_StrChrT>(i) <= 'z')) { digit = (i - static_cast<_NumChrT>('a')) + 10; }
+        if      ((i >= '0') && (i <= '9')) { digit = i - static_cast<_NumChrT>('0'); }
+        else if ((i >= 'A') && (i <= 'Z')) { digit = (i - static_cast<_NumChrT>('A')) + 10; }
+        else if ((i >= 'a') && (i <= 'z')) { digit = (i - static_cast<_NumChrT>('a')) + 10; }
         else                                                                             { digit = numeric_limits<_NumChrT>::max(); }
         s_idigits.push_back(digit);
       }

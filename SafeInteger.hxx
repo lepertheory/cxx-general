@@ -23,12 +23,28 @@
       // Public members.
       public:
         
+        SafeInteger (T const number);
+        
+        T Value ();
       
       // Private members.
       private:
         
+        T _number;
       
     };
+    
+    /*************************************************************************
+     * Inline and template definitions.
+     *************************************************************************/
+    
+    template <class T> SafeInteger<T>::SafeInteger (T const number) {
+      _number = number;
+    }
+    
+    template <class T> T SafeInteger<T>::Value () {
+      return _number;
+    }
     
   };
   
