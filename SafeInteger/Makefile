@@ -20,7 +20,7 @@ BUILDCMD=${COMPILER} ${DEBUG} ${STANDARD} ${ERRORS} ${OPTIMIZE} ${INCLUDE}
 all: SafeInteger${EXEEXT}
 
 SafeInteger${EXEEXT}: main.o
-	${BUILDCMD} -o SafeInteger${EXEEXT} SafeInteger.o main.o
+	${BUILDCMD} -o SafeInteger${EXEEXT} main.o
 
 main.o: test.cxx SafeInteger.hxx ../Exception.hxx ../toString.hxx
 	${BUILDCMD} -c -o main.o test.cxx

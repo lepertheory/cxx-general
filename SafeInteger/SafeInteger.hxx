@@ -20,6 +20,15 @@
     template <class T> class SafeInteger;
   };
   
+  // Stream I/O operators.
+  template <class T> std::istream& operator >> (std::istream& left, DAC::SafeInteger<T>&       right);
+  template <class T> std::ostream& operator << (std::ostream& left, DAC::SafeInteger<T> const& right);
+  
+  // Arithmetic operators.
+  template <class T>          DAC::SafeInteger<T> operator + (DAC::SafeInteger<T> const& left, DAC::SafeInteger<T> const& right);
+  template <class T, class U> DAC::SafeInteger<T> operator + (DAC::SafeInteger<T> const& left, U                   const  right);
+  template <class T, class U> DAC::SafeInteger<U> operator + (U                   const  left, DAC::SafeInteger<T> const& right);
+  
   /*************************************************************************
    * Specialization of numeric_limits.
    *************************************************************************/
@@ -107,7 +116,7 @@
         SafeInteger& operator ++ ();
         
         // Return the value of this number.
-        T Value ();
+        T Value () const;
         
         // Arithmetic operator backends.
                            SafeInteger& op_add (SafeInteger<T> const& number);
@@ -146,7 +155,7 @@
     template <class T> SafeInteger<T>& SafeInteger<T>::operator ++ () { return op_add(1); }
     
     // Return the value of this number.
-    template <class T> T SafeInteger<T>::Value () { return _number; }
+    template <class T> T SafeInteger<T>::Value () const { return _number; }
     
     // Add another SafeInteger of the same type.
     template <class T> SafeInteger<T>& SafeInteger<T>::op_add (SafeInteger<T> const& number) {
@@ -200,5 +209,9 @@
     }
     
   };
+  
+  // Stream I/O operators.
+  template <class T> inline std::istream& operator >> (std::istream& left, DAC::SafeInteger<T>&       right) { T input; left >> input; right = input; return left; }
+  template <class T> inline std::ostream& operator << (std::ostream& left, DAC::SafeInteger<T> const& right) { left << right.Value();                 return left; }
   
 #endif
