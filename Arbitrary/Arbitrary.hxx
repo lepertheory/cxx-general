@@ -18,7 +18,7 @@
   #include "ReferencePointer.hxx"
   #include "toString.hxx"
   #include "rppower.hxx"
-  #include "SafeInteger.hxx"
+  #include "SafeInteger/SafeInteger.hxx"
   
   // Forward declarations.
   namespace DAC {

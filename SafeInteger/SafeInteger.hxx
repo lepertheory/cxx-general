@@ -187,8 +187,7 @@
             if (number > (std::numeric_limits<T>::max() - _number)) {
               SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
             }
-          } else if ((_number > 0) && (number < 0)) {
-            if (number < (std::numeric_limits<T>::max() - 
+          }
           
         }
         
@@ -196,6 +195,7 @@
         
       }
       
+      return *this;
       
     }
     

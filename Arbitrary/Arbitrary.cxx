@@ -14,7 +14,7 @@
 // Internal includes.
 #include "toString.hxx"
 #include "rppower.hxx"
-#include "SafeInteger.hxx"
+#include "SafeInteger/SafeInteger.hxx"
 
 // Namespaces used.
 using namespace std;

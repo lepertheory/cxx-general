@@ -1,8 +1,10 @@
 all:
-	make -C Arbitrary all
+	make -C SafeInteger all
+	make -C Arbitrary   all
 
 clean:
-	make -C Arbitrary clean
+	make -C SafeInteger clean
+	make -C Arbitrary   clean
 
 love:
 	@echo "Not war."
