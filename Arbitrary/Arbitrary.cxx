@@ -95,11 +95,44 @@ namespace DAC {
   // Add a number to this number.
   Arbitrary& Arbitrary::op_add (Arbitrary const& right) {
     
-    // Allow right to be const.
+    // Reduce typing.
+    typedef _DigsT::size_type DST;
+    
+    // Work area.
+    _DataPT   new_data(new _Data);
     Arbitrary tmp_right(right);
     
     // Convert to two numbers that can be calculated against each other.
     _normalizeExponent(tmp_right);
+    
+    // Get the max number of digits.
+    DST largest = max(_data->digits.size(), tmp_right._data->digits.size());
+    
+    // Add like 1st grade.
+    for (DST i = 0; i != largest; ++i) {
+      
+      // Add another digit if needed.
+      if (i >= new_data->digits.size()) {
+        new_data->digits.push_back(0);
+      }
+      
+      // Add and carry each number to the result.
+      if (_data->digits.size() > i) {
+        new_data->digits[i] = of_add<_DigT, _DigT, _DigT>(new_data->digits[i], _data->digits[i]);
+        s_carry<_DigsT, DST>(new_data->digits, i);
+      }
+      if (tmp_right._data->digits.size() > i) {
+        new_data->digits[i] = of_add<_DigT, _DigT, _DigT>(new_data->digits[i], tmp_right._data->digits[i]);
+        s_carry<_DigsT, DST>(new_data->digits, i);
+      }
+      
+    }
+    
+    // Set the decimal point.
+    new_data->exponent = _data->exponent;
+    
+    // Move the new data into place.
+    _data = new_data;
     
     // Done.
     return *this;
@@ -756,6 +789,9 @@ namespace DAC {
       } else {
         op_div(Arbitrary(_data->originalbase).pow(_data->exponent - exponent));
       }
+      
+      // Update the exponent.
+      _data->exponent = exponent;
       
     }
     
