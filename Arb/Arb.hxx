@@ -12,10 +12,12 @@
   #include <iostream>
   #include <string>
   #include <vector>
+  #include <algorithm>
   
   // Internal includes.
   #include "SafeInteger/SafeInteger.hxx"
   #include "ReferencePointer.hxx"
+  #include "rppower.hxx"
   
   // Forward declarations.
   namespace DAC {
@@ -43,6 +45,7 @@
           std::string::size_type _position;
           ConstReferencePointer<std::string> _number;
       };
+      class Overrun   : public Base      { public: virtual char const* what () const throw(); };
     };
     
     /*************************************************************************
@@ -159,17 +162,33 @@
         template <class T> static typename T::size_type s_trimZerosE (T& c);
         template <class T> static typename T::size_type s_trimZeros  (T& c);
         
-        // Do long division on a given container. Container must be little-
-        // endian.
-        template <class DivndT, class DivorT> static DivorT s_longDiv (DivndT& divnd, DivorT const divor, _BaseT const base);
+        // Do long division or multiplication on a given container. Container
+        // must be little-endian for division, big-endian for multiplication.
+        // These are grouped because they both involve applying one number to
+        // a container, but semantics of each are very different.
+        template <class DivndT, class DivorT> static DivorT               s_longDiv (DivndT& divnd, DivorT const divor, _BaseT const base);
+        template <class LT,     class RT>     static ReferencePointer<LT> s_longMul (LT const& l, RT const r);
         
         // Convert a container from one base to another base. Container must
         // be little-endian, result is big-endian.
         template <class FromT, class ToT> static ReferencePointer<ToT> s_baseConv (FromT const& from, _BaseT const frombase, _BaseT const tobase);
-
-        // Perform integer division on two big-endian containers. Returns the
-        // remainder.
-        template <class T> static ReferencePointer<T> s_intDiv (T const& divor, T const& divnd, T& quotient);
+        
+        // Perform integer arithmetic on two big-endian containers.
+        // Subtraction requires that minuend be greater than or equal to
+        // the subtrahend. Base is 2^(bits/2).
+        template <class T> static ReferencePointer<T> s_intMul (T const& mulnd, T const& mulor);
+        template <class T> static ReferencePointer<T> s_intDiv (T const& divor, T const& divnd, ReferencePointer<T> remainder = 0);
+        template <class T> static ReferencePointer<T> s_intAdd (T const& aug,   T const& add);
+        template <class T> static ReferencePointer<T> s_intSub (T const& min,   T const& sub);
+        
+        // Get the greatest common divisor and least common multiple of two
+        // big-endian containers. Base is 2^(bits/2).
+        template <class T> static ReferencePointer<T> s_gcd (T const& c1, T const& c2);
+        template <class T> static ReferencePointer<T> s_lcm (T const& c1, T const& c2);
+        
+        // Perform a carry on a big-endian container. Base is 2^(bits/2).
+        template <class T> static void s_carry  (T& c, typename T::size_type const start);
+        template <class T> static void s_borrow (T& c, typename T::size_type const start);
         
         // Comparison operators on containers.
         template <class T> static bool s_lt (T const& l, T const& r);
@@ -187,11 +206,12 @@
     
     // Errors.
     namespace ArbErrors {
-      inline char const* Base::what          () const throw() { return "Undefined error in Arb.";                                                                                                                                          }
+      inline char const* Base::what          () const throw() { return "Undefined error in Arb.";                                                                                                                                            }
       inline char const* BadFormat::what     () const throw() { return (std::string(_problem) + " at position " + DAC::toString((SafeInteger<std::string::size_type>(_position) + 1).Value()) + " in number \"" + *_number + "\".").c_str(); }
       inline BadFormat&  BadFormat::Problem  (char const*                   const problem)  throw() { _problem  = problem;  return *this; }
       inline BadFormat&  BadFormat::Position (std::string::size_type        const position) throw() { _position = position; return *this; }
       inline BadFormat&  BadFormat::Number   (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   return *this; }
+      inline char const* Overrun::what       () const throw() { return "Instruction overruns end of container.";                                                                                                                             }
     };
     
     /*************************************************************************
@@ -313,25 +333,79 @@
       
     }
     
+    // Perform integer multiplication on two big-endian containers. Base is
+    // 2^(bits/2).
+    template <class T> ReferencePointer<T> Arb::s_intMul (T const& mulnd, T const& mulor) {
+      
+      // Return value.
+      ReferencePointer<T> retval(new T);
+      
+      // Multiply like 3rd grade.
+      for (typename T::size_type i = 0; i != mulor.size(); ++i) {
+        
+        // Get the product for a single digit.
+        ReferencePointer<T> digproduct(s_longMul(mulnd, mulor[i]));
+        
+        // Offset this digit product and add it to the final product.
+        digproduct->insert(digproduct->begin(), i, 0);
+        retval = s_intAdd(*retval, *digproduct);
+        
+      }
+      
+      // Return the result.
+      return retval;
+      
+    }
+    
     // Perform integer division on two big-endian containers. Returns the
-    // remainder.
-    template <class T> ReferencePointer<T> Arb::s_intDiv (T const& divor, T const& divnd, T& quotient) {
+    // quotient. Base is 2^(bits/2).
+    template <class T> ReferencePointer<T> Arb::s_intDiv (T const& divor, T const& divnd, ReferencePointer<T> remainder) {
       
       // Return this container.
       ReferencePointer<T> retval(new T);
       
       // If divor < divnd, result is zero, remainder is divnd.
       if (s_lt(divor, divnd)) {
-        retval = divnd;
-        quotient.clear();
+        if (remainder.get() != 0) {
+          remainder = divnd;
+        }
         return retval;
       }
       
-      // First, seed the group of digits we will be dividing.
-      T diggroup(divor.rbegin(), divor.rbegin() + divnd.size());
+      // Make a copy of the high-order digit of the dividend, this will be
+      // used frequently.
+      typename T::value_type roughdivnd = divnd.back();
       
-      // Iterate through the divisor.
+      // Seed the group of digits we will be dividing, then iterate through
+      // the divisor.
+      T diggroup(divor.rbegin(), divor.rbegin() + divnd.size());
+      T test;
       for (typename T::reverse_iterator i = divor.rbegin() + divnd.size(); i != divor.rend(); ++i) {
+        
+        // Make a guess at the quotient of this digit by dividing the high-
+        // order digits.
+        typename T::value_type guess = diggroup.back() / roughdivnd;
+        
+        // Correct the guess.
+        test.swap(*s_longMul(divnd, guess));
+        if (s_gt(test, diggroup)) {
+          --guess;
+          test.swap(*s_longMul(divnd, guess));
+        } else if (s_ge(*s_intSub(diggroup, test), divnd)) {
+          ++guess;
+          test.swap(*s_longMul(divnd, guess));
+        }
+        
+        // The guess must be correct by this point. Add it to the quotient and
+        // prepare for the next iteration if there will be one.
+        retval->insert(retval->begin(), guess);
+        diggroup.swap(*s_intSub(diggroup, test));
+        
+      }
+      
+      // Swap in the remainder if a container was given.
+      if (remainder.refs != 0) {
+        remainder->swap(diggroup);
       }
       
       // Return.
@@ -339,7 +413,236 @@
       
     }
     
-    // Comparison operators on containers.
+    // Perform integer addition on two big-endian containers. Base is
+    // 2^(bits/2).
+    template <class T> ReferencePointer<T> Arb::s_intAdd (T const& aug, T const& add) {
+      
+      // Return value.
+      ReferencePointer<T> retval(new T);
+      
+      // Iterate through the larger digit, adding to the return value. Cache
+      // sizes.
+      typename T::size_type augsz = aug.size();
+      typename T::size_type addsz = add.size();
+      typename T::size_type digs  = max(augsz, addsz);
+      for (typename T::size_type i = 0; i != digs; ++i) {
+        
+        // Add a new digit if necessary.
+        if (retval->size() == i) {
+          retval->push_back(0);
+        }
+        
+        // Add the augend and addend.
+        if (augsz > i) {
+          *retval[i]  = aug[i];
+        }
+        if (addsz > i) {
+          *retval[i] += add[i];
+        }
+        
+        // Do any carry needed.
+        s_carry(*retval, i);
+        
+      }
+      
+      // Return.
+      return retval;
+      
+    }
+    
+    // Perform integer subtraction on two big-endian containers. This is
+    // an unsigned operation, so minuend must be greater than or equal to
+    // subtrahend. Base is 2^(bits/2).
+    template <class T> ReferencePointer<T> Arb::s_intSub (T const& min, T const& sub) {
+      
+      // Ensure that min >= sub.
+      if (!s_ge(min, sub)) {
+        throw ArbErrors::Overrun();
+      }
+      
+      // Copy min into the return container.
+      ReferencePointer<T> retval(new T(min));
+      
+      // Iterate through min, subtracting each digit of sub.
+      for (typename T::size_type i = 0; i != sub.size(); ++i) {
+        
+        // Perform borrow if necessary.
+        if (retval[i] < sub[i]) {
+          s_borrow(retval, i);
+        }
+        
+        // Subtract this digit.
+        retval[i] -= sub[i];
+        
+      }
+      
+      // Trim zeros and return.
+      s_trimZerosE(*retval);
+      return retval;
+      
+    }
+    
+    // Multiply a big-endian container by a given number. Base is 2^(bits/2).
+    template <class LT, class RT> static ReferencePointer<LT> s_longMul (LT const& l, RT const r) {
+      
+      // Reduce typing.
+      typedef typename LT::value_type LDT;
+      
+      // This is the product.
+      ReferencePointer<LT>   retval;
+      typename LT::size_type curpos = 0;
+      
+      // Multiply like 3rd grade.
+      for (typename LT::size_type i = 0; i != l.size(); ++i) {
+        
+        // Create the digit if necessary.
+        if (curpos == retval.size()) {
+          retval.push_back(0);
+        }
+        
+        // Multiply one digit and carry.
+        retval[curpos] = *i * r;
+        s_carry(retval, curpos);
+        
+      }
+      
+      // We done.
+      return retval;
+      
+    }
+    
+    // Get the greatest common divisor of two big-endian containers. Base
+    // is 2^(bits/2).
+    template <class T> ReferencePointer<T> Arb::s_gcd (T const& c1, T const& c2) {
+      
+      // Return value.
+      ReferencePointer<T> retval;
+      
+      // Work area.
+      T tmp_c1(c1);
+      T tmp_c2(c2);
+      if (s_lt(tmp_c1, tmp_c2)) {
+        tmp_c1.swap(tmp_c2);
+      }
+      
+      // Euclid's algorithm.
+      while (tmp_c2 != 0) {
+        T                   tmp = tmp_c2;
+        ReferencePointer<T> remainder(new T);
+        s_intDiv(tmp_c1, tmp_c2, remainder);
+        tmp_c2.swap(*remainder);
+        tmp_c1.swap(tmp);
+      }
+      
+      // Swap in result and return.
+      retval->swap(tmp_c1);
+      return retval;
+      
+    }
+    
+    // Get the least common multiple of two big-endian containers. Base is
+    // 2^(bits/2).
+    template <class T> ReferencePointer<T> Arb::s_lcm (T const& c1, T const& c2) {
+      
+      // Return value.
+      ReferencePointer<T> retval;
+      
+      // Work area.
+      T tmp_c1(c1);
+      T tmp_c2(c2);
+      if (s_lt(tmp_c1, tmp_c2)) {
+        tmp_c1.swap(tmp_c2);
+      }
+      
+      // LCM is (c1 * c2) / gcd(c1, c2). c1 is always the largest of the two,
+      // save the multiplication by c1 until the end when we have the smallest
+      // number possible.
+      return s_intMul(*s_intDiv(tmp_c2, s_gcd(tmp_c1, tmp_c2)), tmp_c1);
+      
+    }
+    
+    // Perform a carry on a big-endian container. Base is 2^(bits/2).
+    template <class T> void Arb::s_carry (T& c, typename T::size_type const start) {
+      
+      // Reduce typing.
+      typedef typename T::value_type DT;
+      
+      // Calculate the number of bits in a number. This is static so that it
+      // is only calculated once for a given type instead of every function
+      // call.
+      static const int halfbits = std::numeric_limits<DT>::digits >> 1;
+      static const DT  base     = rppower(static_cast<DT>(2), halfbits);
+      
+      // Ensure that the start is not beyond the end of the container.
+      if (start >= c.size()) {
+        throw ArbErrors::Overrun();
+      }
+      
+      // Loop through the container looking for base overflow.
+      for (typename T::size_type i = start; i != c.size(); ++i) {
+        
+        // If we find overflow, push it to the next digit.
+        if (c[i] >= base) {
+          
+          // Create the next digit if it does not already exist.
+          if ((c.size() - 1) <= i) {
+            c.push_back(0);
+          }
+          
+          // Add any overflow to the next digit and remove it from the
+          // current digit.
+          DT overflow  = c[i] / base;
+          c[i + 1]    += overflow;
+          c[i]        -= overflow * base;
+          
+        // If there is no overflow, there will be no more overflow.
+        } else {
+          
+          // Nothing to return, work is done in place.
+          return;
+          
+        }
+        
+      }
+      
+    }
+    
+    // Perform a borrow on a big-endian container. Base is 2^(bits/2).
+    template <class T> void Arb::s_borrow (T& c, typename T::size_type const start) {
+      
+      // Reduce typing.
+      typedef typename T::value_type DT;
+      
+      // Calculate the number of bits in a number.
+      static const int halfbits = std::numeric_limits<DT>::digits >> 1;
+      static const DT  base     = rppower(static_cast<DT>(2), halfbits);
+      
+      // Ensure that the start is not beyond the end of the container.
+      if (start >= c.size()) {
+        throw ArbErrors::Overrun();
+      }
+      
+      // Loop through the container borrowing until we've met our borrow.
+      for (typename T::size_type i = start; i != (c.size() - 1); ++i) {
+        
+        // Add base to this digit.
+        c[i] += base;
+        
+        // If the next digit is > 0, subtract 1 and we're done.
+        if (c[i + 1] > 0) {
+          --c[i + 1];
+          s_trimZerosE(c);
+          return;
+        }
+        
+      }
+      
+      // If we got to here, we have not paid for our borrow.
+      throw ArbErrors::Overrun();
+      
+    }
+    
+    // Comparison operators on big-endian containers.
     template <class T> bool Arb::s_lt (T const& l, T const& r) {
       
       // Don't get fooled by zero size.
@@ -370,11 +673,11 @@
       return false;
       
     }
-    template <class T> bool Arb::s_le (T const& l, T const& r) { return (s_lt(l, r) || !s_lt(r, l));  }
-    template <class T> bool Arb::s_gt (T const& l, T const& r) { return s_lt(r, l);                   }
-    template <class T> bool Arb::s_ge (T const& l, T const& r) { return (s_gt(l, r) || !s_gt(r, l));  }
-    template <class T> bool Arb::s_eq (T const& l, T const& r) { return (!s_lt(l, r) && !s_gt(l, r)); }
-    template <class T> bool Arb::s_ne (T const& l, T const& r) { return (s_lt(l, r) || s_gt(l, r));   }
+    template <class T> inline bool Arb::s_le (T const& l, T const& r) { return (s_lt(l, r) || !s_lt(r, l));  }
+    template <class T> inline bool Arb::s_gt (T const& l, T const& r) { return s_lt(r, l);                   }
+    template <class T> inline bool Arb::s_ge (T const& l, T const& r) { return (s_gt(l, r) || !s_gt(r, l));  }
+    template <class T> inline bool Arb::s_eq (T const& l, T const& r) { return (!s_lt(l, r) && !s_gt(l, r)); }
+    template <class T> inline bool Arb::s_ne (T const& l, T const& r) { return (s_lt(l, r) || s_gt(l, r));   }
     
   };
   

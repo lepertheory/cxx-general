@@ -239,7 +239,11 @@
     template <class T> inline typename ReferencePointer<T>::RefCountT ReferencePointer<T>::refs () const throw() {
       
       // Duh.
-      return *_refs;
+      if (_refs == 0) {
+        return 0;
+      } else {
+        return *_refs;
+      }
       
     }
     
@@ -407,7 +411,7 @@
     template <class T> inline T const* ConstReferencePointer<T>::operator -> () const throw() { return _p; }
     
     // Return the number of references to the pointer.
-    template <class T> inline typename ConstReferencePointer<T>::RefCountT ConstReferencePointer<T>::refs () const throw() { return *_refs; }
+    template <class T> inline typename ConstReferencePointer<T>::RefCountT ConstReferencePointer<T>::refs () const throw() { if (_refs == 0) { return 0; } else { return *_refs; } }
     
     // Return true if the pointer is null.
     template <class T> inline bool ConstReferencePointer<T>::isNull () const throw() { return (_p == 0); }
