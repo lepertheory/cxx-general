@@ -17,7 +17,7 @@
   #include "Exception.hxx"
   #include "ReferencePointer.hxx"
   #include "toString.hxx"
-  #include "overflow.hxx"
+  #include "rppower.hxx"
   
   // Forward declarations.
   namespace DAC {
@@ -348,11 +348,7 @@
     template <class T> inline Arbitrary::operator T () const {
       T retval = 0;
       for (_DigsT::iterator i = _data->digits.begin(); i != _data->digits.end(); ++i) {
-        try {
-          retval = (retval + (*i * rppower(s_digitbase, (i - _data->digits.begin()))));
-        } catch (OverflowErrors::Base error) {
-          ArbitraryErrors::throwOverflow("Overflow converting to integral type.", &error);
-        }
+        retval = (retval + (*i * rppower(s_digitbase, (i - _data->digits.begin()))));
       }
       return retval;
     }

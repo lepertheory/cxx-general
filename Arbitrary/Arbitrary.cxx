@@ -12,8 +12,8 @@
 #include <iostream> // FIXME: This is for debugging only, get rid of it.
 
 // Internal includes.
+#include "toString.hxx"
 #include "rppower.hxx"
-#include "logBase.hxx"
 
 // Namespaces used.
 using namespace std;
@@ -702,7 +702,7 @@ namespace DAC {
       
       // Get the maximum number that can be held in a single digit.
       s_digitbits = numeric_limits<_DigT>::digits >> 1;
-      s_digitbase = of_static_cast<_BaseT, int>(rppower(2, s_digitbits));
+      s_digitbase = static_cast<_BaseT>(rppower(2, s_digitbits));
       
       // Get the input digits.
       for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {
