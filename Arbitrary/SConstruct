@@ -21,7 +21,7 @@ Arbitrary = env.Object(target = 'Arbitrary', source = [ 'Arbitrary.cxx' ])
 main      = env.Object(target = 'main',      source = [ 'test.cxx'      ])
 
 env.Program(
-	target = 'SafeInteger',
+	target = 'Arbitrary',
 	source = [
 		main,
 		Arbitrary

@@ -122,7 +122,8 @@ namespace DAC {
       
     }
     
-    // Move the new data into place.
+    // Clean up and move the new data into place.
+    tmp_left._cleanup();
     _data = tmp_left._data;
     
     // Done.
@@ -310,7 +311,7 @@ namespace DAC {
     }
     
     // Clean up.
-    s_trimZeros<_DigsT, _DigsT::iterator>(new_data->digits, _END);
+    s_trimZeros<_DigsT, _DigsT::size_type, _DigsT::iterator>(new_data->digits, _END);
     
     // Move the new data into place.
     _data = new_data;
@@ -342,7 +343,7 @@ namespace DAC {
     }
     
     // Clean up.
-    s_trimZeros<_DigsT, _DigsT::iterator>(_data->digits, _END);
+    s_trimZeros<_DigsT, _DigsT::size_type, _DigsT::iterator>(_data->digits, _END);
     
     // Return, we done.
     return *this;
@@ -453,7 +454,7 @@ namespace DAC {
     // follow if you're good at templates and have six independent eyes.
     num.swap(
       *(s_reverse<_DigStrT, _DigStrT::reverse_iterator>(
-        *(s_baseconv<_DigStrT, _DigChrT, _DigsT, _DigT, _DigsT::iterator>(
+        *(s_baseconv<_DigStrT, _DigChrT, _DigsT, _DigStrT::size_type, _DigT, _DigsT::iterator>(
           *(s_reverse<_DigsT, _DigsT::reverse_iterator>(_data->digits)),
           s_digitbase,
           base
@@ -610,8 +611,8 @@ namespace DAC {
     new_data->originalbase = base;
     
     // Trim leading and trailing zeros from gathered digits.
-    s_trimZeros<_DigStrT, _DigStrT::iterator>(num, _BEGIN);
-    s_trimZeros<_DigStrT, _DigStrT::iterator>(rad, _END);
+    s_trimZeros<_DigStrT, _DigStrT::size_type, _DigStrT::iterator>(num, _BEGIN);
+    s_trimZeros<_DigStrT, _DigStrT::size_type, _DigStrT::iterator>(rad, _END);
     
     // Load the exponent.
     {
@@ -641,9 +642,12 @@ namespace DAC {
     new_data->exponent += rad.size();
     num.insert(num.end(), rad.begin(), rad.end());
     
+    // Trim low-order zeros and update the exponent.
+    new_data->exponent -= s_trimZeros<_DigStrT, _DigStrT::size_type, _DigStrT::iterator>(num, _BEGIN);
+    
     // Load the numeric digits. Convert from the given base to the target
     // base. Digits come out in reverse order, no need for a temp.
-    new_data->digits.swap(*(s_baseconv<_DigsT, _DigT, _DigStrT, _DigChrT, _DigStrT::iterator>(num, base, s_digitbase)));
+    new_data->digits.swap(*(s_baseconv<_DigsT, _DigT, _DigStrT, _DigStrT::size_type, _DigChrT, _DigStrT::iterator>(num, base, s_digitbase)));
     
     // Set the sign.
     new_data->positive = p_num;
