@@ -43,21 +43,10 @@
         virtual ~Exception () throw();
         
         // Get the cause of this error.
-        virtual const char*        what ()                        const throw();
-        virtual std::string const& Text ()                        const throw();
-        virtual Exception&         Text (std::string const& text)       throw();
+        virtual const char* what () const throw();
         
         // Reset to just-constructed state.
         virtual Exception& clear () throw();
-      
-      /***********************************************************************
-       * Protected members.
-       ***********************************************************************/
-      protected:
-        
-        const size_t _TEXTSIZE = 80;
-        
-        char _text[_TEXTSIZE];
       
     };
     
@@ -77,29 +66,11 @@
     
     // Describe the problem.
     inline char const* Exception::what () const throw() {
-      try {
-        return Text().c_str();
-      } catch (...) {
-        return 0;
-      }
-    }
-    
-    // Accessors.
-    inline std::string Exception::Text () const throw() {
-      try {
-        return std::string(&text);
-      } catch (...) {
-        return std::string();
-      }
-    }
-    inline Exception& Exception::Text (std::string const& text) throw() {
-      strncpy(&_text, text.c_str(), _TEXTSIZE - 1);
-      _text[_TEXTSIZE - 1] = '\0';
+      return "Undefined error.";
     }
     
     // Reset to just-constructed state.
     inline Exception& Exception::clear() throw() {
-      _text[0] = '\0';
       return *this;
     }
     
@@ -108,7 +79,7 @@
   /***************************************************************************
    * Inline and template definitions.
    ***************************************************************************/
-  inline std::ostream& operator << (std::ostream& left, DAC::Exception const& right) { left << right.Text(); return left; }
+  inline std::ostream& operator << (std::ostream& left, DAC::Exception const& right) { left << right.what(); return left; }
   
 // End include guard.
 #endif
