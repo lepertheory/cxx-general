@@ -474,7 +474,7 @@
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
               }
             } else if (_number < 0) {
-              if ((_number == -1) && (number > (-(static_cast<RT>(std::numeric_limits<T>::min() + 1)) + 1)) {
+              if ((_number == -1) && (number > (-(static_cast<RT>(std::numeric_limits<T>::min() + 1)) + 1))) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
               } else if (number > (std::numeric_limits<T>::min() / _number)) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
