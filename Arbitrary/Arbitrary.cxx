@@ -168,7 +168,8 @@ namespace DAC {
       
     }
     
-    // Move the new data into place.
+    // Clean up and move the new data into place.
+    tmp_left._cleanup();
     _data = tmp_left._data;
     
     // Done.
@@ -223,6 +224,7 @@ namespace DAC {
     // Temporary variables.
     Arbitrary divisor(*this);
     Arbitrary dividend(right);
+    Arbitrary quotient;
     Arbitrary remainder;
     Arbitrary diggroup;
     
@@ -277,30 +279,33 @@ namespace DAC {
         
         // Verify the guess.
         Arbitrary test(Arbitrary(guess) * dividend);
+        remainder = diggroup - test;
         cout << "test: " << test << "  diggroup - test: " << (diggroup - test) << endl;
-        cout << "blah: ((test <= diggroup) && ((diggroup - test) < dividend))" << endl
-             << "blah: ((" << test << " <= " << diggroup << ") && ((" << diggroup << " - " << test << ") < " << dividend << "))" << endl
-             << "blah: ((" << test << " <= " << diggroup << ") && (" << (diggroup - test) << " < " << dividend << "))" << endl
-             << "blah: (" << (test <= diggroup) << " && " << ((diggroup - test) < dividend) << ")" << endl
-             << "blah: " << ((test <= diggroup) && ((diggroup - test) < dividend)) << endl;
-        if ((test <= diggroup) && ((diggroup - test) < dividend)) {
-          cout << "guess is correct!" << endl;
+        if ((test <= diggroup) && (remainder < dividend)) {
+          quotient._data->digits.insert(quotient._data->digits.begin(), guess);
+          cout << "quotient: " << quotient << endl;
+          diggroup = remainder;
+          cout << "diggroup: " << diggroup << "  remainder: " << remainder << endl;
         } else {
           cout << "guess is wrong :(" << endl;
         }
         
       }
       
-      // Prepare for the next iteration by bringing down anothe digit from the
+      // Prepare for the next iteration by bringing down another digit from the
       // divisor.
-      if (curdig >= divisor._data->digits.size()) {
+      if (curdig == divisor._data->digits.size()) {
+        ++addl;
         diggroup._data->digits.insert(diggroup._data->digits.begin(), 0);
       } else {
         ++curdig;
         diggroup._data->digits.insert(diggroup._data->digits.begin(), *(divisor._data->digits.end() - curdig.Value()));
       }
       
-    } while ((remainder != 0) || (digsleft != 0) || (addl != maxaddl));
+      cout << "addl: " << addl << "  maxaddl: " << maxaddl << "  quotient: " << quotient << "  digsleft: " << digsleft << "  remainder: " << remainder << endl;
+      cout << "-----------------------------------------" << endl;
+      
+    } while (((quotient == 0) || ((digsleft > 0) || (remainder != 0))) && (addl != maxaddl));
     
     // We done.
     return *this;
@@ -538,29 +543,20 @@ namespace DAC {
     Arbitrary tmp_left(*this);
     Arbitrary tmp_right(right);
     
-    cout << "tmp_left: " << tmp_left << "  tmp_right: " << tmp_right << "  ";
-    
     // Convert to two numbers that can be calculated against each other.
     tmp_left._normalizeExponent(tmp_right);
     
     // Test.
     if (tmp_left._data->positive && !(tmp_right._data->positive)) {
-      cout << "true 1!" << endl;
       return true;
     }
     if (!(tmp_left._data->positive) && tmp_right._data->positive) {
-      cout << "false 1!" << endl;
       return false;
     }
     if (tmp_left._data->digits.size() > tmp_right._data->digits.size()) {
-      cout << "true 2!" << endl;
       return true;
     }
     if (tmp_left._data->digits.size() < tmp_right._data->digits.size()) {
-      cout << "tmp_left: " << tmp_left;
-      cout << "  tmp_right: " << tmp_right;
-      cout << "tmp_left size: " << tmp_left._data->digits.size() << "  tmp_right size: " << tmp_right._data->digits.size() << endl;
-      cout << "false 2!" << endl;
       return false;
     }
     {
@@ -568,11 +564,9 @@ namespace DAC {
       _DigsT::reverse_iterator ri = tmp_right._data->digits.rbegin();
       for (; (li != tmp_left._data->digits.rend()) && (ri != tmp_right._data->digits.rend()); li++, ri++) {
         if (*li > *ri) {
-          cout << "true 3!" << endl;
           return true;
         }
         if (*li < *ri) {
-          cout << "false 3!" << endl;
           return false;
         }
       }
@@ -937,7 +931,7 @@ namespace DAC {
         if      ((i >= '0') && (i <= '9')) { digit = i - static_cast<_NumChrT>('0'); }
         else if ((i >= 'A') && (i <= 'Z')) { digit = (i - static_cast<_NumChrT>('A')) + 10; }
         else if ((i >= 'a') && (i <= 'z')) { digit = (i - static_cast<_NumChrT>('a')) + 10; }
-        else                                                                             { digit = numeric_limits<_NumChrT>::max(); }
+        else                               { digit = numeric_limits<_NumChrT>::max(); }
         s_idigits.push_back(digit);
       }
       
