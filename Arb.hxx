@@ -13,7 +13,7 @@
   #include <string>
   
   // Internal includes.
-  #include "SafeInteger/SafeInteger.hxx"
+  #include "SafeInteger.hxx"
   #include "ReferencePointer.hxx"
   #include "toString.hxx"
   #include "ArbInt.hxx"
