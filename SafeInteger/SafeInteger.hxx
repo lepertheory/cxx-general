@@ -25,18 +25,68 @@
   template <class T> std::ostream& operator << (std::ostream& left, DAC::SafeInteger<T> const& right);
   
   // Arithmetic operators.
-  template <class T>            DAC::SafeInteger<T>  operator + (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
-  template <class LT, class RT> DAC::SafeInteger<LT> operator + (DAC::SafeInteger<LT> const& left, RT                   const  right);
-  template <class LT, class RT> DAC::SafeInteger<RT> operator + (LT                   const  left, DAC::SafeInteger<RT> const& right);
-  template <class T>            DAC::SafeInteger<T>  operator - (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
-  template <class LT, class RT> DAC::SafeInteger<LT> operator - (DAC::SafeInteger<LT> const& left, RT                   const  right);
-  template <class LT, class RT> DAC::SafeInteger<RT> operator - (LT                   const  left, DAC::SafeInteger<RT> const& right);
   template <class T>            DAC::SafeInteger<T>  operator * (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
   template <class LT, class RT> DAC::SafeInteger<LT> operator * (DAC::SafeInteger<LT> const& left, RT                   const  right);
-  template <class LT, class RT> DAC::SafeInteger<RT> operator * (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator * (LT                   const  left, DAC::SafeInteger<RT> const& right);
   template <class T>            DAC::SafeInteger<T>  operator / (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
   template <class LT, class RT> DAC::SafeInteger<LT> operator / (DAC::SafeInteger<LT> const& left, RT                   const  right);
-  template <class LT, class RT> DAC::SafeInteger<RT> operator / (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator / (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            DAC::SafeInteger<T>  operator % (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator % (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator % (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            DAC::SafeInteger<T>  operator + (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator + (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator + (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            DAC::SafeInteger<T>  operator - (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator - (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator - (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  
+  // Bit shift operators.
+  template <class T>            DAC::SafeInteger<T>  operator << (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator << (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator << (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            DAC::SafeInteger<T>  operator >> (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator >> (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator >> (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  
+  // Comparison operators.
+  template <class T>            bool operator <  (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator <  (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator <  (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            bool operator <= (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator <= (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator <= (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            bool operator >  (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator >  (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator >  (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            bool operator >= (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator >= (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator >= (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            bool operator == (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator == (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator == (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            bool operator != (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator != (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator != (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  
+  // Bitwise operators.
+  template <class T>            DAC::SafeInteger<T>  operator & (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator & (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator & (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            DAC::SafeInteger<T>  operator ^ (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator ^ (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator ^ (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            DAC::SafeInteger<T>  operator | (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator | (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator | (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  
+  // Logical operators.
+  template <class T>            bool operator && (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator && (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator && (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            bool operator || (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator || (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator || (LT                   const  left, DAC::SafeInteger<RT> const& right);
   
   /*************************************************************************
    * Specialization of numeric_limits.
@@ -116,18 +166,10 @@
       // Public members.
       public:
         
-        // Default constructor.
-        SafeInteger (T const number = 0);
-        
-        // Arithmetic assignment operators.
-                            SafeInteger& operator += (SafeInteger<T>  const& right);
-        template <class RT> SafeInteger& operator += (RT              const  right);
-                            SafeInteger& operator -= (SafeInteger<T>  const& right);
-        template <class RT> SafeInteger& operator -= (RT              const  right);
-                            SafeInteger& operator *= (SafeInteger<T>  const& right);
-        template <class RT> SafeInteger& operator *= (RT              const  right);
-                            SafeInteger& operator /= (SafeInteger<T>  const& right);
-        template <class RT> SafeInteger& operator /= (RT              const  right);
+        // Constructor.
+                           SafeInteger (T              const  number = 0);
+                           SafeInteger (SafeInteger<T> const& number);
+        template <class U> SafeInteger (U              const  number);
         
         // Increment / decrement operators.
         SafeInteger& operator ++ ();
@@ -135,18 +177,60 @@
         SafeInteger& operator -- ();
         SafeInteger  operator -- (int);
         
-        // Return the value of this number.
-        T Value () const;
+        // Sign operators.
+        SafeInteger operator + () const;
+        SafeInteger operator - () const;
+        
+        // Not operator.
+        bool operator ! () const;
+        
+        // Bitwise compliment.
+        SafeInteger operator ~ () const;
+        
+        // Assignment operator.
+                            SafeInteger& operator = (SafeInteger<T> const& right);
+        template <class RT> SafeInteger& operator = (RT             const  right);
+        
+        // Arithmetic assignment operators.
+                            SafeInteger& operator *= (SafeInteger<T> const& right);
+        template <class RT> SafeInteger& operator *= (RT             const  right);
+                            SafeInteger& operator /= (SafeInteger<T> const& right);
+        template <class RT> SafeInteger& operator /= (RT             const  right);
+                            SafeInteger& operator %= (SafeInteger<T> const& right);
+        template <class RT> SafeInteger& operator %= (RT             const  right);
+                            SafeInteger& operator += (SafeInteger<T> const& right);
+        template <class RT> SafeInteger& operator += (RT             const  right);
+                            SafeInteger& operator -= (SafeInteger<T> const& right);
+        template <class RT> SafeInteger& operator -= (RT             const  right);
+        
+        // Bit shift assignment operators.
+                            SafeInteger& operator <<= (SafeInteger<T> const& right);
+        template <class RT> SafeInteger& operator <<= (RT             const  right);
+                            SafeInteger& operator >>= (SafeInteger<T> const& right);
+        template <class RT> SafeInteger& operator >>= (RT             const  right);
+        
+        // Return and set the value of this number.
+                            T            Value ()                             const;
+                            SafeInteger& Value (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& Value (RT             const  number);
         
         // Arithmetic operator backends.
-                            SafeInteger& op_add (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_add (RT             const  number);
-                            SafeInteger& op_sub (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_sub (RT             const  number);
                             SafeInteger& op_mul (SafeInteger<T> const& number);
         template <class RT> SafeInteger& op_mul (RT             const  number);
                             SafeInteger& op_div (SafeInteger<T> const& number);
         template <class RT> SafeInteger& op_div (RT             const  number);
+                            SafeInteger& op_mod (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_mod (RT             const  number);
+                            SafeInteger& op_add (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_add (RT             const  number);
+                            SafeInteger& op_sub (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_sub (RT             const  number);
+        
+        // Bit shift operator backends.
+                            SafeInteger& op_shl (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_shl (RT             const  number);
+                            SafeInteger& op_shr (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_shr (RT             const  number);
       
       // Private members.
       private:
@@ -172,26 +256,48 @@
     };
     
     // Default constructor.
-    template <class T> SafeInteger<T>::SafeInteger (T const number) { _number = number; }
-    
-    // Arithmetic assignment operators.
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::operator += (SafeInteger<T> const& number) { return op_add(number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::operator += (RT             const  number) { return op_add(number); }
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::operator -= (SafeInteger<T> const& number) { return op_sub(number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::operator -= (RT             const  number) { return op_sub(number); }
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::operator *= (SafeInteger<T> const& number) { return op_mul(number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::operator *= (RT             const  number) { return op_mul(number); }
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::operator /= (SafeInteger<T> const& number) { return op_div(number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::operator /= (RT             const  number) { return op_div(number); }
+    template <class T> inline SafeInteger<T>::SafeInteger (T const number) { _number = number; }
     
     // Increment / decrement operators.
-    template <class T> SafeInteger<T>& SafeInteger<T>::operator ++ ()    { return op_add(1); }
-    template <class T> SafeInteger<T>  SafeInteger<T>::operator ++ (int) { SafeInteger<T> retval(*this); op_add(1); return retval; }
-    template <class T> SafeInteger<T>& SafeInteger<T>::operator -- ()    { return op_sub(1); }
-    template <class T> SafeInteger<T>  SafeInteger<T>::operator -- (int) { SafeInteger<T> retval(*this); op_sub(1); return retval; }
+    template <class T> inline SafeInteger<T>& SafeInteger<T>::operator ++ ()    { return op_add(1); }
+    template <class T> inline SafeInteger<T>  SafeInteger<T>::operator ++ (int) { SafeInteger<T> retval(*this); op_add(1); return retval; }
+    template <class T> inline SafeInteger<T>& SafeInteger<T>::operator -- ()    { return op_sub(1); }
+    template <class T> inline SafeInteger<T>  SafeInteger<T>::operator -- (int) { SafeInteger<T> retval(*this); op_sub(1); return retval; }
+    
+    // Sign operators.
+    template <class T> inline SafeInteger<T> SafeInteger<T>::operator + () const { return *this;      }
+    template <class T> inline SafeInteger<T> SafeInteger<T>::operator - () const { return *this * -1; }
+    
+    // Not operator.
+    template <class T> inline bool SafeInteger<T>::operator ! () const { return !_number; }
+    
+    // Bitwise compliment.
+    template <class T> inline SafeInteger<T> SafeInteger<T>::operator ~ () const { return SafeInteger<T>(~_number); }
+    
+    // Assignment operators.
+    template <class T>           inline SafeInteger& SafeInteger<T>::operator = (SafeInteger<T> const& right) { return Value(right); }
+    template <class T, class RT> inline SafeInteger& SafeInteger<T>::operator = (RT             const  right) { return Value(right); }
+    
+    // Arithmetic assignment operators.
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator *= (SafeInteger<T> const& number) { return op_mul(number); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator *= (RT             const  number) { return op_mul(number); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator /= (SafeInteger<T> const& number) { return op_div(number); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator /= (RT             const  number) { return op_div(number); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator %= (SafeInteger<T> const& number) { return op_mod(number); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator %= (RT             const  number) { return op_mod(number); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator += (SafeInteger<T> const& number) { return op_add(number); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator += (RT             const  number) { return op_add(number); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator -= (SafeInteger<T> const& number) { return op_sub(number); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator -= (RT             const  number) { return op_sub(number); }
+    
+    // Bit shift assignment operators.
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator <<= (SafeInteger<T> const& number) { return op_shl(number); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator <<= (RT             const  number) { return op_shl(number); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator <<= (SafeInteger<T> const& number) { return op_shr(number); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator <<= (RT             const  number) { return op_shr(number); }
     
     // Return the value of this number.
-    template <class T> T SafeInteger<T>::Value () const { return _number; }
+    template <class T> inline T SafeInteger<T>::Value () const { return _number; }
     
     // Add another SafeInteger of the same type.
     template <class T> SafeInteger<T>& SafeInteger<T>::op_add (SafeInteger<T> const& number) {
@@ -263,16 +369,12 @@
               SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
             }
           } else if ((_number > 0) && (number._number < 0)) {
-            if (_number != -1) {
-              if (number._number < (std::numeric_limits<T>::min() / _number)) {
-                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
-              }
+            if (number._number < (std::numeric_limits<T>::min() / _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
             }
           } else if ((_number < 0) && (number._number > 0)) {
-            if (_number != 1) {
-              if (-number._number < -(std::numeric_limits<T>::min() / _number)) {
-                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
-              }
+            if (-number._number < -(std::numeric_limits<T>::min() / _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
             }
           }
         } else {
@@ -310,14 +412,44 @@
       
     }
     
+    // Modulo divide by another SafeInteger of the same type.
+    template <class T> SafeInteger<T>& SafeInteger<T>::op_mod (SafeInteger<T> const& number) {
+      
+      // Check for divide by 0.
+      if (number._number == 0) {
+        SafeIntegerErrors::throwDivByZero("Divide by zero.");
+      }
+      
+      // Do the mod and return result.
+      _number %= number._number;
+      return *this;
+      
+    }
+    
     // Add a number of a different type.
     template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_add (RT const number) {
       
       // Work with the larger of the two types.
       if (std::numeric_limits<T>::digits >= std::numeric_limits<RT>::digits) {
         
+        // Neither number is signed.
+        if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (number > (std::numeric_limits<T>::max() - _number)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+          }
+          
+        // Only the left number is signed.
+        } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (_number > 0) {
+            if (number > (std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          }
+          
         // Only the right number is signed.
-        if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+        } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
           
           if (number < 0) {
             if (number < -(std::numeric_limits<T>::min() + _number)) {
@@ -326,6 +458,19 @@
           } else if (number > 0) {
             if (number > (std::numeric_limits<T>::max() - _number)) {
               SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          }
+          
+        // Both numbers are signed.  
+        } else {
+          
+          if ((_number >= 0) && (number > 0)) {
+            if (number > (std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else if ((_number < 0) && (number < 0)) {
+            if (number < (std::numeric_limits<T>::min() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
             }
           }
           
@@ -339,7 +484,7 @@
           if (number > (std::numeric_limits<T>::max() - _number)) {
             SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
           }
-        
+          
         // Only the left number is signed.
         } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
@@ -348,16 +493,48 @@
               SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
             }
           } else {
-            T tmpnum;
-            if (_number == std::numeric_limits<RT>::min()) {
-              tmpnum = std::numeric_limits<RT>::max() + 1;
-            } else {
-              tmpnum = -_number;
-            }
-            if (number > tmpnum) {
+            if (number > -_number) {
               if ((number + _number) > std::numeric_limits<T>::max()) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
               }
+            }
+          }
+          
+        // Only the right number is signed.
+        } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+          
+          if (number >= 0) {
+            if (number > (std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else {
+            if (number < -(std::numeric_limits<T>::min() + _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+            }
+          }
+          
+        // Both numbers are signed.
+        } else {
+          
+          if ((_number >= 0) && (number > 0)) {
+            if (number > (std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else if ((_number >= 0) && (number < 0)) {
+            if (number < -_number) {
+              if ((number + _number) < std::numeric_limits<T>::min()) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            }
+          } else if ((_number < 0) && (number > 0)) {
+            if (-number < _number) {
+              if ((number + _number) > std::numeric_limits<T>::max()) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+              }
+            }
+          } else if ((_number < 0) && (number < 0)) {
+            if (number < (std::numeric_limits<T>::min() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
             }
           }
           
@@ -377,22 +554,45 @@
       // Work with the larger of the two sides.
       if (std::numeric_limits<T>::digits >= std::numeric_limits<RT>::digits) {
         
+        // Neither number is signed.
+        if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (number > (std::numeric_limits<T>::min() + _number)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+          }
+          
+        // Only the left number is signed.
+        } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (_number <= 0) {
+            if (-number < (std::numeric_limits<T>::min() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+            }
+          }
+          
         // Only the right number is signed.
-        if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+        } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
           
           if (number > 0) {
             if (number > (std::numeric_limits<T>::min() + _number)) {
               SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
             }
           } else if (number < 0) {
-            T tmpnum;
-            if (number == std::numeric_limits<RT>::min()) {
-              tmpnum = std::numeric_limits<RT>::max() + 1;
-            } else {
-              tmpnum = -number;
-            }
-            if (tmpnum > (std::numeric_limits<T>::max() - _number)) {
+            if (-number > (std::numeric_limits<T>::max() - _number)) {
               SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          }
+          
+        // Both numbers are signed.
+        } else {
+          
+          if ((_number >= 0) && (number < 0)) {
+            if (number < -(std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else if ((_number < 0) && (number > 0)) {
+            if (-number < (std::numeric_limits<T>::min() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
             }
           }
           
@@ -422,6 +622,44 @@
             }
           }
           
+        // Only the right number is signed.
+        } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+          
+          if (number > 0) {
+            if (number > (std::numeric_limits<T>::min() + _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+            }
+          } else {
+            if (number < -(std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          }
+          
+        // Both numbers are signed.
+        } else {
+          
+          if ((_number >= 0) && (number > 0)) {
+            if (number > _number) {
+              if (-(number - _number) < std::numeric_limits<T>::min()) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            }
+          } else if ((_number >= 0) && (number < 0)) {
+            if (number < -(std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is greater than type maxiumum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else if ((_number < 0) && (number > 0)) {
+            if (-number < (std::numeric_limits<T>::min() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+            }
+          } else if ((_number < 0) && (number < 0)) {
+            if (number < _number) {
+              if ((number - _number) < -std::numeric_limits<T>::max()) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+              }
+            }
+          }
+          
         }
         
       }
@@ -442,8 +680,28 @@
         // Work with the larger of the two sides.
         if (std::numeric_limits<T>::digits >= std::numeric_limits<RT>::digits) {
           
+          // Neither number is signed.
+          if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+            
+            if (number > (std::numeric_limits<T>::max() / _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+            
+          // Only the left number is signed.
+          } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+            
+            if (_number > 0) {
+              if (number > (std::numeric_limits<T>::max() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+              }
+            } else {
+              if (-number < (std::numeric_limits<T>::min() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            }
+            
           // Only the right number is signed.
-          if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+          } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
             
             if (number > 0) {
               if (number > (std::numeric_limits<T>::max() / _number)) {
@@ -452,6 +710,27 @@
             } else if (number < 0) {
               if (_number != 0) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            }
+            
+          // Both numbers are signed.
+          } else {
+            
+            if ((_number > 0) && (number > 0)) {
+              if (number > (std::numeric_limits<T>::max() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+              }
+            } else if ((_number > 0) && (number < 0)) {
+              if (number < (std::numeric_limits<T>::min() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            } else if ((_number < 0) && (number > 0)) {
+              if (-number < -(std::numeric_limits<T>::min() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            } else if ((_number < 0) && (number < 0)) {
+              if (number < (std::numeric_limits<T>::max() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
               }
             }
             
@@ -474,10 +753,42 @@
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
               }
             } else if (_number < 0) {
-              if ((_number == -1) && (number > (-(static_cast<RT>(std::numeric_limits<T>::min() + 1)) + 1))) {
+              if (number > (std::numeric_limits<T>::min() / _number)) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
-              } else if (number > (std::numeric_limits<T>::min() / _number)) {
+              }
+            }
+            
+          // Only the right number is signed.
+          } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+            
+            if (number > 0) {
+              if (number > (std::numeric_limits<T>::max() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+              }
+            } else {
+              if (number < -(std::numeric_limits<T>::min() / _number)) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            }
+            
+          // Both numbers are signed.
+          } else {
+            
+            if ((_number > 0) && (number > 0)) {
+              if (number > (std::numeric_limits<T>::max() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+              }
+            } else if ((_number > 0) && (number < 0)) {
+              if (number < (std::numeric_limits<T>::min() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            } else if ((_number < 0) && (number > 0)) {
+              if (-number < -(std::numeric_limits<T>::min() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            } else if ((_number < 0) && (number < 0)) {
+              if (number < (std::numeric_limits<T>::max() / _number)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
               }
             }
             
@@ -504,7 +815,25 @@
       // Work with the larger of the two sides.
       if (std::numeric_limits<T>::digits >= std::numeric_limits<RT>::digits) {
         
+        // Both numbers are signed.
+        if (std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+          
+          if ((_number == std::numeric_limits<T>::min()) && (number == -1)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " / " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+          }
+          
+        }
+        
       } else {
+        
+        // Both numbers are signed.
+        if (std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+          
+          if ((_number == std::numeric_limits<T>::min()) && (number == -1)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " / " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+          }
+          
+        }
         
       }
       
@@ -521,17 +850,67 @@
   template <class T> inline std::ostream& operator << (std::ostream& left, DAC::SafeInteger<T> const& right) { left << DAC::toString(right.Value());  return left; }
   
   // Arithmetic operators.
-  template <class T>            inline DAC::SafeInteger<T>  operator + (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_add(right); }
-  template <class LT, class RT> inline DAC::SafeInteger<LT> operator + (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_add(right); }
-  template <class LT, class RT> inline DAC::SafeInteger<RT> operator + (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<RT> retval(left); return retval.op_add(right); }
-  template <class T>            inline DAC::SafeInteger<T>  operator - (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_sub(right); }
-  template <class LT, class RT> inline DAC::SafeInteger<LT> operator - (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_sub(right); }
-  template <class LT, class RT> inline DAC::SafeInteger<RT> operator - (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<RT> retval(left); return retval.op_sub(right); }
-  template <class T>            inline DAC::SafeInteger<T>  operator * (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_mul(right); }
-  template <class LT, class RT> inline DAC::SafeInteger<LT> operator * (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_mul(right); }
-  template <class LT, class RT> inline DAC::SafeInteger<RT> operator * (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<RT> retval(left); return retval.op_mul(right); }
-  template <class T>            inline DAC::SafeInteger<T>  operator / (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_div(right); }
-  template <class LT, class RT> inline DAC::SafeInteger<LT> operator / (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right); }
-  template <class LT, class RT> inline DAC::SafeInteger<RT> operator / (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<RT> retval(left); return retval.op_div(right); }
+  template <class T>            inline DAC::SafeInteger<T>  operator * (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_mul(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator * (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_mul(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator * (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_mul(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator / (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_div(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator / (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator / (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator % (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_div(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator % (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator % (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator + (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_add(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator + (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_add(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator + (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_add(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator - (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_sub(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator - (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_sub(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator - (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_sub(right.Value()); }
+  
+  // Bit shift operators.
+  template <class T>            inline DAC::SafeInteger<T>  operator << (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_shl(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator << (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_shl(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator << (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_shl(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator >> (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_shr(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator >> (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_shr(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator >> (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_shr(right.Value()); }
+  
+  // Comparison operators.
+  template <class T>            inline bool operator <  (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_lt(right);                               }
+  template <class LT, class RT> inline bool operator <  (DAC::SafeInteger<LT> const& left, RT                   const  right) { return left.op_lt(right);                               }
+  template <class LT, class RT> inline bool operator <  (LT                   const  left, DAC::SafeInteger<RT> const& right) { return DAC::SafeInteger<LT>(left).op_lt(right.Value()); }
+  template <class T>            inline bool operator <= (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_le(right);                               }
+  template <class LT, class RT> inline bool operator <= (DAC::SafeInteger<LT> const& left, RT                   const  right) { return left.op_le(right);                               }
+  template <class LT, class RT> inline bool operator <= (LT                   const  left, DAC::SafeInteger<RT> const& right) { return DAC::SafeInteger<LT>(left).op_le(right.Value()); }
+  template <class T>            inline bool operator >  (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_gt(right);                               }
+  template <class LT, class RT> inline bool operator >  (DAC::SafeInteger<LT> const& left, RT                   const  right) { return left.op_gt(right);                               }
+  template <class LT, class RT> inline bool operator >  (LT                   const  left, DAC::SafeInteger<RT> const& right) { return DAC::SafeInteger<LT>(left).op_gt(right.Value()); }
+  template <class T>            inline bool operator >= (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_ge(right);                               }
+  template <class LT, class RT> inline bool operator >= (DAC::SafeInteger<LT> const& left, RT                   const  right) { return left.op_ge(right);                               }
+  template <class LT, class RT> inline bool operator >= (LT                   const  left, DAC::SafeInteger<RT> const& right) { return DAC::SafeInteger<LT>(left).op_ge(right.Value()); }
+  template <class T>            inline bool operator == (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_eq(right);                               }
+  template <class LT, class RT> inline bool operator == (DAC::SafeInteger<LT> const& left, RT                   const  right) { return left.op_eq(right);                               }
+  template <class LT, class RT> inline bool operator == (LT                   const  left, DAC::SafeInteger<RT> const& right) { return DAC::SafeInteger<LT>(left).op_eq(right.Value()); }
+  template <class T>            inline bool operator != (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_ne(right);                               }
+  template <class LT, class RT> inline bool operator != (DAC::SafeInteger<LT> const& left, RT                   const  right) { return left.op_ne(right);                               }
+  template <class LT, class RT> inline bool operator != (LT                   const  left, DAC::SafeInteger<RT> const& right) { return DAC::SafeInteger<LT>(left).op_ne(right.Value()); }
+  
+  // Bitwise operators.
+  template <class T>            inline DAC::SafeInteger<T>  operator & (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_bit_and(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator & (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_and(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator & (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_and(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator ^ (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_bit_xor(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator ^ (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_xor(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator ^ (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_xor(right.Value()); }
+  template <class T>            inline DAC::SafeInteger<T>  operator | (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_bit_ior(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator | (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_ior(right);         }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator | (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<LT> retval(left); return retval.op_bit_ior(right.Value()); }
+  
+  // Logical operators.
+  template <class T>            inline bool operator && (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_log_and(right);                               }
+  template <class LT, class RT> inline bool operator && (DAC::SafeInteger<LT> const& left, RT                   const  right) { return left.op_log_and(right);                               }
+  template <class LT, class RT> inline bool operator && (LT                   const  left, DAC::SafeInteger<RT> const& right) { return DAC::SafeInteger<LT>(left).op_log_and(right.Value()); }
+  template <class T>            inline bool operator || (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { return left.op_log_ior(right);                               }
+  template <class LT, class RT> inline bool operator || (DAC::SafeInteger<LT> const& left, RT                   const  right) { return left.op_log_ior(right);                               }
+  template <class LT, class RT> inline bool operator || (LT                   const  left, DAC::SafeInteger<RT> const& right) { return DAC::SafeInteger<LT>(left).op_log_ior(right.Value()); }
   
 #endif

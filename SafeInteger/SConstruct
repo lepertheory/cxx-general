@@ -14,7 +14,7 @@ env = Environment(
 
 if (env['CC'] == 'gcc') :
 	env.Append(
-		CCFLAGS = '-g -O0 -ansi -Wall'
+		CCFLAGS = '-g -O0 -ansi -w'
 	)
 
 main = env.Object(
