@@ -67,22 +67,23 @@
       class Base               : public Exception     { public: virtual char const* what () const throw(); };
       class BadFormat          : public Base          {
         public:
-          BadFormat (char const* const problem, std::string::size_type const position, ConstReferencePointer<std::string> number) throw();
           virtual char const* what () const throw();
-          virtual void Problem  (char const*                  const problem)  throw();
-          virtual void Position (std::string::size_type       const position) throw();
-          virtual void Number   (ConstReferencePointer<std::string> number)   throw();
+          virtual void Problem  (char const*                   const problem)  throw();
+          virtual void Position (std::string::size_type        const position) throw();
+          virtual void Number   (ConstReferencePointer<std::string>& number)   throw();
         protected:
           char const*                        _problem;
           std::string::size_type             _position;
           ConstReferencePointer<std::string> _number;
       };
-      class Overflow           : public Base          { public: virtual char const* what () const throw(); };
-      class RadixConflict      : public Base          { public: virtual char const* what () const throw(); };
-      class FractionalConflict : public RadixConflict { public: virtual char const* what () const throw(); };
-      class PrecisionLoss      : public Base          { public: virtual char const* what () const throw(); };
-      class ClassInitFailed    : public Base          { public: virtual char const* what () const throw(); };
-      class Overrun            : public Base          { public: virtual char const* what () const throw(); };
+      class Overflow           : public Base           { public: virtual char const* what () const throw(); };
+      class ScalarOverflow     : public Overflow       { public: virtual char const* what () const throw(); };
+      class ShiftOverflow      : public ScalarOverflow { public: virtual char const* what () const throw(); };
+      class RadixConflict      : public Base           { public: virtual char const* what () const throw(); };
+      class FractionalConflict : public RadixConflict  { public: virtual char const* what () const throw(); };
+      class PrecisionLoss      : public Base           { public: virtual char const* what () const throw(); };
+      class ClassInitFailed    : public Base           { public: virtual char const* what () const throw(); };
+      class Overrun            : public Base           { public: virtual char const* what () const throw(); };
       
     }
     
@@ -287,12 +288,14 @@
     namespace ArbitraryErrors {
       
       inline char const* Base::what               () const throw() { return "Undefined error in Arbitrary.";                                                                         }
-      inline char const* BadFormat::what          () const throw() { return (std::string(_problem) + " at position " + DAC::toString(_position) + " in number \"" + *(_number.get()) + "\".").c_str(); }
-      inline             BadFormat::BadFormat     (char const* const problem, std::string::size_type const position, ConstReferencePointer<std::string> number) throw() { _problem = problem; _position = position; _number = number; }
-      inline void        BadFormat::Problem       (char const*                  const problem)  throw() { _problem  = problem;  }
-      inline void        BadFormat::Position      (std::string::size_type       const position) throw() { _position = position; }
-      inline void        BadFormat::Number        (ConstReferencePointer<std::string> number)   throw() { _number   = number;   }
+      inline char const* BadFormat::what          () const throw() { return (std::string(_problem) + " at position " + DAC::toString((SafeInteger<std::string::size_type>(_position) + 1).Value()) + " in number \"" + *(_number.get()) + "\".").c_str(); }
+      inline void        BadFormat::Problem       (char const*                   const problem)  throw() { _problem  = problem;  }
+      inline void        BadFormat::Position      (std::string::size_type        const position) throw() { _position = position; }
+      inline void        BadFormat::Number        (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   }
       inline char const* Overflow::what           () const throw() { return "Overflow error.";                                                                                       }
+      inline char const* ScalarOverflow::what     () const throw() { return "Overflow when converting to scalar type.";                                                              }
+      inline char const* ShiftOverflow::what      () const throw() { return "Shift amount greater than digit array's maximum size requested.";                                       }
+      inline char const* RadixConflict::what      () const throw() { return "Cannot perform operation on numbers of differing bases.";                                               }
       inline char const* FractionalConflict::what () const throw() { return "Cannot perform operation on fractional numbers of differing bases.";                                    }
       inline char const* PrecisionLoss::what      () const throw() { return "Operation will cause precision to be lost.";                                                            }
       inline char const* ClassInitFailed::what    () const throw() { return "Class initialization failed; new objects cannot be constructed.";                                       }
@@ -349,7 +352,7 @@
         try {
           retval += *i * rppower(s_digitbase, (i - _data->digits.begin()));
         } catch (SafeIntegerErrors::Overflow& e) {
-          throw ArbitraryErrors::Overflow();
+          throw ArbitraryErrors::ScalarOverflow();
         }
       }
       return retval.Value();

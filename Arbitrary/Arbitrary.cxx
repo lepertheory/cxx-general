@@ -270,8 +270,8 @@ namespace DAC {
     DS shift = 0;
     try {
       shift = right;
-    } catch (ArbitraryErrors::Overflow error) {
-      throw;
+    } catch (ArbitraryErrors::ScalarOverflow error) {
+      throw ArbitraryErrors::ShiftOverflow();
     }
     
     // Only shift if it is needed.
@@ -501,8 +501,7 @@ namespace DAC {
     _DataPT new_data(new _Data);
     
     // Hold the number in case an error needs to be thrown.
-    ConstReferencePointer<std::string> tmp_number(new std::string);
-    *tmp_number = number;
+    ConstReferencePointer<std::string> tmp_number(new std::string(number));
     
     // Data for parser.
     _DigStrT num;
@@ -533,8 +532,14 @@ namespace DAC {
               case NUM:
                 mode = RAD;
                 break;
-              case RAD: throw ArbitraryErrors::BadFormat("Radix point given for a second time", i, tmp_number);
-              case EXP: throw ArbitraryErrors::BadFormat("Radix point given in exponent",       i, tmp_number);
+              case RAD: {
+                ArbitraryErrors::BadFormat error;
+                error.Problem("Radix point given for a second time");
+                error.Position(i);
+                error.Number(tmp_number);
+                throw error;
+              }
+              case EXP: { ArbitraryErrors::BadFormat error; error.Problem("Radix point given in exponent");       error.Position(i); error.Number(tmp_number); throw error; }
             }
             diggiven = false;
           break;
@@ -545,7 +550,7 @@ namespace DAC {
             switch (mode) {
               case NUM: mode = EXP; break;
               case RAD: mode = EXP; break;
-              case EXP: throw ArbitraryErrors::BadFormat("Exponent symbol given for a second time", i, nump_number);
+              case EXP: { ArbitraryErrors::BadFormat error; error.Problem("Exponent symbol given for a second time"); error.Position(i); error.Number(tmp_number); throw error; }
             }
             diggiven = false;
           break;
@@ -554,22 +559,22 @@ namespace DAC {
           case '+':
           case '-':
             if (diggiven) {
-              throw ArbitraryErrors::BadFormat("Sign given after digits", i, tmp_number);
+              { ArbitraryErrors::BadFormat error; error.Problem("Sign given after digits"); error.Position(i); error.Number(tmp_number); throw error; }
             }
             switch (mode) {
               case NUM:
                 if (s_num) {
-                  throw ArbitraryErrors::BadFormat("Sign of number given for a second time", i, tmp_number);
+                  { ArbitraryErrors::BadFormat error; error.Problem("Sign of number given for a second time"); error.Position(i); error.Number(tmp_number); throw error; }
                 }
                 p_num = (number[i] == '+');
                 s_num = true;
               break;
               case RAD:
-                throw ArbitraryErrors::BadFormat("Sign given after radix point", i, tmp_number);
+                { ArbitraryErrors::BadFormat error; error.Problem("Sign given after radix point"); error.Position(i); error.Number(tmp_number); throw error; }
               break;
               case EXP:
                 if (s_exp) {
-                  throw ArbitraryErrors::BadFormat("Sign of exponent given for a second time", i, tmp_number);
+                  { ArbitraryErrors::BadFormat error; error.Problem("Sign of exponent given for a second time"); error.Position(i); error.Number(tmp_number); throw error; }
                 }
                 p_exp = (number[i] == '+');
                 s_exp = true;
@@ -590,7 +595,7 @@ namespace DAC {
               
               // Make sure this digit is within the number base.
               if ((digval >= base.Value()) || (digval == numeric_limits<_NumChrT>::max())) {
-                throw ArbitraryErrors::BadFormat("Unrecognized character '" + DAC::toString(number[i]) + "'", i, tmp_number);
+                { ArbitraryErrors::BadFormat error; error.Problem("Unrecognized character"); error.Position(i); error.Number(tmp_number); throw error; }
               }
               
               // Add the digit to its proper place.
