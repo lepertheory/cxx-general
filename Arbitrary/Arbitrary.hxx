@@ -84,6 +84,7 @@
       class PrecisionLoss      : public Base           { public: virtual char const* what () const throw(); };
       class ClassInitFailed    : public Base           { public: virtual char const* what () const throw(); };
       class Overrun            : public Base           { public: virtual char const* what () const throw(); };
+      class DivideByZero       : public Base           { public: virtual char const* what () const throw(); };
       
     }
     
@@ -308,6 +309,7 @@
       inline char const* PrecisionLoss::what      () const throw() { return "Operation will cause precision to be lost.";                                                            }
       inline char const* ClassInitFailed::what    () const throw() { return "Class initialization failed; new objects cannot be constructed.";                                       }
       inline char const* Overrun::what            () const throw() { return "Overrun?";                                                                                              }
+      inline char const* DivideByZero::what       () const throw() { return "Divide by zero.";                                                                                       }
       
     };
     

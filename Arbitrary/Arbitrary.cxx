@@ -214,33 +214,68 @@ namespace DAC {
     
     Arbitrary tmp_left(*this);
     Arbitrary tmp_right(right);
-    Arbitrary remainder;
+    Arbitrary remainder(tmp_left);
+    Arbitrary divorgroup;
     Arbitrary retval;
+    
+    // Dividing zero is zero.
+    if (tmp_left == 0) {
+      return *this;
+    }
+    
+    // Dividing by zero is illegal.
+    if (tmp_right == 0) {
+      throw ArbitraryErrors::DivideByZero();
+    }
     
     tmp_left._normalizeRadix(tmp_right);
     
     // Divide like 3rd grade.
+    
+    _DigT roughdivnd = tmp_right._data->digits.back();
+    
+    // Get a group of digits of equal size to the dividend.
+    divorgroup._data->
+    
+    /*
+    SafeInteger<_DigsT::size_type> i          = SafeInteger<_DigsT::size_type>(tmp_left._data->digits.size()) - 1;
+    _DigT                          roughdivnd = tmp_right._data->digits.back();
+    _DigT                          guess      = 0;
+    _DigT                          digrem     = 0;
     do {
       
-      SafeInteger<_DigsT::size_type> i = SafeInteger<_DigsT::size_type>(tmp_left._data->digits.size()) - 1;
-      
       // Guess at what this digit may be by dividing high order digits.
-      _DigT guess = tmp_left._data->digits[i.Value()] / tmp_right._data->digits[tmp_right._data->digits.size() - 1];
+      _DigT guess = (digrem + tmp_left._data->digits[i.Value()]) / roughdivnd;
+      digrem      = 0;
       
       cout << "guess: " << guess << endl;
-      
-      // If the guess is 0, we need to add another digit to divide.
-      _DigT digrem = tmp_left._data->digits[i.Value()];
-      
-      // See if the guess is correct.
-      Arbitrary test = tmp_right * Arbitrary(guess);
-      
-      cout << "test: " << test << endl;
-      
-      if (test > tmp_left._data->digits[i.Value()]) {
+     
+      // If the guess is 0, we need to add another digit to divide. Move the
+      // current digit up an order of magnitude.
+      if (guess == 0) {
+        
+        digrem = tmp_left._data->digits[i.Value()] << s_digitbits.Value();
+        
+        cout << "digrem: " << digrem << endl;
+        
+      } else {
+        
+        // See if the guess is correct.
+        Arbitrary test = tmp_right * Arbitrary(guess);
+        
+        cout << "test: " << test << endl;
+        
+        // If test is more than 
+        if (test > tmp_left._data->digits[i.Value()]) {
+          
+        }
+        
       }
       
-    } while (remainder != 0);
+    } while ((remainder != 0) && (addl < maxaddl));
+    */
+    
+    return *this;
     
   }
   
@@ -440,26 +475,15 @@ namespace DAC {
     // 4.) Swap that into num.
     // Each step is, by itself, ridiculous, but it should be possible to
     // follow if you're good at templates and have six independent eyes.
-    /*
     num.swap(
       *(s_reverse<_DigStrT, _DigStrT::reverse_iterator>(
-        *(s_baseconv<_DigStrT, _DigStrT::size_type, _DigStrT::iterator, _DigChrT, _DigsT, _DigStrT::size_type, _DigT, _DigsT::iterator>(
+        *(s_baseconv<_DigStrT, _DigChrT, _DigsT, _DigStrT::size_type, _DigT, _DigsT::iterator>(
           *(s_reverse<_DigsT, _DigsT::reverse_iterator>(_data->digits)),
           s_digitbase,
           base
         ))
       ))
     );
-    */
-    cout << "poop1!" << endl;
-    _DigsT temp1 = *s_reverse<_DigsT, _DigsT::reverse_iterator>(_data->digits);
-    cout << "poop2!" << endl;
-    _DigStrT temp2 = *s_baseconv<_DigStrT, _DigChrT, _DigsT, _DigStrT::size_type, _DigT, _DigsT::iterator>(temp1, s_digitbase, base);
-    cout << "poop3!" << endl;
-    _DigStrT temp3 = *s_reverse<_DigStrT, _DigStrT::reverse_iterator>(temp2);
-    cout << "poop4!" << endl;
-    num.swap(temp3);
-    cout << "poop5!" << endl;
     
     // Output the number character by character. If a character is not found
     // in the digit table, then output the raw number in single quotes. If num
