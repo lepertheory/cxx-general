@@ -26,6 +26,7 @@ namespace DAC {
    *************************************************************************/
   
   // Static data members.
+  int               Arbitrary::s_digitbits = 0;
   Arbitrary::_BaseT Arbitrary::s_digitbase = 0;
   
   // The characters that make up the digits.
@@ -122,8 +123,6 @@ namespace DAC {
     // Multiply like 3rd grade. Outer loop is the multiplicand.
     for (DST i = 0; i != _data->digits.size(); ++i) {
       
-      cout << "i: " << i << endl;
-      
       // Temporary product for this digit.
       _DigsT digproduct;
       
@@ -140,7 +139,7 @@ namespace DAC {
         digproduct[j] = of_add<_DigT, _DigT, _DigT>(digproduct[j], of_mul<_DigT, _DigT, _DigT>(_data->digits[i], tmp_right._data->digits[j]));
         
         // Do any carry needed.
-        s_carry<_DigsT, _DigsT::iterator, DST>(digproduct, j);
+        s_carry<_DigsT, DST>(digproduct, j);
         
       }
       
@@ -160,11 +159,14 @@ namespace DAC {
         new_data->digits[tdig] = of_add<_DigT, _DigT, _DigT>(new_data->digits[tdig], digproduct[j]);
         
         // Do any carry needed.
-        s_carry<_DigsT, _DigsT::iterator, DST>(new_data->digits, tdig);
+        s_carry<_DigsT, DST>(new_data->digits, tdig);
         
       }
       
     }
+    
+    // Put the decimal point in the proper place.
+    new_data->exponent = _data->exponent + tmp_right._data->exponent;
     
     // Swap in the new data.
     _data = new_data;
@@ -187,6 +189,60 @@ namespace DAC {
   // Bitwise shift right.
   Arbitrary& Arbitrary::op_shr (Arbitrary const& right) {
     
+    // Save typing.
+    typedef _DigsT::size_type DS;
+    
+    // Operate on temporary data.
+    _DataPT new_data(new _Data);
+    *new_data = *_data;
+    
+    // Change shift amount to the digit vector's size_type.
+    DS shift = 0;
+    try {
+      shift = right;
+    } catch (ArbitraryErrors::Overflow error) {
+      ArbitraryErrors::throwOverflow("Shift amount overflows digit vector size type.", &error);
+    }
+    
+    // Only shift if it is needed.
+    if (shift != 0) {
+      
+      // If shift amount will leave no bits in the number, just zero it out.
+      if (shift >= of_mul<DS, DS, int>(new_data->digits.size(), s_digitbits)) {
+        new_data->digits.clear();
+        new_data->digits.push_back(0);
+      }
+      
+      // Do any whole-digit shifting needed. Whole digit shift right is easy,
+      // just cut off the needed number of low-order digits.
+      DS digshift = of_div<DS, DS, int>(shift, s_digitbits);
+      if (digshift > 0) {
+        new_data->digits.erase(new_data->digits.begin(), new_data->digits.begin() + digshift);
+      }
+      
+      // Now do any fine-grained shifting needed. First calculate how much
+      // will be needed, then shift if necessary.
+      if ((shift = of_sub<DS, DS, DS>(shift, of_mul<DS, DS, int>(digshift, s_digitbits))) > 0) {
+        _DigT bitmask  = of_sub<_DigT, _DigT, int>(of_pow<_DigT, int, DS>(2, shift), 1);
+        _DigT carry    = 0;
+        _DigT oldcarry = 0;
+        for (_DigsT::iterator i = new_data->digits.begin(); i != new_data->digits.end(); ++i) {
+          carry      = *i & bitmask;
+          *i       >>= shift;
+          *i        |= oldcarry;
+          oldcarry   = (carry << of_sub<int, int, DS>(s_digitbits, shift));
+        }
+      }
+      
+    }
+    
+    // Clean up.
+    s_trimZeros<_DigsT, _DigsT::iterator>(new_data->digits, _END);
+    
+    // Move the new data into place.
+    _data = new_data;
+    
+    // Shifted, yo.
     return *this;
     
   }
@@ -204,7 +260,8 @@ namespace DAC {
     _toWhole();
     tmp_right._toWhole();
     
-    // Only shared digits need to be checked.
+    // Only shared digits need to be checked. resize() cuts off high-order
+    // digits.
     if (_data->digits.size() > tmp_right._data->digits.size()) { _data->digits.resize(tmp_right._data->digits.size()); }
     if (tmp_right._data->digits.size() > _data->digits.size()) { tmp_right._data->digits.resize(_data->digits.size()); }
     
@@ -291,6 +348,8 @@ namespace DAC {
         if (tmp_right & Arbitrary(1)) {
           retval *= tmp_left;
         }
+        tmp_left   *= tmp_left;
+        tmp_right >>= Arbitrary(1);
       }
     }
     
@@ -586,7 +645,8 @@ namespace DAC {
     try {
       
       // Get the maximum number that can be held in a single digit.
-      s_digitbase = of_static_cast<_BaseT, int>(rppower(2, numeric_limits<_DigT>::digits >> 1));
+      s_digitbits = numeric_limits<_DigT>::digits >> 1;
+      s_digitbase = of_static_cast<_BaseT, int>(of_pow<int, int, int>(2, s_digitbits));
       
       // Get the input digits.
       for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {

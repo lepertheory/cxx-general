@@ -71,7 +71,7 @@
       // Error factories.
       void throwBase               (std::string const& text)                                                        throw(Base);
       void throwBadFormat          (std::string const& text, std::string::size_type pos, std::string const& number) throw(BadFormat);
-      void throwOverflow           (std::string const& text)                                                        throw(Overflow);
+      void throwOverflow           (std::string const& text, Exception const* cause = 0)                            throw(Overflow);
       void throwRadixConflict      (std::string const& text)                                                        throw(RadixConflict);
       void throwFractionalConflict (std::string const& text)                                                        throw(FractionalConflict);
       void throwPrecisionLoss      (std::string const& text)                                                        throw(PrecisionLoss);
@@ -135,6 +135,7 @@
         
         // Type conversion operators.
         operator bool () const;
+        template <class T> operator T () const;
         
         // Arithmetic operator backends.
         Arbitrary& op_add (Arbitrary const& right);
@@ -223,6 +224,7 @@
         // Class members.
         static bool s_initialized;
         
+        static int    s_digitbits;
         static _BaseT s_digitbase;
         
         static const _NumChrT        s_numdigits;
@@ -239,7 +241,7 @@
         template <class T, class IT> static void s_trimZeros (T& c, _BoE const returnzeros);
         
         // Do any carry needed.
-        template <class T, class TI, class TS> static void s_carry (T& digits, TS const start);
+        template <class T, class TS> static void s_carry (T& digits, TS const start);
         
         // Long division.
         template <class DivndT, class DivndDT, class DivndIT, class DivorT> static DivorT s_longdiv (DivndT& dividend, DivorT const divisor, _BaseT const base);
@@ -278,13 +280,13 @@
       
       /***********************************************************************/
       // Throw normal text errors.
-      inline void throwBase               (std::string const& text) throw(Base)               { Base               error; try { error.Text(text); } catch (...) {} throw error; }
-      inline void throwOverflow           (std::string const& text) throw(Overflow)           { Overflow           error; try { error.Text(text); } catch (...) {} throw error; }
-      inline void throwRadixConflict      (std::string const& text) throw(RadixConflict)      { RadixConflict      error; try { error.Text(text); } catch (...) {} throw error; }
-      inline void throwFractionalConflict (std::string const& text) throw(FractionalConflict) { FractionalConflict error; try { error.Text(text); } catch (...) {} throw error; }
-      inline void throwPrecisionLoss      (std::string const& text) throw(PrecisionLoss)      { PrecisionLoss      error; try { error.Text(text); } catch (...) {} throw error; }
-      inline void throwClassInitFailed    (std::string const& text) throw(ClassInitFailed)    { ClassInitFailed    error; try { error.Text(text); } catch (...) {} throw error; }
-      inline void throwOverrun            (std::string const& text) throw(Overrun)            { Overrun            error; try { error.Text(text); } catch (...) {} throw error; }
+      inline void throwBase               (std::string const& text)                         throw(Base)               { Base               error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwOverflow           (std::string const& text, Exception const* cause) throw(Overflow)           { Overflow           error; try { error.Text(text); error.Previous(cause); } catch (...) {} throw error; }
+      inline void throwRadixConflict      (std::string const& text)                         throw(RadixConflict)      { RadixConflict      error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwFractionalConflict (std::string const& text)                         throw(FractionalConflict) { FractionalConflict error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwPrecisionLoss      (std::string const& text)                         throw(PrecisionLoss)      { PrecisionLoss      error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwClassInitFailed    (std::string const& text)                         throw(ClassInitFailed)    { ClassInitFailed    error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwOverrun            (std::string const& text)                         throw(Overrun)            { Overrun            error; try { error.Text(text);                        } catch (...) {} throw error; }
       /***********************************************************************/
       
       /***********************************************************************/
@@ -363,6 +365,18 @@
     // Type conversion operators.
     inline Arbitrary::operator bool () const { return op_bool(); }
     /*************************************************************************/
+    template <class T> Arbitrary::operator T () const {
+      T retval = 0;
+      for (_DigsT::iterator i = _data->digits.begin(); i != _data->digits.end(); ++i) {
+        try {
+          retval = of_add<T, T, _DigT>(retval, of_pow<_DigT, _DigT, _DigsT::size_type>(*i, (i - _data->digits.begin())));
+        } catch (OverflowErrors::Base error) {
+          ArbitraryErrors::throwOverflow("Overflow converting to integral type.", &error);
+        }
+      }
+      return retval;
+    }
+    /*************************************************************************/
     
     /*************************************************************************/
     // Comparison operator backends.
@@ -407,7 +421,7 @@
     
     /*************************************************************************/
     // Do any carry needed, starting at given digit.
-    template <class T, class TI, class TS> void Arbitrary::s_carry (T& digits, TS const start) {
+    template <class T, class TS> void Arbitrary::s_carry (T& digits, TS const start) {
       
       // Make sure we're not stepping out of the container.
       if (start > digits.size()) {
@@ -422,63 +436,24 @@
           break;
         }
         
+        // Overflow safe addition is expensive, cache it.
+        TS j = of_add<TS, TS, int>(i, 1);
+        
+        // How many of the next digit are in this digit?
+        _DigT next = of_div<_DigT, _DigT, _BaseT>(digits[i], s_digitbase);
+        
         // Remove the next digit from this digit.
-        digits[i] = of_sub<_DigT, _DigT, _BaseT>(digits[i], s_digitbase);
+        digits[i] = of_sub<_DigT, _DigT, _DigT>(digits[i], of_mul<_DigT, _DigT, _BaseT>(s_digitbase, next));
         
         // Add a new digit if needed.
-        if (of_add<TS, TS, int>(i, 1) == digits.size()) {
+        if (j == digits.size()) {
           digits.push_back(0);
         }
         
         // Add the carry to the next digit.
-        digits[of_add<TS, TS, int>(i, 1)] = of_add<_DigT, _DigT, int>(digits[of_add<TS, TS, int>(i, 1)], 1);
+        digits[j] = of_add<_DigT, _DigT, _DigT>(digits[j], next);
         
       }
-      
-      /*
-       * What the hell? Somehow, at the push_back between output of pos3 and
-       * pos4, i goes from digits.begin() to digits.begin() - 8. And STLPort
-       * has problems compiling under WinXP, I don't have the energy to find
-       * out why. Moving over to a different iteration method, maybe someday
-       * this will be fixed.
-       * 
-      std::cout << "digits: ";
-      for (TI i = digits.begin(); i != digits.end(); ++i) {
-        std::cout << "'" << *i << "' ";
-      }
-      std::cout << " start: " << start << std::endl;
-      
-      std::cout << "digits.size():" << digits.size() << std::endl;
-      
-      // Go through every digit.
-      for (TI i = digits.begin() + start; i != digits.end(); ++i) {
-        
-        std::cout << "*i: " << *i << "  s_digitbase: " << s_digitbase << std::endl;
-        
-        // If carry isn't needed now, it won't be anywhere further up.
-        if (*i < s_digitbase) {
-          break;
-        }
-        
-        // Remove the next digit from this digit.
-        *i = of_sub<_DigT, _DigT, _BaseT>(*i, s_digitbase);
-        
-        // Add a new digit if needed.
-        if ((i + 1) == digits.end()) {
-          std::cout << "i pos3: " << (i - digits.begin()) << std::endl;
-          digits.push_back(0);
-          std::cout << "i pos4: " << (i - digits.begin()) << std::endl;
-          std::cout << "digits.size() 2: " << digits.size() << std::endl;
-        }
-        
-        // Add the carry to the next digit.
-        std::cout << "i pos1: " << (i - digits.begin()) << std::endl;
-        *(i + 1) = of_add<_DigT, _DigT, int>(*(i + 1), 1);
-        std::cout << "digits.size() 3: " << digits.size() << std::endl;
-        std::cout << "i pos2: " << (i - digits.begin()) << std::endl;
-        
-      }
-      */
       
     }
     /*************************************************************************/

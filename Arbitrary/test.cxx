@@ -21,7 +21,6 @@ int main (int argc, char** argv, char** envp) {
     
     Arbitrary test1;
     Arbitrary test2;
-    Arbitrary test3;
     
     /*
     string from;
@@ -54,10 +53,7 @@ int main (int argc, char** argv, char** envp) {
     cout << "test2: " << test2 << endl;
     cout << endl;
     cout << test1 << " + " << test2 << " = " << (test1 + test2) << endl;
-    //cout << test1 << " * " << test2 << " = " << (test1 * test2) << endl;
-    test3 = test1;
-    test3.op_mul(test2);
-    cout << test1 << " + " << test2 << " = " << test3 << endl;
+    cout << test1 << " * " << test2 << " = " << (test1 * test2) << endl;
     
     exit(0);
     

@@ -38,6 +38,9 @@
     template <class T, class LT, class RT> T of_mul (LT const left, RT const right);
     template <class T, class LT, class RT> T of_div (LT const left, RT const right);
     
+    // Raise to a power.
+    template <class T, class xT, class yT> T of_pow (xT const x, yT const y);
+    
     /*************************************************************************/
     // Throw errors.
     namespace OverflowErrors {
@@ -195,6 +198,48 @@
       
       // Do the divide and return the result.
       return (tmp_left / tmp_right);
+      
+    }
+    /*************************************************************************/
+    
+    /*************************************************************************/
+    // Raise to a power.
+    template <class T, class xT, class yT> T of_pow (xT const x, yT const y) {
+      
+      // See rppower.hxx for docs.
+      
+      T tmp_x;
+      T tmp_y;
+      
+      tmp_x = of_static_cast<T, xT>(x);
+      tmp_y = of_static_cast<T, yT>(y);
+      
+      T result = 1;
+      
+      if (tmp_y >= 0) {
+        while (tmp_y) {
+          if (tmp_y & 1) {
+            result = of_mul<T, T, T>(result, tmp_x);
+          }
+          if (tmp_y != 1) {
+            tmp_x = of_mul<T, T, T>(tmp_x, tmp_x);
+          }
+          tmp_y >>= 1;
+        }
+      } else {
+        while (tmp_y) {
+          if (tmp_y & 1) {
+            result = of_div<T, T, T>(result, tmp_x);
+          }
+          if (tmp_y != 1) {
+            tmp_x = of_mul<T, T, T>(tmp_x, tmp_x);
+          }
+          tmp_y >>= 1;
+        }
+      }
+      
+      // Done.
+      return result;
       
     }
     /*************************************************************************/
