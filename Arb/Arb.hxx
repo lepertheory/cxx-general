@@ -18,6 +18,7 @@
   #include "SafeInteger/SafeInteger.hxx"
   #include "ReferencePointer.hxx"
   #include "rppower.hxx"
+  #include "toString.hxx"
   
   // Forward declarations.
   namespace DAC {
@@ -126,15 +127,40 @@
             // Default constructor.
             _ArbInt ();
             
+            // Copy constructor.
+            _ArbInt (_ArbInt<T> const& number);
+            
+            // Conversion constructor.
+            template <class FT> _ArbInt (FT const number);
+            
             // Reset to just-constructed state.
             _ArbInt<T>& clear ();
             
+            // Assignment operator.
+            _ArbInt<T>& operator = (std::string const& number);
+            _ArbInt<T>& operator = (_ArbInt<T>  const& number);
+            
+            // Arithmetic assignment operators.
+            _ArbInt<T>& operator *= (_ArbInt<T> const& number);
+            _ArbInt<T>& operator /= (_ArbInt<T> const& number);
+            
+            // Accessors.
+            T           Base ()             const;
+            _ArbInt<T>& Base (T const base);
+            
             // Set this number with a string.
-                                _ArbInt<T>& set (std::string const& number, T const base);
+                                _ArbInt<T>& set (std::string const& number, T const base = 0);
+                                _ArbInt<T>& set (_ArbInt<T>  const& number);
             template <class FT> _ArbInt<T>& set (FT          const  number);
             
             // Return a string of this number.
-            std::string toString (T const base) const;
+            std::string toString (T const base = 0) const;
+            
+            // Arithmetic operator backends.
+            _ArbInt<T>& op_mul (_ArbInt<T> const& number);
+            
+            // Raise this number to a power.
+            _ArbInt<T>& pow (_ArbInt<T> const& exp);
           
           /*
            * Private members.
@@ -161,6 +187,9 @@
             // The number.
             _DataPT _digits;
             
+            // The default base of this number.
+            T _base;
+            
             /*****************************************************************/
             // Static data members.
             
@@ -179,6 +208,8 @@
             
             // Common initialization tasks.
             void _init ();
+            
+            // HERE!!!
             
             /*****************************************************************/
             // Static function members.
@@ -254,6 +285,9 @@
         _DataPT _data;
         
         /*********************************************************************/
+        // Friend functions.
+        
+        /*********************************************************************/
         // Function members.
         
         // Common initialization tasks.
@@ -305,8 +339,10 @@
    ***************************************************************************/
   
   // Stream I/O operators.
-  std::ostream& operator << (std::ostream& left, DAC::Arb const& right);
-  std::istream& operator >> (std::istream& left, DAC::Arb&       right);
+                     std::ostream& operator << (std::ostream& left, DAC::Arb             const& right);
+  template <class T> std::ostream& operator << (std::ostream& left, DAC::Arb::_ArbInt<T> const& right);
+                     std::istream& operator >> (std::istream& left, DAC::Arb&                   right);
+  template <class T> std::istream& operator >> (std::istream& left, DAC::Arb::_ArbInt<T>&       right);
   
   /***************************************************************************
    * Error declarations.
@@ -329,10 +365,20 @@
       };
       class Overrun   : public Base      { public: virtual char const* what () const throw(); };
       namespace _ArbIntErrors {
-        class Base            : public ArbErrors::Base      { public: virtual char const* what () const throw(); };
-        class BadFormat       : public ArbErrors::BadFormat {};
-        class ClassInitFailed : public Base                 { public: virtual char const* what () const throw(); };
-        class Negative        : public Base                 { public: virtual char const* what () const throw(); };
+        class Base            : public ArbErrors::Base  { public: virtual char const* what () const throw(); };
+        class BadFormat       : public Base             {
+          public:
+            virtual char const* what () const throw();
+            virtual BadFormat& Problem  (char const*                   const problem)  throw();
+            virtual BadFormat& Position (std::string::size_type        const position) throw();
+            virtual BadFormat& Number   (ConstReferencePointer<std::string>& number)   throw();
+          protected:
+            char const* _problem;
+            std::string::size_type _position;
+            ConstReferencePointer<std::string> _number;
+        };
+        class ClassInitFailed : public Base             { public: virtual char const* what () const throw(); };
+        class Negative        : public Base             { public: virtual char const* what () const throw(); };
       };
     };
     
@@ -352,9 +398,13 @@
       inline BadFormat&  BadFormat::Number   (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   return *this; }
       inline char const* Overrun::what       () const throw() { return "Instruction overruns end of container.";                                                                                                                             }
       namespace _ArbIntErrors {
-        inline char const* Base::what            () const throw() { return "Undefined error in Arb::_ArbInt.";                    }
-        inline char const* ClassInitFailed::what () const throw() { return "Class initialization of Arb::_ArbInt failed.";        }
-        inline char const* Negative::what        () const throw() { return "Attempted to set Arb::_ArbInt to a negative number."; }
+        inline char const* Base::what            () const throw() { return "Undefined error in Arb::_ArbInt.";                                                                                                                                   }
+        inline char const* BadFormat::what       () const throw() { return (std::string(_problem) + " at position " + DAC::toString((SafeInteger<std::string::size_type>(_position) + 1).Value()) + " in number \"" + *_number + "\".").c_str(); }
+        inline BadFormat&  BadFormat::Problem    (char const*                   const problem)  throw() { _problem  = problem;  return *this; }
+        inline BadFormat&  BadFormat::Position   (std::string::size_type        const position) throw() { _position = position; return *this; }
+        inline BadFormat&  BadFormat::Number     (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   return *this; }
+        inline char const* ClassInitFailed::what () const throw() { return "Class initialization of Arb::_ArbInt failed.";                                                                                                                       }
+        inline char const* Negative::what        () const throw() { return "Attempted to set Arb::_ArbInt to a negative number.";                                                                                                                }
       };
     };
     
@@ -780,16 +830,53 @@
       
     }
     
+    // Copy constructor.
+    template <class T> Arb::_ArbInt<T>::_ArbInt (_ArbInt<T> const& number) {
+      
+      // Call common init.
+      _init();
+      
+      // Set the number.
+      set(number);
+      
+    }
+    
+    // Conversion constructor.
+    template <class T> template <class FT> Arb::_ArbInt<T>::_ArbInt (FT const number) {
+      
+      // Call common init.
+      _init();
+      
+      // Set the number.
+      set<FT>(number);
+      
+    }
+    
+    // Assignment operator.
+    template <class T> inline Arb::_ArbInt<T>& Arb::_ArbInt<T>::operator = (std::string const& number) { return set(number, 0); }
+    template <class T> inline Arb::_ArbInt<T>& Arb::_ArbInt<T>::operator = (_ArbInt<T>  const& number) { return set(number);    }
+    
+    // Arithmetic assignment operators.
+    template <class T> inline Arb::_ArbInt<T>& Arb::_ArbInt<T>::operator *= (_ArbInt<T> const& number) { return op_mul(number); }
+    template <class T> inline Arb::_ArbInt<T>& Arb::_ArbInt<T>::operator /= (_ArbInt<T> const& number) { return op_div(number); }
+    
     // Reset to just-constructed state.
     template <class T> Arb::_ArbInt<T>& Arb::_ArbInt<T>::clear () {
       
       // Create a new vector, this preserves COW behavior.
       _digits = new _DigsT;
       
+      // Reset the default base.
+      _base = 10;
+      
       // Return self.
       return *this;
       
     }
+    
+    // Returns or sets the default base of this number.
+    template <class T> inline T                Arb::_ArbInt<T>::Base ()             const { return _base;               }
+    template <class T> inline Arb::_ArbInt<T>& Arb::_ArbInt<T>::Base (T const base)       { _base = base; return *this; }
     
     // Set this number with a string.
     template <class T> Arb::_ArbInt<T>& Arb::_ArbInt<T>::set (std::string const& number, T const base) {
@@ -799,6 +886,12 @@
       
       // Hold the number in case an error needs to be thrown.
       ConstReferencePointer<std::string> tmp_number(new std::string(number));
+      
+      // Get the base of this number. Use the default base if none was supplied.
+      T numbase = base;
+      if (numbase == 0) {
+        numbase = _base;
+      }
       
       // Parser will load data into here.
       _DigStrT num;
@@ -810,25 +903,37 @@
         _NumChrT digval = s_idigits[number[i]];
         
         // Make sure this digit is within the number base.
-        if ((digval >= base.Value() || (digval == std::numeric_limits<_NumChrT>::max()))) {
+        if ((digval >= SafeInteger<T>(numbase).Value() || (digval == std::numeric_limits<_NumChrT>::max()))) {
           throw ArbErrors::_ArbIntErrors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
         }
         
         // Add the digit to the digit string.
-        num.push_back(digval);
+        num.insert(num.begin(), digval);
         
       }
       
       // Trim insignificant zeros. This number is little-endian at this point.
-      s_trimZerosB(num);
+      s_trimZerosE(num);
       
       // Convert to the native number base.
-      s_baseConv(num, base, *new_digits, s_digitbase);
+      s_baseConv(num, numbase, *new_digits, s_digitbase);
       
       // The new number has been loaded successfully. Swap it in.
       _digits = new_digits;
       
       // We done, return the new number.
+      return *this;
+      
+    }
+    
+    // Set this number from another _ArbInt<T>.
+    template <class T> Arb::_ArbInt<T>& Arb::_ArbInt<T>::set (_ArbInt<T> const& number) {
+      
+      // Make another reference to the number. _ArbInt is COW, so the actual
+      // copy will wait until a change is made.
+      _digits = number._digits;
+      
+      // That's it.
       return *this;
       
     }
@@ -875,16 +980,22 @@
       // Otherwise we have work to do.
       } else {
         
+        // Get the base of this number. Use the default base if none was supplied.
+        T numbase = base;
+        if (numbase == 0) {
+          numbase = _base;
+        }
+        
         // Convert to the output base.
         _DigStrT num;
-        s_baseconv(*_digits, s_digitbase, num, base);
+        s_baseConv(*_digits, s_digitbase, num, numbase);
         
         // Load this into the string. If the base is greater than th enumber
         // of digits defined, output the raw numbers of each digit.
         if (SafeInteger<T>(base) > s_numdigits) {
           for (_DigStrT::reverse_iterator i = num.rbegin(); i != num.rend(); ++i) {
             retval += "'" + DAC::toString(*i) + "'";
-            if (i != (num.end() - 1)) {
+            if (i != (num.rend() - 1)) {
               retval += ",";
             }
           }
@@ -898,6 +1009,83 @@
       
       // String constructed, return it.
       return retval;
+      
+    }
+    
+    // Multiply.
+    template <class T> Arb::_ArbInt<T>& Arb::_ArbInt<T>::op_mul (_ArbInt<T> const& number) {
+      
+      // Work area.
+      _ArbInt<T> digproduct;
+      _ArbInt<T> retval;
+      
+      // Less typing.
+      _DigsT& dpd = *(digproduct._digits);
+      
+      // Multiply like 3rd grade.
+      for (_DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
+        
+        // Get the product for a single digit.
+        for (_DigsT::iterator j = number._digits->begin(); j != number._digits->end(); ++j) {
+          
+          // Create a new digit in the digit product if necessary.
+          if (dpd.size() == j) {
+            dpd.push_back(0);
+          }
+          
+          // Multiply into the digit product and carry.
+          dpd[j] = SafeInteger<_DigT>(dpd[j]) + SafeInteger<_DigT>(*i) * SafeInteger<_DigT>(*j);
+          digproduct._carry();
+          
+        }
+        
+      }
+      
+      /*
+      // Work area.
+      T digproduct;
+      
+      // Return value.
+      ReferencePointer<T> retval(new T);
+      
+      // Multiply like 3rd grade.
+      for (typename T::size_type i = 0; i != mulor.size(); ++i) {
+        
+        // Get the product for a single digit.
+        digproduct.swap(*s_longMul(mulnd, mulor[i]));
+        
+        // Offset this digit product and add it to the final product.
+        digproduct.insert(digproduct.begin(), i, 0);
+        retval->swap(*s_intAdd(*retval, digproduct));
+        
+      }
+      
+      // Return the result.
+      return retval;
+      */
+      
+    }
+    
+    // Raise this number to a power.
+    template <class T> Arb::_ArbInt<T>& Arb::_ArbInt<T>::pow (_ArbInt<T> const& exp) {
+      
+      // Work area.
+      _ArbInt<T> tmp_base(*this);
+      _ArbInt<T> tmp_expn(exp);
+      _ArbInt<T> retval(1);
+      
+      // Russian peasant power.
+      while (tmp_expn._digits->size() > 0) {
+        if (tmp_expn._digits->front() & 1) {
+          retval *= tmp_base;
+        }
+        tmp_base *= tmp_base;
+        tmp_expn /= _ArbInt(2);
+      }
+      
+      // Set the result and return.
+      _digits = retval._digits;
+      return *this;
       
     }
     
@@ -952,17 +1140,17 @@
     template <class T> template <class CT> void Arb::_ArbInt<T>::s_trimZerosB (CT& c) {
       
       // Nothing to do if empty.
-      if (c.empty()) {
-        return 0;
-      }
-      
-      // Work data.
-      typename CT::iterator pos;
-      
-      // Trim leading zeros.
-      for (pos = c.begin(); (pos != c.end()) && (*pos == 0); ++pos) {}
-      if (pos >= c.begin()) {
-        c.erase(c.begin(), pos);
+      if (!c.empty()) {
+        
+        // Work data.
+        typename CT::iterator pos;
+        
+        // Trim leading zeros.
+        for (pos = c.begin(); (pos != c.end()) && (*pos == 0); ++pos) {}
+        if (pos >= c.begin()) {
+          c.erase(c.begin(), pos);
+        }
+        
       }
       
     }
@@ -971,17 +1159,17 @@
     template <class T> template <class CT> void Arb::_ArbInt<T>::s_trimZerosE (CT& c) {
       
       // Nothing to do if empty.
-      if (c.empty()) {
-        return 0;
-      }
-      
-      // Work data.
-      typename CT::iterator pos;
-      
-      // Trim trailing zeros.
-      for (pos = (c.end() - 1); (pos != (c.begin() - 1)) && (*pos == 0); --pos) {}
-      if (pos++ < (c.end() - 1)) {
-        c.erase(pos, c.end());
+      if (!c.empty()) {
+        
+        // Work data.
+        typename CT::iterator pos;
+        
+        // Trim trailing zeros.
+        for (pos = (c.end() - 1); (pos != (c.begin() - 1)) && (*pos == 0); --pos) {}
+        if (pos++ < (c.end() - 1)) {
+          c.erase(pos, c.end());
+        }
+        
       }
       
     }
@@ -993,8 +1181,8 @@
     template <class T> template <class DivndT, class DivorT> DivorT Arb::_ArbInt<T>::s_longDiv (DivndT& divnd, DivorT const divor, T const base) {
       
       // Group of digits to divide.
-      SafeInteger<typename DivndT::value_type> dgroup;
-      SafeInteger<DivorT>                      dquot;
+      SafeInteger<DivorT> dgroup;
+      SafeInteger<DivorT> dquot;
       
       // Quotient.
       DivndT quotient;
@@ -1007,10 +1195,10 @@
         
         // Divide the group and add the result to the quotient.
         dquot = dgroup / divor;
-        quotient.push_back(dquot.Value());
+        quotient.insert(quotient.begin(), dquot.Value());
         
         // Take out what we've divided.
-        dgroup -= (dquot * divor).Value();
+        dgroup -= dquot * divor;
         
         // Move the remainder up to the next order of magnitude.
         dgroup *= base;
@@ -1018,7 +1206,7 @@
       }
       
       // Trim insignificant zeros from the quotient.
-      s_trimZerosB(quotient);
+      s_trimZerosE(quotient);
       
       // Set the result in place.
       divnd.swap(quotient);
@@ -1052,7 +1240,9 @@
    * Inline and template definitions.
    ***************************************************************************/
   
-  inline std::ostream& operator << (std::ostream& left, DAC::Arb const& right) { left << right.toString();                               return left; }
-  inline std::istream& operator >> (std::istream& left, DAC::Arb&       right) { std::string input; std::cin >> input; right.set(input); return left; }
+                     inline std::ostream& operator << (std::ostream& left, DAC::Arb             const& right) { left << right.toString();                               return left; }
+  template <class T> inline std::ostream& operator << (std::ostream& left, DAC::Arb::_ArbInt<T> const& right) { left << right.toString(0);                              return left; }
+                     inline std::istream& operator >> (std::istream& left, DAC::Arb&                   right) { std::string input; std::cin >> input; right.set(input); return left; }
+  template <class T> inline std::istream& operator >> (std::istream& left, DAC::Arb::_ArbInt<T>&       right) { std::string input; std::cin >> input; right.set(input); return left; }
   
 #endif

@@ -79,12 +79,13 @@ namespace DAC {
     ConstReferencePointer<string> tmp_number(new std::string(number));
     
     // Parser will load data into here.
-    string num;
-    string rad;
-    string exp;
-    bool   p_num = true;
-    bool   p_exp = true;
-    _DigT  base  = 10;
+    string            num;
+    string            rad;
+    string            exp;
+    bool              p_num = true;
+    bool              p_exp = true;
+    _DigT             base  = 10;
+    string::size_type nexp  = 0;
     
     // Parse the number, scoped for temp variables.
     {
@@ -168,12 +169,28 @@ namespace DAC {
     
     // Trim insignificant zeros from gathered digits.
     num.erase(0, num.find_first_not_of('0'));
-    cout << "num: " << num << endl;
-    cout << "blah: " << rad.find_last_not_of('0') << "  fart: " << string::npos << endl;
     if (rad.find_last_not_of('0') != string::npos) {
       rad.erase(rad.find_last_not_of('0') + 1);
     }
-    cout << "rad: " << rad << endl;
+    exp.erase(0, exp.find_first_not_of('0'));
+    
+    // Count the number of decimal positions.
+    nexp = rad.size();
+    
+    // Concatenate numeric and radix digits.
+    num += rad;
+    
+    // Load the number.
+    new_data->p.Base(base) = num;
+    
+    // Adjust the number based on the exponent. If a negative exponent was
+    // given, up the order of magnitude of the number, otherwise set q to
+    // base^exponent.
+    if (p_exp) {
+      new_data->q  = _DigsT(base).pow(_DigsT(exp));
+    } else {
+      new_data->p *= _DigsT(exp);
+    }
     
     /*
     // Load the exponent.
