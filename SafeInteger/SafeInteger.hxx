@@ -348,7 +348,13 @@
               SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
             }
           } else {
-            if (number > -_number) {
+            T tmpnum;
+            if (_number == std::numeric_limits<RT>::min()) {
+              tmpnum = std::numeric_limits<RT>::max() + 1;
+            } else {
+              tmpnum = -_number;
+            }
+            if (number > tmpnum) {
               if ((number + _number) > std::numeric_limits<T>::max()) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
               }
@@ -379,7 +385,13 @@
               SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
             }
           } else if (number < 0) {
-            if (number < -(std::numeric_limits<T>::max() - _number)) {
+            T tmpnum;
+            if (number == std::numeric_limits<RT>::min()) {
+              tmpnum = std::numeric_limits<RT>::max() + 1;
+            } else {
+              tmpnum = -number;
+            }
+            if (tmpnum > (std::numeric_limits<T>::max() - _number)) {
               SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
             }
           }
@@ -398,13 +410,13 @@
         // Only the left number is signed.
         } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
-          if (_number <= 0) {
+          if (_number < 0) {
             if (number > -(std::numeric_limits<T>::min() - _number)) {
               SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
             }
           } else {
             if (number > _number) {
-              if (-(number - _number) < std::numeric_limits<T>::min()) {
+              if ((number - _number) > (static_cast<T>(-(std::numeric_limits<T>::min() + 1)) + 1)) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
               }
             }
@@ -438,7 +450,7 @@
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
               }
             } else if (number < 0) {
-              if (number < (std::numeric_limits<T>::min() / _number)) {
+              if (_number != 0) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
               }
             }
@@ -462,7 +474,9 @@
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
               }
             } else if (_number < 0) {
-              if (number > (std::numeric_limits<T>::min() / _number)) {
+              if ((_number == -1) && (number > (-(static_cast<RT>(std::numeric_limits<T>::min() + 1)) + 1)) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              } else if (number > (std::numeric_limits<T>::min() / _number)) {
                 SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
               }
             }
