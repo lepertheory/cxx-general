@@ -210,6 +210,60 @@ namespace DAC {
   // Divide this number by another number.
   Arbitrary& Arbitrary::op_div (Arbitrary const& right) {
     
+    // Dividing zero is zero.
+    if (*this == 0) {
+      return *this;
+    }
+    
+    // Dividing by zero is illegal.
+    if (right == 0) {
+      throw ArbitraryErrors::DivideByZero();
+    }
+    
+    // Temporary variables.
+    Arbitrary divisor(*this);
+    Arbitrary dividend(right);
+    Arbitrary remainder;
+    Arbitrary diggroup;
+    
+    // For division, we must have the same base.
+    divisor._normalizeRadix(dividend);
+    
+    // The divisor must be at least as long as the dividend. If it is not, pad
+    // with low order zeros.
+    if (divisor._data->digits.size() < dividend._data->digits.size()) {
+      divisor._data->digits.insert(divisor._data->digits.begin(), dividend._data->digits.size() - divisor._data->digits.size(), 0);
+    }
+    
+    // Get the maximum number of additional digits of precision to add. For
+    // now we will go with the stupid-simple rule of 10x as many digits.
+    const _DigsT::size_type maxaddl = divisor._data->digits.size() * 10;
+    _DigsT::size_type       addl    = 0;
+    
+    // Seed the digit group we will be dividing.
+    diggroup._data->digits = _DigsT(divisor._data->digits.end() - dividend._data->digits.size(), divisor._data->digits.end());
+    cout << "diggroup: " << diggroup << "  diggroup._data->digits: ";
+    for (_DigsT::iterator i = diggroup._data->digits.begin(); i != diggroup._data->digits.end(); ++i) {
+      cout << *i;
+      if (i != diggroup._data->digits.end() - 1) {
+        cout << ",";
+      }
+    }
+    cout << endl;
+    
+    // Divide like 3rd grade.
+    do {
+      
+      // Make a guess at what the outcome of this division will be by dividing
+      // the high-order digits.
+      _DigT 
+      
+    } while ((remainder != 0) && (addl != maxaddl));
+    
+    // We done.
+    return *this;
+    
+    /*
     typedef _DigsT::size_type DS;
     
     static const _DigsT::size_type maxaddl = 100;
@@ -254,16 +308,20 @@ namespace DAC {
     
     _DigsT& dgdigs = divorgroup._data->digits;
     
+    */
     /*
     // Start with a group of digits of equal size to the dividend.
     dgdigs = _DigsT(tmp_left._data->digits.begin() + (leftsize - rightsize - i).Value(), tmp_left._data->digits.begin() + (leftsize - i).Value());
     */
+    /*
     
     remainder = tmp_left;
     
     _DigT rdivor = 0;
     
     SafeInteger<DS> i = 0;
+    
+    bool extradig = false;
     
     // Although the iterator for this loop appears to move from beginning to
     // end, this is actually a backwards loop. The next statment uses i as a
@@ -288,7 +346,12 @@ namespace DAC {
       cout << endl;
       
       // Make a rough guess at the quotient.
-      rdivor += dgdigs.back();
+      if (extradig) {
+        rdivor += dgdigs[(rightsize - 2).Value()];
+        extradig = false;
+      } else {
+        rdivor += dgdigs.back();
+      }
       
       _DigT guess = rdivor / roughdivnd;
       
@@ -298,6 +361,7 @@ namespace DAC {
       if (guess == 0) {
         
         rdivor <<= s_digitbits;
+        extradig = true;
         
       } else {
         
@@ -315,6 +379,7 @@ namespace DAC {
         if (remain < tmp_right) {
           retval._data->digits.push_back(guess);
           rdivor = 0;
+          
         } else {
           
         }
@@ -325,9 +390,7 @@ namespace DAC {
     
     // Swap in the new data.
     _data->digits.swap(retval._data->digits);
-    
-    // We done.
-    return *this;
+    */
     
   }
   
