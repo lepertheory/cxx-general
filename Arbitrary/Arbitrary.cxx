@@ -150,10 +150,7 @@ namespace DAC {
     Arbitrary tmp_right(right);
     
     // Convert to two numbers that can be calculated against each other.
-    _normalizeExponent(tmp_right);
-    
-    // Get the max number of digits.
-    DST largest = max(tmp_left._data->digits.size(), tmp_right._data->digits.size());
+    tmp_left._normalizeExponent(tmp_right);
     
     // Make sure that we are subtracting the smaller (absolute) number from
     // the larger number. If we need to swap to achieve this, also swap the
@@ -164,15 +161,13 @@ namespace DAC {
     }
     
     // Subtract like 1st grade.
-    for (DST i = 0; i != largest; ++i) {
+    for (DST i = 0; i != tmp_right._data->digits.size(); ++i) {
       
       // Subtract with borrowing if needed.
-      if (tmp_right._data->digits.size() > i) {
-        if (tmp_left._data->digits[i] < tmp_right._data->digits[i]) {
-          s_borrow<_DigsT, DST>(tmp_left._data->digits, i);
-        }
-        tmp_left._data->digits[i] = of_sub<_DigT, _DigT, _DigT>(tmp_left._data->digits[i], tmp_right._data->digits[i]);
+      if (tmp_left._data->digits[i] < tmp_right._data->digits[i]) {
+        s_borrow<_DigsT, DST>(tmp_left._data->digits, i);
       }
+      tmp_left._data->digits[i] = of_sub<_DigT, _DigT, _DigT>(tmp_left._data->digits[i], tmp_right._data->digits[i]);
       
     }
     
