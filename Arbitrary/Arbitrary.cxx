@@ -276,29 +276,33 @@ namespace DAC {
       
       // If shift amount will leave no bits in the number, just zero it out.
       if (shift >= of_mul<DS, DS, int>(new_data->digits.size(), s_digitbits)) {
+        
         new_data->digits.clear();
         new_data->digits.push_back(0);
-      }
-      
-      // Do any whole-digit shifting needed. Whole digit shift right is easy,
-      // just cut off the needed number of low-order digits.
-      DS digshift = of_div<DS, DS, int>(shift, s_digitbits);
-      if (digshift > 0) {
-        new_data->digits.erase(new_data->digits.begin(), new_data->digits.begin() + digshift);
-      }
-      
-      // Now do any fine-grained shifting needed. First calculate how much
-      // will be needed, then shift if necessary.
-      if ((shift = of_sub<DS, DS, DS>(shift, of_mul<DS, DS, int>(digshift, s_digitbits))) > 0) {
-        _DigT bitmask  = of_sub<_DigT, _DigT, int>(of_pow<_DigT, int, DS>(2, shift), 1);
-        _DigT carry    = 0;
-        _DigT oldcarry = 0;
-        for (_DigsT::iterator i = new_data->digits.begin(); i != new_data->digits.end(); ++i) {
-          carry      = *i & bitmask;
-          *i       >>= shift;
-          *i        |= oldcarry;
-          oldcarry   = (carry << of_sub<int, int, DS>(s_digitbits, shift));
+        
+      } else {
+        
+        // Do any whole-digit shifting needed. Whole digit shift right is easy,
+        // just cut off the needed number of low-order digits.
+        DS digshift = of_div<DS, DS, int>(shift, s_digitbits);
+        if (digshift > 0) {
+          new_data->digits.erase(new_data->digits.begin(), new_data->digits.begin() + digshift);
         }
+        
+        // Now do any fine-grained shifting needed. First calculate how much
+        // will be needed, then shift if necessary.
+        if ((shift = of_sub<DS, DS, DS>(shift, of_mul<DS, DS, int>(digshift, s_digitbits))) > 0) {
+          _DigT bitmask  = of_sub<_DigT, _DigT, int>(of_pow<_DigT, int, DS>(2, shift), 1);
+          _DigT carry    = 0;
+          _DigT oldcarry = 0;
+          for (_DigsT::iterator i = new_data->digits.begin(); i != new_data->digits.end(); ++i) {
+            carry      = *i & bitmask;
+            *i       >>= shift;
+            *i        |= oldcarry;
+            oldcarry   = (carry << of_sub<int, int, DS>(s_digitbits, shift));
+          }
+        }
+        
       }
       
     }

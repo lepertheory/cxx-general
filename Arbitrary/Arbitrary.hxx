@@ -134,7 +134,7 @@
         Arbitrary operator - () const;
         
         // Type conversion operators.
-        operator bool () const;
+        //operator bool () const;
         template <class T> operator T () const;
         
         // Arithmetic operator backends.
@@ -345,12 +345,12 @@
     inline Arbitrary Arbitrary::operator - () const { Arbitrary retval(*this); retval._data->positive = !(retval._data->positive); return retval; }
     
     // Type conversion operators.
-    inline Arbitrary::operator bool () const { return op_bool(); }
-    template <class T> Arbitrary::operator T () const {
+    template <> inline Arbitrary::operator bool () const { return op_bool(); }
+    template <class T> inline Arbitrary::operator T () const {
       T retval = 0;
       for (_DigsT::iterator i = _data->digits.begin(); i != _data->digits.end(); ++i) {
         try {
-          retval = of_add<T, T, _DigT>(retval, of_pow<_DigT, _DigT, _DigsT::size_type>(*i, (i - _data->digits.begin())));
+          retval = of_add<T, T, _DigT>(retval, of_mul<_DigT, _DigT, _DigT>(*i, of_pow<_DigT, _DigT, _DigsT::size_type>(s_digitbase, (i - _data->digits.begin()))));
         } catch (OverflowErrors::Base error) {
           ArbitraryErrors::throwOverflow("Overflow converting to integral type.", &error);
         }
