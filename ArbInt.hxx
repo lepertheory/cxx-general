@@ -371,7 +371,7 @@
       _init();
       
       // Set the number.
-      set(number, 0);
+      set(number);
       
     }
     template <class T> template <class FT> ArbInt<T>::ArbInt (FT const number) {
@@ -400,7 +400,7 @@
     template <class T> inline ArbInt<T> ArbInt<T>::operator ~ () const { return ArbInt<T>(*this).op_bit_cpm(); }
     
     // Assignment operator.
-    template <class T>                     inline ArbInt<T>& ArbInt<T>::operator = (std::string const& number) { return set(number, 0);  }
+    template <class T>                     inline ArbInt<T>& ArbInt<T>::operator = (std::string const& number) { return set(number);     }
     template <class T>                     inline ArbInt<T>& ArbInt<T>::operator = (ArbInt<T>   const& number) { return copy(number);    }
     template <class T> template <class FT> inline ArbInt<T>& ArbInt<T>::operator = (FT          const  number) { return set<FT>(number); }
     

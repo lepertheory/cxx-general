@@ -65,6 +65,10 @@ namespace DAC {
     // This is the string we will be returning.
     string retval;
     
+    cout << "p: " << _data->p << " / q: " << _data->q << endl;
+    
+    // Get the whole number part.
+    
     // We done.
     return retval;
     
@@ -285,7 +289,6 @@ namespace DAC {
   // Reduce the number to its most compact representation.
   Arb& Arb::_reduce () {
     
-    cout << "p: " << _data->p << "  q: " << _data->q << endl;
     // Fixed-point numbers are forced to their dividend.
     if (_data->fix) {
       
@@ -305,7 +308,6 @@ namespace DAC {
     } else {
       reduce(_data->p, _data->q);
     }
-    cout << "p: " << _data->p << "  q: " << _data->q << endl;
     
   }
   
