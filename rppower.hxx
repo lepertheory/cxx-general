@@ -9,12 +9,21 @@
 #if !defined(RPPOWER_gu2j9g8uuhu)
   #define RPPOWER_gu2j9g8uuhu
   
+  // Internal includes.
+  #include "SafeInteger/SafeInteger.hxx"
+  
   // Contain in namespace.
   namespace DAC {
     
+    // Raise a number to a power.
+    template <class NumT, class ExpT> NumT              rppower (NumT              const  x, ExpT              const  y);
+    template <class NumT, class ExpT> SafeInteger<NumT> rppower (SafeInteger<NumT> const& x, SafeInteger<ExpT> const& y);
+    template <class NumT, class ExpT> SafeInteger<NumT> rppower (SafeInteger<NumT> const& x, ExpT              const  y);
+    template <class NumT, class ExpT> SafeInteger<NumT> rppower (NumT              const  x, SafeInteger<ExpT> const& y);
+    
     /*************************************************************************/
     // Raise a number to a power.
-    template<class NumT, class ExpT> inline NumT rppower (NumT x, ExpT y) {
+    template <class NumT, class ExpT> inline NumT rppower (NumT x, ExpT y) {
       
       // Powers start at 1.
       NumT result = static_cast<NumT>(1);
@@ -48,6 +57,89 @@
       
     };
     /*************************************************************************/
+    
+    // Other specializations of rppower.
+    template <class NumT, class ExpT> SafeInteger<NumT> rppower (SafeInteger<NumT> const& x, SafeInteger<ExpT> const& y) {
+      SafeInteger<ExpT> tmp_y(y);
+      SafeInteger<NumT> tmp_x(x);
+      SafeInteger<NumT> result(1);
+      if (tmp_y >= 0) {
+        while (tmp_y.Value()) {
+          if ((tmp_y & 1).Value()) {
+            result *= tmp_x;
+          }
+          if (tmp_y > 1) {
+            tmp_x *= tmp_x;
+          }
+          tmp_y >>= 1;
+        }
+      } else {
+        while (tmp_y.Value()) {
+          if ((tmp_y & 1).Value()) {
+            result /= tmp_x;
+          }
+          if (tmp_y > 1) {
+            tmp_x *= tmp_x;
+          }
+          tmp_y >>= 1;
+        }
+      }
+      return result;
+    }
+    template <class NumT, class ExpT> SafeInteger<NumT> rppower (SafeInteger<NumT> const& x, ExpT const y) {
+      SafeInteger<ExpT> tmp_y(y);
+      SafeInteger<NumT> tmp_x(x);
+      SafeInteger<NumT> result(1);
+      if (tmp_y >= 0) {
+        while (tmp_y.Value()) {
+          if ((tmp_y & 1).Value()) {
+            result *= tmp_x;
+          }
+          if (tmp_y > 1) {
+            tmp_x *= tmp_x;
+          }
+          tmp_y >>= 1;
+        }
+      } else {
+        while (tmp_y.Value()) {
+          if ((tmp_y & 1).Value()) {
+            result /= tmp_x;
+          }
+          if (tmp_y > 1) {
+            tmp_x *= tmp_x;
+          }
+          tmp_y >>= 1;
+        }
+      }
+      return result;
+    }
+    template <class NumT, class ExpT> SafeInteger<NumT> rppower (NumT const x, SafeInteger<ExpT> const& y) {
+      SafeInteger<ExpT> tmp_y(y);
+      SafeInteger<NumT> tmp_x(x);
+      SafeInteger<NumT> result(1);
+      if (tmp_y >= 0) {
+        while (tmp_y.Value()) {
+          if ((tmp_y & 1).Value()) {
+            result *= tmp_x;
+          }
+          if (tmp_y > 1) {
+            tmp_x *= tmp_x;
+          }
+          tmp_y >>= 1;
+        }
+      } else {
+        while (tmp_y.Value()) {
+          if ((tmp_y & 1).Value()) {
+            result /= tmp_x;
+          }
+          if (tmp_y > 1) {
+            tmp_x *= tmp_x;
+          }
+          tmp_y >>= 1;
+        }
+      }
+      return result;
+    }
     
   };
   

@@ -194,10 +194,10 @@
         // Typedefs.
         typedef SafeInteger<char>          _StrChrT; // String character type.
         typedef SafeInteger<unsigned char> _NumChrT; // Numeric character type.
-        typedef signed int                 _ExpT;    // Exponent type.
+        typedef SafeInteger<signed int>    _ExpT;    // Exponent type.
         typedef _NumChrT                   _DigChrT; // Digit character type.
-        typedef unsigned int               _DigT;    // Individual digits.
-        typedef unsigned int               _BaseT;   // Base type.
+        typedef SafeInteger<unsigned int>  _DigT;    // Individual digits.
+        typedef SafeInteger<unsigned int>  _BaseT;   // Base type.
         
         typedef std::vector<_DigChrT> _DigStrT; // Vector of character digits.
         typedef std::vector<_DigT>    _DigsT;   // Vector of digits.
@@ -224,8 +224,8 @@
         // Class members.
         static bool s_initialized;
         
-        static int    s_digitbits;
-        static _BaseT s_digitbase;
+        static SafeInteger<int> s_digitbits;
+        static _BaseT           s_digitbase;
         
         static _NumChrT              s_numdigits;
         static _StrChrT              s_odigits[];
@@ -349,7 +349,7 @@
     template <class T> inline Arbitrary::operator T () const {
       T retval = 0;
       for (_DigsT::iterator i = _data->digits.begin(); i != _data->digits.end(); ++i) {
-        retval = (retval + (*i * rppower(s_digitbase, (i - _data->digits.begin()))));
+        retval = (retval + (*i * rppower(s_digitbase, (i - _data->digits.begin())))).Value();
       }
       return retval;
     }

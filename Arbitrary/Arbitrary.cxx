@@ -27,7 +27,7 @@ namespace DAC {
    *************************************************************************/
   
   // Static data members.
-  int               Arbitrary::s_digitbits = 0;
+  SafeInteger<int>  Arbitrary::s_digitbits = 0;
   Arbitrary::_BaseT Arbitrary::s_digitbase = 0;
   
   // The characters that make up the digits.
@@ -286,14 +286,14 @@ namespace DAC {
         
         // Do any whole-digit shifting needed. Whole digit shift right is easy,
         // just cut off the needed number of low-order digits.
-        DS digshift = shift / s_digitbits;
+        DS digshift = shift / s_digitbits.Value();
         if (digshift > 0) {
           new_data->digits.erase(new_data->digits.begin(), new_data->digits.begin() + digshift);
         }
         
         // Now do any fine-grained shifting needed. First calculate how much
         // will be needed, then shift if necessary.
-        if ((shift -= digshift * s_digitbits) > 0) {
+        if ((shift -= digshift * s_digitbits.Value()) > 0) {
           _DigT bitmask  = rppower(2, shift) - 1;
           _DigT carry    = 0;
           _DigT oldcarry = 0;
@@ -301,7 +301,7 @@ namespace DAC {
             carry      = *i & bitmask;
             *i       >>= shift;
             *i        |= oldcarry;
-            oldcarry   = (carry << (s_digitbits - shift));
+            oldcarry   = (carry << (s_digitbits - shift).Value());
           }
         }
         
@@ -469,7 +469,7 @@ namespace DAC {
     } else {
       for (_DigStrT::iterator i = num.begin(); i != num.end(); ++i) {
         if (*i > s_numdigits) {
-          construct += "'" + DAC::toString(*i) + "'";
+          construct += "'" + DAC::toStringChr((*i).Value()) + "'";
         } else {
           construct += s_odigits[i->Value()].Value();
         }
@@ -479,12 +479,12 @@ namespace DAC {
     // Insert the radix point.
     if (_data->exponent != 0) {
       if (_data->exponent < 0) {
-        construct.append(-(_data->exponent), '0');
+        construct.append(-(_data->exponent.Value()), '0');
       } else {
         if (_data->exponent >= construct.size()) {
-          construct.insert(0, (_data->exponent - construct.size()) + 1, '0');
+          construct.insert(0, ((_data->exponent - construct.size()) + 1).Value(), '0');
         }
-        construct.insert(construct.size() - _data->exponent, ".");
+        construct.insert((construct.size() - _data->exponent).Value(), ".");
       }
     }
     
@@ -584,7 +584,7 @@ namespace DAC {
               _NumChrT digval = s_idigits[number[i]];
               
               // Make sure this digit is within the number base.
-              if ((digval >= base) || (digval == numeric_limits<_NumChrT>::max())) {
+              if ((digval >= base.Value()) || (digval == numeric_limits<_NumChrT>::max())) {
                 ArbitraryErrors::throwBadFormat("Unrecognized character '" + DAC::toString(number[i]) + "'", i, number);
               }
               
@@ -620,7 +620,7 @@ namespace DAC {
       for (_DigStrT::reverse_iterator i = exp.rbegin(); i != exp.rend(); ++i) {
         
         // Get the single digit value.
-        _ExpT digval = digexp * (*i);
+        _ExpT digval = digexp * (*i).Value();
         
         // Set the digit value.
         new_data->exponent = digval;
@@ -795,7 +795,7 @@ namespace DAC {
       if (!force && (exponent < _data->exponent)) {
         _cleanup();
         if (exponent < _data->exponent) {
-          ArbitraryErrors::throwPrecisionLoss("Precision will be lost lowering the precision of '" + toString() + "' to " + DAC::toString(exponent) + " radix digits.");
+          ArbitraryErrors::throwPrecisionLoss("Precision will be lost lowering the precision of '" + toString() + "' to " + DAC::toString(exponent.Value()) + " radix digits.");
         }
       }
       

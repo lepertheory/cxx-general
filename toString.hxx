@@ -17,6 +17,9 @@
     // Convert the number to a string.
     template <class T> std::string toString (T const& from);
     
+    // Convert a character to a string.
+    std::string toStringChr (char const from);
+    
     template <> std::string toString<char> (char const& from) {
       std::ostringstream os;
       os << static_cast<int>(from);
@@ -36,6 +39,12 @@
     }
     
     template <class T> std::string toString (T const& from) {
+      std::ostringstream os;
+      os << from;
+      return os.str();
+    }
+    
+    std::string toStringChr (char const from) {
       std::ostringstream os;
       os << from;
       return os.str();

@@ -190,77 +190,115 @@
         SafeInteger operator ~ () const;
         
         // Assignment operator.
-                            SafeInteger& operator = (SafeInteger<T> const& right);
-        template <class RT> SafeInteger& operator = (RT             const  right);
+                            SafeInteger& operator = (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator = (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator = (RT              const  right);
         
         // Arithmetic assignment operators.
-                            SafeInteger& operator *= (SafeInteger<T> const& right);
-        template <class RT> SafeInteger& operator *= (RT             const  right);
-                            SafeInteger& operator /= (SafeInteger<T> const& right);
-        template <class RT> SafeInteger& operator /= (RT             const  right);
-                            SafeInteger& operator %= (SafeInteger<T> const& right);
-        template <class RT> SafeInteger& operator %= (RT             const  right);
-                            SafeInteger& operator += (SafeInteger<T> const& right);
-        template <class RT> SafeInteger& operator += (RT             const  right);
-                            SafeInteger& operator -= (SafeInteger<T> const& right);
-        template <class RT> SafeInteger& operator -= (RT             const  right);
+                            SafeInteger& operator *= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator *= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator *= (RT              const  right);
+                            SafeInteger& operator /= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator /= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator /= (RT              const  right);
+                            SafeInteger& operator %= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator %= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator %= (RT              const  right);
+                            SafeInteger& operator += (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator += (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator += (RT              const  right);
+                            SafeInteger& operator -= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator -= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator -= (RT              const  right);
         
         // Bit shift assignment operators.
-                            SafeInteger& operator <<= (SafeInteger<T> const& right);
-        template <class RT> SafeInteger& operator <<= (RT             const  right);
-                            SafeInteger& operator >>= (SafeInteger<T> const& right);
-        template <class RT> SafeInteger& operator >>= (RT             const  right);
+                            SafeInteger& operator <<= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator <<= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator <<= (RT              const  right);
+                            SafeInteger& operator >>= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator >>= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator >>= (RT              const  right);
+        
+        // Bitwise assignment operators.
+                            SafeInteger& operator &= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator &= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator &= (RT              const  right);
+                            SafeInteger& operator |= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator |= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator |= (RT              const  right);
+                            SafeInteger& operator ^= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator ^= (SafeInteger<RT> const& right);
+        template <class RT> SafeInteger& operator ^= (RT              const  right);
         
         // Return and set the value of this number.
                             T            Value ()                             const;
-                            SafeInteger& Value (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& Value (RT             const  number);
+                            SafeInteger& Value (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& Value (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& Value (RT              const  number);
         
         // Arithmetic operator backends.
-                            SafeInteger& op_mul (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_mul (RT             const  number);
-                            SafeInteger& op_div (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_div (RT             const  number);
-                            SafeInteger& op_mod (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_mod (RT             const  number);
-                            SafeInteger& op_add (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_add (RT             const  number);
-                            SafeInteger& op_sub (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_sub (RT             const  number);
+                            SafeInteger& op_mul (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_mul (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_mul (RT              const  number);
+                            SafeInteger& op_div (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_div (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_div (RT              const  number);
+                            SafeInteger& op_mod (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_mod (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_mod (RT              const  number);
+                            SafeInteger& op_add (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_add (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_add (RT              const  number);
+                            SafeInteger& op_sub (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_sub (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_sub (RT              const  number);
         
         // Bit shift operator backends.
-                            SafeInteger& op_shl (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_shl (RT             const  number);
-                            SafeInteger& op_shr (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_shr (RT             const  number);
+                            SafeInteger& op_shl (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_shl (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_shl (RT              const  number);
+                            SafeInteger& op_shr (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_shr (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_shr (RT              const  number);
 
         // Comparison operator backends.
-                            bool op_gt (SafeInteger<T> const& number);
-        template <class RT> bool op_gt (RT             const  number);
-                            bool op_ge (SafeInteger<T> const& number);
-        template <class RT> bool op_ge (RT             const  number);
-                            bool op_lt (SafeInteger<T> const& number);
-        template <class RT> bool op_lt (RT             const  number);
-                            bool op_le (SafeInteger<T> const& number);
-        template <class RT> bool op_le (RT             const  number);
-                            bool op_eq (SafeInteger<T> const& number);
-        template <class RT> bool op_eq (RT             const  number);
-                            bool op_ne (SafeInteger<T> const& number);
-        template <class RT> bool op_ne (RT             const  number);
+                            bool op_gt (SafeInteger<T>  const& number) const;
+        template <class RT> bool op_gt (SafeInteger<RT> const& number) const;
+        template <class RT> bool op_gt (RT              const  number) const;
+                            bool op_ge (SafeInteger<T>  const& number) const;
+        template <class RT> bool op_ge (SafeInteger<RT> const& number) const;
+        template <class RT> bool op_ge (RT              const  number) const;
+                            bool op_lt (SafeInteger<T>  const& number) const;
+        template <class RT> bool op_lt (SafeInteger<RT> const& number) const;
+        template <class RT> bool op_lt (RT              const  number) const;
+                            bool op_le (SafeInteger<T>  const& number) const;
+        template <class RT> bool op_le (SafeInteger<RT> const& number) const;
+        template <class RT> bool op_le (RT              const  number) const;
+                            bool op_eq (SafeInteger<T>  const& number) const;
+        template <class RT> bool op_eq (SafeInteger<RT> const& number) const;
+        template <class RT> bool op_eq (RT              const  number) const;
+                            bool op_ne (SafeInteger<T>  const& number) const;
+        template <class RT> bool op_ne (SafeInteger<RT> const& number) const;
+        template <class RT> bool op_ne (RT              const  number) const;
 
         // Bitwise operator backends.
-                            SafeInteger& op_bit_and (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_bit_and (RT             const  number);
-                            SafeInteger& op_bit_ior (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_bit_ior (RT             const  number);
-                            SafeInteger& op_bit_xor (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_bit_xor (RT             const  number);
+                            SafeInteger& op_bit_and (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_bit_and (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_bit_and (RT              const  number);
+                            SafeInteger& op_bit_ior (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_bit_ior (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_bit_ior (RT              const  number);
+                            SafeInteger& op_bit_xor (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_bit_xor (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_bit_xor (RT              const  number);
 
         // Logical operator backends.
-                            SafeInteger& op_log_and (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_log_and (RT             const  number);
-                            SafeInteger& op_log_ior (SafeInteger<T> const& number);
-        template <class RT> SafeInteger& op_log_ior (RT             const  number);
+                            SafeInteger& op_log_and (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_log_and (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_log_and (RT              const  number);
+                            SafeInteger& op_log_ior (SafeInteger<T>  const& number);
+        template <class RT> SafeInteger& op_log_ior (SafeInteger<RT> const& number);
+        template <class RT> SafeInteger& op_log_ior (RT              const  number);
         
       // Private members.
       private:
@@ -315,26 +353,42 @@
     template <class T> inline SafeInteger<T> SafeInteger<T>::operator ~ () const { return SafeInteger<T>(~_number); }
     
     // Assignment operators.
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator = (SafeInteger<T> const& right) { return Value(right); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator = (RT             const  right) { return Value(right); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator = (SafeInteger<T>  const& right) { return Value(right);         }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator = (SafeInteger<RT> const& right) { return Value(right.Value()); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator = (RT              const  right) { return Value(right);         }
     
     // Arithmetic assignment operators.
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator *= (SafeInteger<T> const& number) { return op_mul(number); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator *= (RT             const  number) { return op_mul(number); }
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator /= (SafeInteger<T> const& number) { return op_div(number); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator /= (RT             const  number) { return op_div(number); }
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator %= (SafeInteger<T> const& number) { return op_mod(number); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator %= (RT             const  number) { return op_mod(number); }
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator += (SafeInteger<T> const& number) { return op_add(number); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator += (RT             const  number) { return op_add(number); }
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator -= (SafeInteger<T> const& number) { return op_sub(number); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator -= (RT             const  number) { return op_sub(number); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator *= (SafeInteger<T>  const& right) { return op_mul(right);         }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator *= (SafeInteger<RT> const& right) { return op_mul(right.Value()); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator *= (RT              const  right) { return op_mul(right);         }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator /= (SafeInteger<T>  const& right) { return op_div(right);         }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator /= (SafeInteger<RT> const& right) { return op_div(right.Value()); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator /= (RT              const  right) { return op_div(right);         }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator %= (SafeInteger<T>  const& right) { return op_mod(right);         }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator %= (SafeInteger<RT> const& right) { return op_mod(right.Value()); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator %= (RT              const  right) { return op_mod(right);         }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator += (SafeInteger<T>  const& right) { return op_add(right);         }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator += (SafeInteger<RT> const& right) { return op_add(right.Value()); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator += (RT              const  right) { return op_add(right);         }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator -= (SafeInteger<T>  const& right) { return op_sub(right);         }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator -= (SafeInteger<RT> const& right) { return op_sub(right.Value()); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator -= (RT              const  right) { return op_sub(right);         }
     
     // Bit shift assignment operators.
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator <<= (SafeInteger<T> const& number) { return op_shl(number); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator <<= (RT             const  number) { return op_shl(number); }
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator >>= (SafeInteger<T> const& number) { return op_shr(number); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator >>= (RT             const  number) { return op_shr(number); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator <<= (SafeInteger<T>  const& right) { return op_shl(right);         }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator <<= (SafeInteger<RT> const& right) { return op_shl(right.Value()); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator <<= (RT              const  right) { return op_shl(right);         }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator >>= (SafeInteger<T>  const& right) { return op_shr(right);         }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator >>= (SafeInteger<RT> const& right) { return op_shl(right.Value()); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator >>= (RT              const  right) { return op_shr(right);         }
+    
+    // Bitwise assignment operators.
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator &= (SafeInteger<T> const& right) { return op_bit_and(right); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator &= (RT             const  right) { return op_bit_and(right); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator |= (SafeInteger<T> const& right) { return op_bit_ior(right); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator |= (RT             const  right) { return op_bit_ior(right); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator ^= (SafeInteger<T> const& right) { return op_bit_xor(right); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator ^= (RT             const  right) { return op_bit_xor(right); }
     
     // Return and set the value of this number.
     template <class T> inline T SafeInteger<T>::Value () const { return _number; }
@@ -1032,26 +1086,26 @@
     }
 
     // Comparison operator backends.
-    template <class T>                     bool SafeInteger<T>::op_gt (SafeInteger<T> const& number) { return     (_number >  number._number); }
-    template <class T> template <class RT> bool SafeInteger<T>::op_gt (RT             const  number) { return s_gt(_number,   number._number); }
-    template <class T>                     bool SafeInteger<T>::op_ge (SafeInteger<T> const& number) { return     (_number >= number._number); }
-    template <class T> template <class RT> bool SafeInteger<T>::op_ge (RT             const  number) { return s_ge(_number,   number._number); }
-    template <class T>                     bool SafeInteger<T>::op_lt (SafeInteger<T> const& number) { return     (_number <  number._number); }
-    template <class T> template <class RT> bool SafeInteger<T>::op_lt (RT             const  number) { return s_lt(_number,   number._number); }
-    template <class T>                     bool SafeInteger<T>::op_le (SafeInteger<T> const& number) { return     (_number <= number._number); }
-    template <class T> template <class RT> bool SafeInteger<T>::op_le (RT             const  number) { return s_le(_number,   number._number); }
-    template <class T>                     bool SafeInteger<T>::op_eq (SafeInteger<T> const& number) { return     (_number == number._number); }
-    template <class T> template <class RT> bool SafeInteger<T>::op_eq (RT             const  number) { return s_eq(_number,   number._number); }
-    template <class T>                     bool SafeInteger<T>::op_ne (SafeInteger<T> const& number) { return     (_number != number._number); }
-    template <class T> template <class RT> bool SafeInteger<T>::op_ne (RT             const  number) { return s_ne(_number,   number._number); }
+    template <class T>                     bool SafeInteger<T>::op_gt (SafeInteger<T> const& number) const { return     (_number >  number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_gt (RT             const  number) const { return s_gt(_number,   number);         }
+    template <class T>                     bool SafeInteger<T>::op_ge (SafeInteger<T> const& number) const { return     (_number >= number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_ge (RT             const  number) const { return s_ge(_number,   number);         }
+    template <class T>                     bool SafeInteger<T>::op_lt (SafeInteger<T> const& number) const { return     (_number <  number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_lt (RT             const  number) const { return s_lt(_number,   number);         }
+    template <class T>                     bool SafeInteger<T>::op_le (SafeInteger<T> const& number) const { return     (_number <= number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_le (RT             const  number) const { return s_le(_number,   number);         }
+    template <class T>                     bool SafeInteger<T>::op_eq (SafeInteger<T> const& number) const { return     (_number == number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_eq (RT             const  number) const { return s_eq(_number,   number);         }
+    template <class T>                     bool SafeInteger<T>::op_ne (SafeInteger<T> const& number) const { return     (_number != number._number); }
+    template <class T> template <class RT> bool SafeInteger<T>::op_ne (RT             const  number) const { return s_ne(_number,   number);         }
 
     // Bitwise operator backends.
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::op_bit_and (SafeInteger<T> const& number) { return (_number & number._number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_bit_and (RT             const  number) { return (_number & number);         }
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::op_bit_ior (SafeInteger<T> const& number) { return (_number | number._number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_bit_ior (RT             const  number) { return (_number | number);         }
-    template <class T>                     SafeInteger<T>& SafeInteger<T>::op_bit_xor (SafeInteger<T> const& number) { return (_number ^ number._number); }
-    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_bit_xor (RT             const  number) { return (_number ^ number);         }
+    template <class T>                     SafeInteger<T>& SafeInteger<T>::op_bit_and (SafeInteger<T> const& number) { _number &= number._number; return *this; }
+    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_bit_and (RT             const  number) { _number &= number;         return *this; }
+    template <class T>                     SafeInteger<T>& SafeInteger<T>::op_bit_ior (SafeInteger<T> const& number) { _number |= number._number; return *this; }
+    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_bit_ior (RT             const  number) { _number |= number;         return *this; }
+    template <class T>                     SafeInteger<T>& SafeInteger<T>::op_bit_xor (SafeInteger<T> const& number) { _number ^= number._number; return *this; }
+    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_bit_xor (RT             const  number) { _number ^= number;         return *this; }
 
     // Logical operator backends.
     template <class T>                     SafeInteger<T>& SafeInteger<T>::op_log_and (SafeInteger<T> const& number) { return (_number && number._number); }
