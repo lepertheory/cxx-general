@@ -1,0 +1,30 @@
+env = Environment(
+  CCFLAGS = '-g -Wall -ansi -O0',
+  CPPPATH = [
+    '.',
+    '..'
+  ]
+)
+
+main = env.Object(
+  target = 'main',
+  source = [
+    'test.cxx'
+  ]
+)
+
+env.Program(
+  target = 'SafeInteger',
+  source = main
+)
+
+#env.Program(
+#  target = 'SafeInteger',
+#  Source = [
+#    'test.cxx'
+#  ],
+#  CPPPATH = [
+#    '.',
+#    '..'
+#  ]
+#)
