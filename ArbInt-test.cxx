@@ -103,6 +103,16 @@ int main (int argc, char** argv, char** envp) {
     }
     //*/
     
+    cout << "Root: " << endl;
+    ArbInt<unsigned int> divor;
+    ArbInt<unsigned int> rem;
+    
+    test1.root(test2, divor, rem);
+    cout << "Rooted:    " << test1 << endl
+         << "Root:      " << test2 << endl
+         << "Divisor:   " << divor << endl
+         << "Remainder: " << rem   << endl;
+    
     return 0;
     
   } catch (Exception& e) {

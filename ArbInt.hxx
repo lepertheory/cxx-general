@@ -564,17 +564,17 @@
         
         // If the number is less than base, simply set it.
         SafeInteger<FT> tmp_number(number);
-        if (tmp_number < SafeInteger<_DigT>(s_digitbase)) {
+        if (tmp_number < s_digitbase) {
           
           // Easy :)
-          new_digits->push_back(SafeInteger<_DigT>(tmp_number.Value()));
+          new_digits->push_back(SafeInteger<_DigT>(tmp_number.Value()).Value());
           
         // Otherwise, full conversion.
         } else {
         
           // Convert with repeated division.
           while (tmp_number > 0) {
-            new_digits->push_back(SafeInteger<_DigT>((tmp_number % s_digitbase).Value()));
+            new_digits->push_back(SafeInteger<_DigT>((tmp_number % s_digitbase).Value()).Value());
             tmp_number /= s_digitbase;
           }
           
@@ -1057,28 +1057,130 @@
     // Find a root of this number.
     template <class T> ArbInt<T>& ArbInt<T>::root (ArbInt<T> const& root, ArbInt<T>& divisor, ArbInt<T>& remainder) {
       
+      Base(s_digitbase);
+      std::cout << "number: " << toString() << std::endl;
+      
+      // Of course.
+      divisor   = ArbInt<T>(1);
+      remainder = ArbInt<T>(0);
+      
       // 0 and 1 are special cases, always themselves, also root 1.
-      if (!_data->empty() && !((_data->size() == 1) && ((*_data)[0] == 1)) && (root != 1)) {
+      if (!_digits->empty() && !((_digits->size() == 1) && ((*_digits)[0] == 1)) && (root != ArbInt<T>(1))) {
         
         // Root 0 is a different problem.
         if (root.isZero()) {
           throw ArbIntErrors::DivByZero();
         }
         
+        // FIXME: This should be picked.
+        SafeInteger<typename _DigsT::size_type> maxextra = 10;
+        
+        // Get the root in integral form.
+        SafeInteger<typename _DigsT::size_type> iroot;
+        try {
+          iroot = root.Value<typename _DigsT::size_type>();
+        } catch (ArbIntErrors::ScalarOverflow()) {
+          throw ArbIntErrors::RootTooLarge();
+        }
+        
+        std::cout << "iroot: " << iroot << std::endl;
+        
+        // Get the number of aligned digit groups in the number before
+        // expansion.
+        SafeInteger<typename _DigsT::size_type> groups = (_digits->size() - 1) / iroot + 1;
+        std::cout << "groups: " << groups << std::endl;
+        
+        // Cache type conversions.
+        ArbInt<T> abase(s_digitbase);
+        
+        // Iterate through the number, stop when desired precision is reached
+        // or a perfect root is found.
+        SafeInteger<typename _DigsT::size_type> group = 0;
+        SafeInteger<typename _DigsT::size_type> extra = 0;
+        ArbInt<T> eroot;
+        ArbInt<T> erem;
+        do {
+          
+          // Get the next aligned block of digits from the radicand.
+          ArbInt<T> diggroup;
+          diggroup.Base(s_digitbase);
+          if (group < groups) {
+            SafeInteger<typename _DigsT::size_type> spos = (groups - 1 - group) * iroot;
+            std::cout << "spos: " << spos << std::endl;
+            SafeInteger<typename _DigsT::size_type> epos = spos + iroot - 1;
+            std::cout << "epos: " << epos << std::endl;
+            if (epos >= _digits->size()) {
+              epos = _digits->size() - 1;
+            }
+            std::cout << "epos: " << epos << std::endl;
+            *(diggroup._digits) = _DigsT(_digits->begin() + spos.Value(), _digits->begin() + (epos + 1).Value());
+            std::cout << "diggroup: " << diggroup << std::endl;
+            ++group;
+          } else {
+            *(diggroup._digits) = _DigsT(iroot.Value(), 0);
+            divisor *= abase;
+            ++extra;
+          }
+          
+          // Find the next digit of the root.
+          SafeInteger<_DigT> guess = 0;
+          SafeInteger<_DigT> min   = 0;
+          SafeInteger<_DigT> max   = s_digitbase - 1;
+          while (min <= max) {
+            guess = (min + max) / 2;
+            /** /
+            ArbInt<T> axe(abase * eroot);
+            std::cout << "axe: " << axe;
+            ArbInt<T> apg(axe + ArbInt<T>(guess.Value()));
+            std::cout << "  apg: " << apg;
+            ArbInt<T> aer(apg.pow(root));
+            std::cout << "  aer: " << aer;
+            ArbInt<T> aer2(abase.pow(root));
+            std::cout << "  aer2: " << aer2;
+            ArbInt<T> eer(eroot.pow(root));
+            std::cout << "  eer: " << eer;
+            ArbInt<T> axe2(aer2 * eer);
+            std::cout << "  axe2: " << axe2;
+            ArbInt<T> ama(axe - axe2);
+            std::cout << "  ama: " << ama;
+            ArbInt<T> aer3(abase.pow(root));
+            std::cout << "  aer3: " << aer3;
+            ArbInt<T> axe3(aer3 * erem);
+            std::cout << "  axe3: " << axe3;
+            ArbInt<T> apd(axe3 + diggroup);
+            std::cout << "  apd: " << apd << std::endl;
+            //*/
+            if ((abase * eroot + ArbInt<T>(guess.Value())).pow(root) - ArbInt<T>(abase).pow(root) * ArbInt<T>(eroot).pow(root) <= ArbInt<T>(abase).pow(root) * erem + diggroup) {
+            //if (ama <= apd) {
+              min = guess + 1;
+            } else {
+              max = guess - 1;
+            }
+            //std::cout << "guess: " << guess << "  min: " << min << "  max: " << max << std::endl;
+          }
+          if (guess == min) {
+            guess -= 1;
+          }
+          std::cout << "guess: " << guess << "  min: " << min << "  max: " << max << std::endl;
+          
+          // Get the next iteration's values.
+          ArbInt<T> new_eroot = abase * eroot + ArbInt<T>(guess.Value());
+          ArbInt<T> new_erem  = ArbInt<T>(abase).pow(root) * erem + diggroup - ((abase * eroot + ArbInt<T>(guess.Value())).pow(root) - ArbInt<T>(abase).pow(root) * ArbInt<T>(eroot).pow(root));
+          eroot = new_eroot;
+          erem  = new_erem;
+          
+        } while ((group < groups) || ((extra < maxextra) && erem));
+        
+        _digits   = eroot._digits;
+        remainder = erem;
+        
+        /*
         // The shifting nth-root algorithm.
         ArbInt<T> remainder;
         ArbInt<T> diggroup;
         ArbInt<T> nroot;
         
         ArbInt<T> base(s_digitbase);
-        
-        // Get the root in integral form.
-        SafeInteger<typename _DigsT::size_type> iroot;
-        try {
-          iroot = root.Value<typename _DigsT::size_type>();
-        } catch ArbIntErrors::ScalarOverflow() {
-          throw ArbIntErrors::RootTooLarge();
-        }
         
         SafeInteger<typename _DigsT::size_type> spos = ((_data->size() - 1) / iroot) * iroot;
         SafeInteger<typename _DigsT::size_type> epos = _data->size() - 1;
@@ -1097,6 +1199,7 @@
           guess  -= ((guess - pguess) >> 1) + 1;
           pguess  = guess;
         }
+        */
         
       }
       
