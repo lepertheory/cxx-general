@@ -526,6 +526,45 @@ namespace DAC {
     
   }
   
+  // Greater-than operator backend.
+  bool Arb::op_gt (Arb const& number) const {
+    
+    // If one or both numbers are zero, compare is easy.
+    if (_data->p.isZero()) {
+      if (number._data->p.isZero()) {
+        return false;
+      } else {
+        return number._data->positive;
+      }
+    } else if (number._data->p.isZero()) {
+      return _data->positive;
+    }
+    
+    // Neither number is zero. If signs are different, they are sufficient
+    // for this test.
+    if (_data->positive && !number._data->positive) {
+      return true;
+    } else if (!_data->positive && number._data->positive) {
+      return false;
+    }
+    
+    // Signs are the same, we will have to compare numbers. Copy numbers since
+    // we will be modifying them.
+    Arb tmp_l(*this,  true);
+    Arb tmp_r(number, true);
+    
+    // Numbers must have the same denomiator to compare.
+    tmp_l._normalize(tmp_r);
+    
+    // If numbers are negative, comparison is reversed.
+    if (_data->positive) {
+      return (tmp_l._data->p > tmp_r._data->p);
+    } else {
+      return (tmp_l._data->p < tmp_r._data->p);
+    }
+    
+  }
+  
   // Common initialization tasks.
   void Arb::_init () {
     

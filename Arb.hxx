@@ -129,12 +129,12 @@
         Arb& op_sub (Arb const& number);
         
         // Comparison operator backends.
-        bool op_gt (Arb const& number);
-        bool op_ge (Arb const& number);
-        bool op_lt (Arb const& number);
-        bool op_le (Arb const& number);
-        bool op_eq (Arb const& number);
-        bool op_ne (Arb const& number);
+        bool op_gt (Arb const& number) const;
+        bool op_ge (Arb const& number) const;
+        bool op_lt (Arb const& number) const;
+        bool op_le (Arb const& number) const;
+        bool op_eq (Arb const& number) const;
+        bool op_ne (Arb const& number) const;
         
         // Raise this number to a power.
         Arb& pow (Arb const& exp);
@@ -235,16 +235,6 @@
         // Normalize this number to another number.
         Arb& _normalize (Arb& number);
         
-        /*********************************************************************/
-        // Static function members.
-        
-        /*
-        // Get the greatest common divisor and least common multiple of two
-        // big-endian containers. Base is 2^(bits/2).
-        template <class T> static ReferencePointer<T> s_gcd (T const& c1, T const& c2);
-        template <class T> static ReferencePointer<T> s_lcm (T const& c1, T const& c2);
-        */
-      
     };
     
   };
@@ -262,6 +252,14 @@
   DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r);
   DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r);
   DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r);
+  
+  // Comparison operators.
+  bool operator >  (DAC::Arb const& l, DAC::Arb const& r);
+  bool operator >= (DAC::Arb const& l, DAC::Arb const& r);
+  bool operator <  (DAC::Arb const& l, DAC::Arb const& r);
+  bool operator <= (DAC::Arb const& l, DAC::Arb const& r);
+  bool operator == (DAC::Arb const& l, DAC::Arb const& r);
+  bool operator != (DAC::Arb const& l, DAC::Arb const& r);
   
   /***************************************************************************
    * Error declarations.
@@ -379,6 +377,13 @@
       
     }
     
+    // Comparison operator backends.
+    inline bool Arb::op_ge (Arb const& number) const { return (op_gt(number) || op_eq(number));  }
+    inline bool Arb::op_lt (Arb const& number) const { return number.op_gt(*this);               }
+    inline bool Arb::op_le (Arb const& number) const { return (op_lt(number) || op_eq(number));  }
+    inline bool Arb::op_eq (Arb const& number) const { return !(op_gt(number) || op_lt(number)); }
+    inline bool Arb::op_ne (Arb const& number) const { return (op_gt(number) || op_lt(number));  }
+    
   };
   
   /***************************************************************************
@@ -394,5 +399,13 @@
   inline DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_div(r); }
   inline DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_add(r); }
   inline DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_sub(r); }
+  
+  // Comparison operators.
+  inline bool operator >  (DAC::Arb const& l, DAC::Arb const& r) { return l.op_gt(r); }
+  inline bool operator >= (DAC::Arb const& l, DAC::Arb const& r) { return l.op_ge(r); }
+  inline bool operator <  (DAC::Arb const& l, DAC::Arb const& r) { return l.op_lt(r); }
+  inline bool operator <= (DAC::Arb const& l, DAC::Arb const& r) { return l.op_le(r); }
+  inline bool operator == (DAC::Arb const& l, DAC::Arb const& r) { return l.op_eq(r); }
+  inline bool operator != (DAC::Arb const& l, DAC::Arb const& r) { return l.op_ne(r); }
   
 #endif

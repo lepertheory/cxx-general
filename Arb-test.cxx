@@ -23,7 +23,13 @@ enum Operation {
   MUL,
   DIV,
   ADD,
-  SUB
+  SUB,
+  CGT,
+  CGE,
+  CLT,
+  CLE,
+  CEQ,
+  CNE
 };
 
 bool testOp (Arb const& l, Operation const op, Arb const& r);
@@ -47,6 +53,12 @@ int main (int argc, char** argv, char** envp) {
     testOp(test1, DIV, test2);
     testOp(test1, ADD, test2);
     testOp(test1, SUB, test2);
+    testOp(test1, CGT, test2);
+    testOp(test1, CGE, test2);
+    testOp(test1, CLT, test2);
+    testOp(test1, CLE, test2);
+    testOp(test1, CEQ, test2);
+    testOp(test1, CNE, test2);
     
     cout << "original: " << test1;
     cout << "  ++" << ++test1;
@@ -95,6 +107,12 @@ bool testOp (Arb const& l, Operation const op, Arb const& r) {
       case DIV: output += "  / "; break;
       case ADD: output += "  + "; break;
       case SUB: output += "  - "; break;
+      case CGT: output += " >  "; break;
+      case CGE: output += " >= "; break;
+      case CLT: output += " <  "; break;
+      case CLE: output += " <= "; break;
+      case CEQ: output += " == "; break;
+      case CNE: output += " != "; break;
     }
     output += r.toString() + " = ";
     switch (op) {
@@ -102,6 +120,12 @@ bool testOp (Arb const& l, Operation const op, Arb const& r) {
       case DIV: output += (l  / r).toString(); break;
       case ADD: output += (l  + r).toString(); break;
       case SUB: output += (l  - r).toString(); break;
+      case CGT: output += ((l >  r) ? "true" : "false"); break;
+      case CGE: output += ((l >= r) ? "true" : "false"); break;
+      case CLT: output += ((l <  r) ? "true" : "false"); break;
+      case CLE: output += ((l <= r) ? "true" : "false"); break;
+      case CEQ: output += ((l == r) ? "true" : "false"); break;
+      case CNE: output += ((l != r) ? "true" : "false"); break;
     }
   } catch (Exception& e) {
     output += "Exception (" + e.type() + "): " + string(e.what());
