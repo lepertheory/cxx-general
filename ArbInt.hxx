@@ -392,8 +392,8 @@
     template <class T> inline ArbInt<T>::operator bool () const { return !isZero(); }
     
     // Unary sign operators.
-    template <class T> inline int operator + () const { return Value<int>();    }
-    template <class T> inline int operator - () const { return -(Value<int>()); }
+    template <class T> inline int ArbInt<T>::operator + () const { return Value<int>();    }
+    template <class T> inline int ArbInt<T>::operator - () const { return -(Value<int>()); }
     
     // Increment / decrement operators.
     template <class T> inline ArbInt<T>& ArbInt<T>::operator ++ ()    { return op_add(ArbInt<T>(1));                                  }

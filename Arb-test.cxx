@@ -48,6 +48,19 @@ int main (int argc, char** argv, char** envp) {
     testOp(test1, ADD, test2);
     testOp(test1, SUB, test2);
     
+    cout << "original: " << test1;
+    cout << "  ++" << ++test1;
+    cout << "  final: " << test1 << endl;
+    cout << "original: " << test1;
+    cout << "  " << test1++ << "++";
+    cout << "  final: " << test1 << endl;
+    cout << "original: " << test1;
+    cout << "  --" << --test1;
+    cout << "  final: " << test1<< endl;
+    cout << "original: " << test1;
+    cout << "  " << test1-- << "--";
+    cout << "  final: " << test1<< endl;
+    
     // All tests successful.
     return 0;
     

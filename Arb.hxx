@@ -75,8 +75,28 @@
         // Boolean conversion operator.
         operator bool () const;
         
-        // Negation operator.
+        // Unary sign operators.
         Arb operator - () const;
+        
+        // Increment / decrement operators.
+        Arb& operator ++ ();
+        Arb  operator ++ (int);
+        Arb& operator -- ();
+        Arb  operator -- (int);
+        
+        // Not operator.
+        bool operator ! () const;
+        
+        // Assignment operator.
+                           Arb& operator = (std::string const& number);
+                           Arb& operator = (Arb         const& number);
+        template <class T> Arb& operator = (T           const  number);
+        
+        // Arithmetic assignment operators.
+        Arb& operator *= (Arb const& number);
+        Arb& operator /= (Arb const& number);
+        Arb& operator += (Arb const& number);
+        Arb& operator -= (Arb const& number);
         
         // Accessors.
         Arb&                   Base     (BaseT const base);
@@ -98,15 +118,27 @@
         std::string toString () const;
         
         // Set the number.
-        Arb& set (std::string const& number);
-        Arb& set (Arb         const& number);
+                           Arb& set (std::string const& number);
+                           Arb& set (Arb         const& number);
+        template <class T> Arb& set (T           const  number);
         
         // Arithmetic operator backends.
         Arb& op_mul (Arb const& number);
         Arb& op_div (Arb const& number);
         Arb& op_add (Arb const& number);
         Arb& op_sub (Arb const& number);
-      
+        
+        // Comparison operator backends.
+        bool op_gt (Arb const& number);
+        bool op_ge (Arb const& number);
+        bool op_lt (Arb const& number);
+        bool op_le (Arb const& number);
+        bool op_eq (Arb const& number);
+        bool op_ne (Arb const& number);
+        
+        // Raise this number to a power.
+        Arb& pow (Arb const& exp);
+        
       /*
        * Private members.
        */
@@ -274,11 +306,36 @@
      * Class Arb.
      *************************************************************************/
     
+    // Conversion constructor.
+    template <class T> Arb::Arb (T const number) {
+      
+      // Call common init.
+      _init();
+      
+      // Set the number.
+      set<T>(number);
+      
+    }
+    
     // Boolean conversion operator.
     inline Arb::operator bool () const { return _data->p; }
     
     // Negation operator.
     inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
+    
+    // Increment / decrement operators.
+    inline Arb& Arb::operator ++ ()    { return op_add(1);                         }
+    inline Arb  Arb::operator ++ (int) { Arb retval(*this); op_add(1); return retval; }
+    inline Arb& Arb::operator -- ()    { return op_sub(1);                         }
+    inline Arb  Arb::operator -- (int) { Arb retval(*this); op_sub(1); return retval; }
+    
+    // Not operator.
+    inline bool Arb::operator ! () const { return !(_data->p); }
+    
+    // Assignment operator.
+                       inline Arb& Arb::operator = (std::string const& number) { return set(number);    }
+                       inline Arb& Arb::operator = (Arb         const& number) { return copy(number);   }
+    template <class T> inline Arb& Arb::operator = (T           const  number) { return set<T>(number); }
     
     // Accessors.
     inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                 }
@@ -286,6 +343,41 @@
     inline std::string::size_type Arb::MaxRadix ()                                      const { return _maxradix;                   }
     inline Arb::PointPosT         Arb::PointPos ()                                      const { return _data->pointpos;             }
     inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                  }
+    
+    // Set from a built-in type.
+    template <class T> Arb& Arb::set (T const number) {
+      
+      // If this is an integer type, set is easy.
+      if (std::numeric_limits<T>::is_integer) {
+        
+        // Work area.
+        Arb new_num;
+        
+        // Carry over old fixed-point properties.
+        new_num._data->fix      = _data->fix;
+        new_num._data->pointpos = _data->pointpos;
+        new_num._data->base     = _data->base;
+        new_num._data->fixq     = _data->fixq;
+        
+        // This number is 1s.
+        new_num._data->p = number;
+        new_num._data->q = 1;
+        
+        // Reduce the fraction.
+        new_num._reduce();
+        
+        // Move the new data into place and return.
+        _data = new_num._data;
+        return *this;
+        
+      // For now be lazy and convert to string.
+      } else {
+        
+        return set(DAC::toString(number));
+        
+      }
+      
+    }
     
   };
   

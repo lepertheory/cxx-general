@@ -395,8 +395,6 @@ namespace DAC {
     
     // The number has been loaded, swap it in. COW is preserved.
     _data = new_num._data;
-    
-    // We done.
     return *this;
     
   }
