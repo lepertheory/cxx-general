@@ -9,98 +9,121 @@
 
 // Internal includes.
 #include "SafeInteger.hxx"
+#include "toString.hxx"
 
 // Namespace declarations.
 using namespace std;
 using namespace DAC;
+
+// Test addition.
+template <class lT, class rT> void testAdd (SafeInteger<lT> const& left, SafeInteger<rT> const& right) {
+  cout << left << " + " << right << " = ";
+  try {
+    cout << (left + right);
+  } catch (SafeIntegerErrors::Overflow e) {
+    cout << e;
+  } catch (Exception e) {
+    cout << "Unexpected error: " << e;
+  } catch (...) {
+    cout << "Unexpected unknown error.";
+  }
+  cout << endl;
+};
+template <class lT, class rT> void testAdd (SafeInteger<lT> const& left, rT const right) {
+  cout << left << " + " << toString(right) << " = ";
+  try {
+    cout << (left + right);
+  } catch (SafeIntegerErrors::Overflow e) {
+    cout << e;
+  } catch (Exception e) {
+    cout << "Unexpected error: " << e;
+  } catch (...) {
+    cout << "Unexpected unknown error.";
+  }
+  cout << endl;
+};
+
+// Test subtraction.
+template <class lT, class rT> void testSub (SafeInteger<lT> const& left, SafeInteger<rT> const& right) {
+  cout << left << " - " << right << " = ";
+  try {
+    cout << (left - right);
+  } catch (SafeIntegerErrors::Overflow e) {
+    cout << e;
+  } catch (Exception e) {
+    cout << "Unexpected error: " << e;
+  } catch (...) {
+    cout << "Unexpected unknown error.";
+  }
+  cout << endl;
+};
+template <class lT, class rT> void testSub (SafeInteger<lT> const& left, rT const right) {
+  cout << left << " - " << toString(right) << " = ";
+  try {
+    cout << (left - right);
+  } catch (SafeIntegerErrors::Overflow e) {
+    cout << e;
+  } catch (Exception e) {
+    cout << "Unexpected error: " << e;
+  } catch (...) {
+    cout << "Unexpected unknown error.";
+  }
+  cout << endl;
+};
 
 // This is where it all happens.
 int main (int argc, char** argv, char** envp) {
   
   try {
     
-    SafeInteger<unsigned char>      test1;
-    SafeInteger<signed   char>      test2;
-    SafeInteger<unsigned short int> test3;
-    SafeInteger<signed   short int> test4;
-    SafeInteger<unsigned int>       test5;
-    SafeInteger<signed   int>       test6;
-    SafeInteger<unsigned long int>  test7;
-    SafeInteger<signed   long int>  test8;
-    
-    cout << "test1: "; cin  >> test1; cout << "test1: " << test1 << endl;
-    cout << "test2: "; cin  >> test2; cout << "test2: " << test2 << endl;
-    cout << "test3: "; cin  >> test3; cout << "test3: " << test3 << endl;
-    cout << "test4: "; cin  >> test4; cout << "test4: " << test4 << endl;
-    cout << "test5: "; cin  >> test5; cout << "test5: " << test5 << endl;
-    cout << "test6: "; cin  >> test6; cout << "test6: " << test6 << endl;
-    cout << "test7: "; cin  >> test7; cout << "test7: " << test7 << endl;
-    cout << "test8: "; cin  >> test8; cout << "test8: " << test8 << endl;
-    
-    cout << "test1(" << test1 << ") + test1(" << test1 << ") = " << (test1 + test1.Value()) << endl;
-    cout << "test1(" << test1 << ") + test2(" << test2 << ") = " << (test1 + test2.Value()) << endl;
-    cout << "test1(" << test1 << ") + test3(" << test3 << ") = " << (test1 + test3.Value()) << endl;
-    cout << "test1(" << test1 << ") + test4(" << test4 << ") = " << (test1 + test4.Value()) << endl;
-    cout << "test1(" << test1 << ") + test5(" << test5 << ") = " << (test1 + test5.Value()) << endl;
-    cout << "test1(" << test1 << ") + test6(" << test6 << ") = " << (test1 + test6.Value()) << endl;
-    cout << "test1(" << test1 << ") + test7(" << test7 << ") = " << (test1 + test7.Value()) << endl;
-    cout << "test1(" << test1 << ") + test8(" << test8 << ") = " << (test1 + test8.Value()) << endl;
-    cout << "test2(" << test2 << ") + test1(" << test1 << ") = " << (test2 + test1.Value()) << endl;
-    cout << "test2(" << test2 << ") + test2(" << test2 << ") = " << (test2 + test2.Value()) << endl;
-    cout << "test2(" << test2 << ") + test3(" << test3 << ") = " << (test2 + test3.Value()) << endl;
-    cout << "test2(" << test2 << ") + test4(" << test4 << ") = " << (test2 + test4.Value()) << endl;
-    cout << "test2(" << test2 << ") + test5(" << test5 << ") = " << (test2 + test5.Value()) << endl;
-    cout << "test2(" << test2 << ") + test6(" << test6 << ") = " << (test2 + test6.Value()) << endl;
-    cout << "test2(" << test2 << ") + test7(" << test7 << ") = " << (test2 + test7.Value()) << endl;
-    cout << "test2(" << test2 << ") + test8(" << test8 << ") = " << (test2 + test8.Value()) << endl;
-    cout << "test3(" << test3 << ") + test1(" << test1 << ") = " << (test3 + test1.Value()) << endl;
-    cout << "test3(" << test3 << ") + test2(" << test2 << ") = " << (test3 + test2.Value()) << endl;
-    cout << "test3(" << test3 << ") + test3(" << test3 << ") = " << (test3 + test3.Value()) << endl;
-    cout << "test3(" << test3 << ") + test4(" << test4 << ") = " << (test3 + test4.Value()) << endl;
-    cout << "test3(" << test3 << ") + test5(" << test5 << ") = " << (test3 + test5.Value()) << endl;
-    cout << "test3(" << test3 << ") + test6(" << test6 << ") = " << (test3 + test6.Value()) << endl;
-    cout << "test3(" << test3 << ") + test7(" << test7 << ") = " << (test3 + test7.Value()) << endl;
-    cout << "test3(" << test3 << ") + test8(" << test8 << ") = " << (test3 + test8.Value()) << endl;
-    cout << "test4(" << test4 << ") + test1(" << test1 << ") = " << (test4 + test1.Value()) << endl;
-    cout << "test4(" << test4 << ") + test2(" << test2 << ") = " << (test4 + test2.Value()) << endl;
-    cout << "test4(" << test4 << ") + test3(" << test3 << ") = " << (test4 + test3.Value()) << endl;
-    cout << "test4(" << test4 << ") + test4(" << test4 << ") = " << (test4 + test4.Value()) << endl;
-    cout << "test4(" << test4 << ") + test5(" << test5 << ") = " << (test4 + test5.Value()) << endl;
-    cout << "test4(" << test4 << ") + test6(" << test6 << ") = " << (test4 + test6.Value()) << endl;
-    cout << "test4(" << test4 << ") + test7(" << test7 << ") = " << (test4 + test7.Value()) << endl;
-    cout << "test4(" << test4 << ") + test8(" << test8 << ") = " << (test4 + test8.Value()) << endl;
-    cout << "test5(" << test5 << ") + test1(" << test1 << ") = " << (test5 + test1.Value()) << endl;
-    cout << "test5(" << test5 << ") + test2(" << test2 << ") = " << (test5 + test2.Value()) << endl;
-    cout << "test5(" << test5 << ") + test3(" << test3 << ") = " << (test5 + test3.Value()) << endl;
-    cout << "test5(" << test5 << ") + test4(" << test4 << ") = " << (test5 + test4.Value()) << endl;
-    cout << "test5(" << test5 << ") + test5(" << test5 << ") = " << (test5 + test5.Value()) << endl;
-    cout << "test5(" << test5 << ") + test6(" << test6 << ") = " << (test5 + test6.Value()) << endl;
-    cout << "test5(" << test5 << ") + test7(" << test7 << ") = " << (test5 + test7.Value()) << endl;
-    cout << "test5(" << test5 << ") + test8(" << test8 << ") = " << (test5 + test8.Value()) << endl;
-    cout << "test6(" << test6 << ") + test1(" << test1 << ") = " << (test6 + test1.Value()) << endl;
-    cout << "test6(" << test6 << ") + test2(" << test2 << ") = " << (test6 + test2.Value()) << endl;
-    cout << "test6(" << test6 << ") + test3(" << test3 << ") = " << (test6 + test3.Value()) << endl;
-    cout << "test6(" << test6 << ") + test4(" << test4 << ") = " << (test6 + test4.Value()) << endl;
-    cout << "test6(" << test6 << ") + test5(" << test5 << ") = " << (test6 + test5.Value()) << endl;
-    cout << "test6(" << test6 << ") + test6(" << test6 << ") = " << (test6 + test6.Value()) << endl;
-    cout << "test6(" << test6 << ") + test7(" << test7 << ") = " << (test6 + test7.Value()) << endl;
-    cout << "test6(" << test6 << ") + test8(" << test8 << ") = " << (test6 + test8.Value()) << endl;
-    cout << "test7(" << test7 << ") + test1(" << test1 << ") = " << (test7 + test1.Value()) << endl;
-    cout << "test7(" << test7 << ") + test2(" << test2 << ") = " << (test7 + test2.Value()) << endl;
-    cout << "test7(" << test7 << ") + test3(" << test3 << ") = " << (test7 + test3.Value()) << endl;
-    cout << "test7(" << test7 << ") + test4(" << test4 << ") = " << (test7 + test4.Value()) << endl;
-    cout << "test7(" << test7 << ") + test5(" << test5 << ") = " << (test7 + test5.Value()) << endl;
-    cout << "test7(" << test7 << ") + test6(" << test6 << ") = " << (test7 + test6.Value()) << endl;
-    cout << "test7(" << test7 << ") + test7(" << test7 << ") = " << (test7 + test7.Value()) << endl;
-    cout << "test7(" << test7 << ") + test8(" << test8 << ") = " << (test7 + test8.Value()) << endl;
-    cout << "test8(" << test8 << ") + test1(" << test1 << ") = " << (test8 + test1.Value()) << endl;
-    cout << "test8(" << test8 << ") + test2(" << test2 << ") = " << (test8 + test2.Value()) << endl;
-    cout << "test8(" << test8 << ") + test3(" << test3 << ") = " << (test8 + test3.Value()) << endl;
-    cout << "test8(" << test8 << ") + test4(" << test4 << ") = " << (test8 + test4.Value()) << endl;
-    cout << "test8(" << test8 << ") + test5(" << test5 << ") = " << (test8 + test5.Value()) << endl;
-    cout << "test8(" << test8 << ") + test6(" << test6 << ") = " << (test8 + test6.Value()) << endl;
-    cout << "test8(" << test8 << ") + test7(" << test7 << ") = " << (test8 + test7.Value()) << endl;
-    cout << "test8(" << test8 << ") + test8(" << test8 << ") = " << (test8 + test8.Value()) << endl;
+    {
+      cout << "Testing unsigned char:" << endl;
+      SafeInteger<unsigned char> test1;
+      {
+        cout << "  With unsigned char:" << endl;
+        SafeInteger<unsigned char> test2;
+        {
+          cout << "    Addition:" << endl;
+          test1 = numeric_limits<unsigned char>::max();
+          test2 = 1;
+          cout << "      Max + 1: ";
+          testAdd(test1, test2);
+        }
+        {
+          cout << "    Subtraction:" << endl;
+          test1 = numeric_limits<unsigned char>::min();
+          test2 = 1;
+          cout << "      Min - 1: ";
+          testSub(test1, test2);
+        }
+      }
+      {
+        cout << "  With signed char:" << endl;
+        SafeInteger<signed char> test2;
+        {
+          cout << "    Addition:" << endl;
+          test1 = 0;
+          test2 = -1;
+          cout << "      0 + -1:  ";
+          testAdd(test1, test2.Value());
+          test1 = numeric_limits<unsigned char>::max();
+          test2 = 1;
+          cout << "      Max + 1: ";
+          testAdd(test1, test2.Value());
+        }
+        {
+          cout << "    Subtraction:" << endl;
+          test1 = 0;
+          test2 = 1;
+          cout << "      0 - 1:    ";
+          testSub(test1, test2.Value());
+          test1 = numeric_limits<unsigned char>::max();
+          test2 = -1;
+          cout << "      Max - -1: ";
+          testSub(test1, test2.Value());
+        }
+      }
+    }
     
   } catch (Exception e) {
     

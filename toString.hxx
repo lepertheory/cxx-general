@@ -23,6 +23,12 @@
       return os.str();
     }
     
+    template <> std::string toString<signed char> (signed char const& from) {
+      std::ostringstream os;
+      os << static_cast<int>(from);
+      return os.str();
+    }
+    
     template <> std::string toString<unsigned char> (unsigned char const& from) {
       std::ostringstream os;
       os << static_cast<unsigned int>(from);
