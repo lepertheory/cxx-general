@@ -1,3 +1,0 @@
-#!/bin/bash
-
-screen -c screenrc -S cxx-general
