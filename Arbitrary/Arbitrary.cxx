@@ -183,6 +183,7 @@ namespace DAC {
     // Work area.
     Arbitrary tmp_left(*this);
     Arbitrary tmp_right(right);
+    _DataPT retval(new _Data);
     
     // Convert to two numbers that can be calculated against each other.
     tmp_left._normalizeRadix(tmp_right);
@@ -203,7 +204,7 @@ namespace DAC {
         
         // Add the product of these two digits to the appropriate digit of the
         // temporary product.
-        digproduct[j] = of_add<_DigT, _DigT, _DigT>(digproduct[j], of_mul<_DigT, _DigT, _DigT>(_data->digits[i], tmp_right._data->digits[j]));
+        digproduct[j] = of_add<_DigT, _DigT, _DigT>(digproduct[j], of_mul<_DigT, _DigT, _DigT>(tmp_left._data->digits[i], tmp_right._data->digits[j]));
         
         // Do any carry needed.
         s_carry<_DigsT, DST>(digproduct, j);
@@ -218,28 +219,28 @@ namespace DAC {
         DST tdig = of_add<DST, DST, DST>(j, i);
         
         // Add a new digit if needed.
-        if (tmp_left._data->digits.size() == tdig) {
-          tmp_left._data->digits.push_back(0);
+        if (retval->digits.size() == tdig) {
+          retval->digits.push_back(0);
         }
         
         // Add this digit.
-        tmp_left._data->digits[tdig] = of_add<_DigT, _DigT, _DigT>(tmp_left._data->digits[tdig], digproduct[j]);
+        retval->digits[tdig] = of_add<_DigT, _DigT, _DigT>(retval->digits[tdig], digproduct[j]);
         
         // Do any carry needed.
-        s_carry<_DigsT, DST>(tmp_left._data->digits, tdig);
+        s_carry<_DigsT, DST>(retval->digits, tdig);
         
       }
       
     }
     
     // Put the decimal point in the proper place.
-    tmp_left._data->exponent = of_add<_ExpT, _ExpT, _ExpT>(tmp_left._data->exponent, tmp_right._data->exponent);
+    retval->exponent = of_add<_ExpT, _ExpT, _ExpT>(tmp_left._data->exponent, tmp_right._data->exponent);
     
     // Set the sign.
-    tmp_left._data->positive = (tmp_left._data->positive == tmp_right._data->positive);
+    retval->positive = (tmp_left._data->positive == tmp_right._data->positive);
     
     // Swap in the new data.
-    _data = tmp_left._data;
+    _data = retval;
     
     // Done.
     return *this;
@@ -295,7 +296,7 @@ namespace DAC {
           _DigT bitmask  = of_sub<_DigT, _DigT, int>(of_pow<_DigT, int, DS>(2, shift), 1);
           _DigT carry    = 0;
           _DigT oldcarry = 0;
-          for (_DigsT::iterator i = new_data->digits.begin(); i != new_data->digits.end(); ++i) {
+          for (_DigsT::reverse_iterator i = new_data->digits.rbegin(); i != new_data->digits.rend(); ++i) {
             carry      = *i & bitmask;
             *i       >>= shift;
             *i        |= oldcarry;
