@@ -8,7 +8,7 @@
 #include <iostream>
 
 // Internal includes.
-#include "ArbInt.hxx"
+#include "src/ArbInt.hxx"
 #include "demangle.hxx"
 #include "Exception.hxx"
 
