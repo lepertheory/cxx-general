@@ -103,12 +103,12 @@
         template <class TT> ArbInt& Value (TT const number);
         
         // Set this number with a string.
-                            ArbInt<T>& set (std::string const& number, T const base = 0);
+                            ArbInt<T>& set (std::string const& number);
                             ArbInt<T>& set (ArbInt      const& number);
         template <class FT> ArbInt<T>& set (FT          const  number);
         
         // Return a string of this number.
-        std::string toString (T const base = 0) const;
+        std::string toString () const;
         
         // Tests if this number is equal to zero.
         bool isZero () const;
@@ -194,8 +194,8 @@
         static _DigT s_digitbase; // Base of native digits.
         static _DigT s_bitmask;   // Bitmask of digits.
         
-        static _NumChrT s_numdigits; // Number of output digits.
-        static _StrChrT s_odigits[]; // Output digits.
+        static _NumChrT s_numodigits; // Number of output digits.
+        static _StrChrT s_odigits[];  // Output digits.
         
         static _NumChrT              s_numidigits; // Number of input digits.
         static std::vector<_NumChrT> s_idigits;    // Input digits.
@@ -232,6 +232,9 @@
         
         // Convert a container from one base to another.
         template <class FT, class TT> static void s_baseConv (FT const& from, T const frombase, TT& to, T const tobase);
+        
+        // Validate a base.
+        static void s_validateBase (T const base);
       
     };
     
@@ -296,6 +299,7 @@
       class Overrun        : public Base      { public: virtual char const* what () const throw(); };
       class DivByZero      : public Base      { public: virtual char const* what () const throw(); };
       class ScalarOverflow : public Base      { public: virtual char const* what () const throw(); };
+      class BaseOutOfRange : public Base      { public: virtual char const* what () const throw(); };
     };
     
   };
@@ -316,6 +320,7 @@
       inline char const* Overrun::what        () const throw() { return "Instruction overruns end of container.";                                                                                                                             }
       inline char const* DivByZero::what      () const throw() { return "Attempt to divide by zero.";                                                                                                                                         }
       inline char const* ScalarOverflow::what () const throw() { return "ArbInt overflows scalar type.";                                                                                                                                      }
+      inline char const* BaseOutOfRange::what () const throw() { return "Requested or specified base is out of range. Base minimum is base 2, base maximum is 2(bits in target container value type/2)-1.";                                   }
     };
     
     /*************************************************************************/
@@ -325,8 +330,8 @@
     template <class T> typename ArbInt<T>::_DigT ArbInt<T>::s_digitbase = 0;
     template <class T> typename ArbInt<T>::_DigT ArbInt<T>::s_bitmask   = 0;
     
-    template <class T> typename ArbInt<T>::_NumChrT ArbInt<T>::s_numdigits = 36;
-    template <class T> typename ArbInt<T>::_StrChrT ArbInt<T>::s_odigits[] = {
+    template <class T> typename ArbInt<T>::_NumChrT ArbInt<T>::s_numodigits = 36;
+    template <class T> typename ArbInt<T>::_StrChrT ArbInt<T>::s_odigits[]  = {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
       'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
@@ -454,7 +459,13 @@
     
     // Returns or sets the default base of this number.
     template <class T> inline T          ArbInt<T>::Base ()             const { return _base;               }
-    template <class T> inline ArbInt<T>& ArbInt<T>::Base (T const base)       { _base = base; return *this; }
+    template <class T> inline ArbInt<T>& ArbInt<T>::Base (T const base)       {
+      if ((base < 2) || (base > s_digitbase)) {
+        throw ArbIntErrors::BaseOutOfRange();
+      }
+      _base = base;
+      return *this;
+    }
     
     // Returns or sets the value of this number.
     template <class T> template <class TT> TT ArbInt<T>::Value () const {
@@ -471,19 +482,13 @@
     template <class T> template <class TT> ArbInt<T>& ArbInt<T>::Value (TT const number) { return set(number); }
     
     // Set this number with a string.
-    template <class T> ArbInt<T>& ArbInt<T>::set (std::string const& number, T const base) {
+    template <class T> ArbInt<T>& ArbInt<T>::set (std::string const& number) {
       
       // Load the number into this for exception safety and COW.
       _DataPT new_digits(new _DigsT);
       
       // Hold the number in case an error needs to be thrown.
       ConstReferencePointer<std::string> tmp_number(new std::string(number));
-      
-      // Get the base of this number. Use the default base if none was supplied.
-      T numbase = base;
-      if (numbase == 0) {
-        numbase = _base;
-      }
       
       // Parser will load data into here.
       _DigStrT num;
@@ -495,7 +500,7 @@
         _NumChrT digval = s_idigits[number[i]];
         
         // Make sure this digit is within the number base.
-        if ((digval >= SafeInteger<T>(numbase).Value() || (digval == std::numeric_limits<_NumChrT>::max()))) {
+        if ((digval >= SafeInteger<T>(_base).Value() || (digval == std::numeric_limits<_NumChrT>::max()))) {
           throw ArbIntErrors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
         }
         
@@ -508,7 +513,7 @@
       s_trimZerosE(num);
       
       // Convert to the native number base.
-      s_baseConv(num, numbase, *new_digits, s_digitbase);
+      s_baseConv(num, _base, *new_digits, s_digitbase);
       
       // The new number has been loaded successfully. Swap it in.
       _digits = new_digits;
@@ -560,7 +565,7 @@
     }
     
     // Return a string of this number.
-    template <class T> std::string ArbInt<T>::toString (T const base) const {
+    template <class T> std::string ArbInt<T>::toString () const {
       
       // This is the string we will return.
       std::string retval;
@@ -573,19 +578,13 @@
       // Otherwise we have work to do.
       } else {
         
-        // Get the base of this number. Use the default base if none was supplied.
-        T numbase = base;
-        if (numbase == 0) {
-          numbase = _base;
-        }
-        
         // Convert to the output base.
         _DigsT num;
-        s_baseConv(*_digits, s_digitbase, num, numbase);
+        s_baseConv(*_digits, s_digitbase, num, _base);
         
-        // Load this into the string. If the base is greater than th enumber
+        // Load this into the string. If the base is greater than the number
         // of digits defined, output the raw numbers of each digit.
-        if (SafeInteger<T>(base) > s_numdigits) {
+        if (SafeInteger<T>(_base) > s_numodigits) {
           for (typename _DigsT::reverse_iterator i = num.rbegin(); i != num.rend(); ++i) {
             retval += "'" + DAC::toString(*i) + "'";
             if (i != (num.rend() - 1)) {
@@ -1273,7 +1272,8 @@
     // Trim leading and trailing zeros from a given container.
     template <class T> template <class CT> void ArbInt<T>::s_trimZeros (CT& c) { s_trimZerosB(c); s_trimZerosE(c); }
     
-    // Do long division on a given container in the specified base.
+    // Do long division on a given container in the specified base. Divisor
+    // type must be 2x base. This is not checked, so be careful!
     template <class T> template <class DivndT, class DivorT> DivorT ArbInt<T>::s_longDiv (DivndT& divnd, DivorT const divor, T const base) {
       
       // Group of digits to divide.
@@ -1291,7 +1291,7 @@
         
         // Divide the group and add the result to the quotient.
         dquot = dgroup / divor;
-        quotient.insert(quotient.begin(), dquot.Value());
+        quotient.insert(quotient.begin(), SafeInteger<typename DivndT::value_type>(dquot.Value()).Value());
         
         // Take out what we've divided.
         dgroup -= dquot * divor;
@@ -1312,8 +1312,19 @@
       
     }
     
-    // Convert a container from one base to another.
+    // Convert a container from one base to another. Frombase must be
+    // 2^(bits/2) of from or smaller, tobase must be 2^(bits/2) of to or
+    // smaller.
     template <class T> template <class FT, class TT> void ArbInt<T>::s_baseConv (FT const& from, T const frombase, TT& to, T const tobase) {
+      
+      // Verify that bases are valid. Base must be at least two, and at most
+      // half of the significant bits of the target container's number type.
+      // Maximum base is static, and so should only be calculated once per
+      // type combination.
+      static SafeInteger<typename TT::value_type> maxbase = rppower(SafeInteger<typename TT::value_type>(2), std::numeric_limits<typename TT::value_type>::digits >> 1);
+      if ((SafeInteger<T>(frombase) < 2) || (SafeInteger<T>(tobase) < 2) || (SafeInteger<T>(frombase) > maxbase) || (SafeInteger<T>(tobase) > maxbase)) {
+        throw ArbIntErrors::BaseOutOfRange();
+      }
       
       // Empty out target container.
       to.clear();
@@ -1337,7 +1348,7 @@
    ***************************************************************************/
   
   // Stream I/O operators.
-  template <class T> inline std::ostream& operator << (std::ostream& l, DAC::ArbInt<T> const& r) { l << r.toString(0);                                 return l; }
+  template <class T> inline std::ostream& operator << (std::ostream& l, DAC::ArbInt<T> const& r) { l << r.toString();                                  return l; }
   template <class T> inline std::istream& operator >> (std::istream& l, DAC::ArbInt<T>&       r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   // Arithmetic operators.
