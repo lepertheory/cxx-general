@@ -193,7 +193,6 @@
         // Typedefs.
         typedef char          _StrChrT; // String character type.
         typedef unsigned char _NumChrT; // Numeric character type.
-        typedef long double   _LogT;    // Logarithm type.
         typedef signed int    _ExpT;    // Exponent type.
         typedef _NumChrT      _DigChrT; // Digit character type.
         typedef unsigned int  _DigT;    // Individual digits.
@@ -254,7 +253,7 @@
         template <class ToT, class ToDT, class FromT, class FromDT, class FromIT> static ReferencePointer<ToT> s_baseconv (FromT const& from, _BaseT const frombase, _BaseT const tobase);
         
         // Normalize this number to another number.
-        Arbitrary& _normalizeRadix   (Arbitrary& number);
+        Arbitrary& _normalizeRadix    (Arbitrary& number);
         Arbitrary& _normalizeExponent (Arbitrary& number);
         
         // Convert this number to a whole number.
@@ -350,7 +349,7 @@
       T retval = 0;
       for (_DigsT::iterator i = _data->digits.begin(); i != _data->digits.end(); ++i) {
         try {
-          retval = of_add<T, T, _DigT>(retval, of_mul<_DigT, _DigT, _DigT>(*i, of_pow<_DigT, _DigT, _DigsT::size_type>(s_digitbase, (i - _data->digits.begin()))));
+          retval = (retval + (*i * rppower(s_digitbase, (i - _data->digits.begin()))));
         } catch (OverflowErrors::Base error) {
           ArbitraryErrors::throwOverflow("Overflow converting to integral type.", &error);
         }
@@ -412,13 +411,13 @@
         }
         
         // Overflow safe addition is expensive, cache it.
-        TS j = of_add<TS, TS, int>(i, 1);
+        TS j = i + 1;
         
         // How many of the next digit are in this digit?
-        _DigT next = of_div<_DigT, _DigT, _BaseT>(digits[i], s_digitbase);
+        _DigT next = digits[i] / s_digitbase;
         
         // Remove the next digit from this digit.
-        digits[i] = of_sub<_DigT, _DigT, _DigT>(digits[i], of_mul<_DigT, _DigT, _BaseT>(s_digitbase, next));
+        digits[i] = digits[i] - (s_digitbase * next);
         
         // Add a new digit if needed.
         if (j == digits.size()) {
@@ -426,7 +425,7 @@
         }
         
         // Add the carry to the next digit.
-        digits[j] = of_add<_DigT, _DigT, _DigT>(digits[j], next);
+        digits[j] += next;
         
       }
       
@@ -441,7 +440,7 @@
       }
       
       // Cache adding 1.
-      TS next = of_add<TS, TS, int>(start, 1);
+      TS next = start + 1;
       
       // Make sure that there is something to borrow from.
       if (next >= digits.size()) {
@@ -455,8 +454,8 @@
       }
       
       // Now do the borrow.
-      digits[next]  = of_sub<_DigT, _DigT, int>(digits[next], 1);
-      digits[start] = of_add<_DigT, _DigT, _BaseT>(digits[start], s_digitbase);
+      digits[next]  -= 1;
+      digits[start] += s_digitbase;
       
     }
     
@@ -476,20 +475,20 @@
       for (DivndIT i = dividend.begin(); i != dividend.end(); ++i) {
         
         // Add this digit to the group.
-        dgroup = of_add<DivorT, DivorT, DivndDT>(dgroup, *i);
+        dgroup += *i;
         
         // Divide the group. Make sure the quotient can hold the result before
         // adding it to the digit array.
         dquot = dgroup / divisor;
-        quotient.push_back(of_static_cast<DivndDT, DivorT>(dquot));
+        quotient.push_back(dquot);
         
         // Take out what we've divided. No need to check for overflow,
         // dquot * divisor must be smaller than or equal to the previous
         // value of dgroup since division gets the floor.
-        dgroup = of_sub<DivorT, DivorT, DivorT>(dgroup, dquot * divisor);
+        dgroup -= dquot * divisor;
         
         // Move the remainder up to the next order of magnitude.
-        dgroup = of_mul<DivorT, DivorT, _BaseT>(dgroup, base);
+        dgroup *= base;
         
       }
       
@@ -534,7 +533,7 @@
       
       // Convert base by storing the remainder of repeated division.
       while (tempfrom.size() > 0) {
-        retval->push_back(of_static_cast<ToDT, _BaseT>(s_longdiv<FromT, FromDT, FromIT, _BaseT>(tempfrom, tobase, frombase)));
+        retval->push_back(s_longdiv<FromT, FromDT, FromIT, _BaseT>(tempfrom, tobase, frombase));
       }
       
       // Return

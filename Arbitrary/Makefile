@@ -11,7 +11,7 @@ endif
 COMPILER=g++
 DEBUG=-g
 STANDARD=-ansi
-ERRORS=-w
+ERRORS=-Wall
 INCLUDE=-I..
 OPTIMIZE=-O0
 

@@ -116,7 +116,7 @@ namespace DAC {
       }
       
       // Add the number and carry.
-      tmp_left._data->digits[i] = of_add<_DigT, _DigT, _DigT>(tmp_left._data->digits[i], tmp_right._data->digits[i]);
+      tmp_left._data->digits[i] += tmp_right._data->digits[i];
       s_carry<_DigsT, DST>(tmp_left._data->digits, i);
       
     }
@@ -162,7 +162,7 @@ namespace DAC {
       if (tmp_left._data->digits[i] < tmp_right._data->digits[i]) {
         s_borrow<_DigsT, DST>(tmp_left._data->digits, i);
       }
-      tmp_left._data->digits[i] = of_sub<_DigT, _DigT, _DigT>(tmp_left._data->digits[i], tmp_right._data->digits[i]);
+      tmp_left._data->digits[i] -= tmp_right._data->digits[i];
       
     }
     
@@ -204,7 +204,7 @@ namespace DAC {
         
         // Add the product of these two digits to the appropriate digit of the
         // temporary product.
-        digproduct[j] = of_add<_DigT, _DigT, _DigT>(digproduct[j], of_mul<_DigT, _DigT, _DigT>(tmp_left._data->digits[i], tmp_right._data->digits[j]));
+        digproduct[j] += tmp_left._data->digits[i] * tmp_right._data->digits[j];
         
         // Do any carry needed.
         s_carry<_DigsT, DST>(digproduct, j);
@@ -216,7 +216,7 @@ namespace DAC {
       for (DST j = 0; j != digproduct.size(); ++j) {
         
         // Digit to add to.
-        DST tdig = of_add<DST, DST, DST>(j, i);
+        DST tdig = j + i;
         
         // Add a new digit if needed.
         if (retval->digits.size() == tdig) {
@@ -224,7 +224,7 @@ namespace DAC {
         }
         
         // Add this digit.
-        retval->digits[tdig] = of_add<_DigT, _DigT, _DigT>(retval->digits[tdig], digproduct[j]);
+        retval->digits[tdig] += digproduct[j];
         
         // Do any carry needed.
         s_carry<_DigsT, DST>(retval->digits, tdig);
@@ -234,7 +234,7 @@ namespace DAC {
     }
     
     // Put the decimal point in the proper place.
-    retval->exponent = of_add<_ExpT, _ExpT, _ExpT>(tmp_left._data->exponent, tmp_right._data->exponent);
+    retval->exponent = tmp_left._data->exponent + tmp_right._data->exponent;
     
     // Set the sign.
     retval->positive = (tmp_left._data->positive == tmp_right._data->positive);
@@ -276,7 +276,7 @@ namespace DAC {
     if (shift != 0) {
       
       // If shift amount will leave no bits in the number, just zero it out.
-      if (shift >= of_mul<DS, DS, int>(new_data->digits.size(), s_digitbits)) {
+      if (shift >= new_data->digits.size() * s_digitbits) {
         
         new_data->digits.clear();
         new_data->digits.push_back(0);
@@ -285,22 +285,22 @@ namespace DAC {
         
         // Do any whole-digit shifting needed. Whole digit shift right is easy,
         // just cut off the needed number of low-order digits.
-        DS digshift = of_div<DS, DS, int>(shift, s_digitbits);
+        DS digshift = shift / s_digitbits;
         if (digshift > 0) {
           new_data->digits.erase(new_data->digits.begin(), new_data->digits.begin() + digshift);
         }
         
         // Now do any fine-grained shifting needed. First calculate how much
         // will be needed, then shift if necessary.
-        if ((shift = of_sub<DS, DS, DS>(shift, of_mul<DS, DS, int>(digshift, s_digitbits))) > 0) {
-          _DigT bitmask  = of_sub<_DigT, _DigT, int>(of_pow<_DigT, int, DS>(2, shift), 1);
+        if ((shift -= digshift * s_digitbits) > 0) {
+          _DigT bitmask  = rppower(2, shift) - 1;
           _DigT carry    = 0;
           _DigT oldcarry = 0;
           for (_DigsT::reverse_iterator i = new_data->digits.rbegin(); i != new_data->digits.rend(); ++i) {
             carry      = *i & bitmask;
             *i       >>= shift;
             *i        |= oldcarry;
-            oldcarry   = (carry << of_sub<int, int, DS>(s_digitbits, shift));
+            oldcarry   = (carry << (s_digitbits - shift));
           }
         }
         
@@ -480,14 +480,8 @@ namespace DAC {
       if (_data->exponent < 0) {
         construct.append(-(_data->exponent), '0');
       } else {
-        if (_data->exponent >= of_static_cast<string::size_type, _ExpT>(construct.size())) {
-          construct.insert(
-            0,
-            of_add<string::size_type, string::size_type, int>(
-              of_sub<string::size_type, _ExpT, string::size_type>(_data->exponent, construct.size()), 1
-            ),
-            '0'
-          );
+        if (_data->exponent >= construct.size()) {
+          construct.insert(0, (_data->exponent - construct.size()) + 1, '0');
         }
         construct.insert(construct.size() - _data->exponent, ".");
       }
@@ -625,25 +619,25 @@ namespace DAC {
       for (_DigStrT::reverse_iterator i = exp.rbegin(); i != exp.rend(); ++i) {
         
         // Get the single digit value.
-        _ExpT digval = of_mul<_ExpT, _ExpT, _DigChrT>(digexp, *i);
+        _ExpT digval = digexp * (*i);
         
         // Set the digit value.
-        new_data->exponent = of_add<_ExpT, _ExpT, _ExpT>(new_data->exponent, digval);
+        new_data->exponent = digval;
         
         // Up the order of magnitude.
-        digexp = of_mul<_ExpT, _ExpT, _BaseT>(digexp, base);
+        digexp *= base;
         
       }
       
       if (p_exp) {
-        new_data->exponent = of_mul<_ExpT, _ExpT, int>(new_data->exponent, -1);
+        new_data->exponent *= -1;
       }
       
     }
     
     // Combine the numeric and radix digits, taking note of the original
     // number of decimal places.
-    new_data->exponent = of_add<_ExpT, _ExpT, _DigStrT::size_type>(new_data->exponent, rad.size());
+    new_data->exponent += rad.size();
     num.insert(num.end(), rad.begin(), rad.end());
     
     // Load the numeric digits. Convert from the given base to the target
@@ -708,14 +702,14 @@ namespace DAC {
       
       // Get the maximum number that can be held in a single digit.
       s_digitbits = numeric_limits<_DigT>::digits >> 1;
-      s_digitbase = of_static_cast<_BaseT, int>(of_pow<int, int, int>(2, s_digitbits));
+      s_digitbase = of_static_cast<_BaseT, int>(rppower(2, s_digitbits));
       
       // Get the input digits.
       for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {
         _NumChrT digit = 0;
-        if      ((static_cast<_StrChrT>(i) >= '0') && (static_cast<_StrChrT>(i) <= '9')) { digit = of_sub<_NumChrT, _NumChrT, _NumChrT>(i, static_cast<_NumChrT>('0')); }
-        else if ((static_cast<_StrChrT>(i) >= 'A') && (static_cast<_StrChrT>(i) <= 'Z')) { digit = of_add<_NumChrT, _NumChrT, _NumChrT>(of_sub<_NumChrT, _NumChrT, _NumChrT>(i, static_cast<_NumChrT>('A')), 10); }
-        else if ((static_cast<_StrChrT>(i) >= 'a') && (static_cast<_StrChrT>(i) <= 'z')) { digit = of_add<_NumChrT, _NumChrT, _NumChrT>(of_sub<_NumChrT, _NumChrT, _NumChrT>(i, static_cast<_NumChrT>('a')), 10); }
+        if      ((static_cast<_StrChrT>(i) >= '0') && (static_cast<_StrChrT>(i) <= '9')) { digit = i - static_cast<_NumChrT>('0'); }
+        else if ((static_cast<_StrChrT>(i) >= 'A') && (static_cast<_StrChrT>(i) <= 'Z')) { digit = (i - static_cast<_NumChrT>('A')) + 10; }
+        else if ((static_cast<_StrChrT>(i) >= 'a') && (static_cast<_StrChrT>(i) <= 'z')) { digit = (i - static_cast<_NumChrT>('a')) + 10; }
         else                                                                             { digit = numeric_limits<_NumChrT>::max(); }
         s_idigits.push_back(digit);
       }
@@ -863,7 +857,7 @@ namespace DAC {
     // Exception safety.
     _DigsT temp;
     temp.push_back(0);
-    originalbase = of_static_cast<_BaseT, int>(10);
+    originalbase = 10;
     
     // These won't throw.
     positive     = true;
