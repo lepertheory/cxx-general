@@ -222,6 +222,35 @@ namespace DAC {
     }
     
     // Temporary variables.
+    Arbitrary divor(*this);
+    Arbitrary divnd(right);
+    Arbitrary quotient(0, 0, true);
+    Arbitrary diggroup(0, 0, true);
+    
+    // For division, we must have the same base.
+    divor._normalizeRadix(divnd);
+    
+    // Get the length of the divisor and dividend.
+    SafeInteger<_DigStrT::size_type> divorsize = divor._radixDigits();
+    SafeInteger<_DigStrT::size_type> divndsize = divnd._radixDigits();
+    
+    cout << "divor: " << divor << "  size: " << divorsize << endl;
+    cout << "divnd: " << divnd << "  size: " << divndsize << endl;
+    
+    // The divisor must be greater than or equal to the dividend. Also,
+    // increase the size of the divisor by 10 times the new length of the
+    // dividend for additional precision.
+    divor._setExponent((divor._data->exponent + ((divndsize > divorsize) ? ((divndsize - divorsize) + (divndsize * 10)) : (divorsize * 10)).Value()).Value());
+    
+    cout << "divor: " << divor << "  size: " << divor._radixDigits() << endl;
+    
+    // This is the group of digits we will be dividing.
+    
+    // We done.
+    return *this;
+    
+    /*
+    // Temporary variables.
     Arbitrary divisor(*this);
     Arbitrary dividend(right);
     Arbitrary quotient;
@@ -309,6 +338,7 @@ namespace DAC {
     
     // We done.
     return *this;
+    */
     
     /*
     typedef _DigsT::size_type DS;
@@ -998,7 +1028,7 @@ namespace DAC {
     // If this number is not fully represented, un-exponentize it. I'm a
     // programmer, not a playwright.
     if (_data->exponent < 0) {
-      op_mul(Arbitrary(_data->originalbase, 0, true).pow(-_data->exponent));
+      _setExponent(0);
     }
     
     return *this;
@@ -1013,7 +1043,7 @@ namespace DAC {
       
       // Make sure that we won't be losing precision.
       if (!force && (exponent < _data->exponent)) {
-        _cleanup();
+        _cleanup(); // FIXME: Number should always be clean!
         if (exponent < _data->exponent) {
           throw ArbitraryErrors::PrecisionLoss();
         }
@@ -1021,9 +1051,9 @@ namespace DAC {
       
       // Do the exponent shift.
       if (exponent > _data->exponent) {
-        op_mul(Arbitrary(_data->originalbase, 0, true).pow(exponent - _data->exponent));
+        op_mul(Arbitrary(_data->originalbase, 0, true).pow(Arbitrary(exponent - _data->exponent, 0, true)));
       } else {
-        op_div(Arbitrary(_data->originalbase, 0, true).pow(_data->exponent - exponent));
+        op_div(Arbitrary(_data->originalbase, 0, true).pow(Arbitrary(_data->exponent - exponent, 0, true)));
       }
       
       // Update the exponent.
@@ -1032,6 +1062,17 @@ namespace DAC {
     }
     
     return *this;
+    
+  }
+  
+  // Get the number of digits in the number's native radix.
+  Arbitrary::_DigStrT::size_type Arbitrary::_radixDigits () const {
+    
+    return (s_baseconv<_DigStrT, _DigChrT, _DigsT, _DigStrT::size_type, _DigT, _DigsT::iterator>(
+      *(s_reverse<_DigsT, _DigsT::reverse_iterator>(_data->digits)),
+      s_digitbase,
+      _data->originalbase
+    ))->size();
     
   }
   

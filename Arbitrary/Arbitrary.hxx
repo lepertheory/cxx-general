@@ -284,6 +284,9 @@
         // Clean the internal data structure.
         Arbitrary& _cleanup ();
         
+        // Get the number of digits in the number's native radix.
+        _DigStrT::size_type _radixDigits () const;
+        
     /*************************************************************************
      * End of class declaration.
      *************************************************************************/
