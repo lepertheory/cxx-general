@@ -1,0 +1,24 @@
+width 132
+
+screen -t compile
+screen -t Arbitrary/Arbitrary.cxx       vim Arbitrary/Arbitrary.cxx
+screen -t Arbitrary/Arbitrary.hxx       vim Arbitrary/Arbitrary.hxx
+screen -t Arbitrary/Makefile            vim Arbitrary/Makefile
+screen -t Arbitrary/test.cxx            vim Arbitrary/test.cxx
+screen -t AutoArray.hxx                 vim AutoArray.hxx
+screen -t Fixed/Fixed.hxx               vim Fixed/Fixed.hxx
+screen -t Fixed/test.cxx                vim Fixed/test.cxx
+screen -t FixedDecimal/FixedDecimal.cxx vim FixedDecimal/FixedDecimal.cxx
+screen -t FixedDecimal/FixedDecimal.hxx vim FixedDecimal/FixedDecimal.hxx
+screen -t FixedDecimal/test.cxx         vim FixedDecimal/test.cxx
+screen -t Getopt/Getopt.cxx             vim Getopt/Getopt.cxx
+screen -t Getopt/Getopt.hxx             vim Getopt/Getopt.hxx
+screen -t ReferencePointer.hxx          vim ReferencePointer.hxx
+screen -t SafeNumber.hxx                vim SafeNumber.hxx
+screen -t Timestamp/Timestamp.cxx       vim Timestamp/Timestamp.cxx
+screen -t abs.hxx                       vim abs.hxx
+screen -t logBase.hxx                   vim logBase.hxx
+screen -t max.hxx                       vim max.hxx
+screen -t overflow.hxx                  vim overflow.hxx
+screen -t rppower.hxx                   vim rppower.hxx
+screen -t toString.hxx                  vim toString.hxx

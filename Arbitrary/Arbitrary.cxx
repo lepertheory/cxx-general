@@ -1,0 +1,768 @@
+/*****************************************************************************
+ * Arbitrary.cxx
+ *****************************************************************************
+ * Implementation for class Arbitrary.
+ *****************************************************************************/
+
+// Class include.
+#include "Arbitrary.hxx"
+
+// STL includes.
+#include <cmath>
+#include <iostream> // FIXME: This is for debugging only, get rid of it.
+
+// Internal includes.
+#include "rppower.hxx"
+#include "logBase.hxx"
+
+// Namespaces used.
+using namespace std;
+
+// Namespace wrapper.
+namespace DAC {
+  
+  /*************************************************************************
+   * Initialize static members.
+   *************************************************************************/
+  
+  // Static data members.
+  Arbitrary::_BaseT Arbitrary::s_digitbase = 0;
+  
+  // The characters that make up the digits.
+  const Arbitrary::_NumChrT   Arbitrary::s_numdigits = 36;
+  const Arbitrary::_StrChrT   Arbitrary::s_odigits[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+    'U', 'V', 'W', 'X', 'Y', 'Z'
+  };
+  vector<Arbitrary::_NumChrT> Arbitrary::s_idigits;
+  
+  // Call class constructor.
+  bool Arbitrary::s_initialized = s_classInit();
+  
+  /***************************************************************************/
+  // Default constructor. By definition of the clear() function, this must do
+  // nothing but call clear().
+  Arbitrary::Arbitrary () {
+    
+    // Make sure the class initialized properly.
+    if (!s_initialized) {
+      ArbitraryErrors::throwClassInitFailed("Class initialization failed, cannot construct new objects.");
+    }
+    
+    // Construct object fully.
+    clear();
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Copy constructor. Makes a perfect copy of a given number.
+  Arbitrary::Arbitrary (Arbitrary const& number) {
+    
+    // Make sure the class initialized properly.
+    if (!s_initialized) {
+      ArbitraryErrors::throwClassInitFailed("Class initialization failed, cannot construct new objects.");
+    }
+    
+    // Copy the given number.
+    copy(number);
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // String conversion constructor. Special case.
+  Arbitrary::Arbitrary (string const& number) {
+    
+    // Make sure the class initialized properly.
+    if (!s_initialized) {
+      ArbitraryErrors::throwClassInitFailed("Class initialization failed, cannot construct new objects.");
+    }
+    
+    // Construct fully.
+    clear();
+    
+    // Set the number.  
+    set(number);
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Add a number to this number.
+  Arbitrary& Arbitrary::op_add (Arbitrary const& right) {
+    
+    // Allow right to be const.
+    Arbitrary tmp_right(right);
+    
+    // Convert to two numbers that can be calculated against each other.
+    _normalizeExponent(tmp_right);
+    
+    // Done.
+    return *this;
+    
+  };
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  Arbitrary& Arbitrary::op_mul (Arbitrary const& right) {
+    
+    // Reduce typing.
+    typedef _DigsT::size_type DST;
+    
+    // Work area.
+    _DataPT   new_data(new _Data);
+    Arbitrary tmp_right(right);
+    
+    // Convert to two numbers that can be calculated against each other.
+    _normalizeRadix(tmp_right);
+    
+    // Multiply like 3rd grade. Outer loop is the multiplicand.
+    for (DST i = 0; i != _data->digits.size(); ++i) {
+      
+      cout << "i: " << i << endl;
+      
+      // Temporary product for this digit.
+      _DigsT digproduct;
+      
+      // Inner loop is the multiplicator.
+      for (DST j = 0; j != tmp_right._data->digits.size(); ++j) {
+        
+        // Add a new digit to the temporary product if needed.
+        if (digproduct.size() == j) {
+          digproduct.push_back(0);
+        }
+        
+        // Add the product of these two digits to the appropriate digit of the
+        // temporary product.
+        digproduct[j] = of_add<_DigT, _DigT, _DigT>(digproduct[j], of_mul<_DigT, _DigT, _DigT>(_data->digits[i], tmp_right._data->digits[j]));
+        
+        // Do any carry needed.
+        s_carry<_DigsT, _DigsT::iterator, DST>(digproduct, j);
+        
+      }
+      
+      // Add the single digit product to the final product, offset by the
+      // multiplicand digit we are on now.
+      for (DST j = 0; j != digproduct.size(); ++j) {
+        
+        // Digit to add to.
+        DST tdig = of_add<DST, DST, DST>(j, i);
+        
+        // Add a new digit if needed.
+        if (new_data->digits.size() == tdig) {
+          new_data->digits.push_back(0);
+        }
+        
+        // Add this digit.
+        new_data->digits[tdig] = of_add<_DigT, _DigT, _DigT>(new_data->digits[tdig], digproduct[j]);
+        
+        // Do any carry needed.
+        s_carry<_DigsT, _DigsT::iterator, DST>(new_data->digits, tdig);
+        
+      }
+      
+    }
+    
+    // Swap in the new data.
+    _data = new_data;
+    
+    // Done.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  Arbitrary& Arbitrary::op_div (Arbitrary const& right) {
+    
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Bitwise shift right.
+  Arbitrary& Arbitrary::op_shr (Arbitrary const& right) {
+    
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Bitwise and operator.
+  Arbitrary& Arbitrary::op_bit_and (Arbitrary const& right) {
+    
+    // Allow right to be const.
+    Arbitrary tmp_right(right);
+    
+    // Convert to two numbers that can be calculated against each other.
+    _normalizeRadix(tmp_right);
+    _toWhole();
+    tmp_right._toWhole();
+    
+    // Only shared digits need to be checked.
+    if (_data->digits.size() > tmp_right._data->digits.size()) { _data->digits.resize(tmp_right._data->digits.size()); }
+    if (tmp_right._data->digits.size() > _data->digits.size()) { tmp_right._data->digits.resize(_data->digits.size()); }
+    
+    // Do the and.
+    for (_DigsT::size_type i = 0; i != _data->digits.size(); ++i) {
+      _data->digits[i] &= tmp_right._data->digits[i];
+    }
+    
+    // Clean up.
+    s_trimZeros<_DigsT, _DigsT::iterator>(_data->digits, _END);
+    
+    // Return, we done.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Comparison operators. Only op_gt until optimization time, all others are
+  // built off of this one.
+  bool Arbitrary::op_gt (Arbitrary const& right) const {
+    
+    // Temp variables allow const.
+    Arbitrary tmp_left(*this);
+    Arbitrary tmp_right(right);
+    
+    // Convert to two numbers that can be calculated against each other.
+    tmp_left._normalizeExponent(tmp_right);
+    
+    // Test.
+    if (tmp_left._data->positive && !tmp_right._data->positive) {
+      return true;
+    }
+    if (tmp_left._data->digits.size() > tmp_right._data->digits.size()) {
+      return true;
+    }
+    if (tmp_left._data->digits.size() < tmp_right._data->digits.size()) {
+      return false;
+    }
+    {
+      _DigsT::reverse_iterator li = tmp_left._data->digits.rbegin();
+      _DigsT::reverse_iterator ri = tmp_right._data->digits.rbegin();
+      for (; (li != tmp_left._data->digits.rend()) && (ri != tmp_right._data->digits.rend()); li++, ri++) {
+        if (*li > *ri) {
+          return true;
+        }
+        if (*li < *ri) {
+          return false;
+        }
+      }
+    }
+    
+    // No differences found. Not greater.
+    return false;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Convert to a bool.
+  bool Arbitrary::op_bool () const {
+    
+    // This one is easy.
+    return (_data->digits.size() > 0);
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Raise to a power.
+  Arbitrary& Arbitrary::pow (Arbitrary const& power) {
+    
+    // Allow const.
+    Arbitrary tmp_left(*this);
+    Arbitrary tmp_right(power);
+    Arbitrary retval(1);
+    
+    // Convert to two numbers that can be calculated against each other.
+    _normalizeRadix(tmp_right._toWhole());
+    
+    // Russian peasant power.
+    if (tmp_right >= Arbitrary(0)) {
+      while (tmp_right) {
+        if (tmp_right & Arbitrary(1)) {
+          retval *= tmp_left;
+        }
+      }
+    }
+    
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Convert to a string.
+  string Arbitrary::toString () const {
+    
+    // Base conversion data.
+    _DigStrT num;
+    _BaseT   base = _data->originalbase;
+    
+    // Construct the string here.
+    string construct;
+    
+    // Output the sign if negative.
+    if (!(_data->positive)) {
+      construct += "-";
+    }
+    
+    // Get the string of digits. Wow. This one's a doozie. Here goes, from the
+    // innermost level out:
+    // 1.) Reverse data->digits for the base conversion.
+    // 2.) Convert data->digits to base whatever from the internal digit base.
+    // 3.) Reverse the converted number.
+    // 4.) Swap that into num.
+    // Each step is, by itself, ridiculous, but it should be possible to
+    // follow if you're good at templates and have six independent eyes.
+    num.swap(
+      *(s_reverse<_DigStrT, _DigStrT::reverse_iterator>(
+        *(s_baseconv<_DigStrT, _DigChrT, _DigsT, _DigT, _DigsT::iterator>(
+          *(s_reverse<_DigsT, _DigsT::reverse_iterator>(_data->digits)),
+          s_digitbase,
+          base
+        ))
+      ))
+    );
+    
+    // Output the number character by character. If a character is not found
+    // in the digit table, then output the raw number in single quotes. If num
+    // is empty, then output a 0.
+    if (num.size() == 0) {
+      construct += "0";
+    } else {
+      for (_DigStrT::iterator i = num.begin(); i != num.end(); ++i) {
+        if (*i > s_numdigits) {
+          construct += "'" + DAC::toString(*i) + "'";
+        } else {
+          construct += s_odigits[*i];
+        }
+      }
+    }
+    
+    // Insert the radix point.
+    if (_data->exponent != 0) {
+      if (_data->exponent < 0) {
+        construct.append(-(_data->exponent), '0');
+      } else {
+        if (_data->exponent >= of_static_cast<string::size_type, _ExpT>(construct.size())) {
+          construct.insert(
+            0,
+            of_add<string::size_type, string::size_type, int>(
+              of_sub<string::size_type, _ExpT, string::size_type>(_data->exponent, construct.size()), 1
+            ),
+            '0'
+          );
+        }
+        construct.insert(construct.size() - _data->exponent, ".");
+      }
+    }
+    
+    // Return the string we've made.
+    return construct;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Set the number from a string.
+  Arbitrary& Arbitrary::set (string const& number) {
+    
+    // Create the number in this.
+    _DataPT new_data(new _Data);
+    
+    // Data for parser.
+    _DigStrT num;
+    _DigStrT rad;
+    _DigStrT exp;
+    bool     p_num = true;
+    bool     p_exp = true;
+    _BaseT   base  = 10;
+    
+    // Parse the number character by character. Scoped because there are a
+    // lot of temp variables that won't be needed later.
+    {
+      
+      // Data for intial parse pass.
+      enum Mode { NUM, RAD, EXP } mode = NUM;
+      string::size_type length   = number.length();
+      bool              s_num    = false;
+      bool              s_exp    = false;
+      bool              diggiven = false;
+      
+      for (string::size_type i = 0; i != length; ++i) {
+        
+        switch(number[i]) {
+          
+          // Decimal point.
+          case '.':
+            switch (mode) {
+              case NUM:
+                mode = RAD;
+                break;
+              case RAD: ArbitraryErrors::throwBadFormat("Radix point given for a second time", i, number);
+              case EXP: ArbitraryErrors::throwBadFormat("Radix point given in exponent",       i, number);
+            }
+            diggiven = false;
+          break;
+          
+          // Exponent symbol.
+          case 'e':
+          case 'E':
+            switch (mode) {
+              case NUM: mode = EXP; break;
+              case RAD: mode = EXP; break;
+              case EXP: ArbitraryErrors::throwBadFormat("Exponent symbol given for a second time", i, number);
+            }
+            diggiven = false;
+          break;
+          
+          // Sign symbol.
+          case '+':
+          case '-':
+            if (diggiven) {
+              ArbitraryErrors::throwBadFormat("Sign given after digits", i, number);
+            }
+            switch (mode) {
+              case NUM:
+                if (s_num) {
+                  ArbitraryErrors::throwBadFormat("Sign of number given for a second time", i, number);
+                }
+                p_num = (number[i] == '+');
+                s_num = true;
+              break;
+              case RAD:
+                ArbitraryErrors::throwBadFormat("Sign given after radix point", i, number);
+              break;
+              case EXP:
+                if (s_exp) {
+                  ArbitraryErrors::throwBadFormat("Sign of exponent given for a second time", i, number);
+                }
+                p_exp = (number[i] == '+');
+                s_exp = true;
+              break;
+            }
+          break;
+          
+          // All other characters. Most likely digits.
+          default:
+            
+            // Scoped for temp variables.
+            {
+              
+              // Get the value of this digit. No need do bounds checking
+              // unless someone does something stupid like changing number
+              // to be something other than a string of char.
+              _NumChrT digval = s_idigits[number[i]];
+              
+              // Make sure this digit is within the number base.
+              if ((digval >= base) || (digval == numeric_limits<_NumChrT>::max())) {
+                ArbitraryErrors::throwBadFormat("Unrecognized character '" + DAC::toString(number[i]) + "'", i, number);
+              }
+              
+              // Add the digit to its proper place.
+              switch (mode) {
+                case NUM: num.push_back(digval); break;
+                case RAD: rad.push_back(digval); break;
+                case EXP: exp.push_back(digval); break;
+              }
+              diggiven = true;
+              
+            }
+            
+          break;
+          
+        }
+        
+      }
+      
+    }
+    
+    // Set the original base for fraction issues.
+    new_data->originalbase = base;
+    
+    // Trim leading and trailing zeros from gathered digits.
+    s_trimZeros<_DigStrT, _DigStrT::iterator>(num, _BEGIN);
+    s_trimZeros<_DigStrT, _DigStrT::iterator>(rad, _END);
+    
+    // Load the exponent.
+    {
+      
+      _ExpT digexp = 1;
+      for (_DigStrT::reverse_iterator i = exp.rbegin(); i != exp.rend(); ++i) {
+        
+        // Get the single digit value.
+        _ExpT digval = of_mul<_ExpT, _ExpT, _DigChrT>(digexp, *i);
+        
+        // Set the digit value.
+        new_data->exponent = of_add<_ExpT, _ExpT, _ExpT>(new_data->exponent, digval);
+        
+        // Up the order of magnitude.
+        digexp = of_mul<_ExpT, _ExpT, _BaseT>(digexp, base);
+        
+      }
+      
+      if (p_exp) {
+        new_data->exponent = of_mul<_ExpT, _ExpT, int>(new_data->exponent, -1);
+      }
+      
+    }
+    
+    // Combine the numeric and radix digits, taking note of the original
+    // number of decimal places.
+    new_data->exponent = of_add<_ExpT, _ExpT, _DigStrT::size_type>(new_data->exponent, rad.size());
+    num.insert(num.end(), rad.begin(), rad.end());
+    
+    // Load the numeric digits. Convert from the given base to the target
+    // base. Digits come out in reverse order, no need for a temp.
+    new_data->digits.swap(*(s_baseconv<_DigsT, _DigT, _DigStrT, _DigChrT, _DigStrT::iterator>(num, base, s_digitbase)));
+    
+    // Number loaded succesfully, swap it in.
+    _data = new_data;
+    
+    // Return self.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Copy the given number (constant).
+  Arbitrary& Arbitrary::copy (Arbitrary const& number) {
+    
+    // Start from scratch.
+    clear();
+    
+    // Do the copy.
+    *_data = *(number._data);
+    
+    // Return self.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Copy the given number.
+  Arbitrary& Arbitrary::copy (Arbitrary& number) {
+    
+    // Start from scratch.
+    clear();
+    
+    // Set the data.
+    _data = number._data;
+    
+    // Return self.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Reset to just-constructed by default constructor state.
+  Arbitrary& Arbitrary::clear () {
+    
+    // Create a new data structure.
+    _data = new _Data;
+    
+    // Return self.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  bool Arbitrary::s_classInit () throw() {
+    
+    // This cannot throw.
+    try {
+      
+      // Get the maximum number that can be held in a single digit.
+      s_digitbase = of_static_cast<_BaseT, int>(rppower(2, numeric_limits<_DigT>::digits >> 1));
+      
+      // Get the input digits.
+      for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {
+        _NumChrT digit = 0;
+        if      ((static_cast<_StrChrT>(i) >= '0') && (static_cast<_StrChrT>(i) <= '9')) { digit = of_sub<_NumChrT, _NumChrT, _NumChrT>(i, static_cast<_NumChrT>('0')); }
+        else if ((static_cast<_StrChrT>(i) >= 'A') && (static_cast<_StrChrT>(i) <= 'Z')) { digit = of_add<_NumChrT, _NumChrT, _NumChrT>(of_sub<_NumChrT, _NumChrT, _NumChrT>(i, static_cast<_NumChrT>('A')), 10); }
+        else if ((static_cast<_StrChrT>(i) >= 'a') && (static_cast<_StrChrT>(i) <= 'z')) { digit = of_add<_NumChrT, _NumChrT, _NumChrT>(of_sub<_NumChrT, _NumChrT, _NumChrT>(i, static_cast<_NumChrT>('a')), 10); }
+        else                                                                             { digit = numeric_limits<_NumChrT>::max(); }
+        s_idigits.push_back(digit);
+      }
+      
+    } catch (...) {
+      
+      // If any exception was caught, we failed.
+      return false;
+      
+    }
+    
+    // Happy joy.
+    return true;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Normalize this number to another number.
+  Arbitrary& Arbitrary::_normalizeRadix (Arbitrary& number) {
+    
+    // Check for problems that will be caused by base differences.
+    if (_data->originalbase != number._data->originalbase) {
+      
+      // Both numbers have fractional digits.
+      if ((_data->exponent > 0) && (number._data->exponent > 0)) {
+        ArbitraryErrors::throwFractionalConflict("Cannot normalize two fractional numbers of different radix.");
+      }
+      
+      // Convert this number to the target number's base unless this number
+      // has fractional digits, in that case convert the target number.
+      if (_data->exponent > 0) {
+        number._toWhole();
+        number._data->originalbase = _data->originalbase;
+      } else {
+        _toWhole();
+        _data->originalbase = number._data->originalbase;
+      }
+      
+    }
+    
+    // We done.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Set the exponents of two numbers to be the same.
+  Arbitrary& Arbitrary::_normalizeExponent (Arbitrary& number) {
+    
+    // Both numbers need to be of the same radix.
+    _normalizeRadix(number);
+    
+    // Drop the larger exponent down to the smaller one.
+    if (_data->exponent > number._data->exponent) {
+      number._setExponent(_data->exponent);
+    } else {
+      _setExponent(number._data->exponent);
+    }
+    
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Convert this number to a whole number.
+  Arbitrary& Arbitrary::_toWhole () {
+    
+    // If this number is not fully represented, un-exponentize it. I'm a
+    // programmer, not a playwright.
+    if (_data->exponent < 0) {
+      op_mul(Arbitrary(_data->originalbase).pow(-_data->exponent));
+    }
+    
+    return *this;
+    
+  }
+  /***************************************************************************/
+ 
+  /***************************************************************************/
+  // Set the exponent of this number.
+  Arbitrary& Arbitrary::_setExponent (_ExpT const exponent, bool const force) {
+    
+    // Make sure there's a need to do this work.
+    if (exponent != _data->exponent) {
+      
+      // Make sure that we won't be losing precision.
+      if (!force && (exponent < _data->exponent)) {
+        _cleanup();
+        if (exponent < _data->exponent) {
+          ArbitraryErrors::throwPrecisionLoss("Precision will be lost lowering the precision of '" + toString() + "' to " + DAC::toString(exponent) + " radix digits.");
+        }
+      }
+      
+      // Do the exponent shift.
+      if (exponent > _data->exponent) {
+        op_mul(Arbitrary(_data->originalbase).pow(exponent - _data->exponent));
+      } else {
+        op_div(Arbitrary(_data->originalbase).pow(_data->exponent - exponent));
+      }
+      
+    }
+    
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Default constructor.
+  Arbitrary::_Data::_Data () {
+    
+    // Construct fully.
+    clear();
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Copy constructor.
+  Arbitrary::_Data::_Data (Arbitrary::_Data const& data) {
+    
+    // Construct fully.
+    clear();
+    
+    // Do the copy.
+    copy(data);
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Copy another _Data structure.
+  Arbitrary::_Data& Arbitrary::_Data::copy (Arbitrary::_Data const& data) {
+    
+    // Copying digits may throw, so do it first. It's the only one that may
+    // throw, so just let it throw if it throws.
+    digits   = data.digits;
+    positive = data.positive;
+    exponent = data.exponent;
+    
+    //  Return this.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+  /***************************************************************************/
+  // Reset to just-constructed by default constructor state.
+  Arbitrary::_Data& Arbitrary::_Data::clear () {
+    
+    // Exception safety.
+    _DigsT temp;
+    temp.push_back(0);
+    originalbase = of_static_cast<_BaseT, int>(10);
+    
+    // These won't throw.
+    positive     = true;
+    exponent     = 0;
+    
+    // Swap in the new data.
+    digits.swap(temp);
+    
+    // Return this.
+    return *this;
+    
+  }
+  /***************************************************************************/
+  
+};
