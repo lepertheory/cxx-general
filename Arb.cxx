@@ -28,6 +28,14 @@ namespace DAC {
    ***************************************************************************/
   
   /***************************************************************************/
+  // Static data members.
+  /*
+  const Arb Arb::VAL_NEGONE(-1);
+  const Arb Arb::VAL_ZERO(0);
+  const Arb Arb::VAL_ONE(1);
+  */
+  
+  /***************************************************************************/
   // Function members.
   
   // Default constructor.
@@ -616,6 +624,30 @@ namespace DAC {
   // Find the nth root of this number.
   Arb Arb::root (Arb const& n) const {
     
+    // Work area.
+    Arb a;
+    Arb b;
+    Arb c;
+    Arb retval;
+    
+    // First bracket the root. Start with 1, work down or up with a binary
+    // search until the root is bracketed.
+    a = VAL_ONE;
+    bool gotb = false;
+    if (_f(a, n).isPositive()) {
+      if (gotb) {
+        c = a;
+      } else {
+        a /= 2;
+      }
+    } else {
+      b  = a;
+      a *= 2;
+    }
+    
+    cout << "a: " << a << "  b: " << b << "  c: " << c << endl;
+    
+    /*
     Arb retval;
     Arb next(1);
     Arb one(1);
@@ -623,35 +655,16 @@ namespace DAC {
     
     do {
       retval = next;
-      //next   = (*this / retval.pow(n - one) + (n - one) * retval) / n;
-      /*
-      Arb nsubone(n - one);
-      nsubone.Format(FMT_FRACTION);
-      cout << "nsubone: " << nsubone;
-      Arb retpownso(retval.pow(nsubone));
-      retpownso.Format(FMT_FRACTION);
-      cout << "  retpownso: " << retpownso;
-      Arb thisdivrpn(*this / retpownso);
-      thisdivrpn.Format(FMT_FRACTION);
-      cout << "  thisdivrpn: " << thisdivrpn;
-      Arb nsomulret(nsubone * retval);
-      nsomulret.Format(FMT_FRACTION);
-      cout << "  nsomulret: " << nsomulret;
-      Arb tdraddnmr(thisdivrpn + nsomulret);
-      tdraddnmr.Format(FMT_FRACTION);
-      cout << "  tdraddnmr: " << tdraddnmr;
-      next = tdraddnmr / n;
-      cout << "  next: " << next << endl;
-      */
-      next   = (one / n) * (*this / retval.pow(n - one) + (n - one) * retval);
+      //next   = (one / n) * (*this / retval.pow(n - one) + (n - one) * retval);
       //next   = (one / n) * ((n - one) * retval + *this / retval.pow(n - one));
-      if (next._data->q > accuracy._data->q) {
-        next._forcereduce(accuracy._data->q);
-      }
+      //if (next._data->q > accuracy._data->q) {
+      //  next._forcereduce(accuracy._data->q);
+      //}
     } while ((next - retval).abs() > accuracy);
     retval = next;
     
     retval._reduce();
+    */
     
     return retval;
     

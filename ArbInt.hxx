@@ -42,6 +42,12 @@
         typedef T value_type;
         
         /*********************************************************************/
+        // Constants.
+        
+        static const ArbInt VAL_ZERO;
+        static const ArbInt VAL_ONE;
+        
+        /*********************************************************************/
         // Function members.
         
         // Default constructor.
@@ -334,6 +340,9 @@
     
     /*************************************************************************/
     // Static member initialization.
+    
+    template <class T> const ArbInt<T> ArbInt<T>::VAL_ZERO(0);
+    template <class T> const ArbInt<T> ArbInt<T>::VAL_ONE(1);
     
     template <class T> int                       ArbInt<T>::s_digitbits = 0;
     template <class T> typename ArbInt<T>::_DigT ArbInt<T>::s_digitbase = 0;
@@ -1034,11 +1043,10 @@
     // Raise this number to a power.
     template <class T> ArbInt<T> ArbInt<T>::pow (ArbInt<T> const& exp) {
       
-      /*
       // Work area.
       ArbInt<T> tmp_base(*this);
       ArbInt<T> tmp_expn(exp);
-      ArbInt<T> retval(1);
+      ArbInt<T> retval(VAL_ONE);
       
       // Russian peasant power.
       while (tmp_expn._digits->size() > 0) {
@@ -1046,10 +1054,10 @@
           retval *= tmp_base;
         }
         tmp_base  *= tmp_base;
-        tmp_expn >>= ArbInt<T>(1);
+        tmp_expn >>= VAL_ONE;
       }
-      */
       
+      /*
       // Work area.
       std::vector< ArbInt<T> > chain;
       std::vector< ArbInt<T> > power;
@@ -1094,6 +1102,7 @@
             }
         
       }
+      */
       
       // Return the result.
       return retval;

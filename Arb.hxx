@@ -64,6 +64,14 @@
         enum OutputFormat { FMT_RADIX, FMT_FRACTION };
         
         /*********************************************************************/
+        // Constants
+        /*
+        static const Arb VAL_NEGONE;
+        static const Arb VAL_ZERO;
+        static const Arb VAL_ONE;
+        */
+        
+        /*********************************************************************/
         // Function members.
         
         // Default constructor.
@@ -257,6 +265,9 @@
         // Find a whole-number root of this number.
         Arb& _root (_DigsT const& root);
         
+        // Root finding function, x^y - z.
+        Arb _f (Arb const& x, Arb const& y) const;
+        
     };
     
   };
@@ -357,6 +368,12 @@
                        inline Arb& Arb::operator = (Arb         const& number) { return copy(number);   }
     template <class T> inline Arb& Arb::operator = (T           const  number) { return set<T>(number); }
     
+    // Arithmetic assignment operators.
+    inline Arb& Arb::operator *= (Arb const& number) { return op_mul(number); }
+    inline Arb& Arb::operator /= (Arb const& number) { return op_div(number); }
+    inline Arb& Arb::operator += (Arb const& number) { return op_add(number); }
+    inline Arb& Arb::operator -= (Arb const& number) { return op_sub(number); }
+    
     // Accessors.
     inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                 }
     inline Arb&                   Arb::MaxRadix (std::string::size_type const maxradix)       { _maxradix = maxradix; return *this; }
@@ -419,6 +436,9 @@
     
     // Return the absolute value of this number.
     inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }
+    
+    // Root finding function, x^y - z.
+    inline Arb Arb::_f (Arb const& x, Arb const& y) const { return x.pow(y) - *this; }
     
   };
   
