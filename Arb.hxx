@@ -136,8 +136,16 @@
         bool op_eq (Arb const& number) const;
         bool op_ne (Arb const& number) const;
         
+        // Return information about this number.
+        bool isInteger  () const;
+        bool isPositive () const;
+        bool isZero     () const;
+        
         // Raise this number to a power.
         Arb& pow (Arb const& exp);
+        
+        // Find the nth root of this number.
+        Arb& root (Arb const& n);
         
       /*
        * Private members.
@@ -386,6 +394,15 @@
     inline bool Arb::op_le (Arb const& number) const { return (op_lt(number) || op_eq(number));  }
     inline bool Arb::op_eq (Arb const& number) const { return !(op_gt(number) || op_lt(number)); }
     inline bool Arb::op_ne (Arb const& number) const { return (op_gt(number) || op_lt(number));  }
+    
+    // Return whether this number is an integer.
+    inline bool Arb::isInteger () const { return (_data->q == _DigsT(1)); }
+    
+    // Return whether this number is positive.
+    inline bool Arb::isPositive () const { return _data->positive; }
+    
+    // Return whether this number is equal to zero.
+    inline bool Arb::isZero () const { return _data->p.isZero(); }
     
   };
   

@@ -1057,12 +1057,10 @@
     // Find a root of this number.
     template <class T> ArbInt<T>& ArbInt<T>::root (ArbInt<T> const& root, ArbInt<T>& divisor, ArbInt<T>& remainder) {
       
-      Base(s_digitbase);
-      std::cout << "number: " << toString() << std::endl;
-      
-      // Of course.
-      divisor   = ArbInt<T>(1);
-      remainder = ArbInt<T>(0);
+      // Work area.
+      ArbInt<T> eroot;
+      ArbInt<T> edivor(1);
+      ArbInt<T> erem;
       
       // 0 and 1 are special cases, always themselves, also root 1.
       if (!_digits->empty() && !((_digits->size() == 1) && ((*_digits)[0] == 1)) && (root != ArbInt<T>(1))) {
@@ -1083,12 +1081,9 @@
           throw ArbIntErrors::RootTooLarge();
         }
         
-        std::cout << "iroot: " << iroot << std::endl;
-        
         // Get the number of aligned digit groups in the number before
         // expansion.
         SafeInteger<typename _DigsT::size_type> groups = (_digits->size() - 1) / iroot + 1;
-        std::cout << "groups: " << groups << std::endl;
         
         // Cache type conversions.
         ArbInt<T> abase(s_digitbase);
@@ -1097,113 +1092,65 @@
         // or a perfect root is found.
         SafeInteger<typename _DigsT::size_type> group = 0;
         SafeInteger<typename _DigsT::size_type> extra = 0;
-        ArbInt<T> eroot;
-        ArbInt<T> erem;
         do {
           
           // Get the next aligned block of digits from the radicand.
           ArbInt<T> diggroup;
-          diggroup.Base(s_digitbase);
           if (group < groups) {
             SafeInteger<typename _DigsT::size_type> spos = (groups - 1 - group) * iroot;
-            std::cout << "spos: " << spos << std::endl;
             SafeInteger<typename _DigsT::size_type> epos = spos + iroot - 1;
-            std::cout << "epos: " << epos << std::endl;
             if (epos >= _digits->size()) {
               epos = _digits->size() - 1;
             }
-            std::cout << "epos: " << epos << std::endl;
             *(diggroup._digits) = _DigsT(_digits->begin() + spos.Value(), _digits->begin() + (epos + 1).Value());
-            std::cout << "diggroup: " << diggroup << std::endl;
             ++group;
           } else {
             *(diggroup._digits) = _DigsT(iroot.Value(), 0);
-            divisor *= abase;
+            edivor *= abase;
             ++extra;
           }
           
-          // Find the next digit of the root.
+          // Find the next digit of the root with a binary search.
           SafeInteger<_DigT> guess = 0;
           SafeInteger<_DigT> min   = 0;
           SafeInteger<_DigT> max   = s_digitbase - 1;
+          ArbInt<T>          arbguess;
+          ArbInt<T>          abpr  = ArbInt<T>(abase).pow(root);
           while (min <= max) {
-            guess = (min + max) / 2;
-            /** /
-            ArbInt<T> axe(abase * eroot);
-            std::cout << "axe: " << axe;
-            ArbInt<T> apg(axe + ArbInt<T>(guess.Value()));
-            std::cout << "  apg: " << apg;
-            ArbInt<T> aer(apg.pow(root));
-            std::cout << "  aer: " << aer;
-            ArbInt<T> aer2(abase.pow(root));
-            std::cout << "  aer2: " << aer2;
-            ArbInt<T> eer(eroot.pow(root));
-            std::cout << "  eer: " << eer;
-            ArbInt<T> axe2(aer2 * eer);
-            std::cout << "  axe2: " << axe2;
-            ArbInt<T> ama(axe - axe2);
-            std::cout << "  ama: " << ama;
-            ArbInt<T> aer3(abase.pow(root));
-            std::cout << "  aer3: " << aer3;
-            ArbInt<T> axe3(aer3 * erem);
-            std::cout << "  axe3: " << axe3;
-            ArbInt<T> apd(axe3 + diggroup);
-            std::cout << "  apd: " << apd << std::endl;
-            //*/
-            if ((abase * eroot + ArbInt<T>(guess.Value())).pow(root) - ArbInt<T>(abase).pow(root) * ArbInt<T>(eroot).pow(root) <= ArbInt<T>(abase).pow(root) * erem + diggroup) {
-            //if (ama <= apd) {
+            guess    = (min + max) / 2;
+            arbguess = guess.Value();
+            if ((abase * eroot + arbguess).pow(root) - abpr * ArbInt<T>(eroot).pow(root) <= abpr * erem + diggroup) {
               min = guess + 1;
             } else {
               max = guess - 1;
             }
-            //std::cout << "guess: " << guess << "  min: " << min << "  max: " << max << std::endl;
           }
           if (guess == min) {
             guess -= 1;
           }
-          std::cout << "guess: " << guess << "  min: " << min << "  max: " << max << std::endl;
+          arbguess = guess.Value();
           
           // Get the next iteration's values.
-          ArbInt<T> new_eroot = abase * eroot + ArbInt<T>(guess.Value());
-          ArbInt<T> new_erem  = ArbInt<T>(abase).pow(root) * erem + diggroup - ((abase * eroot + ArbInt<T>(guess.Value())).pow(root) - ArbInt<T>(abase).pow(root) * ArbInt<T>(eroot).pow(root));
+          erem  = abpr * erem + diggroup - ((abase * eroot + arbguess).pow(root) - abpr * ArbInt<T>(eroot).pow(root));
+          eroot = abase * eroot + arbguess;
+          /*
+          ArbInt<T> new_eroot = abase * eroot + arbguess;
+          ArbInt<T> new_erem  = abpr * erem + diggroup - ((abase * eroot + arbguess).pow(root) - abpr * ArbInt<T>(eroot).pow(root));
           eroot = new_eroot;
           erem  = new_erem;
+          */
           
         } while ((group < groups) || ((extra < maxextra) && erem));
         
         _digits   = eroot._digits;
         remainder = erem;
         
-        /*
-        // The shifting nth-root algorithm.
-        ArbInt<T> remainder;
-        ArbInt<T> diggroup;
-        ArbInt<T> nroot;
-        
-        ArbInt<T> base(s_digitbase);
-        
-        SafeInteger<typename _DigsT::size_type> spos = ((_data->size() - 1) / iroot) * iroot;
-        SafeInteger<typename _DigsT::size_type> epos = _data->size() - 1;
-        
-        diggroup._data = _DigsT(_data->start() + spos, _data->start() + epos);
-        
-        _DigT pguess = 0;
-        _DigT guess  = s_digitbase >> 1;
-        _DigT max    = 0;
-        _DigT min    = 0;
-        if ((base * nroot + ArbInt<T>(guess)).pow(root) - base.pow(root) * nroot.pow(root) <= base.pow(root) * remainder + diggroup) {
-          if (guess > max) {
-            max = guess;
-          }
-        } else {
-          guess  -= ((guess - pguess) >> 1) + 1;
-          pguess  = guess;
-        }
-        */
-        
       }
       
-      // We done.
+      // We done. Move results into place and return.
+      _digits   = eroot._digits;
+      remainder = erem;
+      divisor   = edivor;
       return *this;
       
     }

@@ -565,6 +565,52 @@ namespace DAC {
     
   }
   
+  // Raise this number to a power.
+  Arb& Arb::pow (Arb const& exp) {
+    
+    // Raise this number to an integer power.
+    if (exp.isInteger()) {
+      
+      // Work area.
+      Arb  retval(1);
+      Arb  tmp_base(*this);
+      Arb  tmp_expn(exp);
+      bool positive(tmp_expn.isPositive());
+      Arb  one(1);
+      
+      // Convert exponent to a positive number for algorithm.
+      if (!positive) {
+        tmp_expn *= -1;
+      }
+      
+      // Russian peasant algorithm.
+      while (!tmp_expn.isZero()) {
+        if (tmp_expn & one) {
+          retval *= tmp_base;
+        }
+        tmp_base  *= tmp_base;
+        tmp_expn >>= 1;
+      }
+      
+      // If a negative exponent is requested, 1/x.
+      if (!positive) {
+        retval = one / retval;
+      }
+      
+      // Move the result into place.
+      
+      
+    }
+    
+  }
+  
+  // Find the nth root of this number.
+  Arb& Arb::root (Arb const& n) {
+    
+    
+    
+  }
+  
   // Common initialization tasks.
   void Arb::_init () {
     
