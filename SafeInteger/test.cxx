@@ -297,6 +297,17 @@ int main (int argc, char** argv, char** envp) {
           testOp(test1, DIV, test2);
         }
       }
+      {
+        cout << "  With unsigned short int:" << endl;
+        SafeInteger<unsigned short int> test2;
+        {
+          cout << "    Addition:" << endl;
+          test1 = numeric_limits<signed char>::min();
+          test2 = 255;
+          cout << "      Over maximum: ";
+          testOp(test1, ADD, test2.Value());
+        }
+      }
     }
     
   } catch (Exception& e) {
