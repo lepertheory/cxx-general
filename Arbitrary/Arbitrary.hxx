@@ -64,24 +64,25 @@
     namespace ArbitraryErrors {
       
       // Errors.
-      class Base               : public Exception     {};
-      class BadFormat          : public Base          {};
-      class Overflow           : public Base          {};
-      class RadixConflict      : public Base          {};
-      class FractionalConflict : public RadixConflict {};
-      class PrecisionLoss      : public Base          {};
-      class ClassInitFailed    : public Base          {};
-      class Overrun            : public Base          {};
-      
-      // Error factories.
-      void throwBase               (std::string const& text)                                                        throw(Base);
-      void throwBadFormat          (std::string const& text, std::string::size_type pos, std::string const& number) throw(BadFormat);
-      void throwOverflow           (std::string const& text, Exception const* cause = 0)                            throw(Overflow);
-      void throwRadixConflict      (std::string const& text)                                                        throw(RadixConflict);
-      void throwFractionalConflict (std::string const& text)                                                        throw(FractionalConflict);
-      void throwPrecisionLoss      (std::string const& text)                                                        throw(PrecisionLoss);
-      void throwClassInitFailed    (std::string const& text)                                                        throw(ClassInitFailed);
-      void throwOverrun            (std::string const& text)                                                        throw(Overrun);
+      class Base               : public Exception     { public: virtual char const* what () const throw(); };
+      class BadFormat          : public Base          {
+        public:
+          BadFormat (char const* const problem, std::string::size_type const position, ConstReferencePointer<std::string> number) throw();
+          virtual char const* what () const throw();
+          virtual void Problem  (char const*                  const problem)  throw();
+          virtual void Position (std::string::size_type       const position) throw();
+          virtual void Number   (ConstReferencePointer<std::string> number)   throw();
+        protected:
+          char const*                        _problem;
+          std::string::size_type             _position;
+          ConstReferencePointer<std::string> _number;
+      };
+      class Overflow           : public Base          { public: virtual char const* what () const throw(); };
+      class RadixConflict      : public Base          { public: virtual char const* what () const throw(); };
+      class FractionalConflict : public RadixConflict { public: virtual char const* what () const throw(); };
+      class PrecisionLoss      : public Base          { public: virtual char const* what () const throw(); };
+      class ClassInitFailed    : public Base          { public: virtual char const* what () const throw(); };
+      class Overrun            : public Base          { public: virtual char const* what () const throw(); };
       
     }
     
@@ -285,27 +286,17 @@
     // Error functions.
     namespace ArbitraryErrors {
       
-      /***********************************************************************/
-      // Throw normal text errors.
-      inline void throwBase               (std::string const& text)                   throw(Base)               { Base               error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwOverflow           (std::string const& text, Exception* cause) throw(Overflow)           { Overflow           error; try { error.Text(text); error.Previous(cause); } catch (...) {} throw error; }
-      inline void throwRadixConflict      (std::string const& text)                   throw(RadixConflict)      { RadixConflict      error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwFractionalConflict (std::string const& text)                   throw(FractionalConflict) { FractionalConflict error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwPrecisionLoss      (std::string const& text)                   throw(PrecisionLoss)      { PrecisionLoss      error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwClassInitFailed    (std::string const& text)                   throw(ClassInitFailed)    { ClassInitFailed    error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwOverrun            (std::string const& text)                   throw(Overrun)            { Overrun            error; try { error.Text(text);                        } catch (...) {} throw error; }
-      /***********************************************************************/
-      
-      /***********************************************************************/
-      // Throw a BadFormat error.
-      inline void throwBadFormat (std::string const& text, std::string::size_type pos, std::string const& number) throw(BadFormat) {
-        BadFormat error;
-        try {
-          error.Text(text + " at position " + DAC::toString(pos + 1) + " in '" + number + "'.");
-        } catch (...) {}
-        throw error;
-      }
-      /***********************************************************************/
+      inline char const* Base::what               () const throw() { return "Undefined error in Arbitrary.";                                                                         }
+      inline char const* BadFormat::what          () const throw() { return (std::string(_problem) + " at position " + DAC::toString(_position) + " in number \"" + *(_number.get()) + "\".").c_str(); }
+      inline             BadFormat::BadFormat     (char const* const problem, std::string::size_type const position, ConstReferencePointer<std::string> number) throw() { _problem = problem; _position = position; _number = number; }
+      inline void        BadFormat::Problem       (char const*                  const problem)  throw() { _problem  = problem;  }
+      inline void        BadFormat::Position      (std::string::size_type       const position) throw() { _position = position; }
+      inline void        BadFormat::Number        (ConstReferencePointer<std::string> number)   throw() { _number   = number;   }
+      inline char const* Overflow::what           () const throw() { return "Overflow error.";                                                                                       }
+      inline char const* FractionalConflict::what () const throw() { return "Cannot perform operation on fractional numbers of differing bases.";                                    }
+      inline char const* PrecisionLoss::what      () const throw() { return "Operation will cause precision to be lost.";                                                            }
+      inline char const* ClassInitFailed::what    () const throw() { return "Class initialization failed; new objects cannot be constructed.";                                       }
+      inline char const* Overrun::what            () const throw() { return "Overrun?";                                                                                              }
       
     };
     
@@ -358,7 +349,7 @@
         try {
           retval += *i * rppower(s_digitbase, (i - _data->digits.begin()));
         } catch (SafeIntegerErrors::Overflow& e) {
-          ArbitraryErrors::throwOverflow("Overflow casting \"" + toString() + "\".", &e);
+          throw ArbitraryErrors::Overflow();
         }
       }
       return retval.Value();
@@ -415,7 +406,7 @@
       
       // Make sure we're not stepping out of the container.
       if (start >= digits.size()) {
-        ArbitraryErrors::throwOverrun("Container overrun in s_carry(). digits.size(): " + DAC::toString(digits.size()) + "  start (0 based): " + DAC::toString(start) + ".");
+        throw ArbitraryErrors::Overrun();
       }
       
       // Step through every digit.
@@ -452,7 +443,7 @@
       
       // Make sure we're still within the container.
       if (start >= digits.size()) {
-        ArbitraryErrors::throwOverrun("Container overrun in s_borrow(). digits.size(): " + DAC::toString(digits.size()) + "  start (0 based): " + DAC::toString(start) + ".");
+        throw ArbitraryErrors::Overrun();
       }
       
       // Cache adding 1.
@@ -460,7 +451,7 @@
       
       // Make sure that there is something to borrow from.
       if (next >= digits.size()) {
-        ArbitraryErrors::throwOverrun("Container does not contain necessary digits to perform borrow. Digit " + DAC::toString(next) + " required borrow from " + DAC::toString(digits.size()) + " digit container.");
+        throw ArbitraryErrors::Overrun();
       }
       
       // Make sure that the digit we are borrowing from has something to

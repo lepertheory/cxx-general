@@ -53,7 +53,7 @@ namespace DAC {
     
     // Make sure the class initialized properly.
     if (!s_initialized) {
-      ArbitraryErrors::throwClassInitFailed("Class initialization failed, cannot construct new objects.");
+      throw ArbitraryErrors::ClassInitFailed();
     }
     
     // Construct object fully.
@@ -66,7 +66,7 @@ namespace DAC {
     
     // Make sure the class initialized properly.
     if (!s_initialized) {
-      ArbitraryErrors::throwClassInitFailed("Class initialization failed, cannot construct new objects.");
+      throw ArbitraryErrors::ClassInitFailed();
     }
     
     // Copy the given number.
@@ -79,7 +79,7 @@ namespace DAC {
     
     // Make sure the class initialized properly.
     if (!s_initialized) {
-      ArbitraryErrors::throwClassInitFailed("Class initialization failed, cannot construct new objects.");
+      throw ArbitraryErrors::ClassInitFailed();
     }
     
     // Construct fully.
@@ -271,7 +271,7 @@ namespace DAC {
     try {
       shift = right;
     } catch (ArbitraryErrors::Overflow error) {
-      ArbitraryErrors::throwOverflow("Shift amount overflows digit vector size type.", &error);
+      throw;
     }
     
     // Only shift if it is needed.
@@ -500,6 +500,10 @@ namespace DAC {
     // Create the number in this.
     _DataPT new_data(new _Data);
     
+    // Hold the number in case an error needs to be thrown.
+    ConstReferencePointer<std::string> tmp_number(new std::string);
+    *tmp_number = number;
+    
     // Data for parser.
     _DigStrT num;
     _DigStrT rad;
@@ -529,8 +533,8 @@ namespace DAC {
               case NUM:
                 mode = RAD;
                 break;
-              case RAD: ArbitraryErrors::throwBadFormat("Radix point given for a second time", i, number);
-              case EXP: ArbitraryErrors::throwBadFormat("Radix point given in exponent",       i, number);
+              case RAD: throw ArbitraryErrors::BadFormat("Radix point given for a second time", i, tmp_number);
+              case EXP: throw ArbitraryErrors::BadFormat("Radix point given in exponent",       i, tmp_number);
             }
             diggiven = false;
           break;
@@ -541,7 +545,7 @@ namespace DAC {
             switch (mode) {
               case NUM: mode = EXP; break;
               case RAD: mode = EXP; break;
-              case EXP: ArbitraryErrors::throwBadFormat("Exponent symbol given for a second time", i, number);
+              case EXP: throw ArbitraryErrors::BadFormat("Exponent symbol given for a second time", i, nump_number);
             }
             diggiven = false;
           break;
@@ -550,22 +554,22 @@ namespace DAC {
           case '+':
           case '-':
             if (diggiven) {
-              ArbitraryErrors::throwBadFormat("Sign given after digits", i, number);
+              throw ArbitraryErrors::BadFormat("Sign given after digits", i, tmp_number);
             }
             switch (mode) {
               case NUM:
                 if (s_num) {
-                  ArbitraryErrors::throwBadFormat("Sign of number given for a second time", i, number);
+                  throw ArbitraryErrors::BadFormat("Sign of number given for a second time", i, tmp_number);
                 }
                 p_num = (number[i] == '+');
                 s_num = true;
               break;
               case RAD:
-                ArbitraryErrors::throwBadFormat("Sign given after radix point", i, number);
+                throw ArbitraryErrors::BadFormat("Sign given after radix point", i, tmp_number);
               break;
               case EXP:
                 if (s_exp) {
-                  ArbitraryErrors::throwBadFormat("Sign of exponent given for a second time", i, number);
+                  throw ArbitraryErrors::BadFormat("Sign of exponent given for a second time", i, tmp_number);
                 }
                 p_exp = (number[i] == '+');
                 s_exp = true;
@@ -586,7 +590,7 @@ namespace DAC {
               
               // Make sure this digit is within the number base.
               if ((digval >= base.Value()) || (digval == numeric_limits<_NumChrT>::max())) {
-                ArbitraryErrors::throwBadFormat("Unrecognized character '" + DAC::toString(number[i]) + "'", i, number);
+                throw ArbitraryErrors::BadFormat("Unrecognized character '" + DAC::toString(number[i]) + "'", i, tmp_number);
               }
               
               // Add the digit to its proper place.
@@ -739,7 +743,7 @@ namespace DAC {
       
       // Both numbers have fractional digits.
       if ((_data->exponent > 0) && (number._data->exponent > 0)) {
-        ArbitraryErrors::throwFractionalConflict("Cannot normalize two fractional numbers of different radix.");
+        throw ArbitraryErrors::FractionalConflict();
       }
       
       // Convert this number to the target number's base unless this number
@@ -799,7 +803,7 @@ namespace DAC {
       if (!force && (exponent < _data->exponent)) {
         _cleanup();
         if (exponent < _data->exponent) {
-          ArbitraryErrors::throwPrecisionLoss("Precision will be lost lowering the precision of '" + toString() + "' to " + DAC::toString(exponent.Value()) + " radix digits.");
+          throw ArbitraryErrors::PrecisionLoss();
         }
       }
       
