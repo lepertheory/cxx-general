@@ -13,9 +13,6 @@
   #include <string>
   #include <iostream>
   
-  // Internal includes.
-  #include "ReferencePointer.hxx"
-  
   // Forward declarations.
   namespace DAC {
     class Exception;
@@ -24,7 +21,7 @@
   // Stream output operator.
   std::ostream& operator << (std::ostream& left, DAC::Exception const& right);
   
-  // Contain wrapping.
+  // Namespace wrapping.
   namespace DAC {
     
     /*************************************************************************
@@ -46,8 +43,9 @@
         virtual ~Exception () throw();
         
         // Get the cause of this error.
-        virtual const char*        what () const throw();
-        virtual std::string const& Text () const throw();
+        virtual const char*        what ()                        const throw();
+        virtual std::string const& Text ()                        const throw();
+        virtual Exception&         Text (std::string const& text)       throw();
         
         // Reset to just-constructed state.
         virtual Exception& clear () throw();
@@ -57,7 +55,9 @@
        ***********************************************************************/
       protected:
         
-        char _text[80];
+        const size_t _TEXTSIZE = 80;
+        
+        char _text[_TEXTSIZE];
       
     };
     
@@ -65,21 +65,16 @@
      * Inline and template definitions.
      *************************************************************************/
     
-    /*************************************************************************/
     // Constructor.
     inline Exception::Exception () throw() {
       clear();
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Destructor.
     inline Exception::~Exception () throw() {
       // Nothing.
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Describe the problem.
     inline char const* Exception::what () const throw() {
       try {
@@ -88,9 +83,7 @@
         return 0;
       }
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Accessors.
     inline std::string Exception::Text () const throw() {
       try {
@@ -99,15 +92,16 @@
         return std::string();
       }
     }
-    /*************************************************************************/
+    inline Exception& Exception::Text (std::string const& text) throw() {
+      strncpy(&_text, text.c_str(), _TEXTSIZE - 1);
+      _text[_TEXTSIZE - 1] = '\0';
+    }
     
-    /*************************************************************************/
     // Reset to just-constructed state.
     inline Exception& Exception::clear() throw() {
       _text[0] = '\0';
       return *this;
     }
-    /*************************************************************************/
     
   };
 

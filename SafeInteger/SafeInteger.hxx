@@ -143,10 +143,12 @@
     namespace SafeIntegerErrors {
       
       // Errors.
-      class Base      : public Exception {};
-      class Overflow  : public Base      {};
-      class DivByZero : public Base      {};
-      class Undefined : public Base      {};
+      class Base          : public Exception {};
+      class Overflow      : public Base      {};
+      class BinOpOverflow : public Overflow  {};
+      class SetOverflow   : public Overflow  {};
+      class DivByZero     : public Base      {};
+      class Undefined     : public Base      {};
       
       // Error factories.
       void throwBase      (std::string const& text) throw(Base);
