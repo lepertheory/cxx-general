@@ -69,7 +69,8 @@
         Arb (Arb const& number, bool const copynow = false);
         
         // Conversion constructor.
-        Arb (std::string const& number);
+                           Arb (std::string const& number);
+        template <class T> Arb (T           const  number);
         
         // Boolean conversion operator.
         operator bool () const;

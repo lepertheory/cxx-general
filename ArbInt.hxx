@@ -57,6 +57,10 @@
         // Boolean conversion operator.
         operator bool () const;
         
+        // Unary sign operators.
+        int operator + () const;
+        int operator - () const;
+        
         // Increment / decrement operators.
         ArbInt& operator ++ ();
         ArbInt  operator ++ (int);
@@ -386,6 +390,10 @@
     
     // Boolean conversion operator.
     template <class T> inline ArbInt<T>::operator bool () const { return !isZero(); }
+    
+    // Unary sign operators.
+    template <class T> inline int operator + () const { return Value<int>();    }
+    template <class T> inline int operator - () const { return -(Value<int>()); }
     
     // Increment / decrement operators.
     template <class T> inline ArbInt<T>& ArbInt<T>::operator ++ ()    { return op_add(ArbInt<T>(1));                                  }

@@ -18,7 +18,7 @@
     // Get the logarithm of a number in a given base.
     template <class NumT, class BaseT> NumT logBase (NumT const& number, BaseT const& base) {
       
-      return (std::log(number) / std::log(base));
+      return static_cast<NumT>((std::log(static_cast<long double>(number)) / std::log(static_cast<long double>(base))));
       
     }
     /*************************************************************************/
