@@ -589,7 +589,7 @@ namespace DAC {
   Arb Arb::pow (Arb const& exp) const {
     
     // Work area.
-    Arb retval(*this);
+    Arb retval(*this, true);
     
     // Raise this number to an integer power.
     if (exp.isInteger()) {
@@ -623,29 +623,8 @@ namespace DAC {
     
     do {
       retval = next;
-      //next   = (*this / retval.pow(n - one) + (n - one) * retval) / n;
-      Arb nmo(n - one);
-      nmo.Format(FMT_FRACTION);
-      cout << "nmo: " << nmo;
-      Arb rpn(retval.pow(nmo));
-      rpn.Format(FMT_FRACTION);
-      cout << "  rpn: " << rpn;
-      Arb tdr(*this / rpn);
-      tdr.Format(FMT_FRACTION);
-      cout << "  tdr: " << tdr;
-      Arb ntr(nmo * retval);
-      ntr.Format(FMT_FRACTION);
-      cout << "  ntr: " << ntr;
-      Arb tpn(tdr + ntr);
-      tpn.Format(FMT_FRACTION);
-      cout << "  tpn: " << tpn;
-      Arb tdn(tpn / n);
-      tdn.Format(FMT_FRACTION);
-      cout << "  tdn: " << tdn << endl;
-      next = tdn;
-      next.Format(FMT_FRACTION);
-      retval.Format(FMT_FRACTION);
-      accuracy.Format(FMT_FRACTION);
+      next   = (*this / retval.pow(n - one) + (n - one) * retval) / n;
+      //next = (one / n) * (*this / retval.pow(n - one) + (n - one) * retval);
       cout << "next: " << next << "  retval: " << retval << "  accuracy: " << accuracy << endl;
     } while ((next - retval).abs() > accuracy);
     retval = next;
