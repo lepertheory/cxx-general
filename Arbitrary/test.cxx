@@ -57,6 +57,22 @@ int main (int argc, char** argv, char** envp) {
     cout << test1 << "  * " << test2 << " = " << (test1  * test2) << endl;
     cout << test1 << " >> " << test2 << " = " << (test1 >> test2) << endl;
     
+    Arbitrary test3("0", -5, true);
+    Arbitrary test4("0", 0, true);
+    Arbitrary test5("0", 5, true);
+    cout << "test3: " << test3 << endl;
+    cout << "test4: " << test4 << endl;
+    cout << "test5: " << test5 << endl;
+    cout << "test3: ";
+    cin  >> test3;
+    cout << "test3: " << test3 << endl;
+    cout << "test4: ";
+    cin  >> test4;
+    cout << "test4: " << test4 << endl;
+    cout << "test5: ";
+    cin  >> test5;
+    cout << "test5: " << test5 << endl;
+    
     exit(0);
     
   } catch (Exception& e) {

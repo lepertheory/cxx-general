@@ -14,7 +14,7 @@ env = Environment(
 
 if (env['CC'] == 'gcc') :
 	env.Append(
-		CCFLAGS = '-g -O0 -ansi -w'
+		CCFLAGS = '-g -O0 -ansi -w -pipe'
 	)
 
 Arbitrary = env.Object(target = 'Arbitrary', source = [ 'Arbitrary.cxx' ])

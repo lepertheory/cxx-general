@@ -99,6 +99,9 @@
        ***********************************************************************/
       public:
         
+        // Typedefs.
+        typedef signed int ExponentT;
+        
         // Default constructor.
         Arbitrary ();
         
@@ -106,12 +109,12 @@
         Arbitrary (Arbitrary const& number);
         
         // String conversion constructor. This is a special case.
-        Arbitrary (std::string const& number);
+        Arbitrary (std::string const& number, ExponentT const decimal = 0, bool const fixeddecimal = false);
         
         // Conversion constructor. Valid for any type that DAC::toString() can
         // create a valid number string for. Also creates from a SafeInteger,
         // since it's convenient and used internally.
-        template <class T> Arbitrary (T const& number);
+        template <class T> Arbitrary (T const& number, ExponentT const decimal = 0, bool const fixeddecimal = false);
         
         // Increment / decrement operators.
         Arbitrary& operator ++ ();
@@ -181,9 +184,9 @@
         
         // Set the number.
         //                   Arbitrary& set (Arbitrary      const& number);
-                           Arbitrary& set (std::string    const& number);
-        template <class T> Arbitrary& set (SafeInteger<T> const& number);
-        template <class T> Arbitrary& set (T              const& number);
+                           Arbitrary& set (std::string    const& number, ExponentT const decimal = 0, bool const fixeddecimal = false);
+        template <class T> Arbitrary& set (SafeInteger<T> const& number, ExponentT const decimal = 0, bool const fixeddecimal = false);
+        template <class T> Arbitrary& set (T              const& number, ExponentT const decimal = 0, bool const fixeddecimal = false);
         
         // Copy a given number.
         Arbitrary& copy (Arbitrary const& number);
@@ -203,7 +206,7 @@
         // Typedefs.
         typedef SafeInteger<char>          _StrChrT; // String character type.
         typedef SafeInteger<unsigned char> _NumChrT; // Numeric character type.
-        typedef SafeInteger<signed int>    _ExpT;    // Exponent type.
+        typedef SafeInteger<ExponentT>     _ExpT;    // Exponent type.
         typedef _NumChrT                   _DigChrT; // Digit character type.
         typedef SafeInteger<unsigned int>  _DigT;    // Individual digits.
         typedef SafeInteger<unsigned int>  _BaseT;   // Base type.
@@ -222,6 +225,8 @@
             bool   positive;
             _DigsT digits;
             _ExpT  exponent;
+            _ExpT  fixexponent;
+            bool   fix;
             _BaseT originalbase;
             _Data ();
             _Data (_Data const& data);
@@ -252,6 +257,9 @@
         // Do any carry needed.
         template <class T, class TS> static void s_carry  (T& digits, TS const start);
         template <class T, class TS> static void s_borrow (T& digits, TS const start);
+        
+        // Multiplication of two containers.
+        template <class T, class ST> static ReferencePointer<T> s_mul (T const& left, T const& right);
         
         // Long division.
         template <class DivndT, class DivndST, class DivndDT, class DivndIT, class DivorT> static DivorT s_longdiv (DivndT& dividend, DivorT const divisor, _BaseT const base);
@@ -308,13 +316,13 @@
     
     // Conversion constructor. Requires that DAC::toString will work for the
     // given type.
-    template <class T> Arbitrary::Arbitrary (T              const& number) {
+    template <class T> Arbitrary::Arbitrary (T const& number, ExponentT const decimal, bool const fixeddecimal) {
       
       // Construct object fully.
       clear();
       
       // Set the number.
-      set(number);
+      set(number, decimal, fixeddecimal);
       
     }
     
@@ -366,8 +374,8 @@
     inline bool Arbitrary::op_le (Arbitrary const& right) const { return (op_lt(right) || op_eq(right));         }
     
     // Set with an arbitrary type.
-    template <class T> Arbitrary& Arbitrary::set (SafeInteger<T> const& number) { return set(DAC::toString(number.Value())); }
-    template <class T> Arbitrary& Arbitrary::set (T              const& number) { return set(DAC::toString(number));         }
+    template <class T> Arbitrary& Arbitrary::set (SafeInteger<T> const& number, ExponentT const decimal, bool const fixeddecimal) { return set(DAC::toString(number.Value()), decimal, fixeddecimal); }
+    template <class T> Arbitrary& Arbitrary::set (T              const& number, ExponentT const decimal, bool const fixeddecimal) { return set(DAC::toString(number),         decimal, fixeddecimal); }
     
     // Trim leading and trailing zeros from a given container. Container must
     // support random access iterators.
@@ -466,6 +474,61 @@
       // Now do the borrow.
       digits[next]  -= 1;
       digits[start] += s_digitbase;
+      
+    }
+    
+    // Multiplication of two containers.
+    template <class T, class ST> ReferencePointer<T> Arbitrary::s_mul (T const& left, T const& right) {
+      
+      ReferencePointer<T> retval(new T);
+      
+      // Multiply like 3rd grade. Outer loop is multiplicand.
+      for (ST i = 0; i != left.size(); ++i) {
+        
+        // Temporary product for this digit.
+        T digproduct;
+        
+        // Inner loop is multiplicator.
+        for (ST j = 0; j != right.size(); ++j) {
+          
+          // Add a new digit to the temporary product if needed.
+          if (digproduct.size() == j) {
+            digproduct.push_back(0);
+          }
+          
+          // Add the product of these two digits to the appropriate digit of
+          // the temporary product.
+          digproduct[j] += left[i] * right[j];
+          
+          // Do any carry needed.
+          s_carry<T, ST>(digproduct, j);
+          
+        }
+        
+        // Add the single digit product to the final product, offset by the
+        // multiplicand digit we are on now.
+        for (ST j = 0; j != digproduct.size(); ++j) {
+          
+          // Digit to add to.
+          ST tdig = j + i;
+          
+          // Add a new digit if needed.
+          if (retval->size() == tdig) {
+            retval->push_back(0);
+          }
+          
+          // Add this digit.
+          (*retval)[tdig] += digproduct[j];
+          
+          // Do any carry needed.
+          s_carry<T, ST>(*retval, tdig);
+          
+        }
+        
+      }
+      
+      // Return the result.
+      return retval;
       
     }
     

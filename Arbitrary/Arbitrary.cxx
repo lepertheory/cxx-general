@@ -75,7 +75,7 @@ namespace DAC {
   }
   
   // String conversion constructor. Special case.
-  Arbitrary::Arbitrary (string const& number) {
+  Arbitrary::Arbitrary (string const& number, ExponentT const decimal, bool const fixeddecimal) {
     
     // Make sure the class initialized properly.
     if (!s_initialized) {
@@ -106,7 +106,9 @@ namespace DAC {
     Arbitrary tmp_right(right);
     
     // Convert to two numbers that can be calculated against each other.
+    cout << "tmp_left: " << tmp_left << "  tmp_right: " << tmp_right << endl;
     tmp_left._normalizeExponent(tmp_right);
+    cout << "tmp_left: " << tmp_left << "  tmp_right: " << tmp_right << endl;
     
     // Add like 1st grade.
     for (DST i = 0; i != tmp_right._data->digits.size(); ++i) {
@@ -190,50 +192,8 @@ namespace DAC {
     // Convert to two numbers that can be calculated against each other.
     tmp_left._normalizeRadix(tmp_right);
     
-    // Multiply like 3rd grade. Outer loop is the multiplicand.
-    for (DST i = 0; i != _data->digits.size(); ++i) {
-      
-      // Temporary product for this digit.
-      _DigsT digproduct;
-      
-      // Inner loop is the multiplicator.
-      for (DST j = 0; j != tmp_right._data->digits.size(); ++j) {
-        
-        // Add a new digit to the temporary product if needed.
-        if (digproduct.size() == j) {
-          digproduct.push_back(0);
-        }
-        
-        // Add the product of these two digits to the appropriate digit of the
-        // temporary product.
-        digproduct[j] += tmp_left._data->digits[i] * tmp_right._data->digits[j];
-        
-        // Do any carry needed.
-        s_carry<_DigsT, DST>(digproduct, j);
-        
-      }
-      
-      // Add the single digit product to the final product, offset by the
-      // multiplicand digit we are on now.
-      for (DST j = 0; j != digproduct.size(); ++j) {
-        
-        // Digit to add to.
-        DST tdig = j + i;
-        
-        // Add a new digit if needed.
-        if (retval->digits.size() == tdig) {
-          retval->digits.push_back(0);
-        }
-        
-        // Add this digit.
-        retval->digits[tdig] += digproduct[j];
-        
-        // Do any carry needed.
-        s_carry<_DigsT, DST>(retval->digits, tdig);
-        
-      }
-      
-    }
+    // Multiply the two vectors, swap in the result instead of copying it.
+    retval->digits.swap(*s_mul<_DigsT, DST>(tmp_left._data->digits, tmp_right._data->digits));
     
     // Put the decimal point in the proper place.
     retval->exponent = tmp_left._data->exponent + tmp_right._data->exponent;
@@ -495,7 +455,7 @@ namespace DAC {
   }
   
   // Set the number from a string.
-  Arbitrary& Arbitrary::set (string const& number) {
+  Arbitrary& Arbitrary::set (string const& number, ExponentT const decimal, bool const fixeddecimal) {
     
     // Create the number in this.
     _DataPT new_data(new _Data);
@@ -651,8 +611,37 @@ namespace DAC {
     new_data->exponent += rad.size();
     num.insert(num.end(), rad.begin(), rad.end());
     
-    // Trim low-order zeros and update the exponent.
-    new_data->exponent -= s_trimZeros<_DigStrT, _DigStrT::size_type, _DigStrT::iterator>(num, _BEGIN);
+    // Trim insignificant zeros and update the exponent. In the case of
+    // trimming high-order decimal zeros, no need to update exponent, they
+    // have already been counted.
+    new_data->exponent -= s_trimZeros<_DigStrT, _DigStrT::size_type, _DigStrT::iterator>(num, _END);
+                          s_trimZeros<_DigStrT, _DigStrT::size_type, _DigStrT::iterator>(num, _BEGIN);
+    
+    // If this is a fixed-decimal number, pad or truncate as necessary.
+    if (fixeddecimal) {
+      new_data->fixexponent = decimal;
+      new_data->fix         = fixeddecimal;
+    } else {
+      new_data->fixexponent = _data->fixexponent;
+      new_data->fix         = _data->fix;
+    }
+    if (new_data->fix) {
+      if (new_data->exponent != new_data->fixexponent) {
+        cout << "num.size(): " << num.size() << "  new_data->exponent - neW_data->fixexponent: " << (new_data->exponent - new_data->fixexponent).Value() << endl;
+        if (num.size() > (new_data->exponent - new_data->fixexponent)) {
+          num.resize((num.size() - (new_data->exponent - new_data->fixexponent)).Value());
+        } else {
+          num.clear();
+        }
+        cout << "num.size(): " << num.size() << "  new_data->exponent - neW_data->fixexponent: " << (new_data->exponent - new_data->fixexponent).Value() << endl;
+        new_data->exponent = new_data->fixexponent;
+      }
+      cout << "exponent: " << new_data->exponent.Value() << "  decimal: " << decimal << "  fixeddecimal: " << fixeddecimal << "  num: ";
+      for (_DigStrT::iterator i = num.begin(); i != num.end(); ++i) {
+        cout << *i;
+      }
+      cout << endl;
+    }
     
     // Load the numeric digits. Convert from the given base to the target
     // base. Digits come out in reverse order, no need for a temp.
@@ -856,9 +845,11 @@ namespace DAC {
     
     // Copying digits may throw, so do it first. It's the only one that may
     // throw, so just let it throw if it throws.
-    digits   = data.digits;
-    positive = data.positive;
-    exponent = data.exponent;
+    digits      = data.digits;
+    positive    = data.positive;
+    exponent    = data.exponent;
+    fixexponent = data.fixexponent;
+    fix         = data.fix;
     
     //  Return this.
     return *this;
@@ -874,8 +865,10 @@ namespace DAC {
     originalbase = 10;
     
     // These won't throw.
-    positive     = true;
-    exponent     = 0;
+    positive    = true;
+    exponent    = 0;
+    fixexponent = 0;
+    fix         = false;
     
     // Swap in the new data.
     digits.swap(temp);
