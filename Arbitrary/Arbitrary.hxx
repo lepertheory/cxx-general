@@ -103,7 +103,8 @@
         Arbitrary (std::string const& number);
         
         // Conversion constructor. Valid for any type that DAC::toString() can
-        // create a valid number string for.
+        // create a valid number string for. Also creates from a SafeInteger,
+        // since it's convenient and used internally.
         template <class T> Arbitrary (T const& number);
         
         // Assignment operator.
@@ -172,9 +173,10 @@
         std::string toString () const;
         
         // Set the number.
-        //                   Arbitrary& set (Arbitrary   const& number);
-                           Arbitrary& set (std::string const& number);
-        template <class T> Arbitrary& set (T           const& number);
+        //                   Arbitrary& set (Arbitrary      const& number);
+                           Arbitrary& set (std::string    const& number);
+        template <class T> Arbitrary& set (SafeInteger<T> const& number);
+        template <class T> Arbitrary& set (T              const& number);
         
         // Copy a given number.
         Arbitrary& copy (Arbitrary const& number);
@@ -307,7 +309,7 @@
     
     // Conversion constructor. Requires that DAC::toString will work for the
     // given type.
-    template <class T> Arbitrary::Arbitrary (T const& number) {
+    template <class T> Arbitrary::Arbitrary (T              const& number) {
       
       // Construct object fully.
       clear();
@@ -318,7 +320,8 @@
     }
     
     // Set with an arbitrary type.
-    template <class T> Arbitrary& Arbitrary::set (T const& number) { return set(DAC::toString(number)); }
+    template <class T> Arbitrary& Arbitrary::set (SafeInteger<T> const& number) { return set(DAC::toString(number.Value())); }
+    template <class T> Arbitrary& Arbitrary::set (T              const& number) { return set(DAC::toString(number));         }
     
     // Arithmetic assignment operators.
     inline Arbitrary& Arbitrary::operator += (Arbitrary const& right) { return op_add(right); }

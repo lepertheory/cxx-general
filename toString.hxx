@@ -20,31 +20,31 @@
     // Convert a character to a string.
     std::string toStringChr (char const from);
     
-    template <> std::string toString<char> (char const& from) {
+    template <> inline std::string toString<char> (char const& from) {
       std::ostringstream os;
       os << static_cast<int>(from);
       return os.str();
     }
     
-    template <> std::string toString<signed char> (signed char const& from) {
+    template <> inline std::string toString<signed char> (signed char const& from) {
       std::ostringstream os;
       os << static_cast<int>(from);
       return os.str();
     }
     
-    template <> std::string toString<unsigned char> (unsigned char const& from) {
+    template <> inline std::string toString<unsigned char> (unsigned char const& from) {
       std::ostringstream os;
       os << static_cast<unsigned int>(from);
       return os.str();
     }
     
-    template <class T> std::string toString (T const& from) {
+    template <class T> inline std::string toString (T const& from) {
       std::ostringstream os;
       os << from;
       return os.str();
     }
     
-    std::string toStringChr (char const from) {
+    inline std::string toStringChr (char const from) {
       std::ostringstream os;
       os << from;
       return os.str();
