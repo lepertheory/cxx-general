@@ -31,7 +31,7 @@
         typedef int RefCountT;
         
         // Copy constructor.
-        ReferencePointer (ReferencePointer<T>& p) throw();
+        ReferencePointer (ReferencePointer<T> const& p) throw();
         
         // Conversion constructor, also default constructor.
         explicit ReferencePointer (T* const p = 0) throw();
@@ -40,8 +40,8 @@
         ~ReferencePointer () throw();
         
         // Assignment operator.
-        ReferencePointer& operator = (ReferencePointer<T>& right) throw();
-        ReferencePointer& operator = (T* const             right) throw();
+        ReferencePointer& operator = (ReferencePointer<T> const& right) throw();
+        ReferencePointer& operator = (T* const                   right) throw();
         
         // Dereference operator.
         T& operator *  () const throw();
@@ -60,8 +60,8 @@
         T* release () throw();
         
         // Release the current pointer and set a new one.
-        void reset (ReferencePointer<T>& p)     throw();
-        void reset (T* const             p = 0) throw();
+        void reset (ReferencePointer<T> const& p)     throw();
+        void reset (T* const                   p = 0) throw();
         
         // Swap this pointer with another one.
         void swap (ReferencePointer<T>& p) throw();
@@ -102,21 +102,21 @@
         typedef int RefCountT;
         
         // Copy constructor.
-        ConstReferencePointer (ReferencePointer<T>&      p) throw();
-        ConstReferencePointer (ConstReferencePointer<T>& p) throw();
+        ConstReferencePointer (ReferencePointer<T>      const& p) throw();
+        ConstReferencePointer (ConstReferencePointer<T> const& p) throw();
         
         // Conversion constructor, also default constructor.
-        explicit ConstReferencePointer (T*       const)       throw();
-        explicit ConstReferencePointer (T const* const p = 0) throw();
+        explicit ConstReferencePointer (T*       const p = 0) throw();
+        explicit ConstReferencePointer (T const* const p)     throw();
         
         // Destructor.
         ~ConstReferencePointer () throw();
         
         // Assignment operator.
-        ConstReferencePointer& operator = (ReferencePointer<T>&      right) throw();
-        ConstReferencePointer& operator = (ConstReferencePointer<T>& right) throw();
-        ConstReferencePointer& operator = (T*       const            right) throw();
-        ConstReferencePointer& operator = (T const* const            right) throw();
+        ConstReferencePointer& operator = (ReferencePointer<T>      const& right) throw();
+        ConstReferencePointer& operator = (ConstReferencePointer<T> const& right) throw();
+        ConstReferencePointer& operator = (T*                       const  right) throw();
+        ConstReferencePointer& operator = (T const*                 const  right) throw();
         
         // Dereference operator.
         T const& operator *  () const throw();
@@ -135,10 +135,10 @@
         T const* release () throw();
         
         // Release the current pointer and set a new one.
-        void reset (ReferencePointer<T>&      p)     throw();
-        void reset (ConstReferencePointer<T>& p)     throw();
-        void reset (T*       const            p)     throw();
-        void reset (T const* const            p = 0) throw();
+        void reset (ReferencePointer<T>      const& p)     throw();
+        void reset (ConstReferencePointer<T> const& p)     throw();
+        void reset (T*                       const  p)     throw();
+        void reset (T const*                 const  p = 0) throw();
         
         // Swap this pointer with another one.
         void swap (ConstReferencePointer<T>& p) throw();
@@ -167,7 +167,7 @@
      *************************************************************************/
     
     // Copy constructor.
-    template <class T> ReferencePointer<T>::ReferencePointer (ReferencePointer<T>& p) throw() {
+    template <class T> ReferencePointer<T>::ReferencePointer (ReferencePointer<T> const& p) throw() {
       
       // Just constructed.
       clear();
@@ -197,7 +197,7 @@
     }
     
     // Assignment operator (copy).
-    template <class T> inline ReferencePointer<T>& ReferencePointer<T>::operator = (ReferencePointer<T>& right) throw() {
+    template <class T> inline ReferencePointer<T>& ReferencePointer<T>::operator = (ReferencePointer<T> const& right) throw() {
       
       // Release the current pointer and set the new pointer.
       reset(right);
@@ -307,7 +307,7 @@
     }
     
     // Set this pointer to point to an existing pointer. (ReferencePointer)
-    template <class T> void ReferencePointer<T>::reset (ReferencePointer<T>& p) throw() {
+    template <class T> void ReferencePointer<T>::reset (ReferencePointer<T> const& p) throw() {
       
       // Make sure this is a new pointer.
       if (_p != p._p) {
@@ -386,8 +386,8 @@
     }
     
     // Copy constructor.
-    template <class T> ConstReferencePointer<T>::ConstReferencePointer (ReferencePointer<T>&      p) throw() { clear(); reset(p); }
-    template <class T> ConstReferencePointer<T>::ConstReferencePointer (ConstReferencePointer<T>& p) throw() { clear(); reset(p); }
+    template <class T> ConstReferencePointer<T>::ConstReferencePointer (ReferencePointer<T>      const& p) throw() { clear(); reset(p); }
+    template <class T> ConstReferencePointer<T>::ConstReferencePointer (ConstReferencePointer<T> const& p) throw() { clear(); reset(p); }
     
     // Conversion and default constructor.
     template <class T> ConstReferencePointer<T>::ConstReferencePointer (T*       const p) throw() { clear(); reset(p); }
@@ -397,8 +397,8 @@
     template <class T> ConstReferencePointer<T>::~ConstReferencePointer () throw() { reset(); }
     
     // Assignment operator (copy).
-    template <class T> inline ConstReferencePointer<T>& ConstReferencePointer<T>::operator = (ReferencePointer<T>&      right) throw() { reset(right); return *this; }
-    template <class T> inline ConstReferencePointer<T>& ConstReferencePointer<T>::operator = (ConstReferencePointer<T>& right) throw() { reset(right); return *this; }
+    template <class T> inline ConstReferencePointer<T>& ConstReferencePointer<T>::operator = (ReferencePointer<T>      const& right) throw() { reset(right); return *this; }
+    template <class T> inline ConstReferencePointer<T>& ConstReferencePointer<T>::operator = (ConstReferencePointer<T> const& right) throw() { reset(right); return *this; }
     
     // Assignment operator (conversion).
     template <class T> inline ConstReferencePointer<T>& ConstReferencePointer<T>::operator = (T*       const right) throw() { reset(right); return *this; }
@@ -427,8 +427,8 @@
     template <class T> void ConstReferencePointer<T>::reset (T const* const p) throw() { if (_p != p) { if (_decrementRefs() == 0) { delete _p; } _p = p; if (_p == 0) { _refs = 0; } else { _refs = new int; *_refs = 1; } } }
     
     // Set this pointer to point to an existing pointer. (ReferencePointer)
-    template <class T> void ConstReferencePointer<T>::reset (ReferencePointer<T>&      p) throw() { if (_p != p._p) { if (_decrementRefs() == 0) { delete _p; } _p = p._p; if (_p == 0) { _refs = 0; } else { _refs = p._refs; if (_refs != 0) { ++(*_refs); } } } }
-    template <class T> void ConstReferencePointer<T>::reset (ConstReferencePointer<T>& p) throw() { if (_p != p._p) { if (_decrementRefs() == 0) { delete _p; } _p = p._p; if (_p == 0) { _refs = 0; } else { _refs = p._refs; if (_refs != 0) { ++(*_refs); } } } }
+    template <class T> void ConstReferencePointer<T>::reset (ReferencePointer<T>      const& p) throw() { if (_p != p._p) { if (_decrementRefs() == 0) { delete _p; } _p = p._p; if (_p == 0) { _refs = 0; } else { _refs = p._refs; if (_refs != 0) { ++(*_refs); } } } }
+    template <class T> void ConstReferencePointer<T>::reset (ConstReferencePointer<T> const& p) throw() { if (_p != p._p) { if (_decrementRefs() == 0) { delete _p; } _p = p._p; if (_p == 0) { _refs = 0; } else { _refs = p._refs; if (_refs != 0) { ++(*_refs); } } } }
     
     // Swap this pointer with another one.
     template <class T> void ConstReferencePointer<T>::swap (ConstReferencePointer<T>& p) throw() { if (_p != p._p) { T* tmpp = _p; _p = p._p; p._p = tmpp; int* tmprefs = _refs; _refs = p._refs; p._refs = tmprefs; } }
