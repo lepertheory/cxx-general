@@ -104,40 +104,28 @@ namespace DAC {
     typedef _DigsT::size_type DST;
     
     // Work area.
-    _DataPT   new_data(new _Data);
+    Arbitrary tmp_left(*this);
     Arbitrary tmp_right(right);
     
     // Convert to two numbers that can be calculated against each other.
-    _normalizeExponent(tmp_right);
-    
-    // Get the max number of digits.
-    DST largest = max(_data->digits.size(), tmp_right._data->digits.size());
+    tmp_left._normalizeExponent(tmp_right);
     
     // Add like 1st grade.
-    for (DST i = 0; i != largest; ++i) {
+    for (DST i = 0; i != tmp_right._data->digits.size(); ++i) {
       
       // Add another digit if needed.
-      if (i >= new_data->digits.size()) {
-        new_data->digits.push_back(0);
+      if (i >= tmp_left._data->digits.size()) {
+        tmp_left._data->digits.push_back(0);
       }
       
-      // Add and carry each number to the result.
-      if (_data->digits.size() > i) {
-        new_data->digits[i] = of_add<_DigT, _DigT, _DigT>(new_data->digits[i], _data->digits[i]);
-        s_carry<_DigsT, DST>(new_data->digits, i);
-      }
-      if (tmp_right._data->digits.size() > i) {
-        new_data->digits[i] = of_add<_DigT, _DigT, _DigT>(new_data->digits[i], tmp_right._data->digits[i]);
-        s_carry<_DigsT, DST>(new_data->digits, i);
-      }
+      // Add the number and carry.
+      tmp_left._data->digits[i] = of_add<_DigT, _DigT, _DigT>(tmp_left._data->digits[i], tmp_right._data->digits[i]);
+      s_carry<_DigsT, DST>(tmp_left._data->digits, i);
       
     }
     
-    // Set the decimal point.
-    new_data->exponent = _data->exponent;
-    
     // Move the new data into place.
-    _data = new_data;
+    _data = tmp_left._data;
     
     // Done.
     return *this;
