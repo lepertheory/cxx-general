@@ -106,9 +106,7 @@ namespace DAC {
     Arbitrary tmp_right(right);
     
     // Convert to two numbers that can be calculated against each other.
-    cout << "tmp_left: " << tmp_left << "  tmp_right: " << tmp_right << endl;
     tmp_left._normalizeExponent(tmp_right);
-    cout << "tmp_left: " << tmp_left << "  tmp_right: " << tmp_right << endl;
     
     // Add like 1st grade.
     for (DST i = 0; i != tmp_right._data->digits.size(); ++i) {
@@ -212,7 +210,32 @@ namespace DAC {
   // Divide this number by another number.
   Arbitrary& Arbitrary::op_div (Arbitrary const& right) {
     
-    return *this;
+    static const _DigsT::size_type maxaddl = 100;
+    
+    Arbitrary tmp_left(*this);
+    Arbitrary tmp_right(right);
+    Arbitrary remainder;
+    Arbitrary retval;
+    
+    tmp_left._normalizeRadix(tmp_right);
+    
+    // Divide like 3rd grade.
+    do {
+      
+      // Guess at what this digit may be by dividing high order digits.
+      _DigT guess = tmp_left._data->digits[tmp_left._data->digits.size() - 1] / tmp_right._data->digits[tmp_right._data->digits.size() - 1];
+      
+      cout << "guess: " << guess << endl;
+      
+      // See if the guess is correct.
+      Arbitrary test = tmp_right * Arbitrary(guess);
+      
+      cout << "test: " << test << endl;
+      
+      if (test > tmp_left._data->digits[tmp_left._data->digits.size() - 1]) {
+        
+      
+    } while (remainder != 0);
     
   }
   
@@ -627,20 +650,13 @@ namespace DAC {
     }
     if (new_data->fix) {
       if (new_data->exponent != new_data->fixexponent) {
-        cout << "num.size(): " << num.size() << "  new_data->exponent - neW_data->fixexponent: " << (new_data->exponent - new_data->fixexponent).Value() << endl;
         if (num.size() > (new_data->exponent - new_data->fixexponent)) {
           num.resize((num.size() - (new_data->exponent - new_data->fixexponent)).Value());
         } else {
           num.clear();
         }
-        cout << "num.size(): " << num.size() << "  new_data->exponent - neW_data->fixexponent: " << (new_data->exponent - new_data->fixexponent).Value() << endl;
         new_data->exponent = new_data->fixexponent;
       }
-      cout << "exponent: " << new_data->exponent.Value() << "  decimal: " << decimal << "  fixeddecimal: " << fixeddecimal << "  num: ";
-      for (_DigStrT::iterator i = num.begin(); i != num.end(); ++i) {
-        cout << *i;
-      }
-      cout << endl;
     }
     
     // Load the numeric digits. Convert from the given base to the target
@@ -780,7 +796,7 @@ namespace DAC {
     // If this number is not fully represented, un-exponentize it. I'm a
     // programmer, not a playwright.
     if (_data->exponent < 0) {
-      op_mul(Arbitrary(_data->originalbase).pow(-_data->exponent));
+      op_mul(Arbitrary(_data->originalbase, 0, true).pow(-_data->exponent));
     }
     
     return *this;
@@ -803,9 +819,9 @@ namespace DAC {
       
       // Do the exponent shift.
       if (exponent > _data->exponent) {
-        op_mul(Arbitrary(_data->originalbase).pow(exponent - _data->exponent));
+        op_mul(Arbitrary(_data->originalbase, 0, true).pow(exponent - _data->exponent));
       } else {
-        op_div(Arbitrary(_data->originalbase).pow(_data->exponent - exponent));
+        op_div(Arbitrary(_data->originalbase, 0, true).pow(_data->exponent - exponent));
       }
       
       // Update the exponent.

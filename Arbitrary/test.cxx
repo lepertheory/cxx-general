@@ -55,6 +55,7 @@ int main (int argc, char** argv, char** envp) {
     cout << test1 << "  + " << test2 << " = " << (test1  + test2) << endl;
     cout << test1 << "  - " << test2 << " = " << (test1  - test2) << endl;
     cout << test1 << "  * " << test2 << " = " << (test1  * test2) << endl;
+    cout << test1 << "  / " << test2 << " = " << (test1  / test2) << endl;
     cout << test1 << " >> " << test2 << " = " << (test1 >> test2) << endl;
     
     Arbitrary test3("0", -5, true);

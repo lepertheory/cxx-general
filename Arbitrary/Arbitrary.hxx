@@ -64,8 +64,8 @@
     namespace ArbitraryErrors {
       
       // Errors.
-      class Base               : public Exception     { public: virtual char const* what () const throw(); };
-      class BadFormat          : public Base          {
+      class Base               : public Exception      { public: virtual char const* what () const throw(); };
+      class BadFormat          : public Base           {
         public:
           virtual char const* what () const throw();
           virtual void Problem  (char const*                   const problem)  throw();
