@@ -235,6 +235,9 @@
         // Normalize this number to another number.
         Arb& _normalize (Arb& number);
         
+        // Find a whole-number root of this number.
+        Arb& _root (_DigsT const& root);
+        
     };
     
   };

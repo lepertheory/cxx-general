@@ -149,6 +149,9 @@
         // Raise this number to a power.
         ArbInt& pow (ArbInt const& exp);
         
+        // Find a root of this number.
+        ArbInt& root (ArbInt const& root, ArbInt& divisor, ArbInt& remainder);
+        
         /*********************************************************************/
         // Static function members.
         
@@ -304,6 +307,7 @@
       class DivByZero      : public Base      { public: virtual char const* what () const throw(); };
       class ScalarOverflow : public Base      { public: virtual char const* what () const throw(); };
       class BaseOutOfRange : public Base      { public: virtual char const* what () const throw(); };
+      class RootTooLarge   : public Base      { public: virtual char const* what () const throw(); };
     };
     
   };
@@ -325,6 +329,7 @@
       inline char const* DivByZero::what      () const throw() { return "Attempt to divide by zero.";                                                                                                                                         }
       inline char const* ScalarOverflow::what () const throw() { return "ArbInt overflows scalar type.";                                                                                                                                      }
       inline char const* BaseOutOfRange::what () const throw() { return "Requested or specified base is out of range. Base minimum is base 2, base maximum is 2(bits in target container value type/2)-1.";                                   }
+      inline char const* RootTooLarge::what   () const throw() { return "Cannot find a root that large.";                                                                                                                                     }
     };
     
     /*************************************************************************/
@@ -557,11 +562,22 @@
           throw ArbIntErrors::Negative();
         }
         
-        // Convert with repeated division.
+        // If the number is less than base, simply set it.
         SafeInteger<FT> tmp_number(number);
-        while (tmp_number > 0) {
-          new_digits->push_back((tmp_number % s_digitbase).Value());
-          tmp_number /= s_digitbase;
+        if (tmp_number < SafeInteger<_DigT>(s_digitbase)) {
+          
+          // Easy :)
+          new_digits->push_back(SafeInteger<_DigT>(tmp_number.Value()));
+          
+        // Otherwise, full conversion.
+        } else {
+        
+          // Convert with repeated division.
+          while (tmp_number > 0) {
+            new_digits->push_back(SafeInteger<_DigT>((tmp_number % s_digitbase).Value()));
+            tmp_number /= s_digitbase;
+          }
+          
         }
         
       }
@@ -1034,6 +1050,57 @@
       
       // Set the result and return.
       _digits = retval._digits;
+      return *this;
+      
+    }
+    
+    // Find a root of this number.
+    template <class T> ArbInt<T>& ArbInt<T>::root (ArbInt<T> const& root, ArbInt<T>& divisor, ArbInt<T>& remainder) {
+      
+      // 0 and 1 are special cases, always themselves, also root 1.
+      if (!_data->empty() && !((_data->size() == 1) && ((*_data)[0] == 1)) && (root != 1)) {
+        
+        // Root 0 is a different problem.
+        if (root.isZero()) {
+          throw ArbIntErrors::DivByZero();
+        }
+        
+        // The shifting nth-root algorithm.
+        ArbInt<T> remainder;
+        ArbInt<T> diggroup;
+        ArbInt<T> nroot;
+        
+        ArbInt<T> base(s_digitbase);
+        
+        // Get the root in integral form.
+        SafeInteger<typename _DigsT::size_type> iroot;
+        try {
+          iroot = root.Value<typename _DigsT::size_type>();
+        } catch ArbIntErrors::ScalarOverflow() {
+          throw ArbIntErrors::RootTooLarge();
+        }
+        
+        SafeInteger<typename _DigsT::size_type> spos = ((_data->size() - 1) / iroot) * iroot;
+        SafeInteger<typename _DigsT::size_type> epos = _data->size() - 1;
+        
+        diggroup._data = _DigsT(_data->start() + spos, _data->start() + epos);
+        
+        _DigT pguess = 0;
+        _DigT guess  = s_digitbase >> 1;
+        _DigT max    = 0;
+        _DigT min    = 0;
+        if ((base * nroot + ArbInt<T>(guess)).pow(root) - base.pow(root) * nroot.pow(root) <= base.pow(root) * remainder + diggroup) {
+          if (guess > max) {
+            max = guess;
+          }
+        } else {
+          guess  -= ((guess - pguess) >> 1) + 1;
+          pguess  = guess;
+        }
+        
+      }
+      
+      // We done.
       return *this;
       
     }

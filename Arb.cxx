@@ -620,6 +620,26 @@ namespace DAC {
     
   }
   
+  // Find a whole-number root of this number.
+  Arb& Arb::_root (_DigsT const& root) {
+    
+    // We can only get the root of a whole number, so if this is not a whole
+    // number, return the result of this formula:
+    //        _____     _ x___
+    //  _  x /  y        \/ y
+    //   \  /  ---  == --------
+    //    \/    z       _ x___
+    //                   \/ z
+    // 
+    // x = root, y = _data->p, z = _data->q.
+    Arb tmp_p;
+    Arb tmp_q;
+    tmp_p._data->p = _data->p;
+    tmp_q._data->p = _data->q;
+    return set(tmp_p._root(root) / tmp_q._root(root));
+    
+  }
+  
   /***************************************************************************
    * Class Arb::_Data.
    ***************************************************************************/
