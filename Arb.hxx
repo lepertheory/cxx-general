@@ -248,7 +248,8 @@
         void _init ();
         
         // Reduce the number to its most compact representation.
-        Arb& _reduce ();
+        Arb& _reduce      ();
+        Arb& _forcereduce (_DigsT const& q);
         
         // Normalize this number to another number.
         Arb& _normalize (Arb& number);

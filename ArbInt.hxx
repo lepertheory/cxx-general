@@ -1034,6 +1034,7 @@
     // Raise this number to a power.
     template <class T> ArbInt<T> ArbInt<T>::pow (ArbInt<T> const& exp) {
       
+      /*
       // Work area.
       ArbInt<T> tmp_base(*this);
       ArbInt<T> tmp_expn(exp);
@@ -1046,6 +1047,52 @@
         }
         tmp_base  *= tmp_base;
         tmp_expn >>= ArbInt<T>(1);
+      }
+      */
+      
+      // Work area.
+      std::vector< ArbInt<T> > chain;
+      std::vector< ArbInt<T> > power;
+      ArbInt<T>                zero(0)
+      ArbInt<T>                one(1);
+      ArbInt<T>                reached(zero);
+      ArbInt<T>                max(zero);
+      bool                     atmax = false;
+      
+      // Addition chain power.
+      if (exp > zero) {
+        
+        chain.push_back(*this);
+        power.push_back(one);
+        max = power.back();
+        
+        if (exp > one) {
+          
+          chain.push_back(*this * *this);
+          power.push_back(one   + one);
+          max = power.back();
+          
+          if (exp > power.back()) {
+            
+            chain.push_back(chain.back() * *this);
+            power.push_back(power.back() + one);
+            max = power.back();
+            
+            while (power.back() < exp) {
+              
+              for (vector<ArbInt <T> >::size_type i = power.size() - 1; i != 0; --i) {
+                
+                if (exp <= reached + power[i]) {
+                  chain.push_back(chain.back() * chain[i]);
+                  power.push_back(power.back() + power[i]);
+                  max   = power[i];
+                  atmax = !(max == power[i]);
+                }
+                
+              }
+              
+            }
+        
       }
       
       // Return the result.

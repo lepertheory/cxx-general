@@ -554,7 +554,7 @@ namespace DAC {
       if (number._data->p.isZero()) {
         return false;
       } else {
-        return number._data->positive;
+        return !number._data->positive;
       }
     } else if (number._data->p.isZero()) {
       return _data->positive;
@@ -596,7 +596,7 @@ namespace DAC {
       
       // Raise p & q.
       retval._data->p = retval._data->p.pow(exp._data->p);
-      retval._data->q = retval._data->q.pow(exp._data->q);
+      retval._data->q = retval._data->q.pow(exp._data->p);
       
       // Reduce
       retval._reduce();
@@ -623,14 +623,35 @@ namespace DAC {
     
     do {
       retval = next;
-      next   = (*this / retval.pow(n - one) + (n - one) * retval) / n;
-      //next = (one / n) * (*this / retval.pow(n - one) + (n - one) * retval);
-      cout << "next: " << next << "  retval: " << retval << "  accuracy: " << accuracy << endl;
+      //next   = (*this / retval.pow(n - one) + (n - one) * retval) / n;
+      /*
+      Arb nsubone(n - one);
+      nsubone.Format(FMT_FRACTION);
+      cout << "nsubone: " << nsubone;
+      Arb retpownso(retval.pow(nsubone));
+      retpownso.Format(FMT_FRACTION);
+      cout << "  retpownso: " << retpownso;
+      Arb thisdivrpn(*this / retpownso);
+      thisdivrpn.Format(FMT_FRACTION);
+      cout << "  thisdivrpn: " << thisdivrpn;
+      Arb nsomulret(nsubone * retval);
+      nsomulret.Format(FMT_FRACTION);
+      cout << "  nsomulret: " << nsomulret;
+      Arb tdraddnmr(thisdivrpn + nsomulret);
+      tdraddnmr.Format(FMT_FRACTION);
+      cout << "  tdraddnmr: " << tdraddnmr;
+      next = tdraddnmr / n;
+      cout << "  next: " << next << endl;
+      */
+      next   = (one / n) * (*this / retval.pow(n - one) + (n - one) * retval);
+      //next   = (one / n) * ((n - one) * retval + *this / retval.pow(n - one));
+      if (next._data->q > accuracy._data->q) {
+        next._forcereduce(accuracy._data->q);
+      }
     } while ((next - retval).abs() > accuracy);
     retval = next;
     
     retval._reduce();
-    cout << "retval: " << retval << endl;
     
     return retval;
     
@@ -650,23 +671,34 @@ namespace DAC {
     
     // Fixed-point numbers are forced to their dividend.
     if (_data->fix) {
-      
-      // Only work if we have to.
-      if (_data->q != _data->fixq) {
-        
-        //  p       x
-        // --- == ------
-        //  q      fixq
-        // Solve for x.
-        _data->p = _data->p * _data->fixq / _data->q;
-        _data->q = _data->fixq;
-        
-      }
+      _forcereduce(_data->q);
       
     // Floating-point numbers are simply reduced.
     } else {
       reduce(_data->p, _data->q);
     }
+    
+    // We done.
+    return *this;
+    
+  }
+  
+  // Reduce the number to a specific q.
+  Arb& Arb::_forcereduce (_DigsT const& q) {
+    
+    // Only work if we have to.
+    if (_data->q != q) {
+      
+      //  p       x
+      // --- == ------
+      //  q      fixq
+      _data->p = _data->p * q / _data->q;
+      _data->q = q;
+      
+    }
+    
+    // We done.
+    return *this;
     
   }
   
