@@ -27,24 +27,6 @@ namespace DAC {
    ***************************************************************************/
   
   /***************************************************************************/
-  // Static member initialization.
-  
-  SafeInteger<int> Arb::s_digitbits = 0;
-  Arb::_BaseT      Arb::s_digitbase = 0;
-  
-  Arb::_NumChrT Arb::s_numdigits = 36;
-  Arb::_StrChrT Arb::s_odigits[] = {
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-    'U', 'V', 'W', 'X', 'Y', 'Z'
-  };
-  vector<Arb::_NumChrT> Arb::s_idigits;
-  
-  // Call class constructor.
-  bool Arb::s_initialized = s_classInit();
-  
-  /***************************************************************************/
   // Function members.
   
   // Default constructor.
@@ -82,61 +64,13 @@ namespace DAC {
     // This is the string we will be returning.
     string retval;
     
-    // Easy case outputting 0.
-    if (_data->p.size() == 0) {
-      
-      retval += "0";
-      
-    } else {
-      
-      // Output the sign.
-      if (!(_data->positive)) {
-        retval += "-";
-      }
-      
-      // Convert p to the output base.
-      _DigsT   convert(_data->p);
-      _DigStrT num;
-      _BaseT   base(_data->origbase);
-      reverse(convert.begin(), convert.end());
-      num.swap(*(s_baseConv<_DigsT, _DigStrT>(convert, s_digitbase, base)));
-      reverse(num.begin(), num.end());
-      
-      // Output the number character by character. If the output base is
-      // greater than the number of output digits defined, output the raw
-      // numeric values for each character.
-      for (_DigStrT::iterator i = num.begin(); i != num.end(); ++i) {
-        if (base > s_numdigits.Value()) {
-          retval += "'" + DAC::toString((*i).Value()) + "'";
-          if (i != (num.end() - 1)) {
-            retval += ",";
-          }
-        } else {
-          retval += s_odigits[i->Value()].Value();
-        }
-      }
-      
-      // Insert the radix point.
-      if (_data->exponent != 0) {
-        if (_data->exponent < 0) {
-          retval.append((-(_data->exponent)).Value(), '0');
-        } else {
-          if (_data->exponent >= retval.size()) {
-            retval.insert(0, ((_data->exponent - retval.size()) + 1).Value(), '0');
-          }
-          retval.insert((retval.size() - _data->exponent).Value(), ".");
-        }
-      }
-      
-    }
-    
     // We done.
     return retval;
     
   }
   
   // Set the number from a string.
-  Arb& Arb::set (string const& number, ExponentT const decimal, bool const fix) {
+  Arb& Arb::set (string const& number, PointPosT const decimal, bool const fix) {
     
     // Load the number into this for exception safety.
     _DataPT new_data(new _Data);
@@ -145,12 +79,12 @@ namespace DAC {
     ConstReferencePointer<string> tmp_number(new std::string(number));
     
     // Parser will load data into here.
-    _DigStrT num;
-    _DigStrT rad;
-    _DigStrT exp;
-    bool     p_num = true;
-    bool     p_exp = true;
-    _BaseT   base  = 10;
+    string num;
+    string rad;
+    string exp;
+    bool   p_num = true;
+    bool   p_exp = true;
+    _DigT  base  = 10;
     
     // Parse the number, scoped for temp variables.
     {
@@ -216,26 +150,13 @@ namespace DAC {
           // All other characters, most likely digits.
           default:
             
-            // Scoped for temp variables.
-            {
-              
-              // Get the value of this digit.
-              _NumChrT digval = s_idigits[number[i]];
-              
-              // Make sure this digit is within he number base.
-              if ((digval >= base.Value()) || (digval == numeric_limits<_NumChrT>::max())) {
-                throw ArbErrors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
-              }
-              
-              // Add the digit to its proper place.
-              switch (mode) {
-                case NUM: num.push_back(digval); break;
-                case RAD: rad.push_back(digval); break;
-                case EXP: exp.push_back(digval); break;
-              }
-              diggiven = true;
-              
+            // Add the digit to its proper place.
+            switch (mode) {
+              case NUM: num += number[i]; break;
+              case RAD: rad += number[i]; break;
+              case EXP: exp += number[i]; break;
             }
+            diggiven = true;
             
           break;
           
@@ -246,9 +167,15 @@ namespace DAC {
     }
     
     // Trim insignificant zeros from gathered digits.
-    s_trimZerosB(num);
-    s_trimZerosE(rad);
+    num.erase(0, num.find_first_not_of('0'));
+    cout << "num: " << num << endl;
+    cout << "blah: " << rad.find_last_not_of('0') << "  fart: " << string::npos << endl;
+    if (rad.find_last_not_of('0') != string::npos) {
+      rad.erase(rad.find_last_not_of('0') + 1);
+    }
+    cout << "rad: " << rad << endl;
     
+    /*
     // Load the exponent.
     {
       
@@ -307,9 +234,13 @@ namespace DAC {
     // base. Digits come out in big endian format, no need for a temp.
     new_data->p.swap(*(s_baseConv<_DigStrT, _DigsT>(num, base, s_digitbase)));
     
-    // Set the quotient. Special case a 0 exponent to prevent infinite
-    // recursion since we are using Arb to create q.
-    if (new_data->exponent != 0) {
+    // Set the quotient.
+    if (new_data->exponent >= 0) {
+      _DigsT tmp_base;
+      _DigsT tmp_expn;
+      tmp_base.push_back(base);
+      tmp_expn.push_back(new_data->exponent);
+      new_data->q.swap(*s_intPow(tmp_base, tmp_expn));
     }
     
     // Set the original base.
@@ -320,6 +251,7 @@ namespace DAC {
     
     // The number has been loaded, swap it in. COW is preserved.
     _data = new_data;
+    */
     
     // We done.
     return *this;
@@ -332,38 +264,6 @@ namespace DAC {
     // Construct this object fully. By definition of the clear() function,
     // the default constructor must do nothing more than call clear().
     clear();
-    
-  }
-  
-  // Class constructor.
-  bool Arb::s_classInit () throw() {
-    
-    // This function cannot throw.
-    try {
-      
-      // Get the maximum number that can be held in a single digit.
-      s_digitbits = numeric_limits<_DigT>::digits >> 1;
-      s_digitbase = rppower(_BaseT(2), s_digitbits);
-      
-      // Get the input digits.
-      for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {
-        _NumChrT digit = 0;
-        if      ((i >= '0') && (i <= '9')) { digit = i - _NumChrT('0');               }
-        else if ((i >= 'A') && (i <= 'Z')) { digit = i - _NumChrT('A') + 10;          }
-        else if ((i >= 'a') && (i <= 'z')) { digit = i - _NumChrT('a') + 10;          }
-        else                               { digit = numeric_limits<_NumChrT>::max(); }
-        s_idigits.push_back(digit);
-      }
-      
-    } catch (...) {
-      
-      // If any exception was caught, we failed. Have fun debugging.
-      return false;
-      
-    }
-    
-    // Happy joy.
-    return true;
     
   }
   
@@ -386,16 +286,18 @@ namespace DAC {
     // before any changes are made.
     _DigsT new_p;
     _DigsT new_q;
-    new_q.push_back(1);
+    new_q.set(1);
     
     // These operations will never throw.
     positive = true;
-    exponent = 0;
-    fixexp   = 0;
+    
+    p = new_p;
+    q = new_q;
+    
+    pointpos = 0;
     fix      = false;
+    
     origbase = 10;
-    p.swap(new_p);
-    q.swap(new_q);
     
     // We done.
     return *this;
