@@ -31,7 +31,7 @@ namespace DAC {
   Arbitrary::_BaseT Arbitrary::s_digitbase = 0;
   
   // The characters that make up the digits.
-  const Arbitrary::_NumChrT   Arbitrary::s_numdigits = 36;
+  Arbitrary::_NumChrT   Arbitrary::s_numdigits = 36;
   Arbitrary::_StrChrT   Arbitrary::s_odigits[] = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
@@ -471,7 +471,7 @@ namespace DAC {
         if (*i > s_numdigits) {
           construct += "'" + DAC::toString(*i) + "'";
         } else {
-          construct += s_odigits[*i].Value();
+          construct += s_odigits[i->Value()].Value();
         }
       }
     }

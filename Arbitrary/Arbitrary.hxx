@@ -192,12 +192,12 @@
         class _Data;
         
         // Typedefs.
-        typedef SafeInteger<char> _StrChrT; // String character type.
-        typedef unsigned char     _NumChrT; // Numeric character type.
-        typedef signed int        _ExpT;    // Exponent type.
-        typedef _NumChrT          _DigChrT; // Digit character type.
-        typedef unsigned int      _DigT;    // Individual digits.
-        typedef unsigned int      _BaseT;   // Base type.
+        typedef SafeInteger<char>          _StrChrT; // String character type.
+        typedef SafeInteger<unsigned char> _NumChrT; // Numeric character type.
+        typedef signed int                 _ExpT;    // Exponent type.
+        typedef _NumChrT                   _DigChrT; // Digit character type.
+        typedef unsigned int               _DigT;    // Individual digits.
+        typedef unsigned int               _BaseT;   // Base type.
         
         typedef std::vector<_DigChrT> _DigStrT; // Vector of character digits.
         typedef std::vector<_DigT>    _DigsT;   // Vector of digits.
@@ -227,8 +227,8 @@
         static int    s_digitbits;
         static _BaseT s_digitbase;
         
-        static const _NumChrT        s_numdigits;
-        static _StrChrT        s_odigits[];
+        static _NumChrT              s_numdigits;
+        static _StrChrT              s_odigits[];
         static std::vector<_NumChrT> s_idigits;
         
         // Data members.
