@@ -13,7 +13,9 @@ SafeInteger_test = env.Object(target = 'SafeInteger-test', source = ['SafeIntege
 ArbInt_test      = env.Object(target = 'ArbInt-test',      source = ['ArbInt-test.cxx']     )
 Arb              = env.Object(target = 'Arb',              source = ['Arb.cxx']             )
 Arb_test         = env.Object(target = 'Arb-test',         source = ['Arb-test.cxx']        )
+ibc              = env.Object(target = 'ibc',              source = ['ibc.cxx']             )
 
 env.Program(target = 'SafeInteger-test', source = [SafeInteger_test])
-env.Program(target = 'ArbInt-test',      source = [ArbInt_test])
-env.Program(target = 'Arb-test',         source = [Arb_test, Arb])
+env.Program(target = 'ArbInt-test',      source = [ArbInt_test]     )
+env.Program(target = 'Arb-test',         source = [Arb_test, Arb]   )
+env.Program(target = 'ibc',              source = [ibc]             )

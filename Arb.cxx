@@ -12,6 +12,7 @@
 // Internal includes.
 #include "rppower.hxx"
 #include "toString.hxx"
+#include "reduce.hxx"
 
 // Class include.
 #include "Arb.hxx"
@@ -73,7 +74,7 @@ namespace DAC {
   Arb& Arb::set (string const& number, PointPosT const decimal, bool const fix) {
     
     // Load the number into this for exception safety.
-    _DataPT new_data(new _Data);
+    Arb new_num;
     
     // Hold the number in case an error needs to be throw.
     ConstReferencePointer<string> tmp_number(new std::string(number));
@@ -181,97 +182,91 @@ namespace DAC {
     num += rad;
     
     // Load the number.
-    new_data->p.Base(base) = num;
+    new_num._data->p.Base(base) = num;
     
-    // Adjust the number based on the exponent. If a negative exponent was
-    // given, up the order of magnitude of the number, otherwise set q to
-    // base^exponent.
-    if (p_exp) {
-      new_data->q  = _DigsT(base).pow(_DigsT(exp));
-    } else {
-      new_data->p *= _DigsT(exp);
-    }
-    
-    cout << endl
-         << "new_data->p: " << new_data->p << "  new_data->q: " << new_data->q << endl;
-    
-    /*
-    // Load the exponent.
+    // Adjust the number based on the exponent. Negative exponent increases
+    // radix digits, positive exponent ups order of magnitude.
     {
       
-      _ExpT digexp(1);
-      for (_DigStrT::reverse_iterator i = exp.rbegin(); i != exp.rend(); ++i) {
-        
-        // Get the single digit value.
-        _ExpT digval(digexp * (*i).Value());
-        
-        // Set the digit value.
-        new_data->exponent += digval;
-        
-        // Up the order of magnitude.
-        digexp *= base;
-        
+      // Decide if this will be a fixed-point number.
+      if (fix) {
+        new_num._data->pointpos = decimal;
+        new_num._data->fix      = true;
+      } else {
+        new_num._data->pointpos = _data->pointpos;
+        new_num._data->fix      = _data->fix;
       }
       
-      // Set the exponent sign.
+      // Determine the exponent given.
+      _DigsT expn(exp);
+      _DigsT expr(nexp);
       if (p_exp) {
-        new_data->exponent *= -1;
+        if (expn >= expr) {
+          expn -= expr;
+        } else {
+          p_exp = false;
+          expn  = expr - expn;
+        }
+      } else {
+        expn += expr;
       }
       
-    }
-    
-    // Combine the numeric and radix digits, taking note of the original
-    // number of decimal places.
-    new_data->exponent += rad.size();
-    num.insert(num.end(), rad.begin(), rad.end());
-    
-    // Trim insignificant zeros and update the exponent. In the case of
-    // trimming high-order radix zeros, no need to update exponent, they have
-    // already been counted.
-    new_data->exponent -= s_trimZerosE(num);
-                          s_trimZerosB(num);
-    
-    // If this is a fixed-decimal number, pad or truncate as necessary.
-    if (fix) {
-      new_data->fixexp = decimal;
-      new_data->fix    = fix;
-    } else {
-      new_data->fixexp = _data->fixexp;
-      new_data->fix    = _data->fix;
-    }
-    if (new_data->fix) {
-      if (new_data->exponent != new_data->fixexp) {
-        if (num.size() > (new_data->exponent - new_data->fixexp)) {
-          num.resize((num.size() - (new_data->exponent - new_data->fixexp)).Value());
-        } else {
-          num.clear();
-        }
-        new_data->exponent = new_data->fixexp;
+      // Convert to a fully-represented number (no positive exponent).
+      if (!expn.isZero()) {
+        
+        // This calculation will be needed whether exponent is positive or
+        // negative. If positive, multiply p by it and clear, thus bringing p
+        // down to 1s. If negative, leave as it is, it is already accurate.
+        new_num._data->q = _DigsT(base).pow(expn);
+        if (p_exp) {
+          new_num._data->p *= new_num._data->q;
+          new_num._data->q  = 1;
+          expn              = 0;
+        } 
       }
-    }
-    
-    // Load the numeric digits. Convert from the given base to the target
-    // base. Digits come out in big endian format, no need for a temp.
-    new_data->p.swap(*(s_baseConv<_DigStrT, _DigsT>(num, base, s_digitbase)));
-    
-    // Set the quotient.
-    if (new_data->exponent >= 0) {
-      _DigsT tmp_base;
-      _DigsT tmp_expn;
-      tmp_base.push_back(base);
-      tmp_expn.push_back(new_data->exponent);
-      new_data->q.swap(*s_intPow(tmp_base, tmp_expn));
+      
+      // If a fixed-point number is requested, increase or decrease the
+      // radix digits as needed.
+      if (new_num._data->fix) {
+        
+        // If the exponent is positive, it is a simple case of increasing the
+        // number of radix digits, this is a number represented by 1s by now.
+        if (p_exp) {
+          new_num._data->q  = _DigsT(base).pow(_DigsT(new_num._data->pointpos));
+          new_num._data->p *= new_num._data->q;
+        
+        // If the exponent is negative, we must add or subtract the difference
+        // in digits.
+        } else {
+          if (_DigsT(new_num._data->pointpos) >= expn) {
+            _DigsT mod        = _DigsT(base).pow(_DigsT(new_num._data->pointpos) - expn);
+            new_num._data->p *= mod;
+            new_num._data->q *= mod;
+          } else {
+            _DigsT mod        = _DigsT(base).pow(expn - _DigsT(new_num._data->pointpos));
+            new_num._data->p /= mod;
+            new_num._data->q /= mod;
+          }
+        }
+        
+        // This is the q that we always need to fix at.
+        new_num._data->fixq = new_num._data->q;
+        
+      }
+      
     }
     
     // Set the original base.
-    new_data->origbase = base;
+    new_num._data->origbase = base;
     
     // Set the sign.
-    new_data->positive = p_num;
+    new_num._data->positive = p_num;
+    
+    // Reduce the number.
+    new_num._reduce();
     
     // The number has been loaded, swap it in. COW is preserved.
-    _data = new_data;
-    */
+    _data = new_num._data;
     
     // We done.
     return *this;
@@ -287,6 +282,33 @@ namespace DAC {
     
   }
   
+  // Reduce the number to its most compact representation.
+  Arb& Arb::_reduce () {
+    
+    cout << "p: " << _data->p << "  q: " << _data->q << endl;
+    // Fixed-point numbers are forced to their dividend.
+    if (_data->fix) {
+      
+      // Only work if we have to.
+      if (_data->q != _data->fixq) {
+        
+        //  p       x
+        // --- == ------
+        //  q      fixq
+        // Solve for x.
+        _data->p = _data->p * _data->fixq / _data->q;
+        _data->q = _data->fixq;
+        
+      }
+      
+    // Floating-point numbers are simply reduced.
+    } else {
+      reduce(_data->p, _data->q);
+    }
+    cout << "p: " << _data->p << "  q: " << _data->q << endl;
+    
+  }
+  
   /***************************************************************************
    * Class Arb::_Data.
    ***************************************************************************/
@@ -296,7 +318,7 @@ namespace DAC {
     
     // Call common init.
     _init();
-    
+
   }
   
   // Reset to just constructed state.
@@ -306,13 +328,15 @@ namespace DAC {
     // before any changes are made.
     _DigsT new_p;
     _DigsT new_q;
+    _DigsT new_fixq;
     new_q.set(1);
     
     // These operations will never throw.
     positive = true;
     
-    p = new_p;
-    q = new_q;
+    p    = new_p;
+    q    = new_q;
+    fixq = new_fixq;
     
     pointpos = 0;
     fix      = false;
@@ -330,7 +354,7 @@ namespace DAC {
     // Construct this object fully. By definition of the clear() function, the
     // default constructor must do nothing more than call clear().
     clear();
-    
+
   }
   
 };

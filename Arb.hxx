@@ -110,8 +110,9 @@
             
             bool positive; // True if the number is positive.
             
-            _DigsT p;        // Numerator.
-            _DigsT q;        // Denominator.
+            _DigsT p;    // Numerator.
+            _DigsT q;    // Denominator.
+            _DigsT fixq; // Fixed denominator.
             
             PointPosT pointpos; // Radix point position.
             bool      fix;      // If true, fix the radix point.
@@ -151,6 +152,9 @@
         
         // Common initialization tasks.
         void _init ();
+        
+        // Reduce the number to its most compact representation.
+        Arb& _reduce ();
         
         /*********************************************************************/
         // Static function members.
@@ -216,35 +220,6 @@
      *************************************************************************/
     
     /*
-    // Get the greatest common divisor of two big-endian containers. Base
-    // is 2^(bits/2).
-    template <class T> ReferencePointer<T> Arb::s_gcd (T const& c1, T const& c2) {
-      
-      // Return value.
-      ReferencePointer<T> retval(new T);
-      
-      // Work area.
-      T tmp_c1(c1);
-      T tmp_c2(c2);
-      if (s_lt(tmp_c1, tmp_c2)) {
-        tmp_c1.swap(tmp_c2);
-      }
-      
-      // Euclid's algorithm.
-      while (tmp_c2 != 0) {
-        T                   tmp = tmp_c2;
-        ReferencePointer<T> remainder(new T);
-        s_intDiv(tmp_c1, tmp_c2, remainder);
-        tmp_c2.swap(*remainder);
-        tmp_c1.swap(tmp);
-      }
-      
-      // Swap in result and return.
-      retval->swap(tmp_c1);
-      return retval;
-      
-    }
-    
     // Get the least common multiple of two big-endian containers. Base is
     // 2^(bits/2).
     template <class T> ReferencePointer<T> Arb::s_lcm (T const& c1, T const& c2) {

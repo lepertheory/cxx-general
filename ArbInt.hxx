@@ -24,11 +24,11 @@
   // Namespace wrapping.
   namespace DAC {
     
-    /*********************************************************************
+    /*************************************************************************
       * ArbInt
-      *********************************************************************
+      ************************************************************************
       * This is an integer of an arbitrary number of digits.
-      *********************************************************************/
+      ************************************************************************/
     template <class T> class ArbInt {
       
       /*
@@ -36,12 +36,12 @@
         */
       public:
         
-        /*****************************************************************/
+        /*********************************************************************/
         // Typedefs.
         
         typedef T value_type;
         
-        /*****************************************************************/
+        /*********************************************************************/
         // Function members.
         
         // Default constructor.
@@ -53,6 +53,9 @@
         // Conversion constructor.
                             ArbInt (std::string const& number);
         template <class FT> ArbInt (FT          const  number);
+        
+        // Boolean conversion operator.
+        operator bool () const;
         
         // Increment / decrement operators.
         ArbInt& operator ++ ();
@@ -90,7 +93,7 @@
         // Reset to just-constructed state.
         ArbInt& clear ();
         
-        // Force a copy of another number, no COW.
+        // Copy another number.
         ArbInt& copy (ArbInt const& number, bool const copynow = false);
         
         // Accessors.
@@ -141,13 +144,19 @@
         
         // Raise this number to a power.
         ArbInt& pow (ArbInt const& exp);
+        
+        /*********************************************************************/
+        // Static function members.
+        
+        // Return the maximum string input base.
+        static T max_input_base ();
       
       /*
         * Private members.
         */
       private:
         
-        /*****************************************************************/
+        /*********************************************************************/
         // Typedefs.
         
         typedef char          _StrChrT; // String character.
@@ -161,13 +170,13 @@
         
         typedef ReferencePointer<_DigsT> _DataPT; // Pointer to data.
         
-        /*****************************************************************/
+        /*********************************************************************/
         // Data types.
         
         // Directions.
         enum _Dir { _DIR_L, _DIR_R };
         
-        /*****************************************************************/
+        /*********************************************************************/
         // Data members.
         
         // The number.
@@ -176,7 +185,7 @@
         // The default base of this number.
         T _base;
         
-        /*****************************************************************/
+        /*********************************************************************/
         // Static data members.
         
         static bool s_initialized;
@@ -188,9 +197,10 @@
         static _NumChrT s_numdigits; // Number of output digits.
         static _StrChrT s_odigits[]; // Output digits.
         
-        static std::vector<_NumChrT> s_idigits; // Input digits.
+        static _NumChrT              s_numidigits; // Number of input digits.
+        static std::vector<_NumChrT> s_idigits;    // Input digits.
         
-        /*****************************************************************/
+        /*********************************************************************/
         // Function members.
         
         // Common initialization tasks.
@@ -206,7 +216,7 @@
         // Bit shift this number.
         ArbInt& _shift (ArbInt<T> const& bits, _Dir const direction);
         
-        /*****************************************************************/
+        /*********************************************************************/
         // Static function members.
         
         // Class initialization.
@@ -322,6 +332,7 @@
       'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
       'U', 'V', 'W', 'X', 'Y', 'Z'
     };
+    template <class T> typename ArbInt<T>::_NumChrT              ArbInt<T>::s_numidigits = 0;
     template <class T> std::vector<typename ArbInt<T>::_NumChrT> ArbInt<T>::s_idigits;
     
     template <class T> bool ArbInt<T>::s_initialized = false;
@@ -367,6 +378,9 @@
       set<FT>(number);
       
     }
+    
+    // Boolean conversion operator.
+    template <class T> inline ArbInt<T>::operator bool () const { return !isZero(); }
     
     // Increment / decrement operators.
     template <class T> inline ArbInt<T>& ArbInt<T>::operator ++ ()    { return op_add(ArbInt<T>(1));                                  }
@@ -415,7 +429,7 @@
       
     }
     
-    // Force a copy of another number, no COW.
+    // Make a copy of another number.
     template <class T> ArbInt<T>& ArbInt<T>::copy (ArbInt<T> const& number, bool const copynow) {
       
       // Set the new digits. Make a copy if instructed to do so, otherwise
@@ -1017,6 +1031,9 @@
       
     }
     
+    // Return the maximum string input base.
+    template <class T> inline T ArbInt<T>::max_input_base () { return SafeInteger<T>(s_numidigits).Value(); }
+    
     // Common initialization tasks.
     template <class T> void ArbInt<T>::_init () {
       
@@ -1208,6 +1225,7 @@
         else                               { digit = std::numeric_limits<_NumChrT>::max(); }
         s_idigits.push_back(digit.Value());
       }
+      s_numidigits = 36;
       
       // Class has successfully been initialized.
       s_initialized = true;
