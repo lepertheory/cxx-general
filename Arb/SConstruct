@@ -1,7 +1,7 @@
 import os
 
 env = Environment(
-	ENV = os.environ,
+	ENV     = os.environ,
 	CPPPATH = [ '.', '..' ],
 	tools   = [ 'mingw', 'gcc' ]
 )
@@ -9,8 +9,8 @@ env = Environment(
 if (env['CC'] == 'gcc') :
 	env.Append(CCFLAGS = '-g -O0 -ansi -w -pipe')
 
-Arb  = env.Object(target = 'Arb',  source = [ 'Arb.cxx'  ])
-main = env.Object(target = 'main', source = [ 'test.cxx' ])
+Arb    = env.Object(target = 'Arb',         source = [ 'Arb.cxx'  ]       )
+main   = env.Object(target = 'main',        source = [ 'test.cxx' ]       )
 
 env.Program(
 	target = 'Arb',

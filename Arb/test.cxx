@@ -22,7 +22,26 @@ enum Operation {
   DIV,
   MOD,
   ADD,
-  SUB
+  SUB,
+  SHL,
+  SHR,
+  CGT,
+  CGE,
+  CLT,
+  CLE,
+  CEQ,
+  CNE,
+  BND,
+  BIO,
+  BXO,
+  LND,
+  LIO,
+  PIN,
+  OIN,
+  PDE,
+  ODE,
+  LNT,
+  BCM
 };
 
 template <class T> bool testOp (ArbInt<T> const& l, Operation const op, ArbInt<T> const& r);
@@ -42,12 +61,6 @@ int main (int argc, char** argv, char** envp) {
     cout << "test2: ";
     cin  >> test2;
     cout << "test2: " << test2 << endl;
-    
-    testOp(test1, ADD, test2);
-    testOp(test1, SUB, test2);
-    testOp(test1, MUL, test2);
-    testOp(test1, DIV, test2);
-    testOp(test1, MOD, test2);
     //*/
     
     /** /
@@ -69,11 +82,32 @@ int main (int argc, char** argv, char** envp) {
       for (int j = 0; j != 22; ++j) {
         test1 = testdigs[i];
         test2 = testdigs[j];
-        testOp(test1, ADD, test2);
-        testOp(test1, SUB, test2);
+        //*/
         testOp(test1, MUL, test2);
         testOp(test1, DIV, test2);
         testOp(test1, MOD, test2);
+        testOp(test1, ADD, test2);
+        testOp(test1, SUB, test2);
+        testOp(test1, SHL, test2);
+        testOp(test1, SHR, test2);
+        testOp(test1, CGT, test2);
+        testOp(test1, CGE, test2);
+        testOp(test1, CLT, test2);
+        testOp(test1, CLE, test2);
+        testOp(test1, CEQ, test2);
+        testOp(test1, CNE, test2);
+        testOp(test1, BND, test2);
+        testOp(test1, BIO, test2);
+        testOp(test1, BXO, test2);
+        testOp(test1, LND, test2);
+        testOp(test1, LIO, test2);
+        testOp(test1, PIN, test2);
+        testOp(test1, OIN, test2);
+        testOp(test1, PDE, test2);
+        testOp(test1, ODE, test2);
+        testOp(test1, LNT, test2);
+        testOp(test1, BCM, test2);
+        /** /
       }
     }
     //*/
@@ -108,20 +142,58 @@ template <class T> bool testOp (ArbInt<T> const& l, Operation const op, ArbInt<T
     ArbInt<T> test;
     output = l.toString();
     switch (op) {
-      case ADD: output += "  + "; break;
-      case SUB: output += "  - "; break;
       case MUL: output += "  * "; break;
       case DIV: output += "  / "; break;
       case MOD: output += "  % "; break;
+      case ADD: output += "  + "; break;
+      case SUB: output += "  - "; break;
+      case SHL: output += " << "; break;
+      case SHR: output += " >> "; break;
+      case CGT: output += " >  "; break;
+      case CGE: output += " >= "; break;
+      case CLT: output += " <  "; break;
+      case CLE: output += " <= "; break;
+      case CEQ: output += " == "; break;
+      case CNE: output += " != "; break;
+      case BND: output += "  & "; break;
+      case BIO: output += "  | "; break;
+      case BXO: output += "  ^ "; break;
+      case LND: output += " && "; break;
+      case LIO: output += " || "; break;
+      case PIN: output += "  ++"; break;
+      case OIN: output += "++  "; break;
+      case PDE: output += "  --"; break;
+      case ODE: output += "--  "; break;
+      case LNT: output += "   !"; break;
+      case BCM: output += "   ~"; break;
     }
     output += r.toString() + " = ";
     switch (op) {
       /**/
-      case ADD: output += (l + r).toString(); break;
-      case SUB: output += (l - r).toString(); break;
-      case MUL: output += (l * r).toString(); break;
-      case DIV: output += (l / r).toString(); break;
-      case MOD: output += (l % r).toString(); break;
+      case MUL: output += (l  * r).toString(); break;
+      case DIV: output += (l  / r).toString(); break;
+      case MOD: output += (l  % r).toString(); break;
+      case ADD: output += (l  + r).toString(); break;
+      case SUB: output += (l  - r).toString(); break;
+      case SHL: output += ((r > ArbInt<T>(10000)) ? "Skipped, huge." : (l << r).toString()); break;
+      case SHR: output += (l >> r).toString(); break;
+      case CGT: output += ((l >  r) ? "true" : "false"); break;
+      case CGE: output += ((l >= r) ? "true" : "false"); break;
+      case CLT: output += ((l <  r) ? "true" : "false"); break;
+      case CLE: output += ((l <= r) ? "true" : "false"); break;
+      case CEQ: output += ((l == r) ? "true" : "false"); break;
+      case CNE: output += ((l != r) ? "true" : "false"); break;
+      case BND: output += (l  & r).toString(); break;
+      case BIO: output += (l  | r).toString(); break;
+      case BXO: output += (l  ^ r).toString(); break;
+      case LND: output += ((l && r) ? "true" : "false"); break;
+      case LIO: output += ((l || r) ? "true" : "false"); break;
+      case PIN: output += "++" + l.toString() + ": " + (++ArbInt<T>(l)).toString() + "  ++" + r.toString() + ": " + (++ArbInt<T>(r)).toString(); break;
+      case OIN: output += l.toString() + "++: " + (ArbInt<T>(l)++).toString() + "  " + r.toString() + "++: " + (ArbInt<T>(r)++).toString();  break;
+      case PDE: output += "--" + l.toString() + ": " + (--ArbInt<T>(l)).toString() + "  --" + r.toString() + ": " + (--ArbInt<T>(r)).toString(); break;
+      case ODE: output += l.toString() + "--: " + (ArbInt<T>(l)--).toString() + "  " + r.toString() + "--: " + (ArbInt<T>(r)--).toString();  break;
+      case LNT: output += "!" + l.toString() + ": " + (!l ? "true" : "false" ) + "  !" + r.toString() + ": " + (!r ? "true" : "false"); break;
+      case BCM: output += "~" + l.toString() + ": " + (~l).toString() + "  ~" + r.toString() + ": " + (~r).toString(); break;
       //*/
       /** /
       case ADD:

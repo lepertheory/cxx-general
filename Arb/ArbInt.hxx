@@ -19,6 +19,7 @@
   #include "ReferencePointer.hxx"
   #include "toString.hxx"
   #include "rppower.hxx"
+  #include "logBase.hxx"
   
   // Namespace wrapping.
   namespace DAC {
@@ -106,6 +107,9 @@
         // Return a string of this number.
         std::string toString (T const base = 0) const;
         
+        // Tests if this number is equal to zero.
+        bool isZero () const;
+        
         // Arithmetic operator backends.
         ArbInt& op_mul (ArbInt const& number);
         ArbInt& op_div (ArbInt const& number, ArbInt* remainder = 0);
@@ -129,10 +133,11 @@
         ArbInt& op_bit_and (ArbInt const& number);
         ArbInt& op_bit_ior (ArbInt const& number);
         ArbInt& op_bit_xor (ArbInt const& number);
+        ArbInt& op_bit_cpm ();
         
         // Logical operator backends.
-        bool log_op_and (ArbInt const& number) const;
-        bool log_op_ior (ArbInt const& number) const;
+        bool op_log_and (ArbInt const& number) const;
+        bool op_log_ior (ArbInt const& number) const;
         
         // Raise this number to a power.
         ArbInt& pow (ArbInt const& exp);
@@ -157,6 +162,12 @@
         typedef ReferencePointer<_DigsT> _DataPT; // Pointer to data.
         
         /*****************************************************************/
+        // Data types.
+        
+        // Directions.
+        enum _Dir { _DIR_L, _DIR_R };
+        
+        /*****************************************************************/
         // Data members.
         
         // The number.
@@ -172,6 +183,7 @@
         
         static int   s_digitbits; // Number of bits in a digit.
         static _DigT s_digitbase; // Base of native digits.
+        static _DigT s_bitmask;   // Bitmask of digits.
         
         static _NumChrT s_numdigits; // Number of output digits.
         static _StrChrT s_odigits[]; // Output digits.
@@ -190,6 +202,9 @@
         
         // Trim insignificant zeros.
         ArbInt& _trimZeros ();
+        
+        // Bit shift this number.
+        ArbInt& _shift (ArbInt<T> const& bits, _Dir const direction);
         
         /*****************************************************************/
         // Static function members.
@@ -271,6 +286,7 @@
       class Negative        : public Base      { public: virtual char const* what () const throw(); };
       class Overrun         : public Base      { public: virtual char const* what () const throw(); };
       class DivByZero       : public Base      { public: virtual char const* what () const throw(); };
+      class ScalarOverflow  : public Base      { public: virtual char const* what () const throw(); };
     };
     
   };
@@ -291,6 +307,7 @@
       inline char const* Negative::what        () const throw() { return "Attempted to set ArbInt to a negative number.";                                                                                                                      }
       inline char const* Overrun::what         () const throw() { return "Instruction overruns end of container.";                                                                                                                             }
       inline char const* DivByZero::what       () const throw() { return "Attempt to divide by zero.";                                                                                                                                         }
+      inline char const* ScalarOverflow::what  () const throw() { return "ArbInt overflows scalar type.";                                                                                                                                      }
     };
     
     /*************************************************************************/
@@ -298,6 +315,7 @@
     
     template <class T> int                       ArbInt<T>::s_digitbits = 0;
     template <class T> typename ArbInt<T>::_DigT ArbInt<T>::s_digitbase = 0;
+    template <class T> typename ArbInt<T>::_DigT ArbInt<T>::s_bitmask   = 0;
     
     template <class T> typename ArbInt<T>::_NumChrT ArbInt<T>::s_numdigits = 36;
     template <class T> typename ArbInt<T>::_StrChrT ArbInt<T>::s_odigits[] = {
@@ -354,7 +372,16 @@
     }
     
     // Increment / decrement operators.
-    template <class T> inline ArbInt<T>& ArbInt<T>::operator ++ () { return op_add(1); }
+    template <class T> inline ArbInt<T>& ArbInt<T>::operator ++ ()    { return op_add(ArbInt<T>(1));                                  }
+    template <class T> inline ArbInt<T>  ArbInt<T>::operator ++ (int) { ArbInt<T> retval(*this); op_add(ArbInt<T>(1)); return retval; }
+    template <class T> inline ArbInt<T>& ArbInt<T>::operator -- ()    { return op_sub(ArbInt<T>(1));                                  }
+    template <class T> inline ArbInt<T>  ArbInt<T>::operator -- (int) { ArbInt<T> retval(*this); op_sub(ArbInt<T>(1)); return retval; }
+    
+    // Negation operator.
+    template <class T> inline bool ArbInt<T>::operator ! () const { return isZero(); }
+    
+    // Bitwise compliment.
+    template <class T> inline ArbInt<T> ArbInt<T>::operator ~ () const { return ArbInt<T>(*this).op_bit_cpm(); }
     
     // Assignment operator.
     template <class T>                     inline ArbInt<T>& ArbInt<T>::operator = (std::string const& number) { return set(number, 0);  }
@@ -417,6 +444,20 @@
     // Returns or sets the default base of this number.
     template <class T> inline T          ArbInt<T>::Base ()             const { return _base;               }
     template <class T> inline ArbInt<T>& ArbInt<T>::Base (T const base)       { _base = base; return *this; }
+    
+    // Returns or sets the value of this number.
+    template <class T> template <class TT> TT ArbInt<T>::Value () const {
+      SafeInteger<TT> retval;
+      for (typename _DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
+        try {
+          retval += SafeInteger<_DigT>(*i) * rppower(SafeInteger<_DigT>(s_digitbase), (i - _digits->begin()));
+        } catch (SafeIntegerErrors::Overflow) {
+          throw ArbIntErrors::ScalarOverflow();
+        }
+      }
+      return retval.Value();
+    }
+    template <class T> template <class TT> ArbInt<T>& ArbInt<T>::Value (TT const number) { return set(number); }
     
     // Set this number with a string.
     template <class T> ArbInt<T>& ArbInt<T>::set (std::string const& number, T const base) {
@@ -552,6 +593,9 @@
       return retval;
       
     }
+    
+    // Tests if this number is equal to zero.
+    template <class T> inline bool ArbInt<T>::isZero () const { return (_digits->size() == 0); }
     
     // Multiply.
     template <class T> ArbInt<T>& ArbInt<T>::op_mul (ArbInt<T> const& number) {
@@ -808,6 +852,10 @@
       
     }
     
+    // Shift left, shift right.
+    template <class T> inline ArbInt<T>& ArbInt<T>::op_shl (ArbInt<T> const& number) { ArbInt<T> retval(*this, true); retval._shift(number, _DIR_L); return copy(retval); }
+    template <class T> inline ArbInt<T>& ArbInt<T>::op_shr (ArbInt<T> const& number) { ArbInt<T> retval(*this, true); retval._shift(number, _DIR_R); return copy(retval); }
+    
     // Greater than.
     template <class T> bool ArbInt<T>::op_gt (ArbInt<T> const& number) const {
       
@@ -844,6 +892,111 @@
     template <class T> inline bool ArbInt<T>::op_eq (ArbInt<T> const& number) const { return (!op_gt(number) && !op_lt(number)); }
     template <class T> inline bool ArbInt<T>::op_ne (ArbInt<T> const& number) const { return (op_gt(number) || op_lt(number));   }
     
+    // Bitwise AND.
+    template <class T> ArbInt<T>& ArbInt<T>::op_bit_and (ArbInt<T> const& number) {
+      
+      // Work area.
+      ArbInt<T> retval(*this, true);
+      
+      // Cut off digits longer than number, they will be 0 anyway.
+      if (retval._digits->size() > number._digits->size()) {
+        retval._digits->resize(number._digits->size());
+      }
+      
+      // AND each digit.
+      for (typename _DigsT::size_type i = 0; i != retval._digits->size(); ++i) {
+        (*(retval._digits))[i] &= (*(number._digits))[i];
+      }
+      
+      // Clean up.
+      retval._trimZeros();
+      
+      // Move the result into place and return.
+      _digits = retval._digits;
+      return *this;
+      
+    }
+    
+    // Bitwise inclusive OR.
+    template <class T> ArbInt<T>& ArbInt<T>::op_bit_ior (ArbInt<T> const& number) {
+      
+      // Work area.
+      ArbInt<T> retval(*this, true);
+      
+      // Get the original size of retval, no processing of any of the added
+      // digits will be necessary b/c of how | works.
+      typename _DigsT::size_type origsize = min(retval._digits->size(), number._digits->size());
+      
+      // Directly copy digits longer than *this.
+      if (retval._digits->size() < number._digits->size()) {
+        retval._digits->insert(retval._digits->end(), number._digits->begin() + retval._digits->size(), number._digits->end());
+      }
+      
+      // Inclusive OR each digit.
+      for (typename _DigsT::size_type i = 0; i != origsize; ++i) {
+        (*(retval._digits))[i] |= (*(number._digits))[i];
+      }
+      
+      // No need to trim zeros with inclusive OR. Move the result into place
+      // and return.
+      _digits = retval._digits;
+      return *this;
+      
+    }
+    
+    // Bitwise exclusive OR.
+    template <class T> ArbInt<T>& ArbInt<T>::op_bit_xor (ArbInt<T> const& number) {
+      
+      // Work area.
+      ArbInt<T> retval(*this, true);
+      
+      // Get the original size of retval, no processing of any of the added
+      // digits will be necessary b/c of how | works.
+      typename _DigsT::size_type origsize = min(retval._digits->size(), number._digits->size());
+      
+      // Directly copy digits longer than *this.
+      if (retval._digits->size() < number._digits->size()) {
+        retval._digits->insert(retval._digits->end(), number._digits->begin() + retval._digits->size(), number._digits->end());
+      }
+      
+      // Exclusive OR each digit.
+      for (typename _DigsT::size_type i = 0; i != origsize; ++i) {
+        (*(retval._digits))[i] ^= (*(number._digits))[i];
+      }
+      
+      // Clean up.
+      retval._trimZeros();
+      
+      // Move the result into place and return.
+      _digits = retval._digits;
+      return *this;
+      
+    }
+    
+    // Bitwise compliment.
+    template <class T> ArbInt<T>& ArbInt<T>::op_bit_cpm () {
+      
+      // Work area.
+      ArbInt<T> retval(*this, true);
+      
+      // Apply compliment to each digit.
+      for (typename _DigsT::size_type i = 0; i != retval._digits->size(); ++i) {
+        (*(retval._digits))[i] = (~((*(retval._digits))[i])) & s_bitmask;
+      }
+      
+      // Clean up.
+      retval._trimZeros();
+      
+      // Move the result into place and return.
+      _digits = retval._digits;
+      return *this;
+      
+    }
+    
+    // Logical operators.
+    template <class T> inline bool ArbInt<T>::op_log_and (ArbInt<T> const& number) const { return (!isZero() && !number.isZero()); }
+    template <class T> inline bool ArbInt<T>::op_log_ior (ArbInt<T> const& number) const { return (!isZero() || !number.isZero()); }
+    
     // Raise this number to a power.
     template <class T> ArbInt<T>& ArbInt<T>::pow (ArbInt<T> const& exp) {
       
@@ -857,8 +1010,8 @@
         if (tmp_expn._digits->front() & 1) {
           retval *= tmp_base;
         }
-        tmp_base *= tmp_base;
-        tmp_expn /= ArbInt<T>(2);
+        tmp_base  *= tmp_base;
+        tmp_expn >>= ArbInt<T>(1);
       }
       
       // Set the result and return.
@@ -964,6 +1117,81 @@
       
     }
     
+    // Bitwise shift.
+    template <class T> ArbInt<T>& ArbInt<T>::_shift (ArbInt<T> const& number, _Dir const dir) {
+      
+      // Only shift if it is needed.
+      if (!this->isZero() && !number.isZero()) {
+        
+        // Cache the number of bits in a digit as an ArbInt, this will be used
+        // many times.
+        ArbInt<T> arbdigbits(s_digitbits);
+        
+        // If shift amount will leave no bits in the number, just zero it out.
+        if ((dir == _DIR_R) && (number >= (ArbInt<T>(_digits->size()) * arbdigbits))) {
+          
+          _digits->clear();
+          
+        } else {
+          
+          // Check if shift will overrun _DigsT::size_type. This line is:
+          // if we are shifting left (up), check if number (number of bits to
+          // shift) is greater than the maximum number of bits - the number of
+          // bits in the current number. Unless you have over 4GB of VM,
+          // you'll run out of RAM first, but this probably indicates a bug in
+          // whatever is asking for a shift that big.
+          if ((dir == _DIR_L) && (number > ((ArbInt<T>(std::numeric_limits<typename _DigsT::size_type>::max()) * arbdigbits) - ((ArbInt<T>(_digits->size()) * arbdigbits) - ArbInt<T>(logBase(_digits->back(), 2)))))) {
+            throw ArbIntErrors::Overrun();
+          }
+          
+          // Shift with whole digits as much as possible. size_type should be
+          // fine, since by now we've eliminated any shifts of more bits.
+          // Shift by inserting or erasing whole digits.
+          typename _DigsT::size_type digshift = (number / arbdigbits).Value<typename _DigsT::size_type>();
+          if (digshift > 0) {
+            if (dir == _DIR_L) {
+              _digits->insert(_digits->begin(), digshift, 0);
+            } else {
+              _digits->erase(_digits->begin(), _digits->begin() + digshift);
+            }
+          }
+          
+          // Now do fine-grained shifting.
+          int bitshift = (number - (ArbInt<T>(digshift) * arbdigbits)).Value<int>();
+          if (bitshift > 0) {
+            _DigT carry    = 0;
+            _DigT oldcarry = 0;
+            if (dir == _DIR_L) {
+              _DigT bitmask  = ((rppower(SafeInteger<_DigT>(2), bitshift) - 1) << (s_digitbits - bitshift)).Value();
+              for (typename _DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
+                carry      = *i & bitmask;
+                *i       <<= bitshift;
+                *i        |= oldcarry;
+                oldcarry   = carry >> (s_digitbits - bitshift);
+              }
+            } else {
+              _DigT bitmask  = (rppower(SafeInteger<_DigT>(2), bitshift) - 1).Value();
+              for (typename _DigsT::reverse_iterator i = _digits->rbegin(); i != _digits->rend(); ++i) {
+                carry      = *i & bitmask;
+                *i       >>= bitshift;
+                *i        |= oldcarry;
+                oldcarry   = carry << (s_digitbits - bitshift);
+              }
+            }
+          }
+          
+          // Clean up.
+          _trimZeros();
+          
+        }
+        
+      }
+      
+      // We done.
+      return *this;
+      
+    }
+    
     // Class constructor.
     template <class T> bool ArbInt<T>::s_classInit () throw() {
       
@@ -973,6 +1201,7 @@
         // Get the maximum number that can be held in a single digit.
         s_digitbits = std::numeric_limits<_DigT>::digits >> 1;
         s_digitbase = rppower(SafeInteger<_DigT>(2), s_digitbits).Value();
+        s_bitmask   = (SafeInteger<_DigT>(s_digitbase) - 1).Value();
         
         // Get the input digits.
         SafeInteger<_NumChrT> j;
@@ -1107,15 +1336,15 @@
   template <class T> inline std::istream& operator >> (std::istream& l, DAC::ArbInt<T>&       r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   // Arithmetic operators.
-  template <class T> inline DAC::ArbInt<T> operator * (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_mul(r); }
-  template <class T> inline DAC::ArbInt<T> operator / (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_div(r); }
-  template <class T> inline DAC::ArbInt<T> operator % (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_mod(r); }
-  template <class T> inline DAC::ArbInt<T> operator + (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_add(r); }
-  template <class T> inline DAC::ArbInt<T> operator - (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_sub(r); }
+  template <class T> inline DAC::ArbInt<T> operator * (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_mul(r); }
+  template <class T> inline DAC::ArbInt<T> operator / (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_div(r); }
+  template <class T> inline DAC::ArbInt<T> operator % (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_mod(r); }
+  template <class T> inline DAC::ArbInt<T> operator + (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_add(r); }
+  template <class T> inline DAC::ArbInt<T> operator - (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_sub(r); }
   
   // Bit shift operators.
-  template <class T> inline DAC::ArbInt<T> operator << (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r);
-  template <class T> inline DAC::ArbInt<T> operator >> (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r);
+  template <class T> inline DAC::ArbInt<T> operator << (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_shl(r); }
+  template <class T> inline DAC::ArbInt<T> operator >> (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_shr(r); }
   
   // Comparsion operators.
   template <class T> inline bool operator >  (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return l.op_gt(r); }
@@ -1126,9 +1355,9 @@
   template <class T> inline bool operator != (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return l.op_ne(r); }
   
   // Bitwise operators.
-  template <class T> inline DAC::ArbInt<T> operator & (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_bit_and(r); }
-  template <class T> inline DAC::ArbInt<T> operator | (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_bit_ior(r); }
-  template <class T> inline DAC::ArbInt<T> operator ^ (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_bit_xor(r); }
+  template <class T> inline DAC::ArbInt<T> operator & (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_bit_and(r); }
+  template <class T> inline DAC::ArbInt<T> operator | (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_bit_ior(r); }
+  template <class T> inline DAC::ArbInt<T> operator ^ (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return DAC::ArbInt<T>(l).op_bit_xor(r); }
   
   // Logical operators.
   template <class T> inline bool operator && (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return l.op_log_and(r); }
