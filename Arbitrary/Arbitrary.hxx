@@ -241,7 +241,8 @@
         template <class T, class IT> static void s_trimZeros (T& c, _BoE const returnzeros);
         
         // Do any carry needed.
-        template <class T, class TS> static void s_carry (T& digits, TS const start);
+        template <class T, class TS> static void s_carry  (T& digits, TS const start);
+        template <class T, class TS> static void s_borrow (T& digits, TS const start);
         
         // Long division.
         template <class DivndT, class DivndDT, class DivndIT, class DivorT> static DivorT s_longdiv (DivndT& dividend, DivorT const divisor, _BaseT const base);
@@ -424,8 +425,8 @@
     template <class T, class TS> void Arbitrary::s_carry (T& digits, TS const start) {
       
       // Make sure we're not stepping out of the container.
-      if (start > digits.size()) {
-        ArbitraryErrors::throwOverrun("Container overrun in s_carry(). digits.size(): " + DAC::toString(digits.size()) + "  start: " + DAC::toString(start) + ".");
+      if (start >= digits.size()) {
+        ArbitraryErrors::throwOverrun("Container overrun in s_carry(). digits.size(): " + DAC::toString(digits.size()) + "  start (0 based): " + DAC::toString(start) + ".");
       }
       
       // Step through every digit.
@@ -454,6 +455,36 @@
         digits[j] = of_add<_DigT, _DigT, _DigT>(digits[j], next);
         
       }
+      
+    }
+    /*************************************************************************/
+    
+    /*************************************************************************/
+    // Borrow, starting at given digit.
+    template <class T, class TS> void Arbitrary::s_borrow (T& digits, TS const start) {
+      
+      // Make sure we're still within the container.
+      if (start >= digits.size()) {
+        ArbitraryErrors::throwOverrun("Container overrun in s_borrow(). digits.size(): " + DAC::toString(digits.size()) + "  start (0 based): " + DAC::toString(start) + ".");
+      }
+      
+      // Cache adding 1.
+      TS next = of_add<TS, TS, int>(start, 1);
+      
+      // Make sure that there is something to borrow from.
+      if (next >= digits.size()) {
+        ArbitraryErrors::throwOverrun("Container does not contain necessary digits to perform borrow. Digit " + DAC::toString(next) + " required borrow from " + DAC::toString(digits.size()) + " digit container.");
+      }
+      
+      // Make sure that the digit we are borrowing from has something to
+      // borrow. If not, borrow it.
+      if (digits[next] <= 0) {
+        s_borrow<T, TS>(digits, next);
+      }
+      
+      // Now do the borrow.
+      digits[next]  = of_sub<_DigT, _DigT, int>(digits[next], 1);
+      digits[start] = of_add<_DigT, _DigT, _BaseT>(digits[start], s_digitbase);
       
     }
     /*************************************************************************/

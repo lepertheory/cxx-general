@@ -95,6 +95,11 @@ namespace DAC {
   // Add a number to this number.
   Arbitrary& Arbitrary::op_add (Arbitrary const& right) {
     
+    // If signs are different, redirect this to a subtract.
+    if (_data->positive != right._data->positive) {
+      return op_sub(-right);
+    }
+    
     // Reduce typing.
     typedef _DigsT::size_type DST;
     
@@ -144,32 +149,50 @@ namespace DAC {
   // Subtract a number from this number.
   Arbitrary& Arbitrary::op_sub (Arbitrary const& right) {
     
+    // If signs are different, redirect this to an add.
+    if (_data->positive != right._data->positive) {
+      return op_add(-right);
+    }
+    
     // Reduce typing.
     typedef _DigsT::size_type DST;
     
     // Work area.
-    _DataPT   new_data(new _Data);
+    Arbitrary tmp_left(*this);
     Arbitrary tmp_right(right);
     
     // Convert to two numbers that can be calculated against each other.
     _normalizeExponent(tmp_right);
     
     // Get the max number of digits.
-    DST largest = max(_data->digits.size(), tmp_right._data->digits.size());
+    DST largest = max(tmp_left._data->digits.size(), tmp_right._data->digits.size());
+    
+    // Make sure that we are subtracting the smaller (absolute) number from
+    // the larger number. If we need to swap to achieve this, also swap the
+    // sign.
+    if (tmp_right > *this) {
+      tmp_left._data.swap(tmp_right._data);
+      tmp_left._data->positive = !(tmp_left._data->positive);
+    }
     
     // Subtract like 1st grade.
     for (DST i = 0; i != largest; ++i) {
       
-      // Add another digit if needed.
-      if (i >= new_data->digits.size()) {
-        new_data->digits.push_back(0);
+      // Subtract with borrowing if needed.
+      if (tmp_right._data->digits.size() > i) {
+        if (tmp_left._data->digits[i] < tmp_right._data->digits[i]) {
+          s_borrow<_DigsT, DST>(tmp_left._data->digits, i);
+        }
+        tmp_left._data->digits[i] = of_sub<_DigT, _DigT, _DigT>(tmp_left._data->digits[i], tmp_right._data->digits[i]);
       }
       
-      // Subtract with borrowing if needed.
-      if (_data->digits.size() > i) {
-        if (
-      
     }
+    
+    // Move the new data into place.
+    _data = tmp_left._data;
+    
+    // Done.
+    return *this;
     
   }
   /***************************************************************************/
@@ -234,6 +257,9 @@ namespace DAC {
     
     // Put the decimal point in the proper place.
     new_data->exponent = _data->exponent + tmp_right._data->exponent;
+    
+    // Set the sign.
+    new_data->positive = (_data->positive == tmp_right._data->positive);
     
     // Swap in the new data.
     _data = new_data;
@@ -359,8 +385,11 @@ namespace DAC {
     tmp_left._normalizeExponent(tmp_right);
     
     // Test.
-    if (tmp_left._data->positive && !tmp_right._data->positive) {
+    if (tmp_left._data->positive && !(tmp_right._data->positive)) {
       return true;
+    }
+    if (!(tmp_left._data->positive) && tmp_right._data->positive) {
+      return false;
     }
     if (tmp_left._data->digits.size() > tmp_right._data->digits.size()) {
       return true;
@@ -653,6 +682,9 @@ namespace DAC {
     // Load the numeric digits. Convert from the given base to the target
     // base. Digits come out in reverse order, no need for a temp.
     new_data->digits.swap(*(s_baseconv<_DigsT, _DigT, _DigStrT, _DigChrT, _DigStrT::iterator>(num, base, s_digitbase)));
+    
+    // Set the sign.
+    new_data->positive = p_num;
     
     // Number loaded succesfully, swap it in.
     _data = new_data;

@@ -53,6 +53,7 @@ int main (int argc, char** argv, char** envp) {
     cout << "test2: " << test2 << endl;
     cout << endl;
     cout << test1 << " + " << test2 << " = " << (test1 + test2) << endl;
+    cout << test1 << " - " << test2 << " = " << (test1 - test2) << endl;
     cout << test1 << " * " << test2 << " = " << (test1 * test2) << endl;
     
     exit(0);

@@ -8,6 +8,9 @@
 #if !defined(REFERENCEPOINTER_huhoeu89o8e)
   #define REFERENCEPOINTER_huhoeu89o8e
   
+  // Internal includes.
+  #include "xorswap.hxx"
+  
   // Namespace wrapper.
   namespace DAC {
     
@@ -59,6 +62,9 @@
         // Release the current pointer and set a new one.
         void reset (ReferencePointer<T>& p)     throw();
         void reset (T* const             p = 0) throw();
+        
+        // Swap this pointer with another one.
+        void swap (ReferencePointer<T>& p) throw();
         
         // Reset to just-constructed by default constructor state.
         void clear () throw();
@@ -266,6 +272,27 @@
             ++(*_refs);
           }
         }
+        
+      }
+      
+    }
+    /*************************************************************************/
+    
+    /*************************************************************************/
+    // Swap this pointer with another one.
+    template <class T> void ReferencePointer<T>::swap (ReferencePointer<T>& p) throw() {
+      
+      // Make sure this is a new pointer.
+      if (_p != p._p) {
+        
+        // Swap.
+        T* tmpp = _p;
+        _p      = p._p;
+        p._p    = tmpp;
+        
+        int* tmprefs = _refs;
+        _refs        = p._refs;
+        p._refs      = tmprefs;
         
       }
       
