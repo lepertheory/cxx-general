@@ -353,6 +353,9 @@
       
     }
     
+    // Increment / decrement operators.
+    template <class T> inline ArbInt<T>& ArbInt<T>::operator ++ () { return op_add(1); }
+    
     // Assignment operator.
     template <class T>                     inline ArbInt<T>& ArbInt<T>::operator = (std::string const& number) { return set(number, 0);  }
     template <class T>                     inline ArbInt<T>& ArbInt<T>::operator = (ArbInt<T>   const& number) { return copy(number);    }
@@ -654,7 +657,7 @@
             typename _DigsT::size_type j;
             for (j = 0; j != (diggroup._digits->size() - number._digits->size()); ++j) {
               roughdivor *= s_digitbase;
-              roughdivor += (*(diggroup._digits))[diggroup._digits->size() - 1 - j];
+              roughdivor += (*(diggroup._digits))[diggroup._digits->size() - 1 - (j + 1)];
             }
             guess = roughdivor / roughdivnd;
               
@@ -668,9 +671,20 @@
             // would cause high-order digit to change), and raise the dividend
             // by 1. For the ceiling divisor, raise it by s_digitbase^addl
             // and lower the dividend by 1.
+            // *** CORRECTION ***
+            // Now starting floor at 1 (guess must be at least 1 or we
+            // wouldn't be here) and ceil at max(). The performance penalty
+            // will be negligable since the first time we go over or under the
+            // floor and ceil are corrected, those two possible missed guesses
+            // should not take significantly more time than it would take to
+            // ensure that floor and ceil do not overflow, and even with those
+            // guarantees the better guesses may not even help significantly
+            // since they will still almost always be wrong.
             test = number * ArbInt<T>(guess.Value());
-            SafeInteger<_DigT> guessfloor = (roughdivor - rppower(SafeInteger<_DigT>(s_digitbase), j)) / (roughdivnd + 1);
-            SafeInteger<_DigT> guessceil  = (roughdivor + rppower(SafeInteger<_DigT>(s_digitbase), j)) / ((roughdivnd == 1) ? 1 : (roughdivnd - 1));
+            //SafeInteger<_DigT> guessfloor = (roughdivor - rppower(SafeInteger<_DigT>(s_digitbase), j)) / (roughdivnd + 1);
+            //SafeInteger<_DigT> guessceil  = (roughdivor + rppower(SafeInteger<_DigT>(s_digitbase), j)) / ((roughdivnd == 1) ? 1 : (roughdivnd - 1));
+            SafeInteger<_DigT> guessfloor = 1;
+            SafeInteger<_DigT> guessceil  = std::numeric_limits<_DigT>::max();
             
             // Loop until the test is within th ecorrect range.
             while ((test > diggroup) || ((test + number) <= diggroup)) {
@@ -920,6 +934,12 @@
         
         // Add base to this digit.
         (*_digits)[i] = (SafeInteger<_DigT>((*_digits)[i]) + s_digitbase).Value();
+        
+        // If this is not the first digit, we are only here because we
+        // borrowed for the previous digit. Subtract one for the borrow.
+        if (i != start) {
+          --(*_digits)[i];
+        }
         
         // If the next digit is > 0, subtract 1 and we're done.
         if ((*_digits)[i + 1] > 0) {
