@@ -81,9 +81,10 @@
         ArbInt& op_mul (ArbInt const& number);
         ArbInt& op_div (ArbInt const& number, ArbInt* remainder = 0);
         ArbInt& op_add (ArbInt const& number);
+        ArbInt& op_sub (ArbInt const& number);
         
         // Comparison operator backends.
-        bool op_gt (ArbInt const& number);
+        bool op_gt (ArbInt const& number) const;
         
         // Raise this number to a power.
         ArbInt& pow (ArbInt const& exp);
@@ -135,8 +136,12 @@
         // Common initialization tasks.
         void _init ();
         
-        // Perform carry.
-        ArbInt& _carry (typename _DigsT::size_type start);
+        // Perform carry or borrow.
+        ArbInt& _carry  (typename _DigsT::size_type start);
+        ArbInt& _borrow (typename _DigsT::size_type start);
+        
+        // Trim insignificant zeros.
+        ArbInt& _trimZeros ();
         
         /*****************************************************************/
         // Static function members.
@@ -416,221 +421,6 @@
      *************************************************************************/
     
     /*
-    // Perform integer multiplication on two big-endian containers. Base is
-    // 2^(bits/2).
-    template <class T> ReferencePointer<T> Arb::s_intMul (T const& mulnd, T const& mulor) {
-      
-      // Work area.
-      T digproduct;
-      
-      // Return value.
-      ReferencePointer<T> retval(new T);
-      
-      // Multiply like 3rd grade.
-      for (typename T::size_type i = 0; i != mulor.size(); ++i) {
-        
-        // Get the product for a single digit.
-        digproduct.swap(*s_longMul(mulnd, mulor[i]));
-        
-        // Offset this digit product and add it to the final product.
-        digproduct.insert(digproduct.begin(), i, 0);
-        retval->swap(*s_intAdd(*retval, digproduct));
-        
-      }
-      
-      // Return the result.
-      return retval;
-      
-    }
-    
-    // Perform integer division on two big-endian containers. Returns the
-    // quotient. Base is 2^(bits/2).
-    template <class T> ReferencePointer<T> Arb::s_intDiv (T const& divor, T const& divnd, ReferencePointer<T> remainder) {
-      
-      // Return this container.
-      ReferencePointer<T> retval(new T);
-      
-      // If divor < divnd, result is zero, remainder is divnd.
-      if (s_lt(divor, divnd)) {
-        if (remainder.get() != 0) {
-          remainder = divnd;
-        }
-        return retval;
-      }
-      
-      // Make a copy of the high-order digit of the dividend, this will be
-      // used frequently.
-      typename T::value_type roughdivnd = divnd.back();
-      
-      // Seed the group of digits we will be dividing, then iterate through
-      // the divisor.
-      T diggroup(divor.rbegin(), divor.rbegin() + divnd.size());
-      T test;
-      for (typename T::reverse_iterator i = divor.rbegin() + divnd.size(); i != divor.rend(); ++i) {
-        
-        // Make a guess at the quotient of this digit by dividing the high-
-        // order digits.
-        typename T::value_type guess = diggroup.back() / roughdivnd;
-        
-        // Correct the guess.
-        test.swap(*s_longMul(divnd, guess));
-        if (s_gt(test, diggroup)) {
-          --guess;
-          test.swap(*s_longMul(divnd, guess));
-        } else if (s_ge(*s_intSub(diggroup, test), divnd)) {
-          ++guess;
-          test.swap(*s_longMul(divnd, guess));
-        }
-        
-        // The guess must be correct by this point. Add it to the quotient and
-        // prepare for the next iteration if there will be one.
-        retval->insert(retval->begin(), guess);
-        diggroup.swap(*s_intSub(diggroup, test));
-        
-      }
-      
-      // Swap in the remainder if a container was given.
-      if (remainder.refs != 0) {
-        remainder->swap(diggroup);
-      }
-      
-      // Return.
-      return retval;
-      
-    }
-    
-    // Perform integer addition on two big-endian containers. Base is
-    // 2^(bits/2).
-    template <class T> ReferencePointer<T> Arb::s_intAdd (T const& aug, T const& add) {
-      
-      // Return value.
-      ReferencePointer<T> retval(new T);
-      
-      // Iterate through the larger digit, adding to the return value. Cache
-      // sizes.
-      typename T::size_type augsz = aug.size();
-      typename T::size_type addsz = add.size();
-      typename T::size_type digs  = max(augsz, addsz);
-      for (typename T::size_type i = 0; i != digs; ++i) {
-        
-        // Add a new digit if necessary.
-        if (retval->size() == i) {
-          retval->push_back(0);
-        }
-        
-        // Add the augend and addend.
-        if (augsz > i) {
-          (*retval)[i]  = aug[i];
-        }
-        if (addsz > i) {
-          (*retval)[i] += add[i];
-        }
-        
-        // Do any carry needed.
-        s_carry(*retval, i);
-        
-      }
-      
-      // Return.
-      return retval;
-      
-    }
-    
-    // Perform integer subtraction on two big-endian containers. This is
-    // an unsigned operation, so minuend must be greater than or equal to
-    // subtrahend. Base is 2^(bits/2).
-    template <class T> ReferencePointer<T> Arb::s_intSub (T const& min, T const& sub) {
-      
-      // Ensure that min >= sub.
-      if (!s_ge(min, sub)) {
-        throw ArbErrors::Overrun();
-      }
-      
-      // Copy min into the return container.
-      ReferencePointer<T> retval(new T(min));
-      
-      // Iterate through min, subtracting each digit of sub.
-      for (typename T::size_type i = 0; i != sub.size(); ++i) {
-        
-        // Perform borrow if necessary.
-        if (retval[i] < sub[i]) {
-          s_borrow(retval, i);
-        }
-        
-        // Subtract this digit.
-        retval[i] -= sub[i];
-        
-      }
-      
-      // Trim zeros and return.
-      s_trimZerosE(*retval);
-      return retval;
-      
-    }
-    
-    // Raise a container to a power.
-    template <class T> ReferencePointer<T> Arb::s_intPow (T const& base, T const& expn) {
-      
-      // Reduce typing.
-      typedef typename T::value_type DT;
-      
-      // Calculate the number of bits in a number. This is static so that it
-      // is only calculated once for a given type instead of every function
-      // call.
-      static const int halfbits = std::numeric_limits<DT>::digits >> 1;
-      static const DT  numbase  = rppower(static_cast<DT>(2), halfbits);
-      
-      // Return value.
-      ReferencePointer<T> retval(new T);
-      retval->push_back(1);
-      
-      // Work area.
-      T tmp_base(base);
-      T tmp_expn(expn);
-      
-      // Russian peasant power.
-      while (tmp_expn.size() > 0) {
-        if ((tmp_expn.front() & 1).Value()) {
-          retval->swap(*s_intMul(*retval, tmp_base));
-        }
-        tmp_base.swap(*s_intMul(tmp_base, tmp_base));
-        s_longDiv(tmp_expn, 2, numbase);
-      }
-      
-      // Return the result.
-      return retval;
-      
-    }
-    
-    // Multiply a big-endian container by a given number. Base is 2^(bits/2).
-    template <class LT, class RT> ReferencePointer<LT> Arb::s_longMul (LT const& l, RT const r) {
-      
-      // Reduce typing.
-      typedef typename LT::value_type LDT;
-      
-      // This is the product.
-      ReferencePointer<LT>   retval(new LT);
-      typename LT::size_type curpos = 0;
-      
-      // Multiply like 3rd grade.
-      for (typename LT::size_type i = 0; i != l.size(); ++i) {
-        
-        // Create the digit if necessary.
-        if (curpos == retval->size()) {
-          retval->push_back(0);
-        }
-        
-        // Multiply one digit and carry.
-        (*retval)[curpos] = l[i] * r;
-        s_carry(*retval, curpos);
-        
-      }
-      
-      // We done.
-      return retval;
-      
-    }
-    
     // Get the greatest common divisor of two big-endian containers. Base
     // is 2^(bits/2).
     template <class T> ReferencePointer<T> Arb::s_gcd (T const& c1, T const& c2) {
@@ -680,124 +470,6 @@
       return s_intMul(*s_intDiv(tmp_c2, s_gcd(tmp_c1, tmp_c2)), tmp_c1);
       
     }
-    
-    // Perform a carry on a big-endian container. Base is 2^(bits/2).
-    template <class T> void Arb::s_carry (T& c, typename T::size_type const start) {
-      
-      // Reduce typing.
-      typedef typename T::value_type DT;
-      
-      // Calculate the number of bits in a number. This is static so that it
-      // is only calculated once for a given type instead of every function
-      // call.
-      static const int halfbits = std::numeric_limits<DT>::digits >> 1;
-      static const DT  base     = rppower(static_cast<DT>(2), halfbits);
-      
-      // Ensure that the start is not beyond the end of the container.
-      if (start >= c.size()) {
-        throw ArbErrors::Overrun();
-      }
-      
-      // Loop through the container looking for base overflow.
-      for (typename T::size_type i = start; i != c.size(); ++i) {
-        
-        // If we find overflow, push it to the next digit.
-        if (c[i] >= base) {
-          
-          // Create the next digit if it does not already exist.
-          if ((c.size() - 1) <= i) {
-            c.push_back(0);
-          }
-          
-          // Add any overflow to the next digit and remove it from the
-          // current digit.
-          DT overflow  = c[i] / base;
-          c[i + 1]    += overflow;
-          c[i]        -= overflow * base;
-          
-        // If there is no overflow, there will be no more overflow.
-        } else {
-          
-          // Nothing to return, work is done in place.
-          return;
-          
-        }
-        
-      }
-      
-    }
-    
-    // Perform a borrow on a big-endian container. Base is 2^(bits/2).
-    template <class T> void Arb::s_borrow (T& c, typename T::size_type const start) {
-      
-      // Reduce typing.
-      typedef typename T::value_type DT;
-      
-      // Calculate the number of bits in a number.
-      static const int halfbits = std::numeric_limits<DT>::digits >> 1;
-      static const DT  base     = rppower(static_cast<DT>(2), halfbits);
-      
-      // Ensure that the start is not beyond the end of the container.
-      if (start >= c.size()) {
-        throw ArbErrors::Overrun();
-      }
-      
-      // Loop through the container borrowing until we've met our borrow.
-      for (typename T::size_type i = start; i != (c.size() - 1); ++i) {
-        
-        // Add base to this digit.
-        c[i] += base;
-        
-        // If the next digit is > 0, subtract 1 and we're done.
-        if (c[i + 1] > 0) {
-          --c[i + 1];
-          s_trimZerosE(c);
-          return;
-        }
-        
-      }
-      
-      // If we got to here, we have not paid for our borrow.
-      throw ArbErrors::Overrun();
-      
-    }
-    
-    // Comparison operators on big-endian containers.
-    template <class T> bool Arb::s_lt (T const& l, T const& r) {
-      
-      // Don't get fooled by zero size.
-      if ((l.size() == 0) && (r.size() == 0)) {
-        return false;
-      }
-      
-      // If the size of one container is larger, that is the larger container.
-      if (l.size() < r.size()) {
-        return true;
-      }
-      if (l.size() > r.size()) {
-        return false;
-      }
-      
-      // Examine individual digits, starting from most significant. Return a
-      // result as soon as possible.
-      for (typename T::size_type i = l.size() - 1; i != 0; --i) {
-        if (l[i] < r[i]) {
-          return true;
-        }
-        if (l[i] > r[i]) {
-          return false;
-        }
-      }
-      
-      // All digits are equal, l is not less than r.
-      return false;
-      
-    }
-    template <class T> inline bool Arb::s_le (T const& l, T const& r) { return (s_lt(l, r) || !s_lt(r, l));  }
-    template <class T> inline bool Arb::s_gt (T const& l, T const& r) { return s_lt(r, l);                   }
-    template <class T> inline bool Arb::s_ge (T const& l, T const& r) { return (s_gt(l, r) || !s_gt(r, l));  }
-    template <class T> inline bool Arb::s_eq (T const& l, T const& r) { return (!s_lt(l, r) && !s_gt(l, r)); }
-    template <class T> inline bool Arb::s_ne (T const& l, T const& r) { return (s_lt(l, r) || s_gt(l, r));   }
     */
     
     /*************************************************************************
@@ -954,27 +626,28 @@
     // Set this number from another number.
     template <class T> template <class FT> ArbInt<T>& ArbInt<T>::set (FT const number) {
       
-      // If number is zero, this is easy.
-      if (number == 0) {
-        _digits->clear();
-      }
-      
-      // If number is less than zero, throw an error.
-      if (number < 0) {
-        throw ArbIntErrors::Negative();
-      }
-      
       // Work area.
-      _DataPT         new_digits(new _DigsT);
-      SafeInteger<FT> tmp_number(number);
+      _DataPT new_digits(new _DigsT);
       
-      // Convert with repeated division.
-      while (tmp_number > 0) {
-        new_digits->push_back((tmp_number % s_digitbase).Value());
-        tmp_number /= s_digitbase;
+      // Only something to set if the number is not zero.
+      if (number != 0) {
+        
+        // If number is less than zero, throw an error.
+        if (number < 0) {
+          throw ArbIntErrors::Negative();
+        }
+        
+        // Convert with repeated division.
+        SafeInteger<FT> tmp_number(number);
+        while (tmp_number > 0) {
+          new_digits->push_back((tmp_number % s_digitbase).Value());
+          tmp_number /= s_digitbase;
+        }
+        
       }
       
-      // We done.
+      // Swap in the new digits and return.
+      _digits = new_digits;
       return *this;
       
     }
@@ -1002,6 +675,7 @@
         // Convert to the output base.
         _DigStrT num;
         s_baseConv(*_digits, s_digitbase, num, numbase);
+        std::cout << "num.size(): " << num.size() << "  _digits->size(): " << _digits->size() << std::endl;
         
         // Load this into the string. If the base is greater than th enumber
         // of digits defined, output the raw numbers of each digit.
@@ -1014,6 +688,7 @@
           }
         } else {
           for (typename _DigStrT::reverse_iterator i = num.rbegin(); i != num.rend(); ++i) {
+            std::cout "*i: " << *i << std::endl;
             retval += s_odigits[*i];
           }
         }
@@ -1021,6 +696,7 @@
       }
       
       // String constructed, return it.
+      std::cout << "retval: " << retval << std::endl;
       return retval;
       
     }
@@ -1029,32 +705,38 @@
     template <class T> ArbInt<T>& ArbInt<T>::op_mul (ArbInt<T> const& number) {
       
       // Work area.
-      ArbInt<T> digproduct;
       ArbInt<T> retval;
       
-      // Less typing.
-      _DigsT& dpd = *(digproduct._digits);
-      
-      // Multiply like 3rd grade.
-      for (typename _DigsT::size_type i = 0; i != _digits->size(); ++i) {
+      // If either number is zero, no multiplying to be done.
+      if ((_digits->size() != 0) && (number._digits->size() != 0)) {
         
-        // Get the product for a single digit.
-        for (typename _DigsT::size_type j = 0; j != number._digits->size(); ++j) {
+        // Create a digit product and make a reference its digits to reduce
+        // typing.
+        ArbInt<T> digproduct;
+        _DigsT& dpd = *(digproduct._digits);
+        
+        // Multiply like 3rd grade.
+        for (typename _DigsT::size_type i = 0; i != _digits->size(); ++i) {
           
-          // Create a new digit in the digit product if necessary.
-          if (dpd.size() == j) {
-            dpd.push_back(0);
+          // Get the product for a single digit.
+          for (typename _DigsT::size_type j = 0; j != number._digits->size(); ++j) {
+            
+            // Create a new digit in the digit product if necessary.
+            if (dpd.size() == j) {
+              dpd.push_back(0);
+            }
+            
+            // Multiply into the digit product and carry.
+            dpd[j] = (SafeInteger<_DigT>(dpd[j]) + SafeInteger<_DigT>((*_digits)[i]) * SafeInteger<_DigT>((*(number._digits))[j])).Value();
+            digproduct._carry(j);
+            
           }
           
-          // Multiply into the digit product and carry.
-          dpd[j] = (SafeInteger<_DigT>(dpd[j]) + SafeInteger<_DigT>((*_digits)[i]) * SafeInteger<_DigT>((*(number._digits))[j])).Value();
-          digproduct._carry(j);
+          // Offset this digit product and add it to the final product.
+          digproduct._digits->insert(digproduct._digits->begin(), i, 0);
+          retval.op_add(digproduct);
           
         }
-        
-        // Offset this digit product and add it to the final product.
-        digproduct._digits->insert(digproduct._digits->begin(), i, 0);
-        retval.op_add(digproduct);
         
       }
       
@@ -1068,7 +750,7 @@
     template <class T> ArbInt<T>& ArbInt<T>::op_div (ArbInt<T> const& number, ArbInt<T>* remainder) {
       
       // Work area
-      ArbInt<T> quotient;
+      ArbInt<T> retval;
       
       // If number > this, result is zero, remainder is this.
       if (number > *this) {
@@ -1105,7 +787,7 @@
           
           // The guess must be correct by this point. Add it to th quotient
           // and prepare for the next iteration.
-          quotient._digits->insert(quotient._digits->begin(), guess.Value());
+          retval._digits->insert(retval._digits->begin(), guess.Value());
           diggroup -= test;
           
         }
@@ -1117,9 +799,98 @@
         
       }
       
-      // Move the result into place and return.
-      _digits = quotient._digits;
+      // Clean up, move the result into place and return.
+      retval._trimZeros();
+      _digits = retval._digits;
       return *this;
+      
+    }
+    
+    // Add.
+    template <class T> ArbInt<T>& ArbInt<T>::op_add (ArbInt<T> const& number) {
+      
+      // Work area.
+      ArbInt<T> retval(*this);
+      
+      // Add like kindergarten.
+      for (typename _DigsT::size_type i = 0; i != number._digits->size(); ++i) {
+        
+        // Create a new digit if necessary.
+        if (i == retval._digits->size()) {
+          retval._digits->push_back(0);
+        }
+        
+        // Add this digit and carry.
+        (*(retval._digits))[i] = (SafeInteger<_DigT>((*(retval._digits))[i]) + SafeInteger<_DigT>((*(number._digits))[i])).Value();
+        retval._carry(i);
+        
+      }
+      
+      // Move the result into place and return.
+      _digits = retval._digits;
+      return *this;
+      
+    }
+    
+    // Subtract.
+    template <class T> ArbInt<T>& ArbInt<T>::op_sub (ArbInt<T> const& number) {
+      
+      // Work area.
+      ArbInt<T> retval(*this);
+      
+      // These are unsigned numbers, so if number > this, throw an error.
+      if (number > retval) {
+        throw ArbIntErrors::Negative();
+      }
+      
+      // Subtract like kindergarten.
+      for (typename _DigsT::size_type i = 0; i != number._digits->size(); ++i) {
+        
+        // Borrow if necessary and subtract.
+        if ((*(retval._digits))[i] < (*(number._digits))[i]) {
+          retval._borrow(i);
+        }
+        (*(retval._digits))[i] = (SafeInteger<_DigT>((*(retval._digits))[i]) - SafeInteger<_DigT>((*(number._digits))[i])).Value();
+        
+      }
+      
+      // Trim zeros.
+      retval._trimZeros();
+      
+      // Move the result into place and return.
+      _digits = retval._digits;
+      return *this;
+      
+    }
+    
+    // Greater than.
+    template <class T> bool ArbInt<T>::op_gt (ArbInt<T> const& number) const {
+      
+      // Check sizes of containers first.
+      if (_digits->size() > number._digits->size()) {
+        return true;
+      }
+      if (_digits->size() < number._digits->size()) {
+        return false;
+      }
+      if ((_digits->size() == 0) && (number._digits->size() == 0)) {
+        return false;
+      }
+      
+      // Step through each element looking for a difference, start at high-
+      // order and work down.
+      for (typename _DigsT::size_type i = 0; i != _digits->size(); ++i) {
+        typename _DigsT::size_type j = (_digits->size() - 1) - i;
+        if ((*(_digits))[j] > (*(number._digits))[j]) {
+          return true;
+        }
+        if ((*(_digits))[j] < (*(number._digits))[j]) {
+          return false;
+        }
+      }
+      
+      // No difference was found, is not greater.
+      return false;
       
     }
     
@@ -1139,6 +910,8 @@
         tmp_base *= tmp_base;
         tmp_expn /= ArbInt<T>(2);
       }
+      
+      std::cout << "base: " << *this << "  expn: " << exp << "  result: " << retval << std::endl;
       
       // Set the result and return.
       _digits = retval._digits;
@@ -1196,6 +969,44 @@
         }
         
       }
+      
+    }
+    
+    // Perform borrow. Only call this on temporary objects that are not
+    // copied. Copy on write is not preserved for this function.
+    template <class T> ArbInt<T>& ArbInt<T>::_borrow (typename _DigsT::size_type start) {
+      
+      // Ensure that the start is not beyond the end of the container.
+      if (start >= _digits->size()) {
+        throw ArbIntErrors::Overrun();
+      }
+      
+      // Loop through the container borrowing until we've met our borrow.
+      for (typename _DigsT::size_type i = start; i != (_digits->size() - 1); ++i) {
+        
+        // Add base to this digit.
+        (*_digits)[i] = (SafeInteger<_DigT>((*_digits)[i]) + s_digitbase).Value();
+        
+        // If the next digit is > 0, subtract 1 and we're done.
+        if ((*_digits)[i + 1] > 0) {
+          --(*_digits)[i + 1];
+          _trimZeros();
+          return *this;
+        }
+        
+      }
+      
+      // If we get here, we have not paid for our borrow.
+      throw ArbIntErrors::Overrun();
+      
+    }
+    
+    // Trim insignificant zeros.
+    template <class T> inline ArbInt<T>& ArbInt<T>::_trimZeros () {
+      
+      // Trim zeros and return.
+      s_trimZerosE(*_digits);
+      return *this;
       
     }
     
@@ -1344,9 +1155,9 @@
   template <class T> inline std::istream& operator >> (std::istream& l, DAC::ArbInt<T>&       r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   // Arithmetic operators.
-  template <class T> inline DAC::ArbInt<T> operator * (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return l.op_add(r); }
+  template <class T> inline DAC::ArbInt<T> operator * (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_add(r); }
   
   // Comparison operators.
-  template <class T> inline bool operator > (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { return l.op_gt(r); }
+  template <class T> inline bool operator > (DAC::ArbInt<T> const& l, DAC::ArbInt<T> const& r) { DAC::ArbInt<T> retval(l); return retval.op_gt(r); }
   
 #endif
