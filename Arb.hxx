@@ -60,6 +60,10 @@
         typedef _DigT BaseT;
         
         /*********************************************************************/
+        // Enums
+        enum OutputFormat { FMT_RADIX, FMT_FRACTION };
+        
+        /*********************************************************************/
         // Function members.
         
         // Default constructor.
@@ -107,6 +111,8 @@
         PointPosT              PointPos ()                                      const;
         Arb&                   Fixed    (bool const fixed);
         bool                   Fixed    ()                                      const;
+        Arb&                   Format   (OutputFormat const format);
+        OutputFormat           Format   ()                                      const;
         
         // Reset to just-constructed defaults.
         Arb& clear ();
@@ -142,10 +148,13 @@
         bool isZero     () const;
         
         // Raise this number to a power.
-        Arb& pow (Arb const& exp);
+        Arb pow (Arb const& exp) const;
         
         // Find the nth root of this number.
-        Arb& root (Arb const& n);
+        Arb root (Arb const& n) const;
+        
+        // Return the absolute value of this number.
+        Arb abs () const;
         
       /*
        * Private members.
@@ -230,6 +239,7 @@
         
         // Properties.
         std::string::size_type _maxradix; // Radix digits to output.
+        OutputFormat           _format;   // Format to output this number.
         
         /*********************************************************************/
         // Function members.
@@ -352,6 +362,8 @@
     inline std::string::size_type Arb::MaxRadix ()                                      const { return _maxradix;                   }
     inline Arb::PointPosT         Arb::PointPos ()                                      const { return _data->pointpos;             }
     inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                  }
+    inline Arb&                   Arb::Format   (OutputFormat const format)                   { _format = format; return *this;     }
+    inline Arb::OutputFormat      Arb::Format   ()                                      const { return _format;                     }
     
     // Set from a built-in type.
     template <class T> Arb& Arb::set (T const number) {
@@ -403,6 +415,9 @@
     
     // Return whether this number is equal to zero.
     inline bool Arb::isZero () const { return _data->p.isZero(); }
+    
+    // Return the absolute value of this number.
+    inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }
     
   };
   

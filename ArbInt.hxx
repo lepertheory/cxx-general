@@ -147,10 +147,10 @@
         bool op_log_ior (ArbInt const& number) const;
         
         // Raise this number to a power.
-        ArbInt& pow (ArbInt const& exp);
+        ArbInt pow (ArbInt const& exp);
         
         // Find a root of this number.
-        ArbInt& root (ArbInt const& root, ArbInt& divisor, ArbInt& remainder);
+        ArbInt root (ArbInt const& root, ArbInt& divisor, ArbInt& remainder);
         
         /*********************************************************************/
         // Static function members.
@@ -1032,7 +1032,7 @@
     template <class T> inline bool ArbInt<T>::op_log_ior (ArbInt<T> const& number) const { return (!isZero() || !number.isZero()); }
     
     // Raise this number to a power.
-    template <class T> ArbInt<T>& ArbInt<T>::pow (ArbInt<T> const& exp) {
+    template <class T> ArbInt<T> ArbInt<T>::pow (ArbInt<T> const& exp) {
       
       // Work area.
       ArbInt<T> tmp_base(*this);
@@ -1048,14 +1048,13 @@
         tmp_expn >>= ArbInt<T>(1);
       }
       
-      // Set the result and return.
-      _digits = retval._digits;
-      return *this;
+      // Return the result.
+      return retval;
       
     }
     
     // Find a root of this number.
-    template <class T> ArbInt<T>& ArbInt<T>::root (ArbInt<T> const& root, ArbInt<T>& divisor, ArbInt<T>& remainder) {
+    template <class T> ArbInt<T> ArbInt<T>::root (ArbInt<T> const& root, ArbInt<T>& divisor, ArbInt<T>& remainder) {
       
       // Work area.
       ArbInt<T> eroot;
@@ -1148,10 +1147,9 @@
       }
       
       // We done. Move results into place and return.
-      _digits   = eroot._digits;
       remainder = erem;
       divisor   = edivor;
-      return *this;
+      return eroot;
       
     }
     

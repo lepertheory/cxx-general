@@ -106,6 +106,7 @@ namespace DAC {
     
     // These instructions cannot throw, so they come last.
     _maxradix = 10;
+    _format   = FMT_RADIX;
     
     // We done.
     return *this;
@@ -126,6 +127,7 @@ namespace DAC {
     
     // Now do non-throwing operations.
     _maxradix = number._maxradix;
+    _format   = number._format;
     _data     = new_data;
     
     // We done.
@@ -144,61 +146,79 @@ namespace DAC {
       retval += "-";
     }
     
-    // Output the whole number part.
-    _DigsT whole(_data->p / _data->q);
-    retval += whole.Base(_data->base).toString();
-    
-    // Output the radix part if it exists.
-    _DigsT remainder = _data->p % _data->q;
-    if (((_data->fixq) && (_data->pointpos > 0)) || (!(_data->fixq) && remainder)) {
+    // Choose the output format.
+    switch (_format) {
       
-      // Add the radix point.
-      retval += ".";
-      
-      // Get the radix digits, one by one. Output digits until the entire
-      // fraction is output or the maximum requested significant radix digits
-      // are output.
-      std::string::size_type sigdigs  = 0;
-      bool                   sigstart = whole;
-      _DigsT                 digit;
-      digit.Base(_data->base);
-      while ((sigdigs < _maxradix) && remainder) {
-        remainder *= _data->base;
-        digit      = remainder / _data->q;
-        retval    += digit.toString();
-        remainder %= _data->q;
-        if (sigstart || digit) {
-          ++sigdigs;
-          sigstart = true;
+      // Output in radix notation.
+      case FMT_RADIX: {
+        
+        // Output the whole number part.
+        _DigsT whole(_data->p / _data->q);
+        retval += whole.Base(_data->base).toString();
+        
+        // Output the radix part if it exists.
+        _DigsT remainder = _data->p % _data->q;
+        if (((_data->fixq) && (_data->pointpos > 0)) || (!(_data->fixq) && remainder)) {
+          
+          // Add the radix point.
+          retval += ".";
+          
+          // Get the radix digits, one by one. Output digits until the entire
+          // fraction is output or the maximum requested significant radix digits
+          // are output.
+          std::string::size_type sigdigs  = 0;
+          bool                   sigstart = whole;
+          _DigsT                 digit;
+          digit.Base(_data->base);
+          while ((sigdigs < _maxradix) && remainder) {
+            remainder *= _data->base;
+            digit      = remainder / _data->q;
+            retval    += digit.toString();
+            remainder %= _data->q;
+            if (sigstart || digit) {
+              ++sigdigs;
+              sigstart = true;
+            }
+          }
+          
+          // Strip insignificant zeros.
+          if (retval.find_last_not_of('0') != string::npos) {
+            retval.erase(retval.find_last_not_of('0') + 1);
+          }
+          
+          // If this is a fixed-radix number, fix the radix.
+          if (_data->fixq) {
+            
+            // Pad with zeros.
+            std::string::size_type raddigs = (retval.size() - retval.find('.')) - 1;
+            if (raddigs < _data->pointpos) {
+              retval.append(_data->pointpos - raddigs, '0');
+            }
+            
+          // If this is not a fixed-radix number, we may need to remove the radix
+          // point.
+          } else {
+            
+            if ((retval.size() - 1) == retval.find('.')) {
+              retval.erase(retval.find('.'));
+            }
+            
+          }
+          
         }
-      }
+        
+      } break;
       
-      // Strip insignificant zeros.
-      if (retval.find_last_not_of('0') != string::npos) {
-        retval.erase(retval.find_last_not_of('0') + 1);
-      }
-      
-      // If this is a fixed-radix number, fix the radix.
-      if (_data->fixq) {
+      // Output in fractional format.
+      case FMT_FRACTION: {
         
-        // Pad with zeros.
-        std::string::size_type raddigs = (retval.size() - retval.find('.')) - 1;
-        if (raddigs < _data->pointpos) {
-          retval.append(_data->pointpos - raddigs, '0');
-        }
+        // Easy, output p/q.
+        retval += _data->p.Base(_data->base).toString() + "/" + _data->q.Base(_data->base).toString();
         
-      // If this is not a fixed-radix number, we may need to remove the radix
-      // point.
-      } else {
-        
-        if ((retval.size() - 1) == retval.find('.')) {
-          retval.erase(retval.find('.'));
-        }
-        
-      }
+      } break;
       
     }
-    
+        
     // We done.
     return retval;
     
@@ -566,48 +586,74 @@ namespace DAC {
   }
   
   // Raise this number to a power.
-  Arb& Arb::pow (Arb const& exp) {
+  Arb Arb::pow (Arb const& exp) const {
+    
+    // Work area.
+    Arb retval(*this);
     
     // Raise this number to an integer power.
     if (exp.isInteger()) {
       
-      // Work area.
-      Arb  retval(1);
-      Arb  tmp_base(*this);
-      Arb  tmp_expn(exp);
-      bool positive(tmp_expn.isPositive());
-      Arb  one(1);
+      // Raise p & q.
+      retval._data->p = retval._data->p.pow(exp._data->p);
+      retval._data->q = retval._data->q.pow(exp._data->q);
       
-      // Convert exponent to a positive number for algorithm.
-      if (!positive) {
-        tmp_expn *= -1;
+      // Reduce
+      retval._reduce();
+      
+      // If exp is negative, 1/pow.
+      if (!exp.isPositive()) {
+        retval = Arb(1) / retval;
       }
-      
-      // Russian peasant algorithm.
-      while (!tmp_expn.isZero()) {
-        if (tmp_expn & one) {
-          retval *= tmp_base;
-        }
-        tmp_base  *= tmp_base;
-        tmp_expn >>= 1;
-      }
-      
-      // If a negative exponent is requested, 1/x.
-      if (!positive) {
-        retval = one / retval;
-      }
-      
-      // Move the result into place.
-      
       
     }
+    
+    // Return the result.
+    return retval;
     
   }
   
   // Find the nth root of this number.
-  Arb& Arb::root (Arb const& n) {
+  Arb Arb::root (Arb const& n) const {
     
+    Arb retval;
+    Arb next(1);
+    Arb one(1);
+    Arb accuracy(string("0.00000000001"));
     
+    do {
+      retval = next;
+      //next   = (*this / retval.pow(n - one) + (n - one) * retval) / n;
+      Arb nmo(n - one);
+      nmo.Format(FMT_FRACTION);
+      cout << "nmo: " << nmo;
+      Arb rpn(retval.pow(nmo));
+      rpn.Format(FMT_FRACTION);
+      cout << "  rpn: " << rpn;
+      Arb tdr(*this / rpn);
+      tdr.Format(FMT_FRACTION);
+      cout << "  tdr: " << tdr;
+      Arb ntr(nmo * retval);
+      ntr.Format(FMT_FRACTION);
+      cout << "  ntr: " << ntr;
+      Arb tpn(tdr + ntr);
+      tpn.Format(FMT_FRACTION);
+      cout << "  tpn: " << tpn;
+      Arb tdn(tpn / n);
+      tdn.Format(FMT_FRACTION);
+      cout << "  tdn: " << tdn << endl;
+      next = tdn;
+      next.Format(FMT_FRACTION);
+      retval.Format(FMT_FRACTION);
+      accuracy.Format(FMT_FRACTION);
+      cout << "next: " << next << "  retval: " << retval << "  accuracy: " << accuracy << endl;
+    } while ((next - retval).abs() > accuracy);
+    retval = next;
+    
+    retval._reduce();
+    cout << "retval: " << retval << endl;
+    
+    return retval;
     
   }
   

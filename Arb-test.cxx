@@ -73,6 +73,9 @@ int main (int argc, char** argv, char** envp) {
     cout << "  " << test1-- << "--";
     cout << "  final: " << test1<< endl;
     
+    //cout << "pow:  " << test1.pow(test2)  << endl;
+    cout << "root: " << test1.root(test2) << endl;
+    
     // All tests successful.
     return 0;
     
