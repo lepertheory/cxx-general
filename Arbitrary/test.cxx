@@ -14,7 +14,7 @@
 using namespace std;
 using namespace DAC;
 
-/*****************************************************************************/
+// This is where it all happens.
 int main (int argc, char** argv, char** envp) {
   
   try {
@@ -52,9 +52,10 @@ int main (int argc, char** argv, char** envp) {
     cin  >> test2;
     cout << "test2: " << test2 << endl;
     cout << endl;
-    cout << test1 << " + " << test2 << " = " << (test1 + test2) << endl;
-    cout << test1 << " - " << test2 << " = " << (test1 - test2) << endl;
-    cout << test1 << " * " << test2 << " = " << (test1 * test2) << endl;
+    cout << test1 << "  + " << test2 << " = " << (test1  + test2) << endl;
+    cout << test1 << "  - " << test2 << " = " << (test1  - test2) << endl;
+    cout << test1 << "  * " << test2 << " = " << (test1  * test2) << endl;
+    cout << test1 << " >> " << test2 << " = " << (test1 >> test2) << endl;
     
     exit(0);
     
@@ -71,4 +72,3 @@ int main (int argc, char** argv, char** envp) {
   }
   
 };
-/*****************************************************************************/
