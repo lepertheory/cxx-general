@@ -1,7 +1,7 @@
 /*****************************************************************************
  * test.cxx
  *****************************************************************************
- * Tests the class Arb.
+ * Tests the class ArbInt.
  *****************************************************************************/
 
 // STL includes.
@@ -9,7 +9,6 @@
 
 // Internal includes.
 #include "ArbInt.hxx"
-#include "Arb.hxx"
 #include "demangle.hxx"
 #include "Exception.hxx"
 
@@ -61,14 +60,6 @@ int main (int argc, char** argv, char** envp) {
     cout << "test2: ";
     cin  >> test2;
     cout << "test2: " << test2 << endl;
-    //*/
-    
-    /** /
-    Arb test;
-    
-    cout << "test: ";
-    cin  >> test;
-    cout << "test: " << test << endl;
     //*/
     
     /** /

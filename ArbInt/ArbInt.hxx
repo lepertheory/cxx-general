@@ -210,7 +210,7 @@
         // Static function members.
         
         // Class initialization.
-        static bool s_classInit () throw();
+        static void s_classInit ();
         
         // Trim zeros from a given container.
         template <class CT> static void s_trimZerosB (CT& c);
@@ -270,8 +270,8 @@
     
     // Errors.
     namespace ArbIntErrors {
-      class Base            : public Exception { public: virtual char const* what () const throw(); };
-      class BadFormat       : public Base      {
+      class Base           : public Exception { public: virtual char const* what () const throw(); };
+      class BadFormat      : public Base      {
         public:
           virtual char const* what () const throw();
           virtual BadFormat& Problem  (char const*                   const problem)  throw();
@@ -282,11 +282,10 @@
           std::string::size_type _position;
           ConstReferencePointer<std::string> _number;
       };
-      class ClassInitFailed : public Base      { public: virtual char const* what () const throw(); };
-      class Negative        : public Base      { public: virtual char const* what () const throw(); };
-      class Overrun         : public Base      { public: virtual char const* what () const throw(); };
-      class DivByZero       : public Base      { public: virtual char const* what () const throw(); };
-      class ScalarOverflow  : public Base      { public: virtual char const* what () const throw(); };
+      class Negative       : public Base      { public: virtual char const* what () const throw(); };
+      class Overrun        : public Base      { public: virtual char const* what () const throw(); };
+      class DivByZero      : public Base      { public: virtual char const* what () const throw(); };
+      class ScalarOverflow : public Base      { public: virtual char const* what () const throw(); };
     };
     
   };
@@ -298,16 +297,15 @@
     
     // Errors.
     namespace ArbIntErrors {
-      inline char const* Base::what            () const throw() { return "Undefined error in ArbInt.";                                                                                                                                         }
-      inline char const* BadFormat::what       () const throw() { return (std::string(_problem) + " at position " + DAC::toString((SafeInteger<std::string::size_type>(_position) + 1).Value()) + " in number \"" + *_number + "\".").c_str(); }
-      inline BadFormat&  BadFormat::Problem    (char const*                   const problem)  throw() { _problem  = problem;  return *this; }
-      inline BadFormat&  BadFormat::Position   (std::string::size_type        const position) throw() { _position = position; return *this; }
-      inline BadFormat&  BadFormat::Number     (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   return *this; }
-      inline char const* ClassInitFailed::what () const throw() { return "Class initialization of ArbInt failed.";                                                                                                                             }
-      inline char const* Negative::what        () const throw() { return "Attempted to set ArbInt to a negative number.";                                                                                                                      }
-      inline char const* Overrun::what         () const throw() { return "Instruction overruns end of container.";                                                                                                                             }
-      inline char const* DivByZero::what       () const throw() { return "Attempt to divide by zero.";                                                                                                                                         }
-      inline char const* ScalarOverflow::what  () const throw() { return "ArbInt overflows scalar type.";                                                                                                                                      }
+      inline char const* Base::what           () const throw() { return "Undefined error in ArbInt.";                                                                                                                                         }
+      inline char const* BadFormat::what      () const throw() { return (std::string(_problem) + " at position " + DAC::toString((SafeInteger<std::string::size_type>(_position) + 1).Value()) + " in number \"" + *_number + "\".").c_str(); }
+      inline BadFormat&  BadFormat::Problem   (char const*                   const problem)  throw() { _problem  = problem;  return *this; }
+      inline BadFormat&  BadFormat::Position  (std::string::size_type        const position) throw() { _position = position; return *this; }
+      inline BadFormat&  BadFormat::Number    (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   return *this; }
+      inline char const* Negative::what       () const throw() { return "Attempted to set ArbInt to a negative number.";                                                                                                                      }
+      inline char const* Overrun::what        () const throw() { return "Instruction overruns end of container.";                                                                                                                             }
+      inline char const* DivByZero::what      () const throw() { return "Attempt to divide by zero.";                                                                                                                                         }
+      inline char const* ScalarOverflow::what () const throw() { return "ArbInt overflows scalar type.";                                                                                                                                      }
     };
     
     /*************************************************************************/
@@ -326,8 +324,7 @@
     };
     template <class T> std::vector<typename ArbInt<T>::_NumChrT> ArbInt<T>::s_idigits;
     
-    // Call class constructor.
-    template <class T> bool ArbInt<T>::s_initialized = s_classInit();
+    template <class T> bool ArbInt<T>::s_initialized = false;
     
     /*************************************************************************/
     // Function members.
@@ -1025,7 +1022,7 @@
       
       // Check that the class constructor was successfully called.
       if (!s_initialized) {
-        throw ArbIntErrors::ClassInitFailed();
+        s_classInit();
       }
       
       // Clear.
@@ -1193,37 +1190,27 @@
     }
     
     // Class constructor.
-    template <class T> bool ArbInt<T>::s_classInit () throw() {
+    template <class T> void ArbInt<T>::s_classInit () {
       
-      // This cannot throw.
-      try {
-        
-        // Get the maximum number that can be held in a single digit.
-        s_digitbits = std::numeric_limits<_DigT>::digits >> 1;
-        s_digitbase = rppower(SafeInteger<_DigT>(2), s_digitbits).Value();
-        s_bitmask   = (SafeInteger<_DigT>(s_digitbase) - 1).Value();
-        
-        // Get the input digits.
-        SafeInteger<_NumChrT> j;
-        for (_NumChrT i = 0; i != std::numeric_limits<_NumChrT>::max(); ++i) {
-          j = i;
-          SafeInteger<_NumChrT> digit;
-          if      ((j >= '0') && (j <= '9')) { digit = j - '0';                         }
-          else if ((j >= 'A') && (j <= 'Z')) { digit = j - 'A' + 10;                    }
-          else if ((j >= 'a') && (j <= 'z')) { digit = j - 'a' + 10;                    }
-          else                               { digit = std::numeric_limits<_NumChrT>::max(); }
-          s_idigits.push_back(digit.Value());
-        }
-        
-      } catch (...) {
-        
-        // If any exception was caught, we failed. Have fun debugging.
-        return false;
-        
+      // Get the maximum number that can be held in a single digit.
+      s_digitbits = std::numeric_limits<_DigT>::digits >> 1;
+      s_digitbase = rppower(SafeInteger<_DigT>(2), s_digitbits).Value();
+      s_bitmask   = (SafeInteger<_DigT>(s_digitbase) - 1).Value();
+      
+      // Get the input digits.
+      SafeInteger<_NumChrT> j;
+      for (_NumChrT i = 0; i != std::numeric_limits<_NumChrT>::max(); ++i) {
+        j = i;
+        SafeInteger<_NumChrT> digit;
+        if      ((j >= '0') && (j <= '9')) { digit = j - '0';                         }
+        else if ((j >= 'A') && (j <= 'Z')) { digit = j - 'A' + 10;                    }
+        else if ((j >= 'a') && (j <= 'z')) { digit = j - 'a' + 10;                    }
+        else                               { digit = std::numeric_limits<_NumChrT>::max(); }
+        s_idigits.push_back(digit.Value());
       }
       
-      // Happy joy.
-      return true;
+      // Class has successfully been initialized.
+      s_initialized = true;
       
     }
     
