@@ -13,6 +13,9 @@
   #include <string>
   #include <iostream>
   
+  // Internal includes.
+  #include "ReferencePointer.hxx"
+  
   // Forward declarations.
   namespace DAC {
     class Exception;
@@ -40,27 +43,21 @@
         Exception () throw();
         
         // Destructor.
-        ~Exception () throw();
+        virtual ~Exception () throw();
         
-        // Accessors.
-        virtual std::exception const* Previous ()                                     throw();
-        virtual Exception&            Previous (std::exception const* previous)       throw();
-        virtual std::string const&    Text     ()                               const throw();
-        virtual Exception&            Text     (std::string const& text)              throw();
+        // Get the cause of this error.
+        virtual const char*        what () const throw();
+        virtual std::string const& Text () const throw();
         
         // Reset to just-constructed state.
         virtual Exception& clear () throw();
-        
-        // Describe the problem.
-        virtual char const* what () const throw();
-        
+      
       /***********************************************************************
        * Protected members.
        ***********************************************************************/
       protected:
         
-        std::exception const* _previous;
-        std::string           _text;
+        char _text[80];
       
     };
     
@@ -71,64 +68,44 @@
     /*************************************************************************/
     // Constructor.
     inline Exception::Exception () throw() {
-      
       clear();
-      
     }
     /*************************************************************************/
     
     /*************************************************************************/
     // Destructor.
     inline Exception::~Exception () throw() {
-      
       // Nothing.
-      
-    }
-    /*************************************************************************/
-    
-    /*************************************************************************/
-    // Accessors.
-    inline std::exception const* Exception::Previous () throw() {
-      return _previous;
-    }
-    inline Exception& Exception::Previous (std::exception const* previous) throw() {
-      _previous = previous;
-      return *this;
-    }
-    inline std::string const& Exception::Text () const throw() {
-      return _text;
-    }
-    inline Exception& Exception::Text (std::string const& text) throw() {
-      try {
-        _text = text;
-      } catch (...) {
-      }
-      return *this;
-    }
-    /*************************************************************************/
-    
-    /*************************************************************************/
-    // Reset to just-constructed state.
-    inline Exception& Exception::clear() throw() {
-      
-      _text.clear();
-      _previous = 0;
-      
-      return *this;
-      
     }
     /*************************************************************************/
     
     /*************************************************************************/
     // Describe the problem.
     inline char const* Exception::what () const throw() {
-      
       try {
-        return _text.c_str();
+        return Text().c_str();
       } catch (...) {
         return 0;
       }
-      
+    }
+    /*************************************************************************/
+    
+    /*************************************************************************/
+    // Accessors.
+    inline std::string Exception::Text () const throw() {
+      try {
+        return std::string(&text);
+      } catch (...) {
+        return std::string();
+      }
+    }
+    /*************************************************************************/
+    
+    /*************************************************************************/
+    // Reset to just-constructed state.
+    inline Exception& Exception::clear() throw() {
+      _text[0] = '\0';
+      return *this;
     }
     /*************************************************************************/
     

@@ -59,9 +59,27 @@ int main (int argc, char** argv, char** envp) {
     
     exit(0);
     
-  } catch (Exception e) {
+  } catch (Exception& e) {
     
-    cout << "Exception: " << e << endl;
+    Exception* ep(&e);
+    int level = 0;
+    
+    while (ep->Previous()) {
+      if (level == 0) {
+        cout << "Exception: ";
+      } else {
+        cout << "           ";
+        for (int i = 0; i != level; ++i) {
+          cout << "  ";
+        }
+      }
+      cout << *ep << endl;
+      ep = ep->Previous();
+    }
+    for (int i = 0; i != level; ++i) {
+      cout << "  ";
+    }
+    cout << *ep << endl;
     exit(1);
     
   } catch (...) {

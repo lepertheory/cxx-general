@@ -287,13 +287,13 @@
       
       /***********************************************************************/
       // Throw normal text errors.
-      inline void throwBase               (std::string const& text)                         throw(Base)               { Base               error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwOverflow           (std::string const& text, Exception const* cause) throw(Overflow)           { Overflow           error; try { error.Text(text); error.Previous(cause); } catch (...) {} throw error; }
-      inline void throwRadixConflict      (std::string const& text)                         throw(RadixConflict)      { RadixConflict      error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwFractionalConflict (std::string const& text)                         throw(FractionalConflict) { FractionalConflict error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwPrecisionLoss      (std::string const& text)                         throw(PrecisionLoss)      { PrecisionLoss      error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwClassInitFailed    (std::string const& text)                         throw(ClassInitFailed)    { ClassInitFailed    error; try { error.Text(text);                        } catch (...) {} throw error; }
-      inline void throwOverrun            (std::string const& text)                         throw(Overrun)            { Overrun            error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwBase               (std::string const& text)                   throw(Base)               { Base               error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwOverflow           (std::string const& text, Exception* cause) throw(Overflow)           { Overflow           error; try { error.Text(text); error.Previous(cause); } catch (...) {} throw error; }
+      inline void throwRadixConflict      (std::string const& text)                   throw(RadixConflict)      { RadixConflict      error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwFractionalConflict (std::string const& text)                   throw(FractionalConflict) { FractionalConflict error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwPrecisionLoss      (std::string const& text)                   throw(PrecisionLoss)      { PrecisionLoss      error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwClassInitFailed    (std::string const& text)                   throw(ClassInitFailed)    { ClassInitFailed    error; try { error.Text(text);                        } catch (...) {} throw error; }
+      inline void throwOverrun            (std::string const& text)                   throw(Overrun)            { Overrun            error; try { error.Text(text);                        } catch (...) {} throw error; }
       /***********************************************************************/
       
       /***********************************************************************/
@@ -355,7 +355,11 @@
     template <class T> inline Arbitrary::operator T () const {
       SafeInteger<T> retval = 0;
       for (_DigsT::iterator i = _data->digits.begin(); i != _data->digits.end(); ++i) {
-        retval += *i * rppower(s_digitbase, (i - _data->digits.begin()));
+        try {
+          retval += *i * rppower(s_digitbase, (i - _data->digits.begin()));
+        } catch (SafeIntegerErrors::Overflow& e) {
+          ArbitraryErrors::throwOverflow("Overflow casting \"" + toString() + "\".", &e);
+        }
       }
       return retval.Value();
     }
