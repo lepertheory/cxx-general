@@ -50,18 +50,18 @@
   template <class LT, class RT> DAC::SafeInteger<LT> operator >> (LT                   const  left, DAC::SafeInteger<RT> const& right);
   
   // Comparison operators.
-  template <class T>            bool operator <  (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
-  template <class LT, class RT> bool operator <  (DAC::SafeInteger<LT> const& left, RT                   const  right);
-  template <class LT, class RT> bool operator <  (LT                   const  left, DAC::SafeInteger<RT> const& right);
-  template <class T>            bool operator <= (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
-  template <class LT, class RT> bool operator <= (DAC::SafeInteger<LT> const& left, RT                   const  right);
-  template <class LT, class RT> bool operator <= (LT                   const  left, DAC::SafeInteger<RT> const& right);
   template <class T>            bool operator >  (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
   template <class LT, class RT> bool operator >  (DAC::SafeInteger<LT> const& left, RT                   const  right);
   template <class LT, class RT> bool operator >  (LT                   const  left, DAC::SafeInteger<RT> const& right);
   template <class T>            bool operator >= (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
   template <class LT, class RT> bool operator >= (DAC::SafeInteger<LT> const& left, RT                   const  right);
   template <class LT, class RT> bool operator >= (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            bool operator <  (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator <  (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator <  (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            bool operator <= (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> bool operator <= (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> bool operator <= (LT                   const  left, DAC::SafeInteger<RT> const& right);
   template <class T>            bool operator == (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
   template <class LT, class RT> bool operator == (DAC::SafeInteger<LT> const& left, RT                   const  right);
   template <class LT, class RT> bool operator == (LT                   const  left, DAC::SafeInteger<RT> const& right);
@@ -231,15 +231,45 @@
         template <class RT> SafeInteger& op_shl (RT             const  number);
                             SafeInteger& op_shr (SafeInteger<T> const& number);
         template <class RT> SafeInteger& op_shr (RT             const  number);
+
+        // Comparison operator backends.
+                            bool op_gt (SafeInteger<T> const& number);
+        template <class RT> bool op_gt (RT             const  number);
+                            bool op_ge (SafeInteger<T> const& number);
+        template <class RT> bool op_ge (RT             const  number);
+                            bool op_lt (SafeInteger<T> const& number);
+        template <class RT> bool op_lt (RT             const  number);
+                            bool op_le (SafeInteger<T> const& number);
+        template <class RT> bool op_le (RT             const  number);
+                            bool op_eq (SafeInteger<T> const& number);
+        template <class RT> bool op_eq (RT             const  number);
+                            bool op_ne (SafeInteger<T> const& number);
+        template <class RT> bool op_ne (RT             const  number);
+
+        // Bitwise operator backends.
+                            SafeInteger& op_bit_and (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_bit_and (RT             const  number);
+                            SafeInteger& op_bit_ior (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_bit_ior (RT             const  number);
+                            SafeInteger& op_bit_xor (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_bit_xor (RT             const  number);
+
+        // Logical operator backends.
+                            SafeInteger& op_log_and (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_log_and (RT             const  number);
+                            SafeInteger& op_log_ior (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_log_ior (RT             const  number);
       
       // Private members.
       private:
         
         // This is the number itself.
         T _number;
+
+        // Reliable comparison operators.
+        template <class LT, class RT> static bool s_gt (LT const left, RT const right);
       
     };
-    
     
     /*************************************************************************
      * Inline and template definitions.
@@ -275,8 +305,8 @@
     template <class T> inline SafeInteger<T> SafeInteger<T>::operator ~ () const { return SafeInteger<T>(~_number); }
     
     // Assignment operators.
-    template <class T>           inline SafeInteger& SafeInteger<T>::operator = (SafeInteger<T> const& right) { return Value(right); }
-    template <class T, class RT> inline SafeInteger& SafeInteger<T>::operator = (RT             const  right) { return Value(right); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator = (SafeInteger<T> const& right) { return Value(right); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator = (RT             const  right) { return Value(right); }
     
     // Arithmetic assignment operators.
     template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator *= (SafeInteger<T> const& number) { return op_mul(number); }
@@ -293,11 +323,16 @@
     // Bit shift assignment operators.
     template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator <<= (SafeInteger<T> const& number) { return op_shl(number); }
     template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator <<= (RT             const  number) { return op_shl(number); }
-    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator <<= (SafeInteger<T> const& number) { return op_shr(number); }
-    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator <<= (RT             const  number) { return op_shr(number); }
+    template <class T>                     inline SafeInteger<T>& SafeInteger<T>::operator >>= (SafeInteger<T> const& number) { return op_shr(number); }
+    template <class T> template <class RT> inline SafeInteger<T>& SafeInteger<T>::operator >>= (RT             const  number) { return op_shr(number); }
     
-    // Return the value of this number.
+    // Return and set the value of this number.
     template <class T> inline T SafeInteger<T>::Value () const { return _number; }
+    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::Value (RT const number) {
+      
+      
+      
+    }
     
     // Add another SafeInteger of the same type.
     template <class T> SafeInteger<T>& SafeInteger<T>::op_add (SafeInteger<T> const& number) {
@@ -840,6 +875,33 @@
       // Do the division and return the result.
       _number /= number;
       return *this;
+      
+    }
+    
+    // Reliable comparison operators.
+    template <class T> template <class LT, class RT> bool SafeInteger<T>::s_gt (LT const left, RT const right) {
+      
+      // Check signs first. After this we know both numbers are of the same
+      // sign, which takes care of a lot of sources of error. Also speeds up
+      // zero comparisons.
+      if (right == 0) {
+        return (left > 0);
+      }
+      if ((left > 0) && (right <= 0)) {
+        return true;
+      }
+      if ((left < 0) && (right >= 0)) {
+        return false;
+      }
+      
+      // Upcast to the larger of the two types and compare. Since the signs
+      // are the same, there are no worries about negative numbers being
+      // upcast to unsigned types.
+      if (std::numeric_limits<LT>::digits >= std::numeric_limits<RT>::digits) {
+        return (left > static_cast<LT>(right));
+      } else {
+        return (static_cast<RT>(left) > right);
+      }
       
     }
     
