@@ -13,6 +13,9 @@
   #include <string>
   #include <iostream>
   
+  // Internal includes.
+  #include "demangle.hxx"
+  
   // Forward declarations.
   namespace DAC {
     class Exception;
@@ -45,6 +48,9 @@
         // Get the cause of this error.
         virtual const char* what () const throw();
         
+        // Get the type of this error.
+        std::string type () const throw();
+        
         // Reset to just-constructed state.
         virtual Exception& clear () throw();
       
@@ -67,6 +73,11 @@
     // Describe the problem.
     inline char const* Exception::what () const throw() {
       return "Undefined error.";
+    }
+    
+    // Get the type of this error.
+    inline std::string Exception::type() const throw() {
+      return demangle(*this);
     }
     
     // Reset to just-constructed state.

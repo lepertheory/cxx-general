@@ -210,12 +210,16 @@ namespace DAC {
   // Divide this number by another number.
   Arbitrary& Arbitrary::op_div (Arbitrary const& right) {
     
+    typedef _DigsT::size_type DS;
+    
     static const _DigsT::size_type maxaddl = 100;
     
     Arbitrary tmp_left(*this);
     Arbitrary tmp_right(right);
     Arbitrary remainder(tmp_left);
     Arbitrary divorgroup;
+    Arbitrary test;
+    Arbitrary remain;
     Arbitrary retval;
     
     // Dividing zero is zero.
@@ -234,47 +238,95 @@ namespace DAC {
     
     _DigT roughdivnd = tmp_right._data->digits.back();
     
-    // Get a group of digits of equal size to the dividend.
-    divorgroup._data->
+    SafeInteger<DS> leftsize  = tmp_left._data->digits.size();
+    SafeInteger<DS> rightsize = tmp_right._data->digits.size();
+    
+    cout << "leftsize: " << leftsize << "  rightsize: " << rightsize << endl;
+    
+    if (leftsize < rightsize) {
+      tmp_left._data->digits.insert(tmp_left._data->digits.begin(), (rightsize - leftsize).Value(), 0);
+      leftsize = rightsize;
+    }
+    
+    SafeInteger<DS> diglen = leftsize - rightsize;
+    
+    cout << "diglen: " << diglen << "  leftsize: " << leftsize << "  rightsize: " << rightsize << endl;
+    
+    _DigsT& dgdigs = divorgroup._data->digits;
     
     /*
-    SafeInteger<_DigsT::size_type> i          = SafeInteger<_DigsT::size_type>(tmp_left._data->digits.size()) - 1;
-    _DigT                          roughdivnd = tmp_right._data->digits.back();
-    _DigT                          guess      = 0;
-    _DigT                          digrem     = 0;
+    // Start with a group of digits of equal size to the dividend.
+    dgdigs = _DigsT(tmp_left._data->digits.begin() + (leftsize - rightsize - i).Value(), tmp_left._data->digits.begin() + (leftsize - i).Value());
+    */
+    
+    remainder = tmp_left;
+    
+    _DigT rdivor = 0;
+    
+    SafeInteger<DS> i = 0;
+    
+    // Although the iterator for this loop appears to move from beginning to
+    // end, this is actually a backwards loop. The next statment uses i as a
+    // reverse offset. This is necessary if we want to use _Digst::size_type,
+    // as it is unsigned and needs to end at 0, --i as the 3rd condidtion in
+    // the for loop will cause underflow, so the test will continue to be true
+    // with i looped to its maximum value.
     do {
       
-      // Guess at what this digit may be by dividing high order digits.
-      _DigT guess = (digrem + tmp_left._data->digits[i.Value()]) / roughdivnd;
-      digrem      = 0;
+      cout << "i: " << i << endl;
+      
+      if (i == leftsize) {
+        dgdigs.insert(dgdigs.begin(), 0);
+      } else {
+        dgdigs.insert(dgdigs.begin(), tmp_left._data->digits[(leftsize - ++i).Value()]);
+      }
+      
+      cout << "divorgroup: " << divorgroup << "  dgdigs: ";
+      for (_DigsT::iterator j = dgdigs.begin(); j != dgdigs.end(); ++j) {
+        cout << "'" << *j << "'";
+      }
+      cout << endl;
+      
+      // Make a rough guess at the quotient.
+      rdivor += dgdigs.back();
+      
+      _DigT guess = rdivor / roughdivnd;
       
       cout << "guess: " << guess << endl;
-     
-      // If the guess is 0, we need to add another digit to divide. Move the
-      // current digit up an order of magnitude.
+      
+      // If the guess is zero, add the next digit in the divisior group.
       if (guess == 0) {
         
-        digrem = tmp_left._data->digits[i.Value()] << s_digitbits.Value();
-        
-        cout << "digrem: " << digrem << endl;
+        rdivor <<= s_digitbits;
         
       } else {
         
-        // See if the guess is correct.
-        Arbitrary test = tmp_right * Arbitrary(guess);
+        // If the guess is greater than zero, converge to the correct answer.
+        test = Arbitrary(guess) * tmp_right;
         
         cout << "test: " << test << endl;
         
-        // If test is more than 
-        if (test > tmp_left._data->digits[i.Value()]) {
+        remain = divorgroup - test;
+        
+        cout << "remain: " << remain << endl;
+        
+        // If remainder of this divide is less than divisor, we've found the
+        // number for this digit.
+        if (remain < tmp_right) {
+          retval._data->digits.push_back(guess);
+          rdivor = 0;
+        } else {
           
         }
         
       }
       
-    } while ((remainder != 0) && (addl < maxaddl));
-    */
+    } while (remain > 0);
     
+    // Swap in the new data.
+    _data->digits.swap(retval._data->digits);
+    
+    // We done.
     return *this;
     
   }

@@ -9,6 +9,7 @@
 
 // Internal includes.
 #include "Arbitrary.hxx"
+#include "demangle.hxx"
 
 // Namespace declarations.
 using namespace std;
@@ -62,7 +63,12 @@ int main (int argc, char** argv, char** envp) {
     
   } catch (Exception& e) {
     
-    cout << "Exception: " << e << endl;
+    cout << "Exception (" << e.type() << "): " << e << endl;
+    exit(1);
+    
+  } catch (exception& e) {
+    
+    cout << "Exception (" << demangle(e) << "): " << e.what() << endl;
     exit(1);
     
   } catch (...) {
