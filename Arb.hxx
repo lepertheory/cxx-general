@@ -56,23 +56,55 @@
         // decimal number.
         typedef _DigT PointPosT;
         
+        // Use this type when specifying a base.
+        typedef _DigT BaseT;
+        
         /*********************************************************************/
         // Function members.
         
         // Default constructor.
         Arb ();
         
-        // Destructor.
-        ~Arb ();
+        // Copy constructor.
+        Arb (Arb const& number, bool const copynow = false);
+        
+        // Conversion constructor.
+        Arb (std::string const& number);
+        
+        // Boolean conversion operator.
+        operator bool () const;
+        
+        // Negation operator.
+        Arb operator - () const;
+        
+        // Accessors.
+        Arb&                   Base     (BaseT const base);
+        BaseT                  Base     ()                                      const;
+        Arb&                   MaxRadix (std::string::size_type const maxradix);
+        std::string::size_type MaxRadix ()                                      const;
+        Arb&                   PointPos (PointPosT const pointpos);
+        PointPosT              PointPos ()                                      const;
+        Arb&                   Fixed    (bool const fixed);
+        bool                   Fixed    ()                                      const;
         
         // Reset to just-constructed defaults.
         Arb& clear ();
+        
+        // Copy another number.
+        Arb& copy (Arb const& number, bool const copynow = false);
         
         // Convert to string.
         std::string toString () const;
         
         // Set the number.
-        Arb& set (std::string const& number, PointPosT const decimal = 0, bool const fix = false);
+        Arb& set (std::string const& number);
+        Arb& set (Arb         const& number);
+        
+        // Arithmetic operator backends.
+        Arb& op_mul (Arb const& number);
+        Arb& op_div (Arb const& number);
+        Arb& op_add (Arb const& number);
+        Arb& op_sub (Arb const& number);
       
       /*
        * Private members.
@@ -116,8 +148,7 @@
             
             PointPosT pointpos; // Radix point position.
             bool      fix;      // If true, fix the radix point.
-            
-            _DigT origbase; // Original base of this number.
+            BaseT     base;     // The base of the number.
             
             /*****************************************************************/
             // Function members.
@@ -125,8 +156,17 @@
             // Default constructor.
             _Data ();
             
+            // Copy constructor.
+            _Data (_Data const& data);
+            
+            // Assignment operator.
+            _Data& operator = (_Data const& data);
+            
             // Reset to just-constructed state.
             _Data& clear ();
+            
+            // Copy a given _Data object.
+            _Data& copy (_Data const& data);
             
           /*
            * Private members.
@@ -147,6 +187,9 @@
         // The number.
         _DataPT _data;
         
+        // Properties.
+        std::string::size_type _maxradix; // Radix digits to output.
+        
         /*********************************************************************/
         // Function members.
         
@@ -155,6 +198,9 @@
         
         // Reduce the number to its most compact representation.
         Arb& _reduce ();
+        
+        // Normalize this number to another number.
+        Arb& _normalize (Arb& number);
         
         /*********************************************************************/
         // Static function members.
@@ -178,6 +224,12 @@
   std::ostream& operator << (std::ostream& l, DAC::Arb  const& r);
   std::istream& operator >> (std::istream& l, DAC::Arb&        r);
   
+  // Arithmetic operators.
+  DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r);
+  DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r);
+  DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r);
+  DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r);
+  
   /***************************************************************************
    * Error declarations.
    ***************************************************************************/
@@ -197,6 +249,7 @@
           std::string::size_type _position;
           ConstReferencePointer<std::string> _number;
       };
+      class DivByZero : public Base      { public: virtual char const* what () const throw(); };
     };
     
   };
@@ -213,34 +266,25 @@
       inline BadFormat&  BadFormat::Problem  (char const*                   const problem)  throw() { _problem  = problem;  return *this; }
       inline BadFormat&  BadFormat::Position (std::string::size_type        const position) throw() { _position = position; return *this; }
       inline BadFormat&  BadFormat::Number   (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   return *this; }
+      inline char const* DivByZero::what     () const throw() { return "Divide by zero.";                                                                                                                                                    }
     };
     
     /*************************************************************************
      * Class Arb.
      *************************************************************************/
     
-    /*
-    // Get the least common multiple of two big-endian containers. Base is
-    // 2^(bits/2).
-    template <class T> ReferencePointer<T> Arb::s_lcm (T const& c1, T const& c2) {
-      
-      // Return value.
-      ReferencePointer<T> retval(new T);
-      
-      // Work area.
-      T tmp_c1(c1);
-      T tmp_c2(c2);
-      if (s_lt(tmp_c1, tmp_c2)) {
-        tmp_c1.swap(tmp_c2);
-      }
-      
-      // LCM is (c1 * c2) / gcd(c1, c2). c1 is always the largest of the two,
-      // save the multiplication by c1 until the end when we have the smallest
-      // number possible.
-      return s_intMul(*s_intDiv(tmp_c2, s_gcd(tmp_c1, tmp_c2)), tmp_c1);
-      
-    }
-    */
+    // Boolean conversion operator.
+    inline Arb::operator bool () const { return _data->p; }
+    
+    // Negation operator.
+    inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
+    
+    // Accessors.
+    inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                 }
+    inline Arb&                   Arb::MaxRadix (std::string::size_type const maxradix)       { _maxradix = maxradix; return *this; }
+    inline std::string::size_type Arb::MaxRadix ()                                      const { return _maxradix;                   }
+    inline Arb::PointPosT         Arb::PointPos ()                                      const { return _data->pointpos;             }
+    inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                  }
     
   };
   
@@ -251,5 +295,11 @@
   // Stream I/O operators.
   inline std::ostream& operator << (std::ostream& l, DAC::Arb  const& r) { l << r.toString();                                  return l; }
   inline std::istream& operator >> (std::istream& l, DAC::Arb&        r) { std::string input; std::cin >> input; r.set(input); return l; }
+  
+  // Arithmetic operators.
+  inline DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mul(r); }
+  inline DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_div(r); }
+  inline DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_add(r); }
+  inline DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_sub(r); }
   
 #endif

@@ -19,35 +19,34 @@
 using namespace std;
 using namespace DAC;
 
+enum Operation {
+  MUL,
+  DIV,
+  ADD,
+  SUB
+};
+
+bool testOp (Arb const& l, Operation const op, Arb const& r);
+
 // This is where it all happens.
 int main (int argc, char** argv, char** envp) {
   
   try {
     
-    string testin;
-    Arb test;
-    Arb test0;
     Arb test1;
     Arb test2;
-    Arb test3;
-    Arb test5;
     
-    cout << "test: ";
-    cin  >> testin;
-    
-    test.set(testin);
-    test0.set(testin, 0, true);
-    test1.set(testin, 1, true);
-    test2.set(testin, 2, true);
-    test3.set(testin, 3, true);
-    test5.set(testin, 5, true);
-    
-    cout << "test: "  << test  << endl;
-    cout << "test0: " << test0 << endl;
+    cout << "test1: ";
+    cin  >> test1;
     cout << "test1: " << test1 << endl;
+    cout << "test2: ";
+    cin  >> test2;
     cout << "test2: " << test2 << endl;
-    cout << "test3: " << test3 << endl;
-    cout << "test5: " << test5 << endl;
+    
+    testOp(test1, MUL, test2);
+    testOp(test1, DIV, test2);
+    testOp(test1, ADD, test2);
+    testOp(test1, SUB, test2);
     
     // All tests successful.
     return 0;
@@ -68,5 +67,44 @@ int main (int argc, char** argv, char** envp) {
     exit(1);
     
   }
+  
+};
+
+bool testOp (Arb const& l, Operation const op, Arb const& r) {
+  
+  bool retval = false;
+  string output;
+  
+  try {
+    output = l.toString();
+    switch (op) {
+      case MUL: output += "  * "; break;
+      case DIV: output += "  / "; break;
+      case ADD: output += "  + "; break;
+      case SUB: output += "  - "; break;
+    }
+    output += r.toString() + " = ";
+    switch (op) {
+      case MUL: output += (l  * r).toString(); break;
+      case DIV: output += (l  / r).toString(); break;
+      case ADD: output += (l  + r).toString(); break;
+      case SUB: output += (l  - r).toString(); break;
+    }
+  } catch (Exception& e) {
+    output += "Exception (" + e.type() + "): " + string(e.what());
+    retval = false;
+  } catch (exception& e) {
+    output += "Exception (" + demangle(e) + "): " + string(e.what());
+    retval = false;
+  } catch (...) {
+    output += "Unexpected exception caught.";
+    retval = false;
+  }
+  
+  if (!retval) {
+    cout << output << endl;
+  }
+  
+  return retval;
   
 }

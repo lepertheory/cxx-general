@@ -38,21 +38,95 @@ namespace DAC {
     
   }
   
-  // Destructor.
-  Arb::~Arb () {
+  // Copy constructor.
+  Arb::Arb (Arb const& number, bool const copynow) {
     
-    // Nothing here yet.
+    // Call common init.
+    _init();
+    
+    // Set the number.
+    copy(number, copynow);
     
   }
   
+  // Conversion constructor.
+  Arb::Arb (std::string const& number) {
+    
+    // Call common init.
+    _init();
+    
+    // Set the number.
+    set(number);
+    
+  }
+  
+  // Accessors.
+  Arb& Arb::Base     (BaseT     const base)     {
+    if (base != _data->base) {
+      _data = new _Data(*_data);
+      _data->base = base;
+      if (_data->fix) {
+        _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
+        _reduce();
+      }
+    }
+    return *this;
+  }
+  Arb& Arb::PointPos (PointPosT const pointpos) {
+    if (pointpos != _data->pointpos) {
+      _data = new _Data(*_data);
+      _data->pointpos = pointpos;
+      if (_data->fix) {
+        _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
+        _reduce();
+      }
+    }
+    return *this;
+  }
+  Arb& Arb::Fixed    (bool      const fixed)    {
+    if (fixed != _data->fix) {
+      _data = new _Data(*_data);
+      _data->fix = fixed;
+      if (_data->fix) {
+        _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
+      }
+      _reduce();
+    }
+    return *this;
+  }
+  
   // Reset to just-constructed state.
-  Arb& Arb::clear() {
+  Arb& Arb::clear () {
     
     // Clear this number's data. Instead of calling the clear() method of
     // _Data, we are simply creating a new structure and letting the
     // ReferencePointer take care of cleaning up any no-longer referenced
     // data. This is to allow COW.
     _data = new _Data;
+    
+    // These instructions cannot throw, so they come last.
+    _maxradix = 10;
+    
+    // We done.
+    return *this;
+    
+  }
+  
+  // Copy another number.
+  Arb& Arb::copy (Arb const& number, bool const copynow) {
+    
+    // Set the new data. Copy if instructed to do so, otherwise just
+    // make a reference and wait for COW.
+    _DataPT new_data;
+    if (copynow) {
+      new_data = new _Data(*(number._data));
+    } else {
+      new_data = number._data;
+    }
+    
+    // Now do non-throwing operations.
+    _maxradix = number._maxradix;
+    _data     = new_data;
     
     // We done.
     return *this;
@@ -65,9 +139,65 @@ namespace DAC {
     // This is the string we will be returning.
     string retval;
     
-    cout << "p: " << _data->p << " / q: " << _data->q << endl;
+    // Output the sign if negative.
+    if (!(_data->positive) && _data->p) {
+      retval += "-";
+    }
     
-    // Get the whole number part.
+    // Output the whole number part.
+    _DigsT whole(_data->p / _data->q);
+    retval += whole.Base(_data->base).toString();
+    
+    // Output the radix part if it exists.
+    _DigsT remainder = _data->p % _data->q;
+    if (((_data->fixq) && (_data->pointpos > 0)) || (!(_data->fixq) && remainder)) {
+      
+      // Add the radix point.
+      retval += ".";
+      
+      // Get the radix digits, one by one. Output digits until the entire
+      // fraction is output or the maximum requested significant radix digits
+      // are output.
+      std::string::size_type sigdigs  = 0;
+      bool                   sigstart = whole;
+      _DigsT                 digit;
+      digit.Base(_data->base);
+      while ((sigdigs < _maxradix) && remainder) {
+        remainder *= _data->base;
+        digit      = remainder / _data->q;
+        retval    += digit.toString();
+        remainder %= _data->q;
+        if (sigstart || digit) {
+          ++sigdigs;
+          sigstart = true;
+        }
+      }
+      
+      // Strip insignificant zeros.
+      if (retval.find_last_not_of('0') != string::npos) {
+        retval.erase(retval.find_last_not_of('0') + 1);
+      }
+      
+      // If this is a fixed-radix number, fix the radix.
+      if (_data->fixq) {
+        
+        // Pad with zeros.
+        std::string::size_type raddigs = (retval.size() - retval.find('.')) - 1;
+        if (raddigs < _data->pointpos) {
+          retval.append(_data->pointpos - raddigs, '0');
+        }
+        
+      // If this is not a fixed-radix number, we may need to remove the radix
+      // point.
+      } else {
+        
+        if ((retval.size() - 1) == retval.find('.')) {
+          retval.erase(retval.find('.'));
+        }
+        
+      }
+      
+    }
     
     // We done.
     return retval;
@@ -75,7 +205,7 @@ namespace DAC {
   }
   
   // Set the number from a string.
-  Arb& Arb::set (string const& number, PointPosT const decimal, bool const fix) {
+  Arb& Arb::set (string const& number) {
     
     // Load the number into this for exception safety.
     Arb new_num;
@@ -89,7 +219,6 @@ namespace DAC {
     string            exp;
     bool              p_num = true;
     bool              p_exp = true;
-    _DigT             base  = 10;
     string::size_type nexp  = 0;
     
     // Parse the number, scoped for temp variables.
@@ -186,20 +315,15 @@ namespace DAC {
     num += rad;
     
     // Load the number.
-    new_num._data->p.Base(base) = num;
+    new_num._data->p.Base(_data->base) = num;
     
     // Adjust the number based on the exponent. Negative exponent increases
     // radix digits, positive exponent ups order of magnitude.
     {
       
-      // Decide if this will be a fixed-point number.
-      if (fix) {
-        new_num._data->pointpos = decimal;
-        new_num._data->fix      = true;
-      } else {
-        new_num._data->pointpos = _data->pointpos;
-        new_num._data->fix      = _data->fix;
-      }
+      // Carry fixed-point status from last number.
+      new_num._data->pointpos = _data->pointpos;
+      new_num._data->fix      = _data->fix;
       
       // Determine the exponent given.
       _DigsT expn(exp);
@@ -221,7 +345,7 @@ namespace DAC {
         // This calculation will be needed whether exponent is positive or
         // negative. If positive, multiply p by it and clear, thus bringing p
         // down to 1s. If negative, leave as it is, it is already accurate.
-        new_num._data->q = _DigsT(base).pow(expn);
+        new_num._data->q = _DigsT(_data->base).pow(expn);
         if (p_exp) {
           new_num._data->p *= new_num._data->q;
           new_num._data->q  = 1;
@@ -236,18 +360,18 @@ namespace DAC {
         // If the exponent is positive, it is a simple case of increasing the
         // number of radix digits, this is a number represented by 1s by now.
         if (p_exp) {
-          new_num._data->q  = _DigsT(base).pow(_DigsT(new_num._data->pointpos));
+          new_num._data->q  = _DigsT(_data->base).pow(_DigsT(new_num._data->pointpos));
           new_num._data->p *= new_num._data->q;
         
         // If the exponent is negative, we must add or subtract the difference
         // in digits.
         } else {
           if (_DigsT(new_num._data->pointpos) >= expn) {
-            _DigsT mod        = _DigsT(base).pow(_DigsT(new_num._data->pointpos) - expn);
+            _DigsT mod        = _DigsT(_data->base).pow(_DigsT(new_num._data->pointpos) - expn);
             new_num._data->p *= mod;
             new_num._data->q *= mod;
           } else {
-            _DigsT mod        = _DigsT(base).pow(expn - _DigsT(new_num._data->pointpos));
+            _DigsT mod        = _DigsT(_data->base).pow(expn - _DigsT(new_num._data->pointpos));
             new_num._data->p /= mod;
             new_num._data->q /= mod;
           }
@@ -260,11 +384,11 @@ namespace DAC {
       
     }
     
-    // Set the original base.
-    new_num._data->origbase = base;
-    
     // Set the sign.
     new_num._data->positive = p_num;
+    
+    // Carry over the old base.
+    new_num._data->base = _data->base;
     
     // Reduce the number.
     new_num._reduce();
@@ -273,6 +397,133 @@ namespace DAC {
     _data = new_num._data;
     
     // We done.
+    return *this;
+    
+  }
+  
+  // Set the number from another Arb.
+  Arb& Arb::set (Arb const& number) {
+    
+    // Work area.
+    Arb retval(*this, true);
+    
+    // Set the new p & q;
+    retval._data->p = number._data->p;
+    retval._data->q = number._data->q;
+    
+    // Reduce the fraction.
+    retval._reduce();
+    
+    // Move the result into place and return.
+    _data = retval._data;
+    return *this;
+    
+  }
+  
+  // Multiplication operator backend.
+  Arb& Arb::op_mul (Arb const& number) {
+    
+    // Work area.
+    Arb retval(*this, true);
+    
+    // Multiply the numbers.
+    retval._data->p *= number._data->p;
+    retval._data->q *= number._data->q;
+    
+    // Set the sign.
+    retval._data->positive = (retval._data->positive == number._data->positive);
+    
+    // Reduce the fraction.
+    retval._reduce();
+    
+    // Move the result into place and return.
+    _data = retval._data;
+    return *this;
+    
+  }
+  
+  // Division operator backend.
+  Arb& Arb::op_div (Arb const& number) {
+    
+    // Throw an error on divide by zero.
+    if (!number) {
+      throw ArbErrors::DivByZero();
+    }
+    
+    // Work area
+    Arb retval(*this, true);
+    
+    // Divide the numbers, multiply by the inverse.
+    retval._data->p *= number._data->q;
+    retval._data->q *= number._data->p;
+    
+    // Set the sign.
+    retval._data->positive = (retval._data->positive == number._data->positive);
+    
+    // Reduce the fraction.
+    retval._reduce();
+    
+    // Move the result into place and return.
+    _data = retval._data;
+    return *this;
+    
+  }
+  
+  // Addition operator backend.
+  Arb& Arb::op_add (Arb const& number) {
+    
+    // If adding an opposite sign, subtract the negative.
+    if (_data->positive != number._data->positive) {
+      return op_sub(-number);
+    }
+    
+    // Work area.
+    Arb tmp_l(*this,  true);
+    Arb tmp_r(number, true);
+    
+    // Numbers must have the same denominator to add.
+    tmp_l._normalize(tmp_r);
+    
+    // Add the numerators together.
+    tmp_l._data->p += tmp_r._data->p;
+    
+    // Reduce the fraction.
+    tmp_l._reduce();
+    
+    // We done. Move the result into place and return.
+    _data = tmp_l._data;
+    return *this;
+    
+  }
+  
+  // Subtraction operator backend.
+  Arb& Arb::op_sub (Arb const& number) {
+    
+    // If subtracting an opposite sign, add the negative.
+    if (_data->positive != number._data->positive) {
+      return op_add(-number);
+    }
+    
+    // Work area.
+    Arb tmp_l(*this,  true);
+    Arb tmp_r(number, true);
+    
+    // Numbers must have the same denominator to subtract.
+    tmp_l._normalize(tmp_r);
+    
+    // Subtract the numbers.
+    if (tmp_r._data->p > tmp_l._data->p) {
+      tmp_l._data->p        = tmp_r._data->p - tmp_l._data->p;
+      tmp_l._data->positive = !tmp_l._data->positive;
+    } else {
+      tmp_l._data->p -= tmp_r._data->p;
+    }
+    
+    // Reduce the fraction.
+    tmp_l._reduce();
+    
+    // We done. Move the result into place and return.
+    _data = tmp_l._data;
     return *this;
     
   }
@@ -311,6 +562,27 @@ namespace DAC {
     
   }
   
+  // Normalize two numbers.
+  Arb& Arb::_normalize (Arb& number) {
+    
+    // Only work if necessary.
+    if (_data->q != number._data->q) {
+      
+      // Raise each number's q to their LCM, bring p along.
+      _DigsT qgcd(gcd(_data->q, number._data->q));
+      _DigsT qlcm((_data->q / qgcd) * number._data->q);
+      _data->p        *= number._data->q / qgcd;
+      number._data->p *= _data->q        / qgcd;
+      _data->q         = qlcm;
+      number._data->q  = qlcm;
+      
+    }
+    
+    // We done, return.
+    return *this;
+    
+  }
+  
   /***************************************************************************
    * Class Arb::_Data.
    ***************************************************************************/
@@ -321,6 +593,25 @@ namespace DAC {
     // Call common init.
     _init();
 
+  }
+  
+  // Copy constructor.
+  Arb::_Data::_Data (_Data const& data) {
+    
+    // Call common init.
+    _init();
+    
+    // Copy the given data.
+    copy(data);
+    
+  }
+  
+  // Assignment operator.
+  Arb::_Data& Arb::_Data::operator = (_Data const& data) {
+    
+    // Copy the given data.
+    return copy(data);
+    
   }
   
   // Reset to just constructed state.
@@ -342,11 +633,24 @@ namespace DAC {
     
     pointpos = 0;
     fix      = false;
-    
-    origbase = 10;
+    base     = 10;
     
     // We done.
     return *this;
+    
+  }
+  
+  // Copy a given _Data object.
+  Arb::_Data& Arb::_Data::copy (_Data const& data) {
+    
+    // Copy the given data.
+    p    = data.p;
+    q    = data.q;
+    fixq = data.fixq;
+    
+    pointpos = data.pointpos;
+    fix      = data.fix;
+    base     = data.base;
     
   }
   
