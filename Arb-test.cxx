@@ -25,6 +25,10 @@ int main (int argc, char** argv, char** envp) {
     
     Arb test;
     
+    cout << "test: ";
+    cin  >> test;
+    cout << "test: " << test << endl;
+    
     // All tests successful.
     return 0;
     

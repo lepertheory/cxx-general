@@ -192,6 +192,9 @@ namespace DAC {
       new_data->p *= _DigsT(exp);
     }
     
+    cout << endl
+         << "new_data->p: " << new_data->p << "  new_data->q: " << new_data->q << endl;
+    
     /*
     // Load the exponent.
     {
