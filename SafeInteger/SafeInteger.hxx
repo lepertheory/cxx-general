@@ -34,6 +34,9 @@
   template <class T>            DAC::SafeInteger<T>  operator * (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
   template <class LT, class RT> DAC::SafeInteger<LT> operator * (DAC::SafeInteger<LT> const& left, RT                   const  right);
   template <class LT, class RT> DAC::SafeInteger<RT> operator * (LT                   const  left, DAC::SafeInteger<RT> const& right);
+  template <class T>            DAC::SafeInteger<T>  operator / (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right);
+  template <class LT, class RT> DAC::SafeInteger<LT> operator / (DAC::SafeInteger<LT> const& left, RT                   const  right);
+  template <class LT, class RT> DAC::SafeInteger<RT> operator / (LT                   const  left, DAC::SafeInteger<RT> const& right);
   
   /*************************************************************************
    * Specialization of numeric_limits.
@@ -90,12 +93,14 @@
     namespace SafeIntegerErrors {
       
       // Errors.
-      class Base     : public Exception {};
-      class Overflow : public Base      {};
+      class Base      : public Exception {};
+      class Overflow  : public Base      {};
+      class DivByZero : public Base      {};
       
       // Error factories.
-      void throwBase       (std::string const& text) throw(Base);
-      void throwOverflow   (std::string const& text) throw(Overflow);
+      void throwBase      (std::string const& text) throw(Base);
+      void throwOverflow  (std::string const& text) throw(Overflow);
+      void throwDivByZero (std::string const& text) throw(DivByZero);
       
     };
     
@@ -121,6 +126,8 @@
         template <class RT> SafeInteger& operator -= (RT              const  right);
                             SafeInteger& operator *= (SafeInteger<T>  const& right);
         template <class RT> SafeInteger& operator *= (RT              const  right);
+                            SafeInteger& operator /= (SafeInteger<T>  const& right);
+        template <class RT> SafeInteger& operator /= (RT              const  right);
         
         // Increment / decrement operators.
         SafeInteger& operator ++ ();
@@ -138,6 +145,8 @@
         template <class RT> SafeInteger& op_sub (RT             const  number);
                             SafeInteger& op_mul (SafeInteger<T> const& number);
         template <class RT> SafeInteger& op_mul (RT             const  number);
+                            SafeInteger& op_div (SafeInteger<T> const& number);
+        template <class RT> SafeInteger& op_div (RT             const  number);
       
       // Private members.
       private:
@@ -156,8 +165,9 @@
     namespace SafeIntegerErrors {
       
       // Throw errors.
-      inline void throwBase     (std::string const& text) throw(Base)     { Base     error; try { error.Text(text); } catch (...) {} throw error; }
-      inline void throwOverflow (std::string const& text) throw(Overflow) { Overflow error; try { error.Text(text); } catch (...) {} throw error; }
+      inline void throwBase      (std::string const& text) throw(Base)      { Base      error; try { error.Text(text); } catch (...) {} throw error; }
+      inline void throwOverflow  (std::string const& text) throw(Overflow)  { Overflow  error; try { error.Text(text); } catch (...) {} throw error; }
+      inline void throwDivByZero (std::string const& text) throw(DivByZero) { DivByZero error; try { error.Text(text); } catch (...) {} throw error; }
       
     };
     
@@ -171,6 +181,8 @@
     template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::operator -= (RT             const  number) { return op_sub(number); }
     template <class T>                     SafeInteger<T>& SafeInteger<T>::operator *= (SafeInteger<T> const& number) { return op_mul(number); }
     template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::operator *= (RT             const  number) { return op_mul(number); }
+    template <class T>                     SafeInteger<T>& SafeInteger<T>::operator /= (SafeInteger<T> const& number) { return op_div(number); }
+    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::operator /= (RT             const  number) { return op_div(number); }
     
     // Increment / decrement operators.
     template <class T> SafeInteger<T>& SafeInteger<T>::operator ++ ()    { return op_add(1); }
@@ -233,6 +245,61 @@
       
     }
     
+    // Multiply by another SafeInteger of the same type.
+    template <class T> SafeInteger<T>& SafeInteger<T>::op_mul (SafeInteger<T> const& number) {
+      
+      // Check for overflow.
+      if (std::numeric_limits<T>::is_signed) {
+        if ((_number > 0) && (number._number > 0)) {
+          if (number._number > (std::numeric_limits<T>::max() / _number)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+          }
+        } else if ((_number < 0) && (number._number < 0)) {
+          if (number._number < (std::numeric_limits<T>::max() / _number)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+          }
+        } else if ((_number > 0) && (number._number < 0)) {
+          if (number._number < (std::numeric_limits<T>::min() / _number)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+          }
+        } else if ((_number < 0) && (number._number > 0)) {
+          if (-number._number < -(std::numeric_limits<T>::min() / _number)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+          }
+        }
+      } else {
+        if (number._number > (std::numeric_limits<T>::max() / _number)) {
+          SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number._number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+        }
+      }
+      
+      // Do the multiply and return result.
+      _number *= number._number;
+      return *this;
+      
+    }
+    
+    // Divide by another SafeInteger of the same type.
+    template <class T> SafeInteger<T>& SafeInteger<T>::op_div (SafeInteger<T> const& number) {
+      
+      // Check for divide by 0.
+      if (number._number == 0) {
+        SafeIntegerErrors::throwDivByZero("Divide by zero.");
+      }
+      
+      // Check for overflow.
+      if (std::numeric_limits<T>::is_signed) {
+        if ((_number == std::numeric_limits<T>::min()) && (number._number == -1)) {
+          SafeIntegerErrors::throwOverflow(toString(_number) + " / " + toString(number._number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+        }
+      }
+      
+      // Do the divide and return result.
+      _number /= number._number;
+      return *this;
+      
+    }
+    
     // Add a number of a different type.
     template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_add (RT const number) {
       
@@ -265,6 +332,30 @@
         
       } else {
         
+        // Neither number is signed.
+        if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (number > (std::numeric_limits<T>::max() - _number)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+          }
+        
+        // Only the left number is signed.
+        } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (_number >= 0) {
+            if (number > (std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else {
+            if (number > -_number) {
+              if ((number + _number) > std::numeric_limits<T>::max()) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+              }
+            }
+          }
+          
+        }
+        
       }
       
       // Do the addition and return result.
@@ -296,10 +387,101 @@
         
       } else {
         
+        // Neither number is signed.
+        if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (number > (std::numeric_limits<T>::min() + _number)) {
+            SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+          }
+          
+        // Only the left number is signed.
+        } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (_number <= 0) {
+            if (number > -(std::numeric_limits<T>::min() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+            }
+          } else {
+            if (number > _number) {
+              if (-(number - _number) < std::numeric_limits<T>::min()) {
+                SafeIntegerErrors::throwOverflow(toString(_number) + " - " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+              }
+            }
+          }
+          
+        }
+        
       }
       
       // Do the subtraction and return result.
       _number -= number;
+      return *this;
+      
+    }
+    
+    // Multiply by a number of a different type.
+    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_mul (RT const number) {
+      
+      // Work with the larger of the two sides.
+      if (std::numeric_limits<T>::digits >= std::numeric_limits<RT>::digits) {
+        
+        // Only the right number is signed.
+        if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
+          
+          if (number > 0) {
+            if (number > (std::numeric_limits<T>::max() / _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else if (number < 0) {
+            if (number < (std::numeric_limits<T>::min() / _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+            }
+          }
+          
+        }
+        
+      } else {
+        
+        // Only the left number is signed.
+        if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
+          
+          if (_number > 0) {
+            if (number > (std::numeric_limits<T>::max() / _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else if (_number < 0) {
+            if (number > (std::numeric_limits<T>::min() / _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " * " + toString(number) + " is less than type minimum of " + toString(std::numeric_limits<T>::min()) + ".");
+            }
+          }
+          
+        }
+        
+      }
+      
+      // Do the multiplication and return the result.
+      _number *= number;
+      return *this;
+      
+    }
+    
+    // Divide by a number of a different type.
+    template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::op_div (RT const number) {
+      
+      // Check for divide by 0.
+      if (number == 0) {
+        SafeIntegerErrors::throwDivByZero("Divide by zero.");
+      }
+      
+      // Work with the larger of the two sides.
+      if (std::numeric_limits<T>::digits >= std::numeric_limits<RT>::digits) {
+        
+      } else {
+        
+      }
+      
+      // Do the division and return the result.
+      _number /= number;
       return *this;
       
     }
@@ -320,5 +502,8 @@
   template <class T>            inline DAC::SafeInteger<T>  operator * (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_mul(right); }
   template <class LT, class RT> inline DAC::SafeInteger<LT> operator * (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_mul(right); }
   template <class LT, class RT> inline DAC::SafeInteger<RT> operator * (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<RT> retval(left); return retval.op_mul(right); }
+  template <class T>            inline DAC::SafeInteger<T>  operator / (DAC::SafeInteger<T>  const& left, DAC::SafeInteger<T>  const& right) { DAC::SafeInteger<T>  retval(left); return retval.op_div(right); }
+  template <class LT, class RT> inline DAC::SafeInteger<LT> operator / (DAC::SafeInteger<LT> const& left, RT                   const  right) { DAC::SafeInteger<LT> retval(left); return retval.op_div(right); }
+  template <class LT, class RT> inline DAC::SafeInteger<RT> operator / (LT                   const  left, DAC::SafeInteger<RT> const& right) { DAC::SafeInteger<RT> retval(left); return retval.op_div(right); }
   
 #endif
