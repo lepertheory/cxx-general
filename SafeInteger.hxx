@@ -177,8 +177,25 @@
     // Add a number of a different type.
     template <class T> template <class U> SafeInteger<T>& SafeInteger<T>::op_add (U const number) {
       
-      // Both numbers are signed.
-      if (std::numeric_limits<T>::is_signed && std::
+      // Work with the larger of the two types.
+      if (std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits) {
+        
+        // Both numbers are signed.
+        if (std::numeric_limits<T>::is_signed && std::numeric_limits<U>::is_signed) {
+          
+          if ((_number > 0) && (number > 0)) {
+            if (number > (std::numeric_limits<T>::max() - _number)) {
+              SafeIntegerErrors::throwOverflow(toString(_number) + " + " + toString(number) + " is greater than type maximum of " + toString(std::numeric_limits<T>::max()) + ".");
+            }
+          } else if ((_number > 0) && (number < 0)) {
+            if (number < (std::numeric_limits<T>::max() - 
+          
+        }
+        
+      } else {
+        
+      }
+      
       
     }
     
