@@ -1,10 +1,21 @@
+import os
+
 env = Environment(
-  CCFLAGS = '-g -Wall -ansi -O0',
+	ENV = os.environ,
   CPPPATH = [
     '.',
     '..'
+  ],
+  tools = [
+  	'mingw',
+  	'gcc'
   ]
 )
+
+if (env['CC'] == 'gcc') :
+	env.Append(
+		CCFLAGS = '-g -O0 -ansi -Wall'
+	)
 
 main = env.Object(
   target = 'main',
@@ -17,14 +28,3 @@ env.Program(
   target = 'SafeInteger',
   source = main
 )
-
-#env.Program(
-#  target = 'SafeInteger',
-#  Source = [
-#    'test.cxx'
-#  ],
-#  CPPPATH = [
-#    '.',
-#    '..'
-#  ]
-#)
