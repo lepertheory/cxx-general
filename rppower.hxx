@@ -10,7 +10,7 @@
   #define RPPOWER_gu2j9g8uuhu
   
   // Internal includes.
-  #include "SafeInteger/SafeInteger.hxx"
+  #include "SafeInteger.hxx"
   
   // Contain in namespace.
   namespace DAC {

@@ -15,7 +15,7 @@
   #include <algorithm>
   
   // Internal includes.
-  #include "SafeInteger/SafeInteger.hxx"
+  #include "SafeInteger.hxx"
   #include "ReferencePointer.hxx"
   #include "toString.hxx"
   #include "rppower.hxx"

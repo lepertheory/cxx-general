@@ -1,5 +1,5 @@
 /*****************************************************************************
- * test.cxx
+ * Arbint-test.cxx
  *****************************************************************************
  * Tests the class ArbInt.
  *****************************************************************************/
@@ -8,7 +8,7 @@
 #include <iostream>
 
 // Internal includes.
-#include "src/ArbInt.hxx"
+#include "ArbInt.hxx"
 #include "demangle.hxx"
 #include "Exception.hxx"
 
