@@ -621,21 +621,35 @@
         SafeInteger<_DigT> roughdivnd = number._digits->back();
         
         // Seed the group of digits we will be dividing, then iterate through
-        // the divisor.
+        // the divisor. diggroup is set to *this's last number._digits's size
+        // digits. Since *this is at least as big as number, this will always
+        // succeed. The loop iterates backwards from the least significant
+        // digit added to diggroup to the end of _digits, although the
+        // iterator is only ever referenced to add one to it.
         ArbInt<T> diggroup;
-        ArbInt<T> test;
         *(diggroup._digits) = _DigsT(_digits->end() - number._digits->size(), _digits->end());
         for (typename _DigsT::reverse_iterator i = _digits->rbegin() + (number._digits->size() - 1); i != _digits->rend(); ++i) {
           
+          // Guess and test. Guess is a single native digit so we can use the
+          // computer to do some of our division for us. These need to be set
+          // to zero at each iteration, possible cause of bug if they are not.
           SafeInteger<_DigT> guess = 0;
-          test = 0;
+          ArbInt<T>          test  = 0;
           
           // Make sure that the digit group is greater than or equal to the
-          // dividend. If not, this digit is zero, move on.
+          // dividend. If not, the quotient for this digit is zero, move on.
           if (diggroup >= number) {
             
-            // Make a guess at the quotient of this digit by dividing the high-
-            // order digits.
+            // Make a guess at the quotient of this digit by dividing the
+            // high-order digits. Initially the rough divisor is the high-
+            // order digit of the digit group, but our guess needs to be based
+            // on the number of digits the digit group has over our dividend.
+            // The high-order digits of diggroup are added one at a time, and
+            // moved up 1/2 of the native type's precision. Since the rough
+            // dividend will never be over 1/2 of the native type's precision,
+            // roughdivor can never overflow, since it will always spend at
+            // least one iteration greater than roughdivnd but cannot be
+            // greater than the type maximum.
             SafeInteger<_DigT> roughdivor = diggroup._digits->back();
             typename _DigsT::size_type j;
             for (j = 0; j != (diggroup._digits->size() - number._digits->size()); ++j) {
@@ -644,26 +658,49 @@
             }
             guess = roughdivor / roughdivnd;
               
-            // Correct the guess.
+            // Correct the guess. First create a test. Also create a floor
+            // and ceiling for future guesses. Error in guesses is based on
+            // the fact that we are only dividing the high order digits of
+            // each number, so the worst-case scenario is that the low-order
+            // digits are all at maximum or minimum. For the floor divisor,
+            // assume that all untested digits are at the minimum by lowering
+            // the divisor by s_digitbase^addl digits (necessary because carry
+            // would cause high-order digit to change), and raise the dividend
+            // by 1. For the ceiling divisor, raise it by s_digitbase^addl
+            // and lower the dividend by 1.
             test = number * ArbInt<T>(guess.Value());
             SafeInteger<_DigT> guessfloor = (roughdivor - rppower(SafeInteger<_DigT>(s_digitbase), j)) / (roughdivnd + 1);
-            SafeInteger<_DigT> guessciel  = (roughdivor + rppower(SafeInteger<_DigT>(s_digitbase), j)) / ((roughdivnd == 1) ? 1 : (roughdivnd - 1));
+            SafeInteger<_DigT> guessceil  = (roughdivor + rppower(SafeInteger<_DigT>(s_digitbase), j)) / ((roughdivnd == 1) ? 1 : (roughdivnd - 1));
+            
+            // Loop until the test is within th ecorrect range.
             while ((test > diggroup) || ((test + number) <= diggroup)) {
+              
+              // If the test is greater than the digit group, we need to lower
+              // our guess. Lower it by moving halfway toward the floor. Also,
+              // update the ceiling. We know that we are already over it, so
+              // make the ceiling one less than the current guess.
               if (test > diggroup) {
-                guessciel = guess - 1;
+                guessceil = guess - 1;
                 guess     = guess - (((guess - guessfloor) >> 1) + 1);
                 test      = number * ArbInt<T>(guess.Value());
+              
+              // If there is room for more dividends, we need to raise our
+              // guess. Raise it halfway toward the ceiling. Update the floor,
+              // it is at least one higher than our current guess.
               } else if ((test + number) <= diggroup) {
                 guessfloor = guess + 1;
-                guess      = guess + (((guessciel - guess) >> 1) + 1);
+                guess      = guess + (((guessceil - guess) >> 1) + 1);
                 test       = number * ArbInt<T>(guess.Value());
               }
+              
             }
             
           }
           
           // The guess must be correct by this point. Add it to the quotient
-          // and prepare for the next iteration.
+          // and prepare for the next iteration by removing the current digit
+          // from the digit group, shift the digit group up one digit, and add
+          // the next digit of the divisor.
           retval._digits->insert(retval._digits->begin(), guess.Value());
           diggroup -= test;
           if (i != (_digits->rend() - 1)) {
