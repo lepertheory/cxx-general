@@ -7,6 +7,7 @@
 // STL includes.
 #include <string>
 #include <algorithm>
+#include <iostream> // FIXME: For debugging only.
 
 // Internal includes.
 #include "rppower.hxx"
@@ -229,8 +230,8 @@ namespace DAC {
               // Add the digit to its proper place.
               switch (mode) {
                 case NUM: num.push_back(digval); break;
-                case RAD: num.push_back(digval); break;
-                case EXP: num.push_back(digval); break;
+                case RAD: rad.push_back(digval); break;
+                case EXP: exp.push_back(digval); break;
               }
               diggiven = true;
               

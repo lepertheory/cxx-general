@@ -166,6 +166,18 @@
         // Convert a container from one base to another base. Container must
         // be little-endian, result is big-endian.
         template <class FromT, class ToT> static ReferencePointer<ToT> s_baseConv (FromT const& from, _BaseT const frombase, _BaseT const tobase);
+
+        // Perform integer division on two big-endian containers. Returns the
+        // remainder.
+        template <class T> static ReferencePointer<T> s_intDiv (T const& divor, T const& divnd, T& quotient);
+        
+        // Comparison operators on containers.
+        template <class T> static bool s_lt (T const& l, T const& r);
+        template <class T> static bool s_le (T const& l, T const& r);
+        template <class T> static bool s_gt (T const& l, T const& r);
+        template <class T> static bool s_ge (T const& l, T const& r);
+        template <class T> static bool s_eq (T const& l, T const& r);
+        template <class T> static bool s_ne (T const& l, T const& r);
       
     };
     
@@ -300,6 +312,69 @@
       return retval;
       
     }
+    
+    // Perform integer division on two big-endian containers. Returns the
+    // remainder.
+    template <class T> ReferencePointer<T> Arb::s_intDiv (T const& divor, T const& divnd, T& quotient) {
+      
+      // Return this container.
+      ReferencePointer<T> retval(new T);
+      
+      // If divor < divnd, result is zero, remainder is divnd.
+      if (s_lt(divor, divnd)) {
+        retval = divnd;
+        quotient.clear();
+        return retval;
+      }
+      
+      // First, seed the group of digits we will be dividing.
+      T diggroup(divor.rbegin(), divor.rbegin() + divnd.size());
+      
+      // Iterate through the divisor.
+      for (typename T::reverse_iterator i = divor.rbegin() + divnd.size(); i != divor.rend(); ++i) {
+      }
+      
+      // Return.
+      return retval;
+      
+    }
+    
+    // Comparison operators on containers.
+    template <class T> bool Arb::s_lt (T const& l, T const& r) {
+      
+      // Don't get fooled by zero size.
+      if ((l.size() == 0) && (r.size() == 0)) {
+        return false;
+      }
+      
+      // If the size of one container is larger, that is the larger container.
+      if (l.size() < r.size()) {
+        return true;
+      }
+      if (l.size() > r.size()) {
+        return false;
+      }
+      
+      // Examine individual digits, starting from most significant. Return a
+      // result as soon as possible.
+      for (typename T::size_type i = l.size() - 1; i != 0; --i) {
+        if (l[i] < r[i]) {
+          return true;
+        }
+        if (l[i] > r[i]) {
+          return false;
+        }
+      }
+      
+      // All digits are equal, l is not less than r.
+      return false;
+      
+    }
+    template <class T> bool Arb::s_le (T const& l, T const& r) { return (s_lt(l, r) || !s_lt(r, l));  }
+    template <class T> bool Arb::s_gt (T const& l, T const& r) { return s_lt(r, l);                   }
+    template <class T> bool Arb::s_ge (T const& l, T const& r) { return (s_gt(l, r) || !s_gt(r, l));  }
+    template <class T> bool Arb::s_eq (T const& l, T const& r) { return (!s_lt(l, r) && !s_gt(l, r)); }
+    template <class T> bool Arb::s_ne (T const& l, T const& r) { return (s_lt(l, r) || s_gt(l, r));   }
     
   };
   
