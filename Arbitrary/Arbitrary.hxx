@@ -275,7 +275,6 @@
      * Inline and template definitions.
      *************************************************************************/
     
-    /*************************************************************************/
     // Error functions.
     namespace ArbitraryErrors {
       
@@ -302,14 +301,10 @@
       /***********************************************************************/
       
     };
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Assignment operator. Makes a perfect copy of a given number.
     inline Arbitrary& Arbitrary::operator = (Arbitrary const& right) { copy(right); return *this; }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Conversion constructor. Requires that DAC::toString will work for the
     // given type.
     template <class T> Arbitrary::Arbitrary (T const& number) {
@@ -321,51 +316,36 @@
       set(number);
       
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Set with an arbitrary type.
     template <class T> Arbitrary& Arbitrary::set (T const& number) { return set(DAC::toString(number)); }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Arithmetic assignment operators.
     inline Arbitrary& Arbitrary::operator += (Arbitrary const& right) { return op_add(right); }
     inline Arbitrary& Arbitrary::operator -= (Arbitrary const& right) { return op_sub(right); }
     inline Arbitrary& Arbitrary::operator *= (Arbitrary const& right) { return op_mul(right); }
     inline Arbitrary& Arbitrary::operator /= (Arbitrary const& right) { return op_div(right); }
     //inline Arbitrary& Arbitrary::operator %= (Arbitrary const& right) { return op_mod(right); }
-    /*************************************************************************/
     
-    /*************************************************************************/
     inline Arbitrary& Arbitrary::operator >>= (Arbitrary const& right) { return op_shr(right); }
     //inline Arbitrary& Arbitrary::operator <<= (Arbitrary const& right { return op_shl(right); }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Bitwise assignment operators.
     inline Arbitrary& Arbitrary::operator &= (Arbitrary const& right) { return op_bit_and(right); }
     //inline Arbitrary& Arbitrary::operator |= (Arbitrary const& right) { return op_bit_or(right);  }
     //inline Arbitrary& Arbitrary::operator ^= (Arbitrary const& right) { return op_bit_xor(right); }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Increment / decrement operators.
     inline Arbitrary& Arbitrary::operator ++ ()    {                                     return op_add(1); }
     inline Arbitrary  Arbitrary::operator ++ (int) { Arbitrary retval(*this); op_add(1); return retval;    }
     inline Arbitrary& Arbitrary::operator -- ()    {                                     return op_sub(1); }
     inline Arbitrary  Arbitrary::operator -- (int) { Arbitrary retval(*this); op_sub(1); return retval;    }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Negation operator.
     inline Arbitrary Arbitrary::operator - () const { Arbitrary retval(*this); retval._data->positive = !(retval._data->positive); return retval; }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Type conversion operators.
     inline Arbitrary::operator bool () const { return op_bool(); }
-    /*************************************************************************/
     template <class T> Arbitrary::operator T () const {
       T retval = 0;
       for (_DigsT::iterator i = _data->digits.begin(); i != _data->digits.end(); ++i) {
@@ -377,18 +357,14 @@
       }
       return retval;
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Comparison operator backends.
     inline bool Arbitrary::op_eq (Arbitrary const& right) const { return (!op_gt(right) && !right.op_gt(*this)); }
     inline bool Arbitrary::op_ne (Arbitrary const& right) const { return !op_eq(right);                          }
     inline bool Arbitrary::op_ge (Arbitrary const& right) const { return (op_gt(right) || op_eq(right));         }
     inline bool Arbitrary::op_lt (Arbitrary const& right) const { return (!op_gt(right) && op_ne(right));        }
     inline bool Arbitrary::op_le (Arbitrary const& right) const { return (op_lt(right) || op_eq(right));         }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Trim leading and trailing zeros from a given container. Container must
     // support random access iterators.
     template <class T, class IT> void Arbitrary::s_trimZeros (T& c, _BoE const trimzeros) {
@@ -418,9 +394,7 @@
       }
       
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Do any carry needed, starting at given digit.
     template <class T, class TS> void Arbitrary::s_carry (T& digits, TS const start) {
       
@@ -457,9 +431,7 @@
       }
       
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Borrow, starting at given digit.
     template <class T, class TS> void Arbitrary::s_borrow (T& digits, TS const start) {
       
@@ -487,9 +459,7 @@
       digits[start] = of_add<_DigT, _DigT, _BaseT>(digits[start], s_digitbase);
       
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Do long division on an given number. The number must be in little-
     // endian format. This function call is ridiculous, but it's private to
     // the class and this is the only way it can be even sort of efficient.
@@ -533,9 +503,7 @@
       return (dgroup / base);
       
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Reverse a given container.
     template <class T, class RIT> ReferencePointer<T> Arbitrary::s_reverse (T& c) {
       
@@ -551,9 +519,7 @@
       return retval;
       
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Convert the base of a given container, return a new container.
     template <class ToT, class ToDT, class FromT, class FromDT, class FromIT> ReferencePointer<ToT> Arbitrary::s_baseconv (FromT const& from, _BaseT const frombase, _BaseT const tobase) {
       
@@ -575,18 +541,13 @@
       return retval;
       
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     // Clean the internal data structure.
     inline Arbitrary& Arbitrary::_cleanup () {
       return set(toString());
     }
-    /*************************************************************************/
     
-    /*************************************************************************/
     inline Arbitrary::_Data& Arbitrary::_Data::operator = (Arbitrary::_Data const& right) { return copy(right); }
-    /*************************************************************************/
     
   };
   
@@ -594,28 +555,21 @@
    * Inline and template definitions.
    ***************************************************************************/
   
-  /***************************************************************************/
   // Stream I/O operators.
   inline std::istream& operator >> (std::istream& left, DAC::Arbitrary&       right) { std::string input; std::cin >> input; right.set(input); return left; }
   inline std::ostream& operator << (std::ostream& left, DAC::Arbitrary const& right) { left << right.toString();                               return left; }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Arithmetic operators.
   inline DAC::Arbitrary operator + (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_add(right); }
   inline DAC::Arbitrary operator - (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_sub(right); }
   inline DAC::Arbitrary operator * (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_mul(right); }
   inline DAC::Arbitrary operator / (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_div(right); }
   //inline DAC::Arbitrary operator % (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_div(right); }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Bitshift operators.
   inline DAC::Arbitrary operator >> (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_shr(right); }
   //inline DAC::Arbitrary operator << (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_shl(right); }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Comparison operators.
   inline bool operator == (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { return left.op_eq(right); }
   inline bool operator != (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { return left.op_ne(right); }
@@ -623,13 +577,10 @@
   inline bool operator >= (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { return left.op_ge(right); }
   inline bool operator <  (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { return left.op_lt(right); }
   inline bool operator <= (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { return left.op_le(right); }
-  /***************************************************************************/
 
-  /***************************************************************************/
   // Bitwise operators.
   inline DAC::Arbitrary operator & (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_bit_and(right); }
   //DAC::Arbitrary operator | (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_bit_or(right);  }
   //DAC::Arbitrary operator ^ (DAC::Arbitrary const& left, DAC::Arbitrary const& right) { DAC::Arbitrary retval(left); return retval.op_bit_xor(right); }
-  /***************************************************************************/
   
 #endif

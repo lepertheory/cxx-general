@@ -42,7 +42,10 @@ namespace DAC {
   // Call class constructor.
   bool Arbitrary::s_initialized = s_classInit();
   
-  /***************************************************************************/
+  /***************************************************************************
+   * class Arbitrary
+   ***************************************************************************/
+  
   // Default constructor. By definition of the clear() function, this must do
   // nothing but call clear().
   Arbitrary::Arbitrary () {
@@ -56,9 +59,7 @@ namespace DAC {
     clear();
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Copy constructor. Makes a perfect copy of a given number.
   Arbitrary::Arbitrary (Arbitrary const& number) {
     
@@ -71,9 +72,7 @@ namespace DAC {
     copy(number);
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // String conversion constructor. Special case.
   Arbitrary::Arbitrary (string const& number) {
     
@@ -89,9 +88,7 @@ namespace DAC {
     set(number);
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Add a number to this number.
   Arbitrary& Arbitrary::op_add (Arbitrary const& right) {
     
@@ -131,9 +128,7 @@ namespace DAC {
     return *this;
     
   };
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Subtract a number from this number.
   Arbitrary& Arbitrary::op_sub (Arbitrary const& right) {
     
@@ -178,20 +173,19 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
+  // Multiply this number by another number.
   Arbitrary& Arbitrary::op_mul (Arbitrary const& right) {
     
     // Reduce typing.
     typedef _DigsT::size_type DST;
     
     // Work area.
-    _DataPT   new_data(new _Data);
+    Arbitrary tmp_left(*this);
     Arbitrary tmp_right(right);
     
     // Convert to two numbers that can be calculated against each other.
-    _normalizeRadix(tmp_right);
+    tmp_left._normalizeRadix(tmp_right);
     
     // Multiply like 3rd grade. Outer loop is the multiplicand.
     for (DST i = 0; i != _data->digits.size(); ++i) {
@@ -224,44 +218,41 @@ namespace DAC {
         DST tdig = of_add<DST, DST, DST>(j, i);
         
         // Add a new digit if needed.
-        if (new_data->digits.size() == tdig) {
-          new_data->digits.push_back(0);
+        if (tmp_left._data->digits.size() == tdig) {
+          tmp_left._data->digits.push_back(0);
         }
         
         // Add this digit.
-        new_data->digits[tdig] = of_add<_DigT, _DigT, _DigT>(new_data->digits[tdig], digproduct[j]);
+        tmp_left._data->digits[tdig] = of_add<_DigT, _DigT, _DigT>(tmp_left._data->digits[tdig], digproduct[j]);
         
         // Do any carry needed.
-        s_carry<_DigsT, DST>(new_data->digits, tdig);
+        s_carry<_DigsT, DST>(tmp_left._data->digits, tdig);
         
       }
       
     }
     
     // Put the decimal point in the proper place.
-    new_data->exponent = _data->exponent + tmp_right._data->exponent;
+    tmp_left._data->exponent = of_add<_ExpT, _ExpT, _ExpT>(tmp_left._data->exponent, tmp_right._data->exponent);
     
     // Set the sign.
-    new_data->positive = (_data->positive == tmp_right._data->positive);
+    tmp_left._data->positive = (tmp_left._data->positive == tmp_right._data->positive);
     
     // Swap in the new data.
-    _data = new_data;
+    _data = tmp_left._data;
     
     // Done.
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
+  // Divide this number by another number.
   Arbitrary& Arbitrary::op_div (Arbitrary const& right) {
     
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Bitwise shift right.
   Arbitrary& Arbitrary::op_shr (Arbitrary const& right) {
     
@@ -322,9 +313,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Bitwise and operator.
   Arbitrary& Arbitrary::op_bit_and (Arbitrary const& right) {
     
@@ -353,9 +342,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Comparison operators. Only op_gt until optimization time, all others are
   // built off of this one.
   bool Arbitrary::op_gt (Arbitrary const& right) const {
@@ -397,9 +384,7 @@ namespace DAC {
     return false;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Convert to a bool.
   bool Arbitrary::op_bool () const {
     
@@ -407,9 +392,7 @@ namespace DAC {
     return (_data->digits.size() > 0);
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Raise to a power.
   Arbitrary& Arbitrary::pow (Arbitrary const& power) {
     
@@ -438,9 +421,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Convert to a string.
   string Arbitrary::toString () const {
     
@@ -511,9 +492,7 @@ namespace DAC {
     return construct;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Set the number from a string.
   Arbitrary& Arbitrary::set (string const& number) {
     
@@ -676,9 +655,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Copy the given number (constant).
   Arbitrary& Arbitrary::copy (Arbitrary const& number) {
     
@@ -692,9 +669,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Copy the given number.
   Arbitrary& Arbitrary::copy (Arbitrary& number) {
     
@@ -708,9 +683,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Reset to just-constructed by default constructor state.
   Arbitrary& Arbitrary::clear () {
     
@@ -721,9 +694,8 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
+  // Initialize this class.
   bool Arbitrary::s_classInit () throw() {
     
     // This cannot throw.
@@ -754,9 +726,7 @@ namespace DAC {
     return true;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Normalize this number to another number.
   Arbitrary& Arbitrary::_normalizeRadix (Arbitrary& number) {
     
@@ -784,9 +754,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Set the exponents of two numbers to be the same.
   Arbitrary& Arbitrary::_normalizeExponent (Arbitrary& number) {
     
@@ -803,9 +771,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Convert this number to a whole number.
   Arbitrary& Arbitrary::_toWhole () {
     
@@ -818,9 +784,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
  
-  /***************************************************************************/
   // Set the exponent of this number.
   Arbitrary& Arbitrary::_setExponent (_ExpT const exponent, bool const force) {
     
@@ -850,9 +814,11 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
+  /***************************************************************************
+   * class Arbitrary::_Data
+   ***************************************************************************/
+  
   // Default constructor.
   Arbitrary::_Data::_Data () {
     
@@ -860,9 +826,7 @@ namespace DAC {
     clear();
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Copy constructor.
   Arbitrary::_Data::_Data (Arbitrary::_Data const& data) {
     
@@ -873,9 +837,7 @@ namespace DAC {
     copy(data);
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Copy another _Data structure.
   Arbitrary::_Data& Arbitrary::_Data::copy (Arbitrary::_Data const& data) {
     
@@ -889,9 +851,7 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
-  /***************************************************************************/
   // Reset to just-constructed by default constructor state.
   Arbitrary::_Data& Arbitrary::_Data::clear () {
     
@@ -911,6 +871,5 @@ namespace DAC {
     return *this;
     
   }
-  /***************************************************************************/
   
 };
