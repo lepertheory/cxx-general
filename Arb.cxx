@@ -632,7 +632,7 @@ namespace DAC {
     Arb lastguess;
     Arb one(1);
     Arb two(2);
-    Arb accuracy(string("0.00000000001"));
+    Arb accuracy(Arb(_data->base).pow(-Arb(_maxradix)));
     
     if (abs() > one) {
       retval = two;
