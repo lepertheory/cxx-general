@@ -61,15 +61,7 @@
         
         /*********************************************************************/
         // Enums
-        enum OutputFormat { FMT_RADIX, FMT_FRACTION };
-        
-        /*********************************************************************/
-        // Constants
-        /*
-        static const Arb VAL_NEGONE;
-        static const Arb VAL_ZERO;
-        static const Arb VAL_ONE;
-        */
+        enum OutputFormat { FMT_RADIX, FMT_FRACTION, FMT_BOTH, FMT_DEFAULT };
         
         /*********************************************************************/
         // Function members.
@@ -129,7 +121,7 @@
         Arb& copy (Arb const& number, bool const copynow = false);
         
         // Convert to string.
-        std::string toString () const;
+        std::string toString (OutputFormat const format = FMT_DEFAULT) const;
         
         // Set the number.
                            Arb& set (std::string const& number);
@@ -380,7 +372,7 @@
     inline std::string::size_type Arb::MaxRadix ()                                      const { return _maxradix;                   }
     inline Arb::PointPosT         Arb::PointPos ()                                      const { return _data->pointpos;             }
     inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                  }
-    inline Arb&                   Arb::Format   (OutputFormat const format)                   { _format = format; return *this;     }
+    inline Arb&                   Arb::Format   (OutputFormat const format)                   { _format = (format == FMT_DEFAULT) ? _format : format; return *this;     }
     inline Arb::OutputFormat      Arb::Format   ()                                      const { return _format;                     }
     
     // Set from a built-in type.

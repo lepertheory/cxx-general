@@ -44,8 +44,8 @@
         /*********************************************************************/
         // Constants.
         
-        static const ArbInt VAL_ZERO;
-        static const ArbInt VAL_ONE;
+        //static const ArbInt VAL_ZERO;
+        //static const ArbInt VAL_ONE;
         
         /*********************************************************************/
         // Function members.
@@ -341,8 +341,8 @@
     /*************************************************************************/
     // Static member initialization.
     
-    template <class T> const ArbInt<T> ArbInt<T>::VAL_ZERO(0);
-    template <class T> const ArbInt<T> ArbInt<T>::VAL_ONE(1);
+    //template <class T> const ArbInt<T> ArbInt<T>::VAL_ZERO(0);
+    //template <class T> const ArbInt<T> ArbInt<T>::VAL_ONE(1);
     
     template <class T> int                       ArbInt<T>::s_digitbits = 0;
     template <class T> typename ArbInt<T>::_DigT ArbInt<T>::s_digitbase = 0;
@@ -1046,7 +1046,8 @@
       // Work area.
       ArbInt<T> tmp_base(*this);
       ArbInt<T> tmp_expn(exp);
-      ArbInt<T> retval(VAL_ONE);
+      ArbInt<T> retval(1);
+      ArbInt<T> one(1);
       
       // Russian peasant power.
       while (tmp_expn._digits->size() > 0) {
@@ -1054,7 +1055,7 @@
           retval *= tmp_base;
         }
         tmp_base  *= tmp_base;
-        tmp_expn >>= VAL_ONE;
+        tmp_expn >>= one;
       }
       
       /*

@@ -28,14 +28,6 @@ namespace DAC {
    ***************************************************************************/
   
   /***************************************************************************/
-  // Static data members.
-  /*
-  const Arb Arb::VAL_NEGONE(-1);
-  const Arb Arb::VAL_ZERO(0);
-  const Arb Arb::VAL_ONE(1);
-  */
-  
-  /***************************************************************************/
   // Function members.
   
   // Default constructor.
@@ -144,18 +136,28 @@ namespace DAC {
   }
   
   // Convert this number to a string.
-  string Arb::toString () const {
+  string Arb::toString (OutputFormat const format) const {
     
     // This is the string we will be returning.
     string retval;
     
-    // Output the sign if negative.
-    if (!(_data->positive) && _data->p) {
+    // Determine the output format.
+    OutputFormat fmt = (format == FMT_DEFAULT) ? _format : format;
+    
+    // Output the sign if negative, unless outputting both formats.
+    if ((fmt != FMT_BOTH) && !(_data->positive) && _data->p) {
       retval += "-";
     }
     
     // Choose the output format.
-    switch (_format) {
+    switch (fmt) {
+      
+      // Output both notations.
+      case FMT_BOTH: {
+        
+        retval += toString(FMT_RADIX) + " " + toString(FMT_FRACTION);
+        
+      } break;
       
       // Output in radix notation.
       case FMT_RADIX: {
@@ -614,6 +616,8 @@ namespace DAC {
         retval = Arb(1) / retval;
       }
       
+    } else {
+      throw "Unimplemented!";
     }
     
     // Return the result.
@@ -624,47 +628,30 @@ namespace DAC {
   // Find the nth root of this number.
   Arb Arb::root (Arb const& n) const {
     
-    // Work area.
-    Arb a;
-    Arb b;
-    Arb c;
-    Arb retval;
-    
-    // First bracket the root. Start with 1, work down or up with a binary
-    // search until the root is bracketed.
-    a = VAL_ONE;
-    bool gotb = false;
-    if (_f(a, n).isPositive()) {
-      if (gotb) {
-        c = a;
-      } else {
-        a /= 2;
-      }
-    } else {
-      b  = a;
-      a *= 2;
-    }
-    
-    cout << "a: " << a << "  b: " << b << "  c: " << c << endl;
-    
-    /*
-    Arb retval;
-    Arb next(1);
+    Arb retval(1);
+    Arb lastguess;
     Arb one(1);
+    Arb two(2);
     Arb accuracy(string("0.00000000001"));
     
+    if (abs() > one) {
+      retval = two;
+      while (retval.pow(n) < *this) {
+        retval *= two;
+      }
+    }
+    
+    Arb nmo(n - one);
     do {
-      retval = next;
-      //next   = (one / n) * (*this / retval.pow(n - one) + (n - one) * retval);
-      //next   = (one / n) * ((n - one) * retval + *this / retval.pow(n - one));
-      //if (next._data->q > accuracy._data->q) {
-      //  next._forcereduce(accuracy._data->q);
-      //}
-    } while ((next - retval).abs() > accuracy);
-    retval = next;
+      lastguess = retval;
+      retval    = (*this / retval.pow(nmo) + nmo * retval) / n;
+      if (retval._data->q > accuracy._data->q) {
+        retval._forcereduce(accuracy._data->q);
+      }
+      cout << "retval: " << retval << endl;
+    } while ((retval - lastguess).abs() > accuracy);
     
     retval._reduce();
-    */
     
     return retval;
     
