@@ -600,24 +600,57 @@ namespace DAC {
     
     // Work area.
     Arb retval(*this, true);
+    Arb one(1);
     
-    // Raise this number to an integer power.
-    if (exp.isInteger()) {
+    // No work if this is zero or if we are raising to the 1.
+    if (!isZero() || (exp == one)) {
       
-      // Raise p & q.
-      retval._data->p = retval._data->p.pow(exp._data->p);
-      retval._data->q = retval._data->q.pow(exp._data->p);
-      
-      // Reduce
-      retval._reduce();
-      
-      // If exp is negative, 1/pow.
-      if (!exp.isPositive()) {
-        retval = Arb(1) / retval;
+      // Only raise if we have to.
+      if (exp) {
+        
+        // Raise this number to an integer power.
+        if (exp.isInteger()) {
+          
+          // If we are raising 1, just modify the sign.
+          if (retval.abs() == one) {
+            
+            // If the number is negative and the exponent is even, this number
+            // is positive.
+            retval._data->positive = retval._data->positive || !(exp._data->p & _DigsT(1));
+            
+          } else {
+            
+            // No need to raise if we are raising to the -1.
+            if (exp == -one) {
+              
+              // Raise p & q.
+              retval._data->p = retval._data->p.pow(exp._data->p);
+              retval._data->q = retval._data->q.pow(exp._data->p);
+              
+              // Reduce
+              retval._reduce();
+              
+            }
+            
+            // If exp is negative, 1/pow.
+            if (!exp.isPositive()) {
+              retval = one / retval;
+            }
+            
+          }
+        
+        // Raising to a fraction.
+        } else {
+          throw "Unimplemented!";
+        }
+        
+      // Raising to the 0 power is always 1.
+      } else {
+        
+        retval = one;
+        
       }
       
-    } else {
-      throw "Unimplemented!";
     }
     
     // Return the result.
@@ -628,12 +661,16 @@ namespace DAC {
   // Find the nth root of this number.
   Arb Arb::root (Arb const& n) const {
     
+    // Work area.
     Arb retval(1);
     Arb lastguess;
     Arb one(1);
     Arb two(2);
     Arb accuracy(Arb(_data->base).pow(-Arb(_maxradix)));
     
+    // Create an initial guess, will be within at least one ^2, so Newton's
+    // algorithm should begin converging by doubling correct # of bits each
+    // iteration.
     if (abs() > one) {
       retval = two;
       while (retval.pow(n) < *this) {
@@ -641,18 +678,28 @@ namespace DAC {
       }
     }
     
+    // Newton's algorithm. 
     Arb nmo(n - one);
     do {
+      
+      // Save the last guess for comparison and make a new one.
       lastguess = retval;
       retval    = (*this / retval.pow(nmo) + nmo * retval) / n;
+      
+      // Restrict to the specified precision for performance. Since we know
+      // that the number of valid bits doubles each time we iterate, this
+      // should be possible to do far more intelligently.
       if (retval._data->q > accuracy._data->q) {
         retval._forcereduce(accuracy._data->q);
       }
-      cout << "retval: " << retval << endl;
+      
+    // Loop until we are within our specified accuracy.
     } while ((retval - lastguess).abs() > accuracy);
     
+    // Always reduce.
     retval._reduce();
     
+    // Return the result.
     return retval;
     
   }
