@@ -146,6 +146,8 @@
         bool isInteger  () const;
         bool isPositive () const;
         bool isZero     () const;
+        bool isEven     () const;
+        bool isOdd      () const;
         
         // Raise this number to a power.
         Arb pow (Arb const& exp) const;
@@ -306,6 +308,7 @@
           ConstReferencePointer<std::string> _number;
       };
       class DivByZero : public Base      { public: virtual char const* what () const throw(); };
+      class Complex   : public Base      { public: virtual char const* what () const throw(); };
     };
     
   };
@@ -323,6 +326,7 @@
       inline BadFormat&  BadFormat::Position (std::string::size_type        const position) throw() { _position = position; return *this; }
       inline BadFormat&  BadFormat::Number   (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   return *this; }
       inline char const* DivByZero::what     () const throw() { return "Divide by zero.";                                                                                                                                                    }
+      inline char const* Complex::what       () const throw() { return "Even roots of negative numbers can only be complex numbers.";                                                                                                        }
     };
     
     /*************************************************************************
@@ -425,6 +429,10 @@
     
     // Return whether this number is equal to zero.
     inline bool Arb::isZero () const { return _data->p.isZero(); }
+    
+    // Return whether this number is even or odd.
+    inline bool Arb::isOdd  () const { return (isInteger() && _data->p.isOdd());  }
+    inline bool Arb::isEven () const { return (isInteger() && _data->p.isEven()); }
     
     // Return the absolute value of this number.
     inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }

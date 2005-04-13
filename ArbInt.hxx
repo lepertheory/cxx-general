@@ -120,9 +120,6 @@
         // Return a string of this number.
         std::string toString () const;
         
-        // Tests if this number is equal to zero.
-        bool isZero () const;
-        
         // Arithmetic operator backends.
         ArbInt& op_mul (ArbInt const& number);
         ArbInt& op_div (ArbInt const& number, ArbInt* remainder = 0);
@@ -151,6 +148,11 @@
         // Logical operator backends.
         bool op_log_and (ArbInt const& number) const;
         bool op_log_ior (ArbInt const& number) const;
+        
+        // Return information about this number.
+        bool isEven () const;
+        bool isZero () const;
+        bool isOdd  () const;
         
         // Raise this number to a power.
         ArbInt pow (ArbInt const& exp);
@@ -637,9 +639,6 @@
       
     }
     
-    // Tests if this number is equal to zero.
-    template <class T> inline bool ArbInt<T>::isZero () const { return (_digits->size() == 0); }
-    
     // Multiply.
     template <class T> ArbInt<T>& ArbInt<T>::op_mul (ArbInt<T> const& number) {
       
@@ -1039,6 +1038,13 @@
     // Logical operators.
     template <class T> inline bool ArbInt<T>::op_log_and (ArbInt<T> const& number) const { return (!isZero() && !number.isZero()); }
     template <class T> inline bool ArbInt<T>::op_log_ior (ArbInt<T> const& number) const { return (!isZero() || !number.isZero()); }
+    
+    // Tests if this number is equal to zero.
+    template <class T> inline bool ArbInt<T>::isZero () const { return (_digits->size() == 0); }
+    
+    // Tests if this number is odd or even.
+    template <class T> inline bool ArbInt<T>::isOdd  () const { return (!isZero() && (_digits->front() & 1)); }
+    template <class T> inline bool ArbInt<T>::isEven () const { return !isOdd();                              }
     
     // Raise this number to a power.
     template <class T> ArbInt<T> ArbInt<T>::pow (ArbInt<T> const& exp) {

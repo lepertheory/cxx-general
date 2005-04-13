@@ -75,6 +75,7 @@ int main (int argc, char** argv, char** envp) {
     
     //cout << "pow:  " << test1.pow(test2)  << endl;
     test1.Format(Arb::FMT_BOTH);
+    cout << "pow:  " << test1.pow(test2) << endl;
     cout << "root: " << test1.root(test2) << endl;
     
     // All tests successful.
