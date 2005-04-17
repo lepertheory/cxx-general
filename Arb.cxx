@@ -497,6 +497,31 @@ namespace DAC {
     
   }
   
+  // Modulo division operator backend.
+  Arb& Arb::op_mod (Arb const& number) {
+    
+    // Throw an error on divide by zero.
+    if (!number) {
+      throw ArbErrors::DivByZero();
+    }
+    
+    // Throw an error if both numbers are not integer.
+    if (!isInteger() || !number.isInteger()) {
+      throw ArbErrors::NonInteger();
+    }
+    
+    // Work area.
+    Arb retval(*this, true);
+    
+    // Simple, just modulo divide p's.
+    retval._data->p %= number._data->p;
+    
+    // We done, return.
+    _data = retval._data;
+    return *this;
+    
+  }
+  
   // Addition operator backend.
   Arb& Arb::op_add (Arb const& number) {
     

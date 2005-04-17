@@ -99,20 +99,23 @@
         // Arithmetic assignment operators.
         Arb& operator *= (Arb const& number);
         Arb& operator /= (Arb const& number);
+        Arb& operator %= (Arb const& number);
         Arb& operator += (Arb const& number);
         Arb& operator -= (Arb const& number);
         
         // Accessors.
-        Arb&                   Base     (BaseT const base);
-        BaseT                  Base     ()                                      const;
-        Arb&                   MaxRadix (std::string::size_type const maxradix);
-        std::string::size_type MaxRadix ()                                      const;
-        Arb&                   PointPos (PointPosT const pointpos);
-        PointPosT              PointPos ()                                      const;
-        Arb&                   Fixed    (bool const fixed);
-        bool                   Fixed    ()                                      const;
-        Arb&                   Format   (OutputFormat const format);
-        OutputFormat           Format   ()                                      const;
+                           Arb&                   Base     (BaseT const base);
+                           BaseT                  Base     ()                                      const;
+                           Arb&                   MaxRadix (std::string::size_type const maxradix);
+                           std::string::size_type MaxRadix ()                                      const;
+                           Arb&                   PointPos (PointPosT const pointpos);
+                           PointPosT              PointPos ()                                      const;
+                           Arb&                   Fixed    (bool const fixed);
+                           bool                   Fixed    ()                                      const;
+                           Arb&                   Format   (OutputFormat const format);
+                           OutputFormat           Format   ()                                      const;
+        template <class T> Arb&                   Value    (T const number);
+        template <class T> T                      Value    ()                                      const;
         
         // Reset to just-constructed defaults.
         Arb& clear ();
@@ -131,6 +134,7 @@
         // Arithmetic operator backends.
         Arb& op_mul (Arb const& number);
         Arb& op_div (Arb const& number);
+        Arb& op_mod (Arb const& number);
         Arb& op_add (Arb const& number);
         Arb& op_sub (Arb const& number);
         
@@ -277,6 +281,7 @@
   // Arithmetic operators.
   DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r);
   DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r);
+  DAC::Arb operator % (DAC::Arb const& l, DAC::Arb const& r);
   DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r);
   DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r);
   
@@ -295,8 +300,8 @@
     
     // Errors.
     namespace ArbErrors {
-      class Base      : public Exception { public: virtual char const* what () const throw(); };
-      class BadFormat : public Base      {
+      class Base       : public Exception { public: virtual char const* what () const throw(); };
+      class BadFormat  : public Base      {
         public:
           virtual char const* what () const throw();
           virtual BadFormat& Problem  (char const*                   const problem)  throw();
@@ -307,8 +312,9 @@
           std::string::size_type _position;
           ConstReferencePointer<std::string> _number;
       };
-      class DivByZero : public Base      { public: virtual char const* what () const throw(); };
-      class Complex   : public Base      { public: virtual char const* what () const throw(); };
+      class DivByZero  : public Base      { public: virtual char const* what () const throw(); };
+      class Complex    : public Base      { public: virtual char const* what () const throw(); };
+      class NonInteger : public Base      { public: virtual char const* what () const throw(); };
     };
     
   };
@@ -327,6 +333,7 @@
       inline BadFormat&  BadFormat::Number   (ConstReferencePointer<std::string>& number)   throw() { _number   = number;   return *this; }
       inline char const* DivByZero::what     () const throw() { return "Divide by zero.";                                                                                                                                                    }
       inline char const* Complex::what       () const throw() { return "Even roots of negative numbers can only be complex numbers.";                                                                                                        }
+      inline char const* NonInteger::what    () const throw() { return "An integer operation was attempted on non-integer numbers.";                                                                                                         }
     };
     
     /*************************************************************************
@@ -367,17 +374,20 @@
     // Arithmetic assignment operators.
     inline Arb& Arb::operator *= (Arb const& number) { return op_mul(number); }
     inline Arb& Arb::operator /= (Arb const& number) { return op_div(number); }
+    inline Arb& Arb::operator %= (Arb const& number) { return op_mod(number); }
     inline Arb& Arb::operator += (Arb const& number) { return op_add(number); }
     inline Arb& Arb::operator -= (Arb const& number) { return op_sub(number); }
     
     // Accessors.
-    inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                 }
-    inline Arb&                   Arb::MaxRadix (std::string::size_type const maxradix)       { _maxradix = maxradix; return *this; }
-    inline std::string::size_type Arb::MaxRadix ()                                      const { return _maxradix;                   }
-    inline Arb::PointPosT         Arb::PointPos ()                                      const { return _data->pointpos;             }
-    inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                  }
-    inline Arb&                   Arb::Format   (OutputFormat const format)                   { _format = (format == FMT_DEFAULT) ? _format : format; return *this;     }
-    inline Arb::OutputFormat      Arb::Format   ()                                      const { return _format;                     }
+                       inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                                                              }
+                       inline Arb&                   Arb::MaxRadix (std::string::size_type const maxradix)       { _maxradix = maxradix; return *this;                                              }
+                       inline std::string::size_type Arb::MaxRadix ()                                      const { return _maxradix;                                                                }
+                       inline Arb::PointPosT         Arb::PointPos ()                                      const { return _data->pointpos;                                                          }
+                       inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                                                               }
+                       inline Arb&                   Arb::Format   (OutputFormat const format)                   { _format = (format == FMT_DEFAULT) ? _format : format; return *this;              }
+                       inline Arb::OutputFormat      Arb::Format   ()                                      const { return _format;                                                                  }
+    template <class T> inline Arb&                   Arb::Value    (T const number)                              { return set<T>(number);                                                           }
+    template <class T> inline T                      Arb::Value    ()                                      const { if (!isInteger()) { throw "Unimplemented"; } else { return _data->p.Value<T>(); } }
     
     // Set from a built-in type.
     template <class T> Arb& Arb::set (T const number) {
@@ -453,6 +463,7 @@
   // Arithmetic operators.
   inline DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mul(r); }
   inline DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_div(r); }
+  inline DAC::Arb operator % (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mod(r); }
   inline DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_add(r); }
   inline DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_sub(r); }
   
