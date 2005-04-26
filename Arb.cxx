@@ -61,7 +61,7 @@ namespace DAC {
   }
   
   // Accessors.
-  Arb& Arb::Base     (BaseT     const base)     {
+  Arb& Arb::Base (BaseT const base) {
     if (base != _data->base) {
       _data = new _Data(*_data);
       _data->base = base;
@@ -83,7 +83,7 @@ namespace DAC {
     }
     return *this;
   }
-  Arb& Arb::Fixed    (bool      const fixed)    {
+  Arb& Arb::Fixed (bool const fixed) {
     if (fixed != _data->fix) {
       _data = new _Data(*_data);
       _data->fix = fixed;
@@ -107,6 +107,8 @@ namespace DAC {
     // These instructions cannot throw, so they come last.
     _maxradix = 10;
     _format   = FMT_RADIX;
+    _propcopy = true;
+    _round    = ROUND_NORMAL;
     
     // We done.
     return *this;
@@ -128,6 +130,8 @@ namespace DAC {
     // Now do non-throwing operations.
     _maxradix = number._maxradix;
     _format   = number._format;
+    _propcopy = number._propcopy;
+    _round    = number._round;
     _data     = new_data;
     
     // We done.
@@ -162,28 +166,33 @@ namespace DAC {
       // Output in radix notation.
       case FMT_RADIX: {
         
-        // Output the whole number part.
-        _DigsT whole(_data->p / _data->q);
-        retval += whole.Base(_data->base).toString();
+        // Work area.
+        _DigsT numeric;
+        numeric.Base(_data->base);
         
-        // Output the radix part if it exists.
+        // Get the whole number part.
+        numeric = _data->p / _data->q;
+        
+        // This is the number of digits from the end of the string to put
+        // the radix point.
+        std::string::size_type radixpos = 0;
+        
+        // Create the radix part.
         _DigsT remainder = _data->p % _data->q;
         if (((_data->fixq) && (_data->pointpos > 0)) || (!(_data->fixq) && remainder)) {
-          
-          // Add the radix point.
-          retval += ".";
           
           // Get the radix digits, one by one. Output digits until the entire
           // fraction is output or the maximum requested significant radix digits
           // are output.
           std::string::size_type sigdigs  = 0;
-          bool                   sigstart = whole;
+          bool                   sigstart = numeric;
           _DigsT                 digit;
           digit.Base(_data->base);
           while ((sigdigs < _maxradix) && remainder) {
             remainder *= _data->base;
             digit      = remainder / _data->q;
-            retval    += digit.toString();
+            numeric.push_back(digit);
+            ++radixpos;
             remainder %= _data->q;
             if (sigstart || digit) {
               ++sigdigs;
@@ -191,28 +200,70 @@ namespace DAC {
             }
           }
           
+          // Round.
+          if (remainder) {
+            switch (_round) {
+              case ROUND_UP: {
+                if (_data->positive) {
+                  ++numeric;
+                }
+              } break;
+              case ROUND_DOWN: {
+                if (!_data->positive) {
+                  ++numeric;
+                }
+              } break;
+              case ROUND_TOWARD_ZERO: {
+              } break;
+              case ROUND_FROM_ZERO: {
+                ++numeric;
+              } break;
+              case ROUND_NORMAL: {
+                if (remainder * _DigsT(2) >= _data->q) {
+                  ++numeric;
+                }
+              } break;
+            }
+          }
+          
+          // If this is a fixed-radix number, fix the radix.
+          if (_data->fix) {
+          
+            // Pad with zeros.
+            if (radixpos < _data->pointpos) {
+              numeric  *= _DigsT(_data->base).pow(_data->pointpos - radixpos);
+              radixpos  = _data->pointpos;
+            }
+            
+          }
+          
+        }
+        
+        // Convert the number to a string.
+        retval += numeric.toString();
+        
+        // Add placeholder zeros.
+        if (radixpos >= retval.length()) {
+          retval.insert(0, radixpos - retval.length() + 1, '0');
+        }
+        
+        // Place the radix point.
+        if (radixpos) {
+          retval.insert(retval.length() - radixpos, ".");
+        }
+        
+        // If this is not a fixed-radix number, we may need to remove the radix
+        // point.
+        if (!_data->fix && radixpos > 0) {
+          
           // Strip insignificant zeros.
           if (retval.find_last_not_of('0') != string::npos) {
             retval.erase(retval.find_last_not_of('0') + 1);
           }
           
-          // If this is a fixed-radix number, fix the radix.
-          if (_data->fixq) {
-            
-            // Pad with zeros.
-            std::string::size_type raddigs = (retval.size() - retval.find('.')) - 1;
-            if (raddigs < _data->pointpos) {
-              retval.append(_data->pointpos - raddigs, '0');
-            }
-            
-          // If this is not a fixed-radix number, we may need to remove the radix
-          // point.
-          } else {
-            
-            if ((retval.size() - 1) == retval.find('.')) {
-              retval.erase(retval.find('.'));
-            }
-            
+          // Remove the radix point if it is dangling.
+          if ((retval.size() - 1) == retval.find('.')) {
+            retval.erase(retval.find('.'));
           }
           
         }
@@ -620,6 +671,33 @@ namespace DAC {
     
   }
   
+  // Get the floor of this fractional number.
+  Arb Arb::floor () const {
+    
+    // Work area.
+    Arb retval(*this);
+    
+    // Only work if we have to.
+    if (!isInteger()) {
+      
+      // Easy, p/q.
+      retval._data->p  /= retval._data->q;
+      _DigsT remainder  = retval._data->p % retval._data->q;
+      retval._data->q   = 1;
+      
+      // If the number was negative and there was a remainder, we need to
+      // subtract 1.
+      if (!isPositive() && remainder) {
+        --(retval._data->p);
+      }
+      
+    }
+    
+    // We done.
+    return retval;
+    
+  }
+  
   // Raise this number to a power.
   Arb Arb::pow (Arb const& exp) const {
     
@@ -772,7 +850,7 @@ namespace DAC {
     
     // Fixed-point numbers are forced to their dividend.
     if (_data->fix) {
-      _forcereduce(_data->q);
+      _forcereduce(_data->fixq);
       
     // Floating-point numbers are simply reduced.
     } else {
@@ -793,7 +871,36 @@ namespace DAC {
       //  p       x
       // --- == ------
       //  q      fixq
-      _data->p = _data->p * q / _data->q;
+      _DigsT remainder = _data->p * q % _data->q;
+      _data->p         = _data->p * q / _data->q;
+      
+      // Round.
+      if (remainder) {
+        switch (_round) {
+          case ROUND_UP: {
+            if (_data->positive) {
+              ++_data->p;
+            }
+          } break;
+          case ROUND_DOWN: {
+            if (!_data->positive) {
+              ++_data->p;
+            }
+          } break;
+          case ROUND_TOWARD_ZERO: {
+          } break;
+          case ROUND_FROM_ZERO: {
+            ++_data->p;
+          } break;
+          case ROUND_NORMAL: {
+            if (remainder * _DigsT(2) >= _data->q) {
+              ++_data->p;
+            }
+          } break;
+        }
+      }
+      
+      // Finally, set the new q.
       _data->q = q;
       
     }

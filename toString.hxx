@@ -40,7 +40,7 @@
     
     template <class T> inline std::string toString (T const& from) {
       std::ostringstream os;
-      os << from;
+      os << std::fixed << from;
       return os.str();
     }
     

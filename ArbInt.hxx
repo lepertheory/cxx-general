@@ -113,9 +113,14 @@
         template <class TT> ArbInt& Value (TT const number);
         
         // Set this number with a string.
-                            ArbInt<T>& set (std::string const& number);
-                            ArbInt<T>& set (ArbInt      const& number);
-        template <class FT> ArbInt<T>& set (FT          const  number);
+                            ArbInt& set (std::string const& number);
+                            ArbInt& set (ArbInt      const& number);
+        template <class FT> ArbInt& set (FT          const  number);
+        
+        // Push digits into this number.
+                            ArbInt& push_back (std::string const& number);
+                            ArbInt& push_back (ArbInt      const& number);
+        template <class FT> ArbInt& push_back (FT          const  number);
         
         // Return a string of this number.
         std::string toString () const;
@@ -598,6 +603,30 @@
       return *this;
       
     }
+    
+    // Push a string onto the back of this number.
+    template <class T> ArbInt<T>& ArbInt<T>::push_back (std::string const& number) {
+      
+      // Work area.
+      ArbInt<T> retval(*this, true);
+      ArbInt<T> newnum;
+      
+      // Move retval up to accomidate the new digits.
+      retval *= ArbInt<T>(_base).pow(number.length());
+      
+      // Convert the new number.
+      newnum.Base(_base).set(number);
+      
+      // Add the new number to this.
+      retval += newnum;
+      
+      // Move the return into place and we're done.
+      _digits = retval._digits;
+      return *this;
+      
+    }
+    template <class T> inline ArbInt<T>& ArbInt<T>::push_back (ArbInt<T> const& number) { return push_back(ArbInt<T>(number).Base(_base).toString()); }
+    template <class T> template <class FT> inline ArbInt<T>& ArbInt<T>::push_back (FT const number) { return push_back(DAC::toString(number)); }
     
     // Return a string of this number.
     template <class T> std::string ArbInt<T>::toString () const {

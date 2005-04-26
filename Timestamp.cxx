@@ -46,7 +46,7 @@ namespace DAC {
         break;
         
         case 2:
-          days = ((year % 4) && (!(year % 100) || (year % 400))) ? 29 : 28;
+          days = ((year % I_Year(4)) && (!(year % I_Year(100)) || (year % I_Year(400)))) ? 29 : 28;
         break;
         
         case 4:
@@ -54,6 +54,10 @@ namespace DAC {
         case 9:
         case 11:
           days = 30;
+        break;
+        
+        default:
+          days = 0;
         break;
         
       }
@@ -67,66 +71,17 @@ namespace DAC {
   }
   
   /***************************************************************************
-   * Class Timestamp::Interval.
+   * Class Timestamp.
    ***************************************************************************/
   
   /***************************************************************************/
-  // Function members.
+  // Static data members.
   
-  // Verify that this is a valid time.
-  bool Timestamp::Interval::isValid () const {
-    
-    // All segments of the time must be set for it to be valid.
-    if (!_set_millisecond ||
-        !_set_second      ||
-        !_set_minute      ||
-        !_set_hour        ||
-        !_set_day         ||
-        !_set_month       ||
-        !_set_year) {
-      return false;
-    }
-    
-    // Year must be a whole number, not zero.
-    if (!_year || !_year.isInteger()) {
-      return false;
-    }
-    
-    // Month must be a whole number, 1-12.
-    if (!_month.isInteger() || (_month < I_Month(1)) || (_month > I_Month(12))) {
-      return false;
-    }
-    
-    // Day must be a whole number, 1-days in month.
-    if (!_day.isInteger() || (_day < I_Month(1)) || (_day > _month.daysInMonth(_year))) {
-      return false;
-    }
-    
-    // Hour must be a whole number, < 24.
-    if (!_hour.isInteger() || (_hour > I_Hour(23))) {
-      return false;
-    }
-    
-    // Minute must be a whole number, < 60.
-    if (!_minute.isInteger() || (_minute > I_Minute(59))) {
-      return false;
-    }
-    
-    // Second must be a whole number, < 60, or on leap second days, < 59 or < 61.
-    if (!_second.isInteger() || (_second > (I_Second(59) + _day.leapSecond(_year, _month)))) {
-      return false;
-    }
-    
-    // Millisecond must be a whole number, < 1000.
-    if (!_millisecond.isInteger() || (_millisecond > I_Millisecond(1000))) {
-      return false;
-    }
-    
-  }
+  // True when class has been initialized.
+  bool Timestamp::s_initialized = false;
   
-  /***************************************************************************
-   * Class Timestamp.
-   ***************************************************************************/
+  // Default list of leap seconds.
+  ReferencePointer<Timestamp::LeapSecondList> Timestamp::s_defaultleapseconds;
   
   /***************************************************************************/
   // Function members.
@@ -157,13 +112,51 @@ namespace DAC {
     Timestamp newtime(*this);
     
     // Verify that the new time is a valid time.
-    if (!time.isValid()) {
+    if (!time.isSet_Millisecond() ||
+        !time.isSet_Second()      ||
+        !time.isSet_Minute()      ||
+        !time.isSet_Hour()        ||
+        !time.isSet_Day()         ||
+        !time.isSet_Month()       ||
+        !time.isSet_Year()        ||
+        !time.Year().isInteger()        || !time.Year()                      ||
+        !time.Month().isInteger()       || (time.Month()       < TimeVal(1)) || (time.Month()       > TimeVal(12))                                                      ||
+        !time.Day().isInteger()         || (time.Day()         < TimeVal(1)) || (time.Day()         > time.Month().daysInMonth(time.Year()))                            ||
+        !time.Hour().isInteger()        || (time.Hour()        < TimeVal(0)) || (time.Hour()        > TimeVal(23))                                                      ||
+        !time.Minute().isInteger()      || (time.Minute()      < TimeVal(0)) || (time.Minute()      > TimeVal(59))                                                      ||
+        !time.Second().isInteger()      || (time.Second()      < TimeVal(0)) || (time.Second()      > TimeVal(59) + _leapSecond(time.Year(), time.Month(), time.Day())) ||
+        !time.Millisecond().isInteger() || (time.Millisecond() < TimeVal(0)) || (time.Millisecond() > TimeVal(999))
+    ) {
       throw TimestampErrors::InvalidTime();
     }
     
-    
+    // Set the julian date, this is for Gregorian calendar dates.
+    if ( (time.Year() >  _lastjulian.Year) ||
+        ((time.Year() == _lastjulian.Year) && ( (time.Month() >  _lastjulian.Month) ||
+                                               ((time.Month() == _lastjulian.Month) && time.Day() > _lastjulian.Day)))) {
+      
+      newtime._jd = TimeVal(367) * time.Year()
+                  - (TimeVal(7) * (time.Year() + ((time.Month() + TimeVal(9)) / TimeVal(12)).floor()) / TimeVal(4)).floor()
+                  - (TimeVal(3) * (((time.Year() + (time.Month() - TimeVal(9)) / TimeVal(7)) / TimeVal(100)).floor() + TimeVal(1)) / TimeVal(4)).floor()
+                  + (TimeVal(275) * time.Month() / TimeVal(9)).floor()
+                  + time.Day()
+                  + TimeVal(1721028.5)
+                  + (time.Hour() + ((time.Minute() + (time.Second() / TimeVal(60))) / TimeVal(60))) / TimeVal(24);
+      
+    // This is for Julian calendar dates.
+    } else {
+      
+      newtime._jd = TimeVal(367) * time.Year()
+                  - (TimeVal(7) * (time.Year() + TimeVal(5001) + ((time.Month() - TimeVal(9)) / TimeVal(7)).floor()) / TimeVal(4)).floor()
+                  + (TimeVal(275) * time.Month() / TimeVal(9)).floor()
+                  + time.Day()
+                  + TimeVal(1729776.5)
+                  + (time.Hour() + ((time.Minute() + (time.Second() / TimeVal(60))) / TimeVal(60))) / TimeVal(24);
+      
+    }
     
     // We done, return.
+    _jd = newtime._jd;
     return *this;
     
   }
@@ -171,40 +164,49 @@ namespace DAC {
   // Get the current system time.
   Timestamp& Timestamp::getSystemTime () {
     
-    // Win32 platform implementation.
-    #if defined(PLAT_WIN32)
-      
-      // Work area.
-      Timestamp   newtime(*this);
-      _SYSTEMTIME systime;
-      
-      // Make the system call. Appearantly this call cannot fail on Windows.
-      GetSystemTime(&systime);
-      
-      // Set the new time.
-      newtime.set(Interval().Millisecond(systime.wMilliseconds)
-                            .Second(systime.wSecond)
-                            .Minute(systime.wMinute)
-                            .Hour(systime.wHour)
-                            .Day(systime.wDay)
-                            .Month(systime.wMonth)
-                            .Year(systime.wYear));
-      
-    // Unknown platform.
-    #else
-      
-      // Throw an error, nothing else we can do.
-      throw TimestampErrors::UnknownPlatform();
-      
+    // Verify that we are on a supported platform.
+    #if !defined(PLAT_WIN32)
+      throw TimestampErrors::UnknowPlatform();
     #endif
     
+    // Work area.
+    Timestamp newtime(*this);
+    Interval  interval;
+    #if defined(PLAT_WIN32)
+      _SYSTEMTIME systime;
+    #endif
+    
+    // Set the interval.
+    #if defined(PLAT_WIN32)
+      GetSystemTime(&systime);
+      interval.Millisecond(systime.wMilliseconds).Second(systime.wSecond).Minute(systime.wMinute).Hour(systime.wHour).Day(systime.wDay).Month(systime.wMonth).Year(systime.wYear);
+    #endif
+    
+    // Set the new time.
+    newtime.set(interval);
+    
     // We done, return.
+    _jd = newtime._jd;
     return *this;
     
   }
   
   // Reset to just-constructed state.
   Timestamp& Timestamp::clear () {
+    
+    // Make a new jd.
+    TimeVal tmp_jd;
+    tmp_jd.PropCopy(false).Base(10).PointPos(5).Fixed(true);
+    
+    // Make a new lastjulian.
+    YMD new_lastjulian(1582, 10, 4);
+    _lastjulian = new_lastjulian;
+    
+    // Set the leap second list to the default.
+    _leapseconds = s_defaultleapseconds;
+    
+    // Clear the jd.
+    _jd = tmp_jd;
     
     // We done.
     return *this;
@@ -213,6 +215,15 @@ namespace DAC {
   
   // Copy another timestamp.
   Timestamp& Timestamp::copy (Timestamp const& ts) {
+    
+    // Set the last julian date.
+    _lastjulian = ts._lastjulian;
+    
+    // Set the leap second list.
+    _leapseconds = ts._leapseconds;
+    
+    // Set the jd.
+    _jd = ts._jd;
     
     // We done.
     return *this;
@@ -233,8 +244,61 @@ namespace DAC {
   // Common initialization tasks.
   void Timestamp::_init () {
     
+    // Perform class initialization.
+    if (!s_initialized) {
+      s_classInit();
+    }
+    
     // Construct this object fully.
     clear();
+    
+  }
+  
+  // Return the leap seconds of a given day.
+  Timestamp::I_Second Timestamp::_leapSecond (I_Year const& year, I_Month const& month, I_Day const& day) {
+    
+    // List should be very short, just iterate through it and determine if this is a leap second.
+    for (LeapSecondList::iterator i = _leapseconds->begin(); i != _leapseconds->end(); ++i) {
+      if ((i->Year == year) && (i->Month == month) && (i->Day == day)) {
+        return i->Leap;
+      }
+    }
+    
+    // No leap second found.
+    return I_Second(0);
+    
+  }
+  
+  // Class initialization.
+  void Timestamp::s_classInit () {
+    
+    // Set the default leap seconds.
+    s_defaultleapseconds = new LeapSecondList;
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1972,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1972, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1973, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1974, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1975, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1976, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1977, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1978, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1979, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1981,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1982,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1983,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1985,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1987, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1989, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1990, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1992,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1993,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1994,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1995, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1997,  6, 30), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1998, 12, 31), 1));
+    
+    // Class has been successfully initialized.
+    s_initialized = true;
     
   }
   

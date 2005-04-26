@@ -27,6 +27,9 @@ int main (int argc, char** argv, char** envp) {
     
     test1.getSystemTime();
     
+    cout << "Current:" << endl
+         << "  Julian: " << test1.Julian() << endl;
+    
     return 0;
     
   } catch (Exception& e) {

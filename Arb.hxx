@@ -61,7 +61,12 @@
         
         /*********************************************************************/
         // Enums
+        
+        // Format of number when output.
         enum OutputFormat { FMT_RADIX, FMT_FRACTION, FMT_BOTH, FMT_DEFAULT };
+        
+        // Rounding method.
+        enum RoundMethod { ROUND_NORMAL, ROUND_UP, ROUND_DOWN, ROUND_TOWARD_ZERO, ROUND_FROM_ZERO, ROUND_DEFAULT };
         
         /*********************************************************************/
         // Function members.
@@ -114,6 +119,10 @@
                            bool                   Fixed    ()                                      const;
                            Arb&                   Format   (OutputFormat const format);
                            OutputFormat           Format   ()                                      const;
+                           Arb&                   PropCopy (bool const propcopy);
+                           bool                   PropCopy ()                                      const;
+                           Arb&                   Round    (RoundMethod const round);
+                           RoundMethod            Round    ()                                      const;
         template <class T> Arb&                   Value    (T const number);
         template <class T> T                      Value    ()                                      const;
         
@@ -127,9 +136,11 @@
         std::string toString (OutputFormat const format = FMT_DEFAULT) const;
         
         // Set the number.
-                           Arb& set (std::string const& number);
-                           Arb& set (Arb         const& number);
-        template <class T> Arb& set (T           const  number);
+                           Arb& set      (std::string const& number);
+                           Arb& set      (Arb         const& number);
+        template <class T> Arb& set      (T           const  number);
+        template <class T> Arb& setInt   (T           const  number);
+        template <class T> Arb& setFloat (T           const  number);
         
         // Arithmetic operator backends.
         Arb& op_mul (Arb const& number);
@@ -152,6 +163,9 @@
         bool isZero     () const;
         bool isEven     () const;
         bool isOdd      () const;
+        
+        // Get the floor of this fractional number.
+        Arb floor () const;
         
         // Raise this number to a power.
         Arb pow (Arb const& exp) const;
@@ -246,6 +260,9 @@
         // Properties.
         std::string::size_type _maxradix; // Radix digits to output.
         OutputFormat           _format;   // Format to output this number.
+        bool                   _propcopy; // Copy the properties of other
+                                          // numbers when setting with =.
+        RoundMethod            _round;    // Rounding method.
         
         /*********************************************************************/
         // Function members.
@@ -367,9 +384,9 @@
     inline bool Arb::operator ! () const { return !(_data->p); }
     
     // Assignment operator.
-                       inline Arb& Arb::operator = (std::string const& number) { return set(number);    }
-                       inline Arb& Arb::operator = (Arb         const& number) { return copy(number);   }
-    template <class T> inline Arb& Arb::operator = (T           const  number) { return set<T>(number); }
+                       inline Arb& Arb::operator = (std::string const& number) { return set(number);                                                  }
+                       inline Arb& Arb::operator = (Arb         const& number) { if (_propcopy) { return copy(number); } else { return set(number); } }
+    template <class T> inline Arb& Arb::operator = (T           const  number) { return set<T>(number);                                               }
     
     // Arithmetic assignment operators.
     inline Arb& Arb::operator *= (Arb const& number) { return op_mul(number); }
@@ -379,50 +396,61 @@
     inline Arb& Arb::operator -= (Arb const& number) { return op_sub(number); }
     
     // Accessors.
-                       inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                                                              }
-                       inline Arb&                   Arb::MaxRadix (std::string::size_type const maxradix)       { _maxradix = maxradix; return *this;                                              }
-                       inline std::string::size_type Arb::MaxRadix ()                                      const { return _maxradix;                                                                }
-                       inline Arb::PointPosT         Arb::PointPos ()                                      const { return _data->pointpos;                                                          }
-                       inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                                                               }
-                       inline Arb&                   Arb::Format   (OutputFormat const format)                   { _format = (format == FMT_DEFAULT) ? _format : format; return *this;              }
-                       inline Arb::OutputFormat      Arb::Format   ()                                      const { return _format;                                                                  }
-    template <class T> inline Arb&                   Arb::Value    (T const number)                              { return set<T>(number);                                                           }
+                       inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                                                               }
+                       inline Arb&                   Arb::MaxRadix (std::string::size_type const maxradix)       { _maxradix = maxradix; return *this;                                               }
+                       inline std::string::size_type Arb::MaxRadix ()                                      const { return _maxradix;                                                                 }
+                       inline Arb::PointPosT         Arb::PointPos ()                                      const { return _data->pointpos;                                                           }
+                       inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                                                                }
+                       inline Arb&                   Arb::Format   (OutputFormat const format)                   { _format = (format == FMT_DEFAULT) ? _format : format; return *this;               }
+                       inline Arb::OutputFormat      Arb::Format   ()                                      const { return _format;                                                                   }
+                       inline Arb&                   Arb::PropCopy (bool const propcopy)                         { _propcopy = propcopy; return *this;                                               }
+                       inline bool                   Arb::PropCopy ()                                      const { return _propcopy;                                                                 }
+                       inline Arb&                   Arb::Round    (RoundMethod const round)                     { _round = (round == ROUND_DEFAULT) ? _round : round; return *this;                 }
+                       inline Arb::RoundMethod       Arb::Round    ()                                      const { return _round;                                                                    }
+    template <class T> inline Arb&                   Arb::Value    (T const number)                              { return set<T>(number);                                                            }
     template <class T> inline T                      Arb::Value    ()                                      const { if (!isInteger()) { throw "Unimplemented"; } else { return _data->p.Value<T>(); } }
     
     // Set from a built-in type.
-    template <class T> Arb& Arb::set (T const number) {
+    template <> inline Arb& Arb::set (bool               const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (unsigned char      const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (signed   char      const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (unsigned short int const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (signed   short int const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (unsigned int       const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (signed   int       const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (unsigned long int  const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (signed   long int  const number) { setInt(number);   }
+    template <> inline Arb& Arb::set (float              const number) { setFloat(number); }
+    template <> inline Arb& Arb::set (double             const number) { setFloat(number); }
+    template <> inline Arb& Arb::set (long double        const number) { setFloat(number); }
+    
+    // Set from an integer type.
+    template <class T> Arb& Arb::setInt (T const number) {
       
-      // If this is an integer type, set is easy.
-      if (std::numeric_limits<T>::is_integer) {
-        
-        // Work area.
-        Arb new_num;
-        
-        // Carry over old fixed-point properties.
-        new_num._data->fix      = _data->fix;
-        new_num._data->pointpos = _data->pointpos;
-        new_num._data->base     = _data->base;
-        new_num._data->fixq     = _data->fixq;
-        
-        // This number is 1s.
-        new_num._data->p = number;
-        new_num._data->q = 1;
-        
-        // Reduce the fraction.
-        new_num._reduce();
-        
-        // Move the new data into place and return.
-        _data = new_num._data;
-        return *this;
-        
-      // For now be lazy and convert to string.
-      } else {
-        
-        return set(DAC::toString(number));
-        
-      }
+      // Work area.
+      Arb new_num;
+      
+      // Carry over old fixed-point properties.
+      new_num._data->fix      = _data->fix;
+      new_num._data->pointpos = _data->pointpos;
+      new_num._data->base     = _data->base;
+      new_num._data->fixq     = _data->fixq;
+      
+      // This number is 1s.
+      new_num._data->p = number;
+      new_num._data->q = 1;
+      
+      // Reduce the fraction.
+      new_num._reduce();
+      
+      // Move the new data into place and return.
+      _data = new_num._data;
+      return *this;
       
     }
+    
+    // Set from a floating-point type.
+    template <class T> inline Arb& Arb::setFloat (T const number) { return set(DAC::toString(number)); }
     
     // Comparison operator backends.
     inline bool Arb::op_ge (Arb const& number) const { return (op_gt(number) || op_eq(number));  }

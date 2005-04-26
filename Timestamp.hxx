@@ -11,6 +11,7 @@
   // STL includes.
   #include <iostream>
   #include <string>
+  #include <vector>
   #include <map>
   
   // Internal includes.
@@ -34,9 +35,8 @@
       public:
         
         /*********************************************************************/
-        // Classes.
-        
         // Forward declarations.
+        
         class I_Millisecond;
         class I_Second;
         class I_Minute;
@@ -45,42 +45,73 @@
         class I_Month;
         class I_Year;
         
+        class LeapSecondDay;
+        
+        /*********************************************************************/
+        // Typedefs.
+        
+        typedef Arb TimeVal;
+        
+        typedef std::vector<LeapSecondDay> LeapSecondList;
+        
+        /*********************************************************************/
+        // Classes.
+        
         // Interval classes, for function overloading.
-        class I_Millisecond : public Arb {
+        class I_Millisecond : public TimeVal {
           public:
                                I_Millisecond ();
             template <class T> I_Millisecond (T const value);
         };
-        class I_Second : public Arb {
+        class I_Second : public TimeVal {
           public:
                                I_Second ();
             template <class T> I_Second (T const value);
         };
-        class I_Minute : public Arb {
+        class I_Minute : public TimeVal {
           public:
                                I_Minute ();
             template <class T> I_Minute (T const value);
         };
-        class I_Hour : public Arb {
+        class I_Hour : public TimeVal {
           public:
                                I_Hour ();
             template <class T> I_Hour (T const value);
         };
-        class I_Day : public Arb {
+        class I_Day : public TimeVal {
           public:
                                I_Day ();
             template <class T> I_Day (T const value);
         };
-        class I_Month : public Arb {
+        class I_Month : public TimeVal {
           public:
                                I_Month ();
             template <class T> I_Month (T const value);
             I_Day daysInMonth (I_Year const& year) const;
         };
-        class I_Year : public Arb {
+        class I_Year : public TimeVal {
           public:
                                I_Year ();
             template <class T> I_Year (T const value);
+        };
+        
+        // Year, month, and day grouped.
+        class YMD {
+          public:
+            YMD () {};
+            YMD (YMD const& ymd) : Year(ymd.Year), Month(ymd.Month), Day(ymd.Day) {};
+            YMD (I_Year const& year, I_Month const& month, I_Day const& day) : Year(year), Month(month), Day(Day) {};
+            I_Year  Year;
+            I_Month Month;
+            I_Day   Day;
+        };
+        
+        // Leap second day.
+        class LeapSecondDay : public YMD {
+          public:
+            LeapSecondDay () {};
+            LeapSecondDay (YMD const& ymd, I_Second const& leap) : YMD(ymd), Leap(leap) {};
+            I_Second Leap;
         };
         
         // Interval container, for passing multiple intervals at once.
@@ -124,9 +155,6 @@
             bool isSet_Month       () const;
             bool isSet_Year        () const;
             
-            // Verify that this is a valid time.
-            bool isValid () const;
-            
           /*
            * Private members.
            */
@@ -162,6 +190,12 @@
         // Copy constructor.
         Timestamp (Timestamp const& ts);
         
+        // Properties.
+        Timestamp& LastJulianDate (YMD const& lastjulian);
+        YMD        LastJulianDate ()                      const;
+        Timestamp& Julian         (TimeVal const& jd);
+        TimeVal    Julian         ()                      const;
+        
         // Reset to just-constructed defaults.
         Timestamp& clear ();
         
@@ -189,27 +223,40 @@
       private:
         
         /*********************************************************************/
-        // Class members.
+        // Data members.
         
-        // Year, month, day key for map.
-        class _YMD {
-          public:
-            I_Year  year;
-            I_Month month;
-            I_Day   day;
-            static less (_YMD const& 
-        };
+        // List of leap seconds, must always be sorted.
+        ReferencePointer<LeapSecondList> _leapseconds;
+        
+        // This is the time.
+        TimeVal _jd;
+        
+        // Last julian date.
+        YMD _lastjulian;
         
         /*********************************************************************/
         // Static data members.
         
-        ReferencePointer< map<
+        // True when this class has been initialzed.
+        static bool s_initialized;
+        
+        // Default list of leap seconds, must always be sorted.
+        static ReferencePointer<LeapSecondList> s_defaultleapseconds;
         
         /*********************************************************************/
         // Function members.
         
         // Common initialization routines.
         void _init ();
+        
+        // Return the leap seconds of a given day.
+        I_Second _leapSecond (I_Year const& year, I_Month const& month, I_Day const& day);
+        
+        /*********************************************************************/
+        // Static function members.
+        
+        // Class initialization.
+        static void s_classInit ();
         
     };
     
@@ -254,22 +301,28 @@
      *************************************************************************/
     
     // Interval default constructors.
-    inline Timestamp::I_Millisecond::I_Millisecond () : Arb() {}
-    inline Timestamp::I_Second::I_Second           () : Arb() {}
-    inline Timestamp::I_Minute::I_Minute           () : Arb() {}
-    inline Timestamp::I_Hour::I_Hour               () : Arb() {}
-    inline Timestamp::I_Day::I_Day                 () : Arb() {}
-    inline Timestamp::I_Month::I_Month             () : Arb() {}
-    inline Timestamp::I_Year::I_Year               () : Arb() {}
+    inline Timestamp::I_Millisecond::I_Millisecond () : TimeVal() {}
+    inline Timestamp::I_Second::I_Second           () : TimeVal() {}
+    inline Timestamp::I_Minute::I_Minute           () : TimeVal() {}
+    inline Timestamp::I_Hour::I_Hour               () : TimeVal() {}
+    inline Timestamp::I_Day::I_Day                 () : TimeVal() {}
+    inline Timestamp::I_Month::I_Month             () : TimeVal() {}
+    inline Timestamp::I_Year::I_Year               () : TimeVal() {}
     
     // Interval conversion constructors.
-    template <class T> inline Timestamp::I_Millisecond::I_Millisecond (T const value) : Arb(value) {}
-    template <class T> inline Timestamp::I_Second::I_Second           (T const value) : Arb(value) {}
-    template <class T> inline Timestamp::I_Minute::I_Minute           (T const value) : Arb(value) {}
-    template <class T> inline Timestamp::I_Hour::I_Hour               (T const value) : Arb(value) {}
-    template <class T> inline Timestamp::I_Day::I_Day                 (T const value) : Arb(value) {}
-    template <class T> inline Timestamp::I_Month::I_Month             (T const value) : Arb(value) {}
-    template <class T> inline Timestamp::I_Year::I_Year               (T const value) : Arb(value) {}
+    template <class T> inline Timestamp::I_Millisecond::I_Millisecond (T const value) : TimeVal(value) {}
+    template <class T> inline Timestamp::I_Second::I_Second           (T const value) : TimeVal(value) {}
+    template <class T> inline Timestamp::I_Minute::I_Minute           (T const value) : TimeVal(value) {}
+    template <class T> inline Timestamp::I_Hour::I_Hour               (T const value) : TimeVal(value) {}
+    template <class T> inline Timestamp::I_Day::I_Day                 (T const value) : TimeVal(value) {}
+    template <class T> inline Timestamp::I_Month::I_Month             (T const value) : TimeVal(value) {}
+    template <class T> inline Timestamp::I_Year::I_Year               (T const value) : TimeVal(value) {}
+    
+    // Properties.
+    inline Timestamp&         Timestamp::LastJulianDate (YMD const& lastjulian)       { _lastjulian = lastjulian; return *this; }
+    inline Timestamp::YMD     Timestamp::LastJulianDate ()                      const { return _lastjulian;                     }
+    inline Timestamp&         Timestamp::Julian         (TimeVal const& jd)           { _jd = jd; return *this;                 }
+    inline Timestamp::TimeVal Timestamp::Julian         ()                      const { return _jd;                             }
     
     /*************************************************************************
      * Class Timestamp::Interval.

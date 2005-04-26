@@ -2,7 +2,7 @@
 <?eclipse-cdt version="2.0"?>
 
 <cdtproject id="org.eclipse.cdt.make.core.make">
-<extension point="org.eclipse.cdt.core.BinaryParser" id="org.eclipse.cdt.core.PE"/>
+<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
 <data>
 <item id="org.eclipse.cdt.core.pathentry">
 <pathentry kind="con" path="org.eclipse.cdt.make.core.DISCOVERED_SCANNER_INFO"/>
@@ -19,25 +19,25 @@
 </item>
 <item id="org.eclipse.cdt.make.core.buildtargets">
 <buildTargets>
-<target name="all" targetID="org.eclipse.cdt.make.MakeTargetBuilder" path="Arbitrary">
+<target name="all" path="Arbitrary" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildTarget>all</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>true</useDefaultCommand>
 </target>
-<target name="clean" targetID="org.eclipse.cdt.make.MakeTargetBuilder" path="Arbitrary">
+<target name="clean" path="Arbitrary" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildTarget>clean</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>true</useDefaultCommand>
 </target>
-<target name="all" targetID="org.eclipse.cdt.make.MakeTargetBuilder" path="SafeInteger">
+<target name="all" path="SafeInteger" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildTarget>all</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>true</useDefaultCommand>
 </target>
-<target name="clean" targetID="org.eclipse.cdt.make.MakeTargetBuilder" path="SafeInteger">
+<target name="clean" path="SafeInteger" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildTarget>clean</buildTarget>
 <stopOnError>true</stopOnError>
