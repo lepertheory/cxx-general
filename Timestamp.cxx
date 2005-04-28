@@ -6,7 +6,16 @@
 
 // System includes.
 #if defined(PLAT_WIN32)
-  #include "windows.h"
+  #if defined(HAS_WINDOWS_H)
+    #include <windows.h>
+  #endif
+#elif defined(PLAT_POSIX)
+  #if defined(HAS_SYS_TIME_H)
+    #include <sys/time.h>
+  #endif
+  #if defined(HAS_TIME_H)
+    #include <time.h>
+  #endif
 #endif
 
 // Class include.
@@ -165,22 +174,86 @@ namespace DAC {
   Timestamp& Timestamp::getSystemTime () {
     
     // Verify that we are on a supported platform.
-    #if !defined(PLAT_WIN32)
-      throw TimestampErrors::UnknowPlatform();
+  #if !defined(PLAT_WIN32) && \
+      !defined(PLAT_POSIX)
+    throw TimestampErrors::UnknownPlatform();
+  #endif
+    
+    // Verify that we have the necessary system support to get the system
+    // time.
+  #if   defined(PLAT_WIN32)
+    #if !defined(HAS_GETSYSTEMTIME) || \
+        !defined(HAS__SYSTEMTIME)
+    throw TimestampErrors::MissingSysSupport();
     #endif
+  #elif defined(PLAT_POSIX)
+    #if (!defined(HAS_GMTIME_R) && !defined(HAS_GMTIME)) || \
+        !defined(HAS_TIME_T) || !defined(HAS_TM)
+    throw TimestampErrors::MissingSysSupport();
+    #endif
+    #if !defined(HAS_GETTIMEOFDAY) || !defined(HAS_TIMEVAL) || !defined(HAS_TIMEZONE)
+      #define USE_TIME
+      #if !defined(HAS_TIME)
+    throw TimestampErrors::MissingSysSupport();
+      #endif
+    #endif
+  #endif
     
     // Work area.
-    Timestamp newtime(*this);
-    Interval  interval;
-    #if defined(PLAT_WIN32)
-      _SYSTEMTIME systime;
+    Timestamp       newtime(*this);
+    Interval        interval;
+  #if   defined(PLAT_WIN32)
+    _SYSTEMTIME     systime = { 0, 0, 0, 0, 0, 0, 0, 0 };
+  #elif defined(PLAT_POSIX)
+    #if !defined(USE_TIME)
+    struct timezone tz      = { 0, 0 };
+    struct timeval  tv      = { 0, 0 };
     #endif
+    time_t          t       = 0;
+    struct tm       systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct tm*      stp     = &systime;
+  #endif
     
     // Set the interval.
-    #if defined(PLAT_WIN32)
-      GetSystemTime(&systime);
-      interval.Millisecond(systime.wMilliseconds).Second(systime.wSecond).Minute(systime.wMinute).Hour(systime.wHour).Day(systime.wDay).Month(systime.wMonth).Year(systime.wYear);
+  #if   defined(PLAT_WIN32)
+    GetSystemTime(&systime);
+    interval.Millisecond(systime.wMilliseconds)
+            .Second(systime.wSecond)
+            .Minute(systime.wMinute)
+            .Hour(systime.wHour)
+            .Day(systime.wDay)
+            .Month(systime.wMonth)
+            .Year(systime.wYear);
+  #elif defined(PLAT_POSIX)
+    TimeVal ms;
+    #if defined(USE_TIME)
+    if (!time(&t)) {
+      throw TimestampErrors::SysCallError();
+    }
+    #else
+    if (gettimeofday(&tv, &tz)) {
+      throw TimestampErrors::SysCallError();
+    }
+    t  = tv.tv_sec;
+    ms = tv.tv_usec / 1000;
     #endif
+    #if defined(HAS_GMTIME_R)
+    if ((!gmtime_r(&t, &systime)) && (!(stp = gmtime(&t)))) {
+      throw TimestampErrors::SysCallError();
+    }
+    #else
+    if ((!stp = gmtime(&t))) {
+      throw TimestampErrors::SysCallError();
+    }
+    #endif
+    interval.Millisecond(ms)
+            .Second(stp->tm_sec)
+            .Minute(stp->tm_min)
+            .Hour(stp->tm_hour)
+            .Day(stp->tm_mday)
+            .Month(TimeVal(1) + TimeVal(stp->tm_mon))
+            .Year(TimeVal(1900) + TimeVal(stp->tm_year));
+  #endif
     
     // Set the new time.
     newtime.set(interval);

@@ -335,7 +335,33 @@
     };
     
   };
+  
+  /***************************************************************************
+   * Declare template specializations.
+   ***************************************************************************/
+  
+  namespace DAC {
     
+    /*************************************************************************
+     * Class Arb.
+     *************************************************************************/
+    
+    // Set from a built-in type.
+    template <> inline Arb& Arb::set (bool               const number);
+    template <> inline Arb& Arb::set (unsigned char      const number);
+    template <> inline Arb& Arb::set (signed   char      const number);
+    template <> inline Arb& Arb::set (unsigned short int const number);
+    template <> inline Arb& Arb::set (signed   short int const number);
+    template <> inline Arb& Arb::set (unsigned int       const number);
+    template <> inline Arb& Arb::set (signed   int       const number);
+    template <> inline Arb& Arb::set (unsigned long int  const number);
+    template <> inline Arb& Arb::set (signed   long int  const number);
+    template <> inline Arb& Arb::set (float              const number);
+    template <> inline Arb& Arb::set (double             const number);
+    template <> inline Arb& Arb::set (long double        const number);
+    
+  };
+  
   /***************************************************************************
    * Inline and template definitions.
    ***************************************************************************/

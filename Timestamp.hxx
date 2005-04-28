@@ -276,9 +276,11 @@
     
     // Errors.
     namespace TimestampErrors {
-      class Base            : public Exception { public: virtual char const* what () const throw(); };
-      class UnknownPlatform : public Base      { public: virtual char const* what () const throw(); };
-      class InvalidTime     : public Base      { public: virtual char const* what () const throw(); };
+      class Base              : public Exception { public: virtual char const* what () const throw(); };
+      class UnknownPlatform   : public Base      { public: virtual char const* what () const throw(); };
+      class InvalidTime       : public Base      { public: virtual char const* what () const throw(); };
+      class SysCallError      : public Base      { public: virtual char const* what () const throw(); };
+      class MissingSysSupport : public Base      { public: virtual char const* what () const throw(); };
     };
     
   };
@@ -291,9 +293,11 @@
     
     // Errors
     namespace TimestampErrors {
-      inline char const* Base::what            () const throw() { return "Undefined error in class Timestamp.";                                            }
-      inline char const* UnknownPlatform::what () const throw() { return "Cannot perform function on unknown platform, requires platform-specific calls."; }
-      inline char const* InvalidTime::what     () const throw() { return "The specified time is invalid.";                                                 }
+      inline char const* Base::what              () const throw() { return "Undefined error in class Timestamp.";                                            }
+      inline char const* UnknownPlatform::what   () const throw() { return "Cannot perform function on unknown platform, requires platform-specific calls."; }
+      inline char const* InvalidTime::what       () const throw() { return "The specified time is invalid.";                                                 }
+      inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                        }
+      inline char const* MissingSysSupport::what () const throw() { return "Missing necessary system-provided support.";                                     }
     };
     
     /*************************************************************************
