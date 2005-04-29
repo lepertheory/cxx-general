@@ -148,11 +148,6 @@ namespace DAC {
     // Determine the output format.
     OutputFormat fmt = (format == FMT_DEFAULT) ? _format : format;
     
-    // Output the sign if negative, unless outputting both formats.
-    if ((fmt != FMT_BOTH) && !(_data->positive) && _data->p) {
-      retval += "-";
-    }
-    
     // Choose the output format.
     switch (fmt) {
       
@@ -249,7 +244,7 @@ namespace DAC {
         
         // Place the radix point.
         if (radixpos) {
-          retval.insert(retval.length() - radixpos, ".");
+          retval.insert(retval.length() - radixpos, 1, '.');
         }
         
         // If this is not a fixed-radix number, we may need to remove the radix
@@ -280,6 +275,11 @@ namespace DAC {
       
     }
         
+    // Output the sign if negative, unless outputting both formats.
+    if ((fmt != FMT_BOTH) && !(_data->positive) && _data->p) {
+      retval.insert(0, 1, '-');
+    }
+    
     // We done.
     return retval;
     
@@ -486,9 +486,10 @@ namespace DAC {
     // Work area.
     Arb retval(*this, true);
     
-    // Set the new p & q;
-    retval._data->p = number._data->p;
-    retval._data->q = number._data->q;
+    // Set the new number.
+    retval._data->p        = number._data->p;
+    retval._data->q        = number._data->q;
+    retval._data->positive = number._data->positive;
     
     // Reduce the fraction.
     retval._reduce();
@@ -576,7 +577,7 @@ namespace DAC {
   // Addition operator backend.
   Arb& Arb::op_add (Arb const& number) {
     
-    // If adding an opposite sign, subtract the negative.
+    // If signs are opposite, subtract the negative.
     if (_data->positive != number._data->positive) {
       return op_sub(-number);
     }
@@ -588,7 +589,7 @@ namespace DAC {
     // Numbers must have the same denominator to add.
     tmp_l._normalize(tmp_r);
     
-    // Add the numerators together.
+    // Add the numerators.
     tmp_l._data->p += tmp_r._data->p;
     
     // Reduce the fraction.
@@ -603,7 +604,7 @@ namespace DAC {
   // Subtraction operator backend.
   Arb& Arb::op_sub (Arb const& number) {
     
-    // If subtracting an opposite sign, add the negative.
+    // If signs are opposite, add the negative.
     if (_data->positive != number._data->positive) {
       return op_add(-number);
     }
@@ -615,7 +616,7 @@ namespace DAC {
     // Numbers must have the same denominator to subtract.
     tmp_l._normalize(tmp_r);
     
-    // Subtract the numbers.
+    // Add or subtract the numbers.
     if (tmp_r._data->p > tmp_l._data->p) {
       tmp_l._data->p        = tmp_r._data->p - tmp_l._data->p;
       tmp_l._data->positive = !tmp_l._data->positive;
@@ -993,12 +994,11 @@ namespace DAC {
     new_q.set(1);
     
     // These operations will never throw.
-    positive = true;
-    
     p    = new_p;
     q    = new_q;
     fixq = new_fixq;
     
+    positive = true;
     pointpos = 0;
     fix      = false;
     base     = 10;
@@ -1016,6 +1016,7 @@ namespace DAC {
     q    = data.q;
     fixq = data.fixq;
     
+    positive = data.positive;
     pointpos = data.pointpos;
     fix      = data.fix;
     base     = data.base;

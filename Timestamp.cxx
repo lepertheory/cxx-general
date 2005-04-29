@@ -140,7 +140,8 @@ namespace DAC {
     
     // Set the julian date.
     TimeVal a   = ((TimeVal(14) - time.Month()) / TimeVal(12)).floor();
-    TimeVal y   = time.Year() + TimeVal(4800) - a;
+    TimeVal y   = time.Year() + TimeVal(time.Year().isPositive() ? 0 : 1) + TimeVal(4800) - a;
+    cout << "y: " << y << endl;
     TimeVal m   = time.Month() + TimeVal(12) * a - TimeVal(3);
     TimeVal jdn = ((time.Year() >  _lastjulian.Year) || (
                    (time.Year() == _lastjulian.Year) && ((time.Month() >  _lastjulian.Month) || (
@@ -151,33 +152,6 @@ namespace DAC {
                   :
                     time.Day() + ((TimeVal(153) * m + TimeVal(2)) / TimeVal(5)).floor() + TimeVal(365) * y + (y / TimeVal(4)).floor() - TimeVal(32083);
     newtime._jd = jdn + (time.Hour() - TimeVal(12)) / TimeVal(24) + time.Minute() / TimeVal(1440) + time.Second() / TimeVal(86400);
-    
-    /*
-    // Set the julian date, this is for Gregorian calendar dates.
-    if ( (time.Year() >  _lastjulian.Year) ||
-        ((time.Year() == _lastjulian.Year) && ( (time.Month() >  _lastjulian.Month) ||
-                                               ((time.Month() == _lastjulian.Month) && (time.Day() > _lastjulian.Day))))) {
-      
-      newtime._jd = TimeVal(367) * time.Year()
-                  - (TimeVal(7) * (time.Year() + ((time.Month() + TimeVal(9)) / TimeVal(12)).floor()) / TimeVal(4)).floor()
-                  - (TimeVal(3) * (((time.Year() + (time.Month() - TimeVal(9)) / TimeVal(7)) / TimeVal(100)).floor() + TimeVal(1)) / TimeVal(4)).floor()
-                  + (TimeVal(275) * time.Month() / TimeVal(9)).floor()
-                  + time.Day()
-                  + TimeVal(1721028.5)
-                  + (time.Hour() + ((time.Minute() + (time.Second() / TimeVal(60))) / TimeVal(60))) / TimeVal(24);
-      
-    // This is for Julian calendar dates.
-    } else {
-      
-      newtime._jd = TimeVal(367) * time.Year()
-                  - (TimeVal(7) * (time.Year() + TimeVal(5001) + ((time.Month() - TimeVal(9)) / TimeVal(7)).floor()) / TimeVal(4)).floor()
-                  + (TimeVal(275) * time.Month() / TimeVal(9)).floor()
-                  + time.Day()
-                  + TimeVal(1729776.5)
-                  + (time.Hour() + ((time.Minute() + (time.Second() / TimeVal(60))) / TimeVal(60))) / TimeVal(24);
-      
-    }
-    */
     
     // We done, return.
     _jd = newtime._jd;

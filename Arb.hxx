@@ -210,12 +210,11 @@
             /*****************************************************************/
             // Data members.
             
-            bool positive; // True if the number is positive.
-            
             _DigsT p;    // Numerator.
             _DigsT q;    // Denominator.
             _DigsT fixq; // Fixed denominator.
             
+            bool      positive; // True if the number is positive.
             PointPosT pointpos; // Radix point position.
             bool      fix;      // If true, fix the radix point.
             BaseT     base;     // The base of the number.
