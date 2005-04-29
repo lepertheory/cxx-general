@@ -141,7 +141,6 @@ namespace DAC {
     // Set the julian date.
     TimeVal a   = ((TimeVal(14) - time.Month()) / TimeVal(12)).floor();
     TimeVal y   = time.Year() + TimeVal(time.Year().isPositive() ? 0 : 1) + TimeVal(4800) - a;
-    cout << "y: " << y << endl;
     TimeVal m   = time.Month() + TimeVal(12) * a - TimeVal(3);
     TimeVal jdn = ((time.Year() >  _lastjulian.Year) || (
                    (time.Year() == _lastjulian.Year) && ((time.Month() >  _lastjulian.Month) || (
@@ -151,7 +150,8 @@ namespace DAC {
                     time.Day() + ((TimeVal(153) * m + TimeVal(2)) / TimeVal(5)).floor() + TimeVal(365) * y + (y / TimeVal(4)).floor() - (y / TimeVal(100)).floor() + (y / TimeVal(400)).floor() - TimeVal(32045)
                   :
                     time.Day() + ((TimeVal(153) * m + TimeVal(2)) / TimeVal(5)).floor() + TimeVal(365) * y + (y / TimeVal(4)).floor() - TimeVal(32083);
-    newtime._jd = jdn + (time.Hour() - TimeVal(12)) / TimeVal(24) + time.Minute() / TimeVal(1440) + time.Second() / TimeVal(86400);
+    //newtime._jd = jdn + (time.Hour() - TimeVal(12)) / TimeVal(24) + time.Minute() / TimeVal(1440) + time.Second() / TimeVal(86400);
+    newtime._jd = jdn + ((time.Hour() - TimeVal(12)) + (time.Minute() + (time.Second() + (time.Millisecond() / TimeVal(1000))) / TimeVal(60)) / TimeVal(60)) / TimeVal(24);
     
     // We done, return.
     _jd = newtime._jd;
@@ -257,7 +257,7 @@ namespace DAC {
     
     // Make a new jd.
     TimeVal tmp_jd;
-    tmp_jd.PropCopy(false).Base(10).PointPos(5).Fixed(true);
+    tmp_jd.PropCopy(false).Base(10).PointPos(8).Fixed(true);
     
     // Make a new lastjulian.
     YMD new_lastjulian(1582, 10, 4);
