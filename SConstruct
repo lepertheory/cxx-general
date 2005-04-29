@@ -33,8 +33,6 @@ if doconfig :
   if (env_Timestamp['PLATFORM'] == 'win32') :
     if conf.CheckHeader(header = 'windows.h', language = 'C++') :
       env_Timestamp.Append(CPPDEFINES = [ 'HAS_WINDOWS_H' ])
-      if conf.CheckFunc(function_name = 'GetSystemTime', language = 'C++') :
-        env_Timestamp.Append(CPPDEFINES = [ 'HAS_GETSYSTEMTIME' ])
       if conf.CheckType(type_name = '_SYSTEMTIME', includes = '#include <windows.h>', language = 'C++') :
         env_Timestamp.Append(CPPDEFINES = [ 'HAS__SYSTEMTIME' ])
   elif (env_Timestamp['PLATFORM'] == 'posix') :

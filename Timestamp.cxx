@@ -121,8 +121,7 @@ namespace DAC {
     Timestamp newtime(*this);
     
     // Verify that the new time is a valid time.
-    if (!time.isSet_Millisecond() ||
-        !time.isSet_Second()      ||
+    if (!time.isSet_Second()      ||
         !time.isSet_Minute()      ||
         !time.isSet_Hour()        ||
         !time.isSet_Day()         ||
@@ -139,10 +138,25 @@ namespace DAC {
       throw TimestampErrors::InvalidTime();
     }
     
+    // Set the julian date.
+    TimeVal a   = ((TimeVal(14) - time.Month()) / TimeVal(12)).floor();
+    TimeVal y   = time.Year() + TimeVal(4800) - a;
+    TimeVal m   = time.Month() + TimeVal(12) * a - TimeVal(3);
+    TimeVal jdn = ((time.Year() >  _lastjulian.Year) || (
+                   (time.Year() == _lastjulian.Year) && ((time.Month() >  _lastjulian.Month) || (
+                                                         (time.Month() == _lastjulian.Month) && (time.Day() > _lastjulian.Day)
+                                                        ))
+                  )) ?
+                    time.Day() + ((TimeVal(153) * m + TimeVal(2)) / TimeVal(5)).floor() + TimeVal(365) * y + (y / TimeVal(4)).floor() - (y / TimeVal(100)).floor() + (y / TimeVal(400)).floor() - TimeVal(32045)
+                  :
+                    time.Day() + ((TimeVal(153) * m + TimeVal(2)) / TimeVal(5)).floor() + TimeVal(365) * y + (y / TimeVal(4)).floor() - TimeVal(32083);
+    newtime._jd = jdn + (time.Hour() - TimeVal(12)) / TimeVal(24) + time.Minute() / TimeVal(1440) + time.Second() / TimeVal(86400);
+    
+    /*
     // Set the julian date, this is for Gregorian calendar dates.
     if ( (time.Year() >  _lastjulian.Year) ||
         ((time.Year() == _lastjulian.Year) && ( (time.Month() >  _lastjulian.Month) ||
-                                               ((time.Month() == _lastjulian.Month) && time.Day() > _lastjulian.Day)))) {
+                                               ((time.Month() == _lastjulian.Month) && (time.Day() > _lastjulian.Day))))) {
       
       newtime._jd = TimeVal(367) * time.Year()
                   - (TimeVal(7) * (time.Year() + ((time.Month() + TimeVal(9)) / TimeVal(12)).floor()) / TimeVal(4)).floor()
@@ -163,6 +177,7 @@ namespace DAC {
                   + (time.Hour() + ((time.Minute() + (time.Second() / TimeVal(60))) / TimeVal(60))) / TimeVal(24);
       
     }
+    */
     
     // We done, return.
     _jd = newtime._jd;
@@ -182,8 +197,7 @@ namespace DAC {
     // Verify that we have the necessary system support to get the system
     // time.
   #if   defined(PLAT_WIN32)
-    #if !defined(HAS_GETSYSTEMTIME) || \
-        !defined(HAS__SYSTEMTIME)
+    #if !defined(HAS__SYSTEMTIME)
     throw TimestampErrors::MissingSysSupport();
     #endif
   #elif defined(PLAT_POSIX)

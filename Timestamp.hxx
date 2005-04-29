@@ -100,7 +100,7 @@
           public:
             YMD () {};
             YMD (YMD const& ymd) : Year(ymd.Year), Month(ymd.Month), Day(ymd.Day) {};
-            YMD (I_Year const& year, I_Month const& month, I_Day const& day) : Year(year), Month(month), Day(Day) {};
+            YMD (I_Year const& year, I_Month const& month, I_Day const& day) : Year(year), Month(month), Day(day) {};
             I_Year  Year;
             I_Month Month;
             I_Day   Day;
