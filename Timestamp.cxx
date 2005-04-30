@@ -139,6 +139,7 @@ namespace DAC {
     }
     
     // Set the julian date.
+    /*
     TimeVal a   = ((TimeVal(14) - time.Month()) / TimeVal(12)).floor();
     TimeVal y   = time.Year() + TimeVal(time.Year().isPositive() ? 0 : 1) + TimeVal(4800) - a;
     TimeVal m   = time.Month() + TimeVal(12) * a - TimeVal(3);
@@ -150,14 +151,49 @@ namespace DAC {
                     time.Day() + ((TimeVal(153) * m + TimeVal(2)) / TimeVal(5)).floor() + TimeVal(365) * y + (y / TimeVal(4)).floor() - (y / TimeVal(100)).floor() + (y / TimeVal(400)).floor() - TimeVal(32045)
                   :
                     time.Day() + ((TimeVal(153) * m + TimeVal(2)) / TimeVal(5)).floor() + TimeVal(365) * y + (y / TimeVal(4)).floor() - TimeVal(32083);
-    //newtime._jd = jdn + (time.Hour() - TimeVal(12)) / TimeVal(24) + time.Minute() / TimeVal(1440) + time.Second() / TimeVal(86400);
     newtime._jd = jdn + ((time.Hour() - TimeVal(12)) + (time.Minute() + (time.Second() + (time.Millisecond() / TimeVal(1000))) / TimeVal(60)) / TimeVal(60)) / TimeVal(24);
+    */
+    
+    // Set the julian date. Different formulas for different calendar systems.
+    if ((time.Year() >  _lastjulian.Year) || (
+        (time.Year() == _lastjulian.Year) && ((time.Month() >  _lastjulian.Month) || (
+                                              (time.Month() == _lastjulian.Month) && (time.Day() > _lastjulian.Day
+                                             ))
+        ))
+       ) {
+      
+      // Gregorian.
+      newtime._jd = TimeVal(367) * time.Year() - (TimeVal(7) * (time.Year() + ((time.Month() + TimeVal(9)) / TimeVal(12)).toInt()) / TimeVal(4)).toInt()
+                  - (TimeVal(3) * (((time.Year() + (time.Month() - TimeVal(9)) / TimeVal(7)) / TimeVal(100)).toInt() + TimeVal(1)) / TimeVal(4)).toInt()
+                  + (TimeVal(275) * time.Month() / TimeVal(9)).toInt() + time.Day() + TimeVal(1721028.5)
+                  + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / TimeVal(1000))) / TimeVal(60)) / TimeVal(60)) / TimeVal(24);
+      
+    } else {
+      
+      // Julian.
+      TimeVal y   = time.Year() + TimeVal(time.Year().isPositive() ? 0 : 1);
+      newtime._jd = TimeVal(367) * y - (TimeVal(7) * (y + TimeVal(5001) + ((time.Month() - TimeVal(9)) / TimeVal(7)).toInt()) / TimeVal(4)).toInt()
+                  + (TimeVal(275) * time.Month() / TimeVal(9)).toInt() + time.Day() + TimeVal(1729776.5)
+                  + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / TimeVal(1000))) / TimeVal(60)) / TimeVal(60)) / TimeVal(24);
+      
+    }
     
     // We done, return.
     _jd = newtime._jd;
     return *this;
     
   }
+  
+  // Get the individual values of this timestamp.
+  Timestamp::Interval& Timestamp::get () const {
+    
+    // Work area.
+    Interval retval;
+    
+    // Return.
+    return retval;
+    
+  };
   
   // Get the current system time.
   Timestamp& Timestamp::getSystemTime () {

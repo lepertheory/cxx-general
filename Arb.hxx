@@ -164,8 +164,9 @@
         bool isEven     () const;
         bool isOdd      () const;
         
-        // Get the floor of this fractional number.
+        // Convert to an interger value. Do not confuse with int.
         Arb floor () const;
+        Arb toInt () const;
         
         // Raise this number to a power.
         Arb pow (Arb const& exp) const;
@@ -496,6 +497,9 @@
     // Return whether this number is even or odd.
     inline bool Arb::isOdd  () const { return (isInteger() && _data->p.isOdd());  }
     inline bool Arb::isEven () const { return (isInteger() && _data->p.isEven()); }
+    
+    // Return the integer portion of this number.
+    inline Arb Arb::toInt () const { Arb retval(*this, true); retval._data->p /= retval._data->q; retval._data->q = 1; return retval; }
     
     // Return the absolute value of this number.
     inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }

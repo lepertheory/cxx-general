@@ -676,7 +676,7 @@ namespace DAC {
   Arb Arb::floor () const {
     
     // Work area.
-    Arb retval(*this);
+    Arb retval(*this, true);
     
     // Only work if we have to.
     if (!isInteger()) {
