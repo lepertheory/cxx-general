@@ -174,29 +174,29 @@ namespace DAC {
         
         // Create the radix part.
         _DigsT remainder = _data->p % _data->q;
-        if (((_data->fixq) && (_data->pointpos > 0)) || (!(_data->fixq) && remainder)) {
+        if (((_data->fixq == 0) && (_data->pointpos > 0)) || ((_data->fixq == 0) && (remainder != 0))) {
           
           // Get the radix digits, one by one. Output digits until the entire
           // fraction is output or the maximum requested significant radix digits
           // are output.
           std::string::size_type sigdigs  = 0;
-          bool                   sigstart = numeric;
+          bool                   sigstart = (numeric != 0);
           _DigsT                 digit;
           digit.Base(_data->base);
-          while ((sigdigs < _maxradix) && remainder) {
+          while ((sigdigs < _maxradix) && (remainder != 0)) {
             remainder *= _data->base;
             digit      = remainder / _data->q;
             numeric.push_back(digit);
             ++radixpos;
             remainder %= _data->q;
-            if (sigstart || digit) {
+            if (sigstart || (digit != 0)) {
               ++sigdigs;
               sigstart = true;
             }
           }
           
           // Round.
-          if (remainder) {
+          if (remainder != 0) {
             switch (_round) {
               case ROUND_UP: {
                 if (_data->positive) {
@@ -276,7 +276,7 @@ namespace DAC {
     }
         
     // Output the sign if negative, unless outputting both formats.
-    if ((fmt != FMT_BOTH) && !(_data->positive) && _data->p) {
+    if ((fmt != FMT_BOTH) && !(_data->positive) && (_data->p != 0)) {
       retval.insert(0, 1, '-');
     }
     
@@ -526,7 +526,7 @@ namespace DAC {
   Arb& Arb::op_div (Arb const& number) {
     
     // Throw an error on divide by zero.
-    if (!number) {
+    if (number == 0) {
       throw ArbErrors::DivByZero();
     }
     
@@ -553,7 +553,7 @@ namespace DAC {
   Arb& Arb::op_mod (Arb const& number) {
     
     // Throw an error on divide by zero.
-    if (!number) {
+    if (number == 0) {
       throw ArbErrors::DivByZero();
     }
     
@@ -688,7 +688,7 @@ namespace DAC {
       
       // If the number was negative and there was a remainder, we need to
       // subtract 1.
-      if (!isPositive() && remainder) {
+      if (!isPositive() && (remainder != 0)) {
         --(retval._data->p);
       }
       
@@ -710,7 +710,7 @@ namespace DAC {
     if (!isZero() || (exp == one)) {
       
       // Only raise if we have to.
-      if (exp) {
+      if (exp != 0) {
         
         // Raise this number to an integer power.
         if (exp.isInteger()) {
@@ -876,7 +876,7 @@ namespace DAC {
       _data->p         = _data->p * q / _data->q;
       
       // Round.
-      if (remainder) {
+      if (remainder != 0) {
         switch (_round) {
           case ROUND_UP: {
             if (_data->positive) {

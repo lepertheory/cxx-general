@@ -28,7 +28,7 @@
       }
       
       // Euclid's algorithm.
-      while (tmp_n2) {
+      while (tmp_n2 != 0) {
         T tmp  = tmp_n2;
         tmp_n2 = tmp_n1 % tmp_n2;
         tmp_n1 = tmp;

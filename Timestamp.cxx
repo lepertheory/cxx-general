@@ -55,7 +55,7 @@ namespace DAC {
         break;
         
         case 2:
-          days = ((year % I_Year(4)) && (!(year % I_Year(100)) || (year % I_Year(400)))) ? 29 : 28;
+          days = ((year % I_Year(4) != 0) && ((year % I_Year(100) == 0) || (year % I_Year(400) != 0))) ? 29 : 28;
         break;
         
         case 4:
@@ -127,7 +127,7 @@ namespace DAC {
         !time.isSet_Day()         ||
         !time.isSet_Month()       ||
         !time.isSet_Year()        ||
-        !time.Year().isInteger()        || !time.Year()                      ||
+        !time.Year().isInteger()        || (time.Year() == 0)                ||
         !time.Month().isInteger()       || (time.Month()       < TimeVal(1)) || (time.Month()       > TimeVal(12))                                                      ||
         !time.Day().isInteger()         || (time.Day()         < TimeVal(1)) || (time.Day()         > time.Month().daysInMonth(time.Year()))                            ||
         !time.Hour().isInteger()        || (time.Hour()        < TimeVal(0)) || (time.Hour()        > TimeVal(23))                                                      ||
@@ -185,10 +185,13 @@ namespace DAC {
   }
   
   // Get the individual values of this timestamp.
-  Timestamp::Interval& Timestamp::get () const {
+  Timestamp::Interval Timestamp::get () const {
     
     // Work area.
     Interval retval;
+    
+    retval.Year((_jd / TimeVal(365.2425)).toInt() - TimeVal(4712));
+    retval.Month(_jd - ((retval.Year() + TimeVal(4712)) * TimeVal(365.2425)));
     
     // Return.
     return retval;

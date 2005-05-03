@@ -81,9 +81,6 @@
                            Arb (std::string const& number);
         template <class T> Arb (T           const  number);
         
-        // Boolean conversion operator.
-        operator bool () const;
-        
         // Unary sign operators.
         Arb operator - () const;
         
@@ -92,9 +89,6 @@
         Arb  operator ++ (int);
         Arb& operator -- ();
         Arb  operator -- (int);
-        
-        // Not operator.
-        bool operator ! () const;
         
         // Assignment operator.
                            Arb& operator = (std::string const& number);
@@ -188,7 +182,7 @@
         // Forward declarations.
         class _Data;
         
-        typedef ArbInt<_DigT> _DigsT; // Native digits type.
+        typedef ArbInt _DigsT; // Native digits type.
         
         typedef ReferencePointer<_Data> _DataPT; // Pointer to number data.
         
@@ -394,9 +388,6 @@
       
     }
     
-    // Boolean conversion operator.
-    inline Arb::operator bool () const { return _data->p; }
-    
     // Negation operator.
     inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
     
@@ -405,9 +396,6 @@
     inline Arb  Arb::operator ++ (int) { Arb retval(*this); op_add(1); return retval; }
     inline Arb& Arb::operator -- ()    { return op_sub(1);                         }
     inline Arb  Arb::operator -- (int) { Arb retval(*this); op_sub(1); return retval; }
-    
-    // Not operator.
-    inline bool Arb::operator ! () const { return !(_data->p); }
     
     // Assignment operator.
                        inline Arb& Arb::operator = (std::string const& number) { return set(number);                                                  }

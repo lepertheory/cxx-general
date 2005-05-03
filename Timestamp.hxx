@@ -206,7 +206,7 @@
         Timestamp& set (Interval const& time);
         
         // Get the individual values of this timestamp.
-        Interval& get () const;
+        Interval get () const;
         
         // Get the current system time.
         Timestamp& getSystemTime ();

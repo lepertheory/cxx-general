@@ -39,19 +39,18 @@ enum Operation {
   OIN,
   PDE,
   ODE,
-  LNT,
   BCM
 };
 
-template <class T> bool testOp (ArbInt<T> const& l, Operation const op, ArbInt<T> const& r);
+bool testOp (ArbInt const& l, Operation const op, ArbInt const& r);
 
 // This is where it all happens.
 int main (int argc, char** argv, char** envp) {
   
   try {
     
-    ArbInt<unsigned int> test1;
-    ArbInt<unsigned int> test2;
+    ArbInt test1;
+    ArbInt test2;
     
     /**/
     cout << "test1: ";
@@ -96,22 +95,11 @@ int main (int argc, char** argv, char** envp) {
         testOp(test1, OIN, test2);
         testOp(test1, PDE, test2);
         testOp(test1, ODE, test2);
-        testOp(test1, LNT, test2);
         testOp(test1, BCM, test2);
         /** /
       }
     }
     //*/
-    
-    cout << "Root: " << endl;
-    ArbInt<unsigned int> divor;
-    ArbInt<unsigned int> rem;
-    
-    test1.root(test2, divor, rem);
-    cout << "Rooted:    " << test1 << endl
-         << "Root:      " << test2 << endl
-         << "Divisor:   " << divor << endl
-         << "Remainder: " << rem   << endl;
     
     return 0;
     
@@ -134,13 +122,13 @@ int main (int argc, char** argv, char** envp) {
   
 }
 
-template <class T> bool testOp (ArbInt<T> const& l, Operation const op, ArbInt<T> const& r) {
+bool testOp (ArbInt const& l, Operation const op, ArbInt const& r) {
   
   bool retval = false;
   string output;
   
   try {
-    ArbInt<T> test;
+    ArbInt test;
     output = l.toString();
     switch (op) {
       case MUL: output += "  * "; break;
@@ -165,7 +153,6 @@ template <class T> bool testOp (ArbInt<T> const& l, Operation const op, ArbInt<T
       case OIN: output += "++  "; break;
       case PDE: output += "  --"; break;
       case ODE: output += "--  "; break;
-      case LNT: output += "   !"; break;
       case BCM: output += "   ~"; break;
     }
     output += r.toString() + " = ";
@@ -176,7 +163,7 @@ template <class T> bool testOp (ArbInt<T> const& l, Operation const op, ArbInt<T
       case MOD: output += (l  % r).toString(); break;
       case ADD: output += (l  + r).toString(); break;
       case SUB: output += (l  - r).toString(); break;
-      case SHL: output += ((r > ArbInt<T>(10000)) ? "Skipped, huge." : (l << r).toString()); break;
+      case SHL: output += ((r > ArbInt(10000)) ? "Skipped, huge." : (l << r).toString()); break;
       case SHR: output += (l >> r).toString(); break;
       case CGT: output += ((l >  r) ? "true" : "false"); break;
       case CGE: output += ((l >= r) ? "true" : "false"); break;
@@ -189,11 +176,10 @@ template <class T> bool testOp (ArbInt<T> const& l, Operation const op, ArbInt<T
       case BXO: output += (l  ^ r).toString(); break;
       case LND: output += ((l && r) ? "true" : "false"); break;
       case LIO: output += ((l || r) ? "true" : "false"); break;
-      case PIN: output += "++" + l.toString() + ": " + (++ArbInt<T>(l)).toString() + "  ++" + r.toString() + ": " + (++ArbInt<T>(r)).toString(); break;
-      case OIN: output += l.toString() + "++: " + (ArbInt<T>(l)++).toString() + "  " + r.toString() + "++: " + (ArbInt<T>(r)++).toString();  break;
-      case PDE: output += "--" + l.toString() + ": " + (--ArbInt<T>(l)).toString() + "  --" + r.toString() + ": " + (--ArbInt<T>(r)).toString(); break;
-      case ODE: output += l.toString() + "--: " + (ArbInt<T>(l)--).toString() + "  " + r.toString() + "--: " + (ArbInt<T>(r)--).toString();  break;
-      case LNT: output += "!" + l.toString() + ": " + (!l ? "true" : "false" ) + "  !" + r.toString() + ": " + (!r ? "true" : "false"); break;
+      case PIN: output += "++" + l.toString() + ": " + (++ArbInt(l)).toString() + "  ++" + r.toString() + ": " + (++ArbInt(r)).toString(); break;
+      case OIN: output += l.toString() + "++: " + (ArbInt(l)++).toString() + "  " + r.toString() + "++: " + (ArbInt(r)++).toString();  break;
+      case PDE: output += "--" + l.toString() + ": " + (--ArbInt(l)).toString() + "  --" + r.toString() + ": " + (--ArbInt(r)).toString(); break;
+      case ODE: output += l.toString() + "--: " + (ArbInt(l)--).toString() + "  " + r.toString() + "--: " + (ArbInt(r)--).toString();  break;
       case BCM: output += "~" + l.toString() + ": " + (~l).toString() + "  ~" + r.toString() + ": " + (~r).toString(); break;
       //*/
       /** /

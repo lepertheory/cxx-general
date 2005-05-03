@@ -60,6 +60,7 @@ if doconfig :
 
 # Object files.
 SafeInteger_test =           env.Object(target = 'SafeInteger-test', source = ['SafeInteger-test.cxx'])
+ArbInt           =           env.Object(target = 'ArbInt',           source = ['ArbInt.cxx']          )
 ArbInt_test      =           env.Object(target = 'ArbInt-test',      source = ['ArbInt-test.cxx']     )
 Arb              =           env.Object(target = 'Arb',              source = ['Arb.cxx']             )
 Arb_test         =           env.Object(target = 'Arb-test',         source = ['Arb-test.cxx']        )
@@ -68,11 +69,11 @@ Timestamp_test   =           env.Object(target = 'Timestamp-test',   source = ['
 ibc              =           env.Object(target = 'ibc',              source = ['ibc.cxx']             )
 
 # Program files.
-env.Program(target = 'SafeInteger-test', source = [SafeInteger_test]              )
-env.Program(target = 'ArbInt-test',      source = [ArbInt_test]                   )
-env.Program(target = 'Arb-test',         source = [Arb_test, Arb]                 )
-env.Program(target = 'Timestamp-test',   source = [Arb, Timestamp, Timestamp_test])
-env.Program(target = 'ibc',              source = [ibc]                           )
+env.Program(target = 'SafeInteger-test', source = [SafeInteger_test]                      )
+env.Program(target = 'ArbInt-test',      source = [ArbInt, ArbInt_test]                   )
+env.Program(target = 'Arb-test',         source = [ArbInt, Arb, Arb_test]                 )
+env.Program(target = 'Timestamp-test',   source = [ArbInt, Arb, Timestamp, Timestamp_test])
+env.Program(target = 'ibc',              source = [ibc]                                   )
 
 # Do not build everything by default, do clean everything.
 if not env.GetOption('clean') :
