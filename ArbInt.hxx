@@ -61,8 +61,8 @@
         ArbInt (ArbInt const& number, bool const copynow = false);
         
         // Conversion constructor.
-                           ArbInt (std::string const& number);
-        template <class T> ArbInt (T           const  number);
+                           explicit ArbInt (std::string const& number);
+        template <class T> explicit ArbInt (T           const  number);
         
         // Unary sign operators.
         int operator + () const;
@@ -83,20 +83,30 @@
         template <class T> ArbInt& operator = (T           const  number);
         
         // Arithmetic assignment operators.
-        ArbInt& operator *= (ArbInt const& number);
-        ArbInt& operator /= (ArbInt const& number);
-        ArbInt& operator %= (ArbInt const& number);
-        ArbInt& operator += (ArbInt const& number);
-        ArbInt& operator -= (ArbInt const& number);
+                           ArbInt& operator *= (ArbInt const& number);
+        template <class T> ArbInt& operator *= (T      const  number);
+                           ArbInt& operator /= (ArbInt const& number);
+        template <class T> ArbInt& operator /= (T      const  number);
+                           ArbInt& operator %= (ArbInt const& number);
+        template <class T> ArbInt& operator %= (T      const  number);
+                           ArbInt& operator += (ArbInt const& number);
+        template <class T> ArbInt& operator += (T      const  number);
+                           ArbInt& operator -= (ArbInt const& number);
+        template <class T> ArbInt& operator -= (T      const  number);
         
         // Bit shift assignment operators.
-        ArbInt& operator <<= (ArbInt const& number);
-        ArbInt& operator >>= (ArbInt const& number);
+                           ArbInt& operator <<= (ArbInt const& number);
+        template <class T> ArbInt& operator <<= (T      const  number);
+                           ArbInt& operator >>= (ArbInt const& number);
+        template <class T> ArbInt& operator >>= (T      const  number);
         
         // Bitwise assignment operators.
-        ArbInt& operator &= (ArbInt const& number);
-        ArbInt& operator |= (ArbInt const& number);
-        ArbInt& operator ^= (ArbInt const& number);
+                           ArbInt& operator &= (ArbInt const& number);
+        template <class T> ArbInt& operator &= (T      const  number);
+                           ArbInt& operator |= (ArbInt const& number);
+        template <class T> ArbInt& operator |= (T      const  number);
+                           ArbInt& operator ^= (ArbInt const& number);
+        template <class T> ArbInt& operator ^= (T      const  number);
         
         // Reset to just-constructed state.
         ArbInt& clear ();
@@ -116,41 +126,59 @@
         template <class T> ArbInt& set (T           const  number);
         
         // Push digits into this number.
-                           ArbInt& push_back (std::string const& number);
                            ArbInt& push_back (ArbInt      const& number);
+                           ArbInt& push_back (std::string const& number);
         template <class T> ArbInt& push_back (T           const  number);
         
         // Return a string of this number.
         std::string toString () const;
         
         // Arithmetic operator backends.
-        ArbInt& op_mul (ArbInt const& number);
-        ArbInt& op_div (ArbInt const& number, ArbInt* remainder = 0);
-        ArbInt& op_mod (ArbInt const& number);
-        ArbInt& op_add (ArbInt const& number);
-        ArbInt& op_sub (ArbInt const& number);
+                           ArbInt& op_mul (ArbInt const& number);
+        template <class T> ArbInt& op_mul (T      const  number);
+                           ArbInt& op_div (ArbInt const& number, ArbInt* remainder = 0);
+        template <class T> ArbInt& op_div (T      const  number, ArbInt* remainder = 0);
+                           ArbInt& op_mod (ArbInt const& number);
+        template <class T> ArbInt& op_mod (T      const  number);
+                           ArbInt& op_add (ArbInt const& number);
+        template <class T> ArbInt& op_add (T      const  number);
+                           ArbInt& op_sub (ArbInt const& number);
+        template <class T> ArbInt& op_sub (T      const  number);
         
         // Bit shift operator backends.
-        ArbInt& op_shl (ArbInt const& number);
-        ArbInt& op_shr (ArbInt const& number);
+                           ArbInt& op_shl (ArbInt const& number);
+        template <class T> ArbInt& op_shl (T      const  number);
+                           ArbInt& op_shr (ArbInt const& number);
+        template <class T> ArbInt& op_shr (T      const  number);
         
         // Comparison operator backends.
-        bool op_gt (ArbInt const& number) const;
-        bool op_ge (ArbInt const& number) const;
-        bool op_lt (ArbInt const& number) const;
-        bool op_le (ArbInt const& number) const;
-        bool op_eq (ArbInt const& number) const;
-        bool op_ne (ArbInt const& number) const;
+                           bool op_gt (ArbInt const& number) const;
+        template <class T> bool op_gt (T      const  number) const;
+                           bool op_ge (ArbInt const& number) const;
+        template <class T> bool op_ge (T      const  number) const;
+                           bool op_lt (ArbInt const& number) const;
+        template <class T> bool op_lt (T      const  number) const;
+                           bool op_le (ArbInt const& number) const;
+        template <class T> bool op_le (T      const  number) const;
+                           bool op_eq (ArbInt const& number) const;
+        template <class T> bool op_eq (T      const  number) const;
+                           bool op_ne (ArbInt const& number) const;
+        template <class T> bool op_ne (T      const  number) const;
         
         // Bitwise operator backends.
-        ArbInt& op_bit_and (ArbInt const& number);
-        ArbInt& op_bit_ior (ArbInt const& number);
-        ArbInt& op_bit_xor (ArbInt const& number);
-        ArbInt& op_bit_cpm ();
+                           ArbInt& op_bit_and (ArbInt const& number);
+        template <class T> ArbInt& op_bit_and (T      const  number);
+                           ArbInt& op_bit_ior (ArbInt const& number);
+        template <class T> ArbInt& op_bit_ior (T      const  number);
+                           ArbInt& op_bit_xor (ArbInt const& number);
+        template <class T> ArbInt& op_bit_xor (T      const  number);
+                           ArbInt& op_bit_cpm ();
         
         // Logical operator backends.
-        bool op_log_and (ArbInt const& number) const;
-        bool op_log_ior (ArbInt const& number) const;
+                           bool op_log_and (ArbInt const& number) const;
+        template <class T> bool op_log_and (T      const  number) const;
+                           bool op_log_ior (ArbInt const& number) const;
+        template <class T> bool op_log_ior (T      const  number) const;
         
         // Return information about this number.
         bool isEven () const;
@@ -158,7 +186,8 @@
         bool isOdd  () const;
         
         // Raise this number to a power.
-        ArbInt pow (ArbInt const& exp);
+                           ArbInt pow (ArbInt const& exp);
+        template <class T> ArbInt pow (T      const  exp);
         
         // Find a root of this number.
         ArbInt root (ArbInt const& root, ArbInt& divisor, ArbInt& remainder);
@@ -411,20 +440,30 @@
     template <class T> inline ArbInt& ArbInt::operator = (T           const  number) { return set(number); }
     
     // Arithmetic assignment operators.
-    inline ArbInt& ArbInt::operator *= (ArbInt const& number) { return op_mul(number); }
-    inline ArbInt& ArbInt::operator /= (ArbInt const& number) { return op_div(number); }
-    inline ArbInt& ArbInt::operator %= (ArbInt const& number) { return op_mod(number); }
-    inline ArbInt& ArbInt::operator += (ArbInt const& number) { return op_add(number); }
-    inline ArbInt& ArbInt::operator -= (ArbInt const& number) { return op_sub(number); }
+                       inline ArbInt& ArbInt::operator *= (ArbInt const& number) { return op_mul(number); }
+    template <class T> inline ArbInt& ArbInt::operator *= (T      const  number) { return op_mul(number); }
+                       inline ArbInt& ArbInt::operator /= (ArbInt const& number) { return op_div(number); }
+    template <class T> inline ArbInt& ArbInt::operator /= (T      const  number) { return op_div(number); }
+                       inline ArbInt& ArbInt::operator %= (ArbInt const& number) { return op_mod(number); }
+    template <class T> inline ArbInt& ArbInt::operator %= (T      const  number) { return op_mod(number); }
+                       inline ArbInt& ArbInt::operator += (ArbInt const& number) { return op_add(number); }
+    template <class T> inline ArbInt& ArbInt::operator += (T      const  number) { return op_add(number); }
+                       inline ArbInt& ArbInt::operator -= (ArbInt const& number) { return op_sub(number); }
+    template <class T> inline ArbInt& ArbInt::operator -= (T      const  number) { return op_sub(number); }
     
     // Bit shift assignment operators.
-    inline ArbInt& ArbInt::operator <<= (ArbInt const& number) { return op_shl(number); }
-    inline ArbInt& ArbInt::operator >>= (ArbInt const& number) { return op_shr(number); }
+                       inline ArbInt& ArbInt::operator <<= (ArbInt const& number) { return op_shl(number); }
+    template <class T> inline ArbInt& ArbInt::operator <<= (T      const  number) { return op_shl(number); }
+                       inline ArbInt& ArbInt::operator >>= (ArbInt const& number) { return op_shr(number); }
+    template <class T> inline ArbInt& ArbInt::operator >>= (T      const  number) { return op_shr(number); }
     
     // Bitwise assignment operators.
-    inline ArbInt& ArbInt::operator &= (ArbInt const& number) { return op_bit_and(number); }
-    inline ArbInt& ArbInt::operator |= (ArbInt const& number) { return op_bit_ior(number); }
-    inline ArbInt& ArbInt::operator ^= (ArbInt const& number) { return op_bit_xor(number); }
+                       inline ArbInt& ArbInt::operator &= (ArbInt const& number) { return op_bit_and(number); }
+    template <class T> inline ArbInt& ArbInt::operator &= (T      const  number) { return op_bit_and(number); }
+                       inline ArbInt& ArbInt::operator |= (ArbInt const& number) { return op_bit_ior(number); }
+    template <class T> inline ArbInt& ArbInt::operator |= (T      const  number) { return op_bit_ior(number); }
+                       inline ArbInt& ArbInt::operator ^= (ArbInt const& number) { return op_bit_xor(number); }
+    template <class T> inline ArbInt& ArbInt::operator ^= (T      const  number) { return op_bit_xor(number); }
     
     // Get the base of this number.
     inline ArbInt::value_type ArbInt::Base () const { return _base; }
@@ -522,6 +561,9 @@
     // Tests if this number is odd or even.
     inline bool ArbInt::isOdd  () const { return (!isZero() && (_digits->front() & 1)); }
     inline bool ArbInt::isEven () const { return !isOdd();                              }
+    
+    // Placeholder for automatic pow conversion.
+    template <class T> inline ArbInt pow (T const exp) { return pow(ArbInt(exp)); }
     
     // Return the maximum string input base.
     inline ArbInt::value_type ArbInt::max_input_base () { return SafeInteger<value_type>(s_numidigits).Value(); }
