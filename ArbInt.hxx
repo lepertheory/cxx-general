@@ -540,20 +540,396 @@
                        inline ArbInt& ArbInt::push_back (ArbInt const& number) { return push_back(ArbInt(number).Base(_base).toString()); }
     template <class T> inline ArbInt& ArbInt::push_back (T      const  number) { return push_back(DAC::toString(number));                 }
     
+    // Multiply by an integral type.
+    template <class T> ArbInt& ArbInt::op_mul (T const number) {
+      
+      // Make this number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // If the number is too large to do in one step, resort to conversion to
+      // ArbInt then multiply.
+      if (tmpnum >= s_digitbase) {
+        
+        // DO IT.
+        return op_mul(ArbInt(number));
+        
+      // Otherwise, multiply directly.
+      } else {
+        
+        // If we were sent a negative number, error.
+        if (tmpnum < 0) {
+          throw ArbIntErrors::Negative();
+        }
+        
+        // If we were sent zero, blank the digits.
+        if (tmpnum == 0) {
+          _digits = new _DigsT;
+          return *this;
+        }
+        
+        // If we were sent 1, easy.
+        if (tmpnum == 1) {
+          return *this;
+        }
+        
+        // Work area.
+        ArbInt retval;
+        
+        // Multiply like 3rd grade.
+        for (_DigsT::size_type i = 0; i != _digits->size(); ++i) {
+          
+          // Create a new digit if necessary.
+          if (retval._digits->size() == i) {
+            retval._digits->push_back(0);
+          }
+          
+          // Multiply the digit and carry.
+          (*(retval._digits))[i] = SafeInteger<_DigT>((*(_digits))[i]) * number;
+          retval._carry();
+          
+        }
+        
+        // Move the digits into place and return.
+        _digits = retval._digits;
+        return *this;
+        
+      }
+      
+    }
+    
+    // Divide by an integral type.
+    template <class T> ArbInt& ArbInt::op_div (T const number, ArbInt* remainder) {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // If the number is too large to do in one step, resort to conversion to
+      // ArbInt then divide.
+      if (tmpnum >= s_digitbase) {
+        
+        // Just do it.
+        return op_div(ArbInt(number), remainder);
+        
+      // Otherwise, divide directly.
+      } else {
+        
+        // Cannot divide by zero.
+        if (tmpnum == 0) {
+          throw ArbIntErrors::DivByZero();
+        }
+        
+        // Cannot return a negative number.
+        if (tmpnum < 0) {
+          throw ArbIntErrors::Negative();
+        }
+        
+        // If dividing by 1, easy, remainder is zero and return.
+        if (tmpnum == 1) {
+          if (remainder) {
+            *remainder = 0;
+          }
+          return *this;
+        }
+        
+        // Work area.
+        ArbInt retval(*this, true);
+        
+        // Already wrote the long division algorithm, reuse it. Different
+        // calls for remainder or not.
+        if (remainder) {
+          *remainder = s_longDiv((*(retval._digits)), number, s_digitbase);
+        } else {
+          s_longDiv((*(retval._digits)), number, s_digitbase);
+        }
+        
+        // Move the digits into place and return.
+        _digits = retval._digits;
+        
+      }
+      
+    }
+    
+    // Modulo division by an integral type.
+    template <class T> ArbInt& ArbInt::op_mod (T const number) {
+      
+      // Work area.
+      ArbInt retval;
+      ArbInt quotient(*this);
+      
+      // Do division and return the remainder.
+      quotient.op_div(number, &retval);
+      _digits = retval._digits;
+      return *this;
+      
+    }
+    
+    // Add an integral type.
+    template <class T> ArbInt& ArbInt::op_add (T const number) {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // If the number is too large to add directly, resort to conversion to
+      // ArbInt then add.
+      if (tmpnum >= s_digitbase) {
+        
+        // Do it do it do it.
+        return op_add(ArbInt(number));
+        
+      // Otherwise add directly.
+      } else {
+        
+        // If adding a negative number, subtract the positive.
+        if (tmpnum < 0) {
+          return op_sub((-tmpnum).Value());
+        }
+        
+        // Nothing to do if adding 0.
+        if (tmpnum == 0) {
+          return *this;
+        }
+        
+        // Work area.
+        ArbInt retval(*this, true);
+        
+        // Add and carry or create a digit if necessary.
+        if (retval._digits->empty()) {
+          retval._digits->push_back(SafeInteger<_DigT>(number));
+        } else {
+          (*(retval._digits))[0] = (*(retval._digits))[0] + tmpnum;
+          retval._carry();
+        }
+        
+        // Move digits into place and return.
+        _digits = retval._digits;
+        return *this;
+        
+      }
+      
+    }
+    
+    // Subtract an integral type.
+    template <class T> ArbInt& ArbInt::op_sub (T const number) {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // If the number is too large to subtract directly, resort to conversion
+      // to ArbInt then subtract.
+      if (tmpnum >= s_digitbase) {
+        
+        // Doin it and doin it and doin it.
+        return op_sub(ArbInt(number));
+        
+      // Otherwise subtract directly.
+      } else {
+        
+        // If subtracting a negative number, add the positive.
+        if (tmpnum < 0) {
+          return op_add((-tmpnum).Value());
+        }
+        
+        // Nothing to do if subtracting 0.
+        if (tmpnum == 0) {
+          return *this;
+        }
+        
+        // If number > this, throw an error.
+        if (tmpnum > *this) {
+          throw ArbIntErrors::Negative();
+        }
+        
+        // Work area.
+        ArbInt retval(*this, true);
+        
+        // Borrow if necessary and subtract.
+        if ((*(retval._digits))[0] < tmpnum) {
+          retval._borrow(0);
+        }
+        (*(retval._digits))[0] = (*(retval._digits))[0] - tmpnum;
+        
+        // Trim zeros.
+        retval._trimZeros();
+        
+        // Move the digits into place and return.
+        _digits = retval._digits;
+        return *this;
+        
+      }
+      
+    }
+    
     // Shift left, shift right.
-    inline ArbInt& ArbInt::op_shl (ArbInt const& number) { ArbInt retval(*this, true); retval._shift(number, _DIR_L); return copy(retval); }
-    inline ArbInt& ArbInt::op_shr (ArbInt const& number) { ArbInt retval(*this, true); retval._shift(number, _DIR_R); return copy(retval); }
+                       inline ArbInt& ArbInt::op_shl (ArbInt const& number) { ArbInt retval(*this, true); retval._shift(number, _DIR_L); return copy(retval); }
+    template <class T> inline ArbInt& ArbInt::op_shl (T      const  number) { ArbInt retval(*this, true); retval._shift(number, _DIR_L); return copy(retval); }
+                       inline ArbInt& ArbInt::op_shr (ArbInt const& number) { ArbInt retval(*this, true); retval._shift(number, _DIR_R); return copy(retval); }
+    template <class T> inline ArbInt& ArbInt::op_shr (T      const  number) { ArbInt retval(*this, true); retval._shift(number, _DIR_R); return copy(retval); }
+    
+    // Greater than an integral type.
+    template <class T> bool ArbInt::op_gt (T const number) const {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // If the number is too large to compare directly, resort to conversion
+      // to ArbInt then compare.
+      if (tmpnum >= s_digitbase) {
+        
+        // RAWR!
+        return op_gt(ArbInt(number));
+        
+      // Otherwise compare directly.
+      } else {
+        
+        // If the container is empty, it cannot be greater than anything but
+        // a negative number.
+        if (_digits->empty()) {
+          return (tmpnum < 0);
+        }
+        
+        // If the container is larger than 1, it must be greater.
+        if (_digits->size() > 1) {
+          return true;
+        }
+        
+        // Compare.
+        return ((*(_digits))[0] > tmpnum);
+        
+      }
+      
+    }
     
     // Comparison operators.
-    inline bool ArbInt::op_ge (ArbInt const& number) const { return (op_gt(number) || op_eq(number));   }
-    inline bool ArbInt::op_lt (ArbInt const& number) const { return number.op_gt(*this);                }
-    inline bool ArbInt::op_le (ArbInt const& number) const { return (op_lt(number) || op_eq(number));   }
-    inline bool ArbInt::op_eq (ArbInt const& number) const { return (!op_gt(number) && !op_lt(number)); }
-    inline bool ArbInt::op_ne (ArbInt const& number) const { return (op_gt(number) || op_lt(number));   }
+                       inline bool ArbInt::op_ge (ArbInt const& number) const { return (op_gt(number) || op_eq(number));   }
+    template <class T> inline bool ArbInt::op_ge (T      const  number) const { return (op_gt(number) || op_eq(number));   }
+                       inline bool ArbInt::op_lt (ArbInt const& number) const { return number.op_gt(*this);                }
+    template <class T> inline bool ArbInt::op_lt (T      const  number) const { return !op_ge(number);                     }
+                       inline bool ArbInt::op_le (ArbInt const& number) const { return (op_lt(number) || op_eq(number));   }
+    template <class T> inline bool ArbInt::op_le (T      const  number) const { return !op_gt(number);                     }
+                       inline bool ArbInt::op_eq (ArbInt const& number) const { return (!op_gt(number) && !op_lt(number)); }
+    template <class T> inline bool ArbInt::op_eq (T      const  number) const { return (!op_gt(number) && !op_lt(number)); }
+                       inline bool ArbInt::op_ne (ArbInt const& number) const { return (op_gt(number) || op_lt(number));   }
+    template <class T> inline bool ArbInt::op_ne (T      const  number) const { return (op_gt(number) || op_lt(number));   }
+    
+    // Bitwise AND with an integral type.
+    template <class T> ArbInt& ArbInt::op_bit_and (T const number) {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // No negatives.
+      if (tmpnum < 0) {
+        throw ArbIntErrors::Negative();
+      }
+      
+      // If the number is too large to AND directly, resort to conversion to
+      // ArbInt then AND.
+      if (tmpnum >= s_digitbase) {
+        
+        // Poopyfarts!
+        return op_bit_and(ArbInt(number));
+        
+      // Otherwise AND directly.
+      } else {
+        
+        // If this number is 0, nothing needs to be done.
+        if (_digits->empty()) {
+          return *this;
+        }
+        
+        // Work area, but don't bother copying anything more than the least
+        // significant digit. In fact, do the AND right here, it's easy.
+        ArbInt retval((*(_digits))[0] & number);
+        
+        // Copy into place and return.
+        _digits = retval._digits;
+        return *this;
+        
+      }
+      
+    }
+    
+    // Bitwise inclusive OR with an integral type.
+    template <class T> ArbInt& ArbInt::op_bit_ior (T const number) {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // No negatives.
+      if (tmpnum < 0) {
+        throw ArbIntErrors::Negative();
+      }
+      
+      // If the number is too large to OR directly, resort to conversion to
+      // ArbInt then OR.
+      if (tmpnum >= s_digitbase) {
+        
+        // Stinknugget.
+        return op_bit_ior(ArbInt(number));
+        
+      // Otherwise OR directly.
+      } else {
+        
+        // If this number is 0, simply set with number.
+        if (_digits->empty()) {
+          return set(number);
+        }
+        
+        // Copy digits and OR.
+        ArbInt retval(*this, true);
+        (*(retval._digits))[0] = (*(retval._digits))[0] | tmpnum;
+        
+        // Move the result into place and return.
+        _digits = retval._digits;
+        return *this;
+        
+      }
+      
+    }
+    
+    // Bitwise exclusive OR with an integral type.
+    template <class T> ArbInt& ArbInt::op_bit_xor (T const number) {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // No negatives.
+      if (tmpnum < 0) {
+        throw ArbIntErrors::Negative();
+      }
+      
+      // If the number is too large to OR directly, resort to conversion to
+      // ArbInt then OR.
+      if (tmpnum >= s_digitbase) {
+        
+        // Blargh.
+        return op_bit_xor(ArbInt(number));
+        
+      // Otherwise OR directly.
+      } else {
+        
+        // If this number is 0, simply set with number.
+        if (_digits->empty()) {
+          return set(number);
+        }
+        
+        // Copy digits and OR.
+        ArbInt retval(*this, true);
+        (*(retval._digits))[0] = (*(retval._digits))[0] ^ tmpnum;
+        
+        // Move the result into place and return.
+        _digits = retval._digits;
+        return *this;
+        
+      }
+      
+    }
     
     // Logical operators.
-    inline bool ArbInt::op_log_and (ArbInt const& number) const { return (!isZero() && !number.isZero()); }
-    inline bool ArbInt::op_log_ior (ArbInt const& number) const { return (!isZero() || !number.isZero()); }
+                       inline bool ArbInt::op_log_and (ArbInt const& number) const { return (!isZero() && !number.isZero()); }
+    template <class T> inline bool ArbInt::op_log_and (T      const  number) const { return (!isZero() && number);           }
+                       inline bool ArbInt::op_log_ior (ArbInt const& number) const { return (!isZero() || !number.isZero()); }
+    template <class T> inline bool ArbInt::op_log_ior (T      const  number) const { return (!isZero() || number);           }
     
     // Tests if this number is equal to zero.
     inline bool ArbInt::isZero () const { return (_digits->size() == 0); }
@@ -563,7 +939,7 @@
     inline bool ArbInt::isEven () const { return !isOdd();                              }
     
     // Placeholder for automatic pow conversion.
-    template <class T> inline ArbInt pow (T const exp) { return pow(ArbInt(exp)); }
+    template <class T> inline ArbInt ArbInt::pow (T const exp) { return pow(ArbInt(exp)); }
     
     // Return the maximum string input base.
     inline ArbInt::value_type ArbInt::max_input_base () { return SafeInteger<value_type>(s_numidigits).Value(); }
@@ -585,31 +961,67 @@
   inline std::istream& operator >> (std::istream& l, DAC::ArbInt&       r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   // Arithmetic operators.
-  inline DAC::ArbInt operator * (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_mul(r); }
-  inline DAC::ArbInt operator / (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_div(r); }
-  inline DAC::ArbInt operator % (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_mod(r); }
-  inline DAC::ArbInt operator + (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_add(r); }
-  inline DAC::ArbInt operator - (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_sub(r); }
+                     inline DAC::ArbInt operator * (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_mul(r); }
+  template <class T> inline DAC::ArbInt operator * (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_mul(r); }
+  template <class T> inline DAC::ArbInt operator * (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(r).op_mul(l); }
+                     inline DAC::ArbInt operator / (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_div(r); }
+  template <class T> inline DAC::ArbInt operator / (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_div(r); }
+  template <class T> inline DAC::ArbInt operator / (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_div(r); }
+                     inline DAC::ArbInt operator % (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_mod(r); }
+  template <class T> inline T           operator % (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_mod(r); }
+  template <class T> inline DAC::ArbInt operator % (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_mod(r); }
+                     inline DAC::ArbInt operator + (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_add(r); }
+  template <class T> inline DAC::ArbInt operator + (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_add(r); }
+  template <class T> inline DAC::ArbInt operator + (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(r).op_add(l); }
+                     inline DAC::ArbInt operator - (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_sub(r); }
+  template <class T> inline DAC::ArbInt operator - (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_sub(r); }
+  template <class T> inline DAC::ArbInt operator - (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_sub(r); }
   
   // Bit shift operators.
-  inline DAC::ArbInt operator << (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_shl(r); }
-  inline DAC::ArbInt operator >> (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_shr(r); }
+                     inline DAC::ArbInt operator << (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_shl(r); }
+  template <class T> inline DAC::ArbInt operator << (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_shl(r); }
+  template <class T> inline DAC::ArbInt operator << (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_shl(r); }
+                     inline DAC::ArbInt operator >> (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_shr(r); }
+  template <class T> inline DAC::ArbInt operator >> (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_shr(r); }
+  template <class T> inline DAC::ArbInt operator >> (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_shr(r); }
   
   // Comparsion operators.
-  inline bool operator >  (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_gt(r); }
-  inline bool operator >= (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_ge(r); }
-  inline bool operator <  (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_lt(r); }
-  inline bool operator <= (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_le(r); }
-  inline bool operator == (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_eq(r); }
-  inline bool operator != (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_ne(r); }
+                     inline bool operator >  (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_gt(r); }
+  template <class T> inline bool operator >  (DAC::ArbInt const& l, T           const  r) { return l.op_gt(r); }
+  template <class T> inline bool operator >  (T           const  l, DAC::ArbInt const& r) { return r.op_le(l); }
+                     inline bool operator >= (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_ge(r); }
+  template <class T> inline bool operator >= (DAC::ArbInt const& l, T           const  r) { return l.op_ge(r); }
+  template <class T> inline bool operator >= (T           const  l, DAC::ArbInt const& r) { return r.op_lt(l); }
+                     inline bool operator <  (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_lt(r); }
+  template <class T> inline bool operator <  (DAC::ArbInt const& l, T           const  r) { return l.op_lt(r); }
+  template <class T> inline bool operator <  (T           const  l, DAC::ArbInt const& r) { return r.op_ge(l); }
+                     inline bool operator <= (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_le(r); }
+  template <class T> inline bool operator <= (DAC::ArbInt const& l, T           const  r) { return l.op_le(r); }
+  template <class T> inline bool operator <= (T           const  l, DAC::ArbInt const& r) { return r.op_gt(l); }
+                     inline bool operator == (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_eq(r); }
+  template <class T> inline bool operator == (DAC::ArbInt const& l, T           const  r) { return l.op_eq(r); }
+  template <class T> inline bool operator == (T           const  l, DAC::ArbInt const& r) { return r.op_eq(l); }
+                     inline bool operator != (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_ne(r); }
+  template <class T> inline bool operator != (DAC::ArbInt const& l, T           const  r) { return l.op_ne(r); }
+  template <class T> inline bool operator != (T           const  l, DAC::ArbInt const& r) { return r.op_ne(l); }
   
   // Bitwise operators.
-  inline DAC::ArbInt operator & (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_bit_and(r); }
-  inline DAC::ArbInt operator | (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_bit_ior(r); }
-  inline DAC::ArbInt operator ^ (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_bit_xor(r); }
+                     inline DAC::ArbInt operator & (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_bit_and(r); }
+  template <class T> inline DAC::ArbInt operator & (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_bit_and(r); }
+  template <class T> inline DAC::ArbInt operator & (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(r).op_bit_and(l); }
+                     inline DAC::ArbInt operator | (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_bit_ior(r); }
+  template <class T> inline DAC::ArbInt operator | (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_bit_ior(r); }
+  template <class T> inline DAC::ArbInt operator | (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(r).op_bit_ior(l); }
+                     inline DAC::ArbInt operator ^ (DAC::ArbInt const& l, DAC::ArbInt const& r) { return DAC::ArbInt(l).op_bit_xor(r); }
+  template <class T> inline DAC::ArbInt operator ^ (DAC::ArbInt const& l, T           const  r) { return DAC::ArbInt(l).op_bit_xor(r); }
+  template <class T> inline DAC::ArbInt operator ^ (T           const  l, DAC::ArbInt const& r) { return DAC::ArbInt(r).op_bit_xor(l); }
   
   // Logical operators.
-  inline bool operator && (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_log_and(r); }
-  inline bool operator || (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_log_ior(r); }
+                     inline bool operator && (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_log_and(r); }
+  template <class T> inline bool operator && (DAC::ArbInt const& l, T           const  r) { return l.op_log_and(r); }
+  template <class T> inline bool operator && (T           const  l, DAC::ArbInt const& r) { return r.op_log_and(l); }
+                     inline bool operator || (DAC::ArbInt const& l, DAC::ArbInt const& r) { return l.op_log_ior(r); }
+  template <class T> inline bool operator || (DAC::ArbInt const& l, T           const  r) { return l.op_log_ior(r); }
+  template <class T> inline bool operator || (T           const  l, DAC::ArbInt const& r) { return r.op_log_ior(l); }
   
 #endif
