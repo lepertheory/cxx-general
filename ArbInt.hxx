@@ -12,6 +12,7 @@
   #include <iostream>
   #include <string>
   #include <vector>
+  #include <limits>
   
   // Internal includes.
   #include "SafeInteger.hxx"
@@ -426,10 +427,10 @@
     inline int ArbInt::operator - () const { return -(Value<int>()); }
     
     // Increment / decrement operators.
-    inline ArbInt& ArbInt::operator ++ ()    { return op_add(ArbInt(1));                               }
-    inline ArbInt  ArbInt::operator ++ (int) { ArbInt retval(*this); op_add(ArbInt(1)); return retval; }
-    inline ArbInt& ArbInt::operator -- ()    { return op_sub(ArbInt(1));                               }
-    inline ArbInt  ArbInt::operator -- (int) { ArbInt retval(*this); op_sub(ArbInt(1)); return retval; }
+    inline ArbInt& ArbInt::operator ++ ()    { return op_add(1);                               }
+    inline ArbInt  ArbInt::operator ++ (int) { ArbInt retval(*this); op_add(1); return retval; }
+    inline ArbInt& ArbInt::operator -- ()    { return op_sub(1);                               }
+    inline ArbInt  ArbInt::operator -- (int) { ArbInt retval(*this); op_sub(1); return retval; }
     
     // Bitwise compliment.
     inline ArbInt ArbInt::operator ~ () const { return ArbInt(*this).op_bit_cpm(); }
@@ -584,8 +585,8 @@
           }
           
           // Multiply the digit and carry.
-          (*(retval._digits))[i] = SafeInteger<_DigT>((*(_digits))[i]) * number;
-          retval._carry();
+          (*(retval._digits))[i] = (SafeInteger<_DigT>((*(retval._digits))[i]) + SafeInteger<_DigT>((*(_digits))[i]) * number).Value();
+          retval._carry(i);
           
         }
         
@@ -694,10 +695,10 @@
         
         // Add and carry or create a digit if necessary.
         if (retval._digits->empty()) {
-          retval._digits->push_back(SafeInteger<_DigT>(number));
+          retval._digits->push_back(SafeInteger<_DigT>(number).Value());
         } else {
-          (*(retval._digits))[0] = (*(retval._digits))[0] + tmpnum;
-          retval._carry();
+          (*(retval._digits))[0] = ((*(retval._digits))[0] + tmpnum).Value();
+          retval._carry(0);
         }
         
         // Move digits into place and return.
@@ -735,7 +736,7 @@
         }
         
         // If number > this, throw an error.
-        if (tmpnum > *this) {
+        if (tmpnum.Value() > *this) {
           throw ArbIntErrors::Negative();
         }
         
@@ -746,7 +747,7 @@
         if ((*(retval._digits))[0] < tmpnum) {
           retval._borrow(0);
         }
-        (*(retval._digits))[0] = (*(retval._digits))[0] - tmpnum;
+        (*(retval._digits))[0] = ((*(retval._digits))[0] - tmpnum).Value();
         
         // Trim zeros.
         retval._trimZeros();
@@ -770,6 +771,11 @@
       
       // Make the number safe.
       SafeInteger<T> tmpnum = number;
+      
+      // Always greater than negative numbers.
+      if (tmpnum < 0) {
+        return true;
+      }
       
       // If the number is too large to compare directly, resort to conversion
       // to ArbInt then compare.
@@ -799,17 +805,90 @@
       
     }
     
+    // Less than an integral type.
+    template <class T> inline bool ArbInt::op_lt (T const number) const {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // Never less than 0.
+      if (tmpnum <= 0) {
+        return false;
+      }
+      
+      // If the number is too large to compare directly, resort to conversion
+      // to ArbInt then compare.
+      if (tmpnum >= s_digitbase) {
+        
+        // Pong.
+        return op_lt(ArbInt(number));
+      
+      // Otherwise compare directly.  
+      } else {
+        
+        // If the container is empty, it must be less than anything but 0,
+        // which was already checked.
+        if (_digits->empty()) {
+          return true;
+        }
+        
+        // If the container is larger than 1 element, it cannot be less.
+        if (_digits->size() > 1) {
+          return false;
+        }
+        
+        // Compare.
+        return ((*(_digits))[0] < tmpnum);
+        
+      }
+      
+    }
+    
+    // Equal to an integral type.
+    template <class T> inline bool ArbInt::op_eq (T const number) const {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // Never less than 0.
+      if (tmpnum < 0) {
+        return false;
+      }
+      
+      // If the number is too large to compare directly, resort to conversion
+      // to ArbInt then compare.
+      if (tmpnum >= s_digitbase) {
+        
+        // Horf.
+        return op_eq(ArbInt(number));
+        
+      // Otherwise compare directly.
+      } else {
+        
+        // If the container is empty, it can only equal 0.
+        if (_digits->empty()) {
+          return (number == 0);
+        }
+        
+        // If the container is larger than 1 element, it cannot be equal.
+        if (_digits->size() > 1) {
+          return false;
+        }
+        
+        // Compare.
+        return ((*(_digits))[0] == tmpnum);
+        
+      }
+      
+    }
+    
     // Comparison operators.
-                       inline bool ArbInt::op_ge (ArbInt const& number) const { return (op_gt(number) || op_eq(number));   }
-    template <class T> inline bool ArbInt::op_ge (T      const  number) const { return (op_gt(number) || op_eq(number));   }
-                       inline bool ArbInt::op_lt (ArbInt const& number) const { return number.op_gt(*this);                }
-    template <class T> inline bool ArbInt::op_lt (T      const  number) const { return !op_ge(number);                     }
-                       inline bool ArbInt::op_le (ArbInt const& number) const { return (op_lt(number) || op_eq(number));   }
-    template <class T> inline bool ArbInt::op_le (T      const  number) const { return !op_gt(number);                     }
-                       inline bool ArbInt::op_eq (ArbInt const& number) const { return (!op_gt(number) && !op_lt(number)); }
-    template <class T> inline bool ArbInt::op_eq (T      const  number) const { return (!op_gt(number) && !op_lt(number)); }
-                       inline bool ArbInt::op_ne (ArbInt const& number) const { return (op_gt(number) || op_lt(number));   }
-    template <class T> inline bool ArbInt::op_ne (T      const  number) const { return (op_gt(number) || op_lt(number));   }
+                       inline bool ArbInt::op_ge (ArbInt const& number) const { return !op_lt(number); }
+    template <class T> inline bool ArbInt::op_ge (T      const  number) const { return !op_lt(number); }
+                       inline bool ArbInt::op_le (ArbInt const& number) const { return !op_gt(number); }
+    template <class T> inline bool ArbInt::op_le (T      const  number) const { return !op_gt(number); }
+                       inline bool ArbInt::op_ne (ArbInt const& number) const { return !op_eq(number); }
+    template <class T> inline bool ArbInt::op_ne (T      const  number) const { return !op_eq(number); }
     
     // Bitwise AND with an integral type.
     template <class T> ArbInt& ArbInt::op_bit_and (T const number) {
@@ -839,7 +918,7 @@
         
         // Work area, but don't bother copying anything more than the least
         // significant digit. In fact, do the AND right here, it's easy.
-        ArbInt retval((*(_digits))[0] & number);
+        ArbInt retval(SafeInteger<_DigsT>(((*(_digits))[0] & number).Value()).Value());
         
         // Copy into place and return.
         _digits = retval._digits;
@@ -877,7 +956,7 @@
         
         // Copy digits and OR.
         ArbInt retval(*this, true);
-        (*(retval._digits))[0] = (*(retval._digits))[0] | tmpnum;
+        (*(retval._digits))[0] = SafeInteger<_DigsT>(((*(retval._digits))[0] | tmpnum).Value());
         
         // Move the result into place and return.
         _digits = retval._digits;
@@ -915,7 +994,7 @@
         
         // Copy digits and OR.
         ArbInt retval(*this, true);
-        (*(retval._digits))[0] = (*(retval._digits))[0] ^ tmpnum;
+        (*(retval._digits))[0] = SafeInteger<_DigsT>(((*(retval._digits))[0] ^ tmpnum).Value()).Value();
         
         // Move the result into place and return.
         _digits = retval._digits;
@@ -932,7 +1011,7 @@
     template <class T> inline bool ArbInt::op_log_ior (T      const  number) const { return (!isZero() || number);           }
     
     // Tests if this number is equal to zero.
-    inline bool ArbInt::isZero () const { return (_digits->size() == 0); }
+    inline bool ArbInt::isZero () const { return (_digits->empty()); }
     
     // Tests if this number is odd or even.
     inline bool ArbInt::isOdd  () const { return (!isZero() && (_digits->front() & 1)); }

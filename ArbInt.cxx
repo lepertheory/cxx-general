@@ -190,7 +190,7 @@ namespace DAC {
     string retval;
     
     // Easy case of 0.
-    if (_digits->size() == 0) {
+    if (_digits->empty()) {
       
       retval = "0";
       
@@ -272,7 +272,7 @@ namespace DAC {
   ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* remainder) {
     
     // If number is zero, throw error.
-    if (number._digits->size() == 0) {
+    if (number.isZero()) {
       throw ArbIntErrors::DivByZero();
     }
     
@@ -350,7 +350,7 @@ namespace DAC {
           // ensure that floor and ceil do not overflow, and even with those
           // guarantees the better guesses may not even help significantly
           // since they will still almost always be wrong.
-          test = number * ArbInt(guess.Value());
+          test = number * guess.Value();
           //SafeInteger<_DigT> guessfloor = (roughdivor - rppower(SafeInteger<_DigT>(s_digitbase), j)) / (roughdivnd + 1);
           //SafeInteger<_DigT> guessceil  = (roughdivor + rppower(SafeInteger<_DigT>(s_digitbase), j)) / ((roughdivnd == 1) ? 1 : (roughdivnd - 1));
           SafeInteger<_DigT> guessfloor = 1;
@@ -366,7 +366,7 @@ namespace DAC {
             if (test > diggroup) {
               guessceil = guess - 1;
               guess     = guess - (((guess - guessfloor) >> 1) + 1);
-              test      = number * ArbInt(guess.Value());
+              test      = number * guess.Value();
             
             // If there is room for more dividends, we need to raise our
             // guess. Raise it halfway toward the ceiling. Update the floor,
@@ -374,7 +374,7 @@ namespace DAC {
             } else if ((test + number) <= diggroup) {
               guessfloor = guess + 1;
               guess      = guess + (((guessceil - guess) >> 1) + 1);
-              test       = number * ArbInt(guess.Value());
+              test       = number * guess.Value();
             }
             
           }
@@ -488,14 +488,14 @@ namespace DAC {
     if (_digits->size() < number._digits->size()) {
       return false;
     }
-    if ((_digits->size() == 0) && (number._digits->size() == 0)) {
+    if (_digits->empty() && number._digits->empty()) {
       return false;
     }
     
     // Step through each element looking for a difference, start at high-
     // order and work down.
     for (_DigsT::size_type i = 0; i != _digits->size(); ++i) {
-      _DigsT::size_type j = (_digits->size() - 1) - i;
+      _DigsT::size_type j = _digits->size() - 1 - i;
       if ((*(_digits))[j] > (*(number._digits))[j]) {
         return true;
       }
@@ -506,6 +506,60 @@ namespace DAC {
     
     // No difference was found, is not greater.
     return false;
+    
+  }
+  
+  // Less than.
+  bool ArbInt::op_lt (ArbInt const& number) const {
+    
+    // Check sizes of containers first.
+    if (_digits->size() < number._digits->size()) {
+      return true;
+    }
+    if (_digits->size() > number._digits->size()) {
+      return false;
+    }
+    if (_digits->empty() && number._digits->empty()) {
+      return false;
+    }
+    
+    // Step through each element looking for a difference, start at high-order
+    // and work down.
+    for (_DigsT::size_type i = 0; i != _digits->size(); ++i) {
+      _DigsT::size_type j = _digits->size() - 1 - i;
+      if ((*(_digits))[j] < (*(number._digits))[j]) {
+        return true;
+      }
+      if ((*(_digits))[j] > (*(number._digits))[j]) {
+        return false;
+      }
+    }
+    
+    // No difference was found, is not less.
+    return false;
+    
+  }
+  
+  bool ArbInt::op_eq (ArbInt const& number) const {
+    
+    // Check sizes of containers first.
+    if (_digits->empty() && number._digits->empty()) {
+      return true;
+    }
+    if (_digits->size() != number._digits->size()) {
+      return false;
+    }
+    
+    // Step through each element looking for a difference, start at low-order
+    // and work up, most differences will be in low-order digits.
+    for (_DigsT::size_type i = 0; i != _digits->size(); ++i) {
+      if ((*(_digits))[i] != (*(number._digits))[i]) {
+        return false;
+      }
+    }
+    
+    // No difference was found, is equal.
+    return true;
     
   }
   
@@ -620,7 +674,7 @@ namespace DAC {
     ArbInt one(1);
     
     // Russian peasant power.
-    while (tmp_expn._digits->size() > 0) {
+    while (!tmp_expn._digits->empty()) {
       if (tmp_expn._digits->front() & 1) {
         retval *= tmp_base;
       }

@@ -672,6 +672,67 @@ namespace DAC {
     
   }
   
+  // Less-than operator backend.
+  bool Arb::op_lt (Arb const& number) const {
+    
+    // If one or both numbers are zero, compare is easy.
+    if (_data->p.isZero()) {
+      if (number._data->p.isZero()) {
+        return false;
+      } else {
+        return number._data->positive;
+      }
+    } else if (number._data->p.isZero()) {
+      return !_data->positive;
+    }
+    
+    // Neither number is zero. If signs are different, they are sufficient for
+    // this test.
+    if (_data->positive && !number._data->positive) {
+      return false;
+    } else if (!_data->positive && number._data->positive) {
+      return true;
+    }
+    
+    // Signs are the same, we will have to compare numbers.
+    Arb tmp_l(*this, true);
+    Arb tmp_r(*this, true);
+    
+    // Numbers must have the same denominator to compare.
+    tmp_l._normalize(tmp_r);
+    
+    // If numbers are negative, comparison is reversed.
+    if (_data->positive) {
+      return (tmp_l._data->p < tmp_r._data->p);
+    } else {
+      return (tmp_l._data->p > tmp_r._data->p);
+    }
+    
+  }
+  
+  // Equal-to operator backend.
+  bool Arb::op_eq (Arb const& number) const {
+    
+    // Check for 0.
+    if (_data->p.isZero()) {
+      return number._data->p.isZero();
+    } else {
+      if (number._data->p.isZero()) {
+        return false;
+      }
+    }
+    
+    // Neither number is zero. Check signs.
+    if (_data->positive != number._data->positive) {
+      return false;
+    }
+    
+    // Check the numbers themselves. No need to normalize, if they're not,
+    // they're not equal.
+    return ((_data->q == number._data->q) && (_data->p == number._data->p));
+    
+  }
+  
   // Get the floor of this fractional number.
   Arb Arb::floor () const {
     
@@ -929,26 +990,6 @@ namespace DAC {
     
     // We done, return.
     return *this;
-    
-  }
-  
-  // Find a whole-number root of this number.
-  Arb& Arb::_root (_DigsT const& root) {
-    
-    // We can only get the root of a whole number, so if this is not a whole
-    // number, return the result of this formula:
-    //        _____     _ x___
-    //  _  x /  y        \/ y
-    //   \  /  ---  == --------
-    //    \/    z       _ x___
-    //                   \/ z
-    // 
-    // x = root, y = _data->p, z = _data->q.
-    Arb tmp_p;
-    Arb tmp_q;
-    tmp_p._data->p = _data->p;
-    tmp_q._data->p = _data->q;
-    return set(tmp_p._root(root) / tmp_q._root(root));
     
   }
   

@@ -11,6 +11,7 @@
   // STL includes.
   #include <iostream>
   #include <string>
+  #include <limits>
   
   // Internal includes.
   #include "SafeInteger.hxx"
@@ -78,8 +79,8 @@
         Arb (Arb const& number, bool const copynow = false);
         
         // Conversion constructor.
-                           Arb (std::string const& number);
-        template <class T> Arb (T           const  number);
+                           explicit Arb (std::string const& number);
+        template <class T> explicit Arb (T           const  number);
         
         // Unary sign operators.
         Arb operator - () const;
@@ -91,16 +92,21 @@
         Arb  operator -- (int);
         
         // Assignment operator.
-                           Arb& operator = (std::string const& number);
                            Arb& operator = (Arb         const& number);
+                           Arb& operator = (std::string const& number);
         template <class T> Arb& operator = (T           const  number);
         
         // Arithmetic assignment operators.
-        Arb& operator *= (Arb const& number);
-        Arb& operator /= (Arb const& number);
-        Arb& operator %= (Arb const& number);
-        Arb& operator += (Arb const& number);
-        Arb& operator -= (Arb const& number);
+                           Arb& operator *= (Arb const& number);
+        template <class T> Arb& operator *= (T   const  number);
+                           Arb& operator /= (Arb const& number);
+        template <class T> Arb& operator /= (T   const  number);
+                           Arb& operator %= (Arb const& number);
+        template <class T> Arb& operator %= (T   const  number);
+                           Arb& operator += (Arb const& number);
+        template <class T> Arb& operator += (T   const  number);
+                           Arb& operator -= (Arb const& number);
+        template <class T> Arb& operator -= (T   const  number);
         
         // Accessors.
                            Arb&                   Base     (BaseT const base);
@@ -130,26 +136,35 @@
         std::string toString (OutputFormat const format = FMT_DEFAULT) const;
         
         // Set the number.
-                           Arb& set      (std::string const& number);
-                           Arb& set      (Arb         const& number);
-        template <class T> Arb& set      (T           const  number);
-        template <class T> Arb& setInt   (T           const  number);
-        template <class T> Arb& setFloat (T           const  number);
+                           Arb& set (std::string const& number);
+                           Arb& set (Arb         const& number);
+        template <class T> Arb& set (T           const  number);
         
         // Arithmetic operator backends.
-        Arb& op_mul (Arb const& number);
-        Arb& op_div (Arb const& number);
-        Arb& op_mod (Arb const& number);
-        Arb& op_add (Arb const& number);
-        Arb& op_sub (Arb const& number);
+                           Arb& op_mul (Arb const& number);
+        template <class T> Arb& op_mul (T   const  number);
+                           Arb& op_div (Arb const& number);
+        template <class T> Arb& op_div (T   const  number);
+                           Arb& op_mod (Arb const& number);
+        template <class T> Arb& op_mod (T   const  number);
+                           Arb& op_add (Arb const& number);
+        template <class T> Arb& op_add (T   const  number);
+                           Arb& op_sub (Arb const& number);
+        template <class T> Arb& op_sub (T   const  number);
         
         // Comparison operator backends.
-        bool op_gt (Arb const& number) const;
-        bool op_ge (Arb const& number) const;
-        bool op_lt (Arb const& number) const;
-        bool op_le (Arb const& number) const;
-        bool op_eq (Arb const& number) const;
-        bool op_ne (Arb const& number) const;
+                           bool op_gt (Arb const& number) const;
+        template <class T> bool op_gt (T   const  number) const;
+                           bool op_ge (Arb const& number) const;
+        template <class T> bool op_ge (T   const  number) const;
+                           bool op_lt (Arb const& number) const;
+        template <class T> bool op_lt (T   const  number) const;
+                           bool op_le (Arb const& number) const;
+        template <class T> bool op_le (T   const  number) const;
+                           bool op_eq (Arb const& number) const;
+        template <class T> bool op_eq (T   const  number) const;
+                           bool op_ne (Arb const& number) const;
+        template <class T> bool op_ne (T   const  number) const;
         
         // Return information about this number.
         bool isInteger  () const;
@@ -163,10 +178,12 @@
         Arb toInt () const;
         
         // Raise this number to a power.
-        Arb pow (Arb const& exp) const;
+                           Arb pow (Arb const& exp) const;
+        template <class T> Arb pow (T   const  exp) const;
         
         // Find the nth root of this number.
-        Arb root (Arb const& n) const;
+                           Arb root (Arb const& n) const;
+        template <class T> Arb root (T   const  n) const;
         
         // Return the absolute value of this number.
         Arb abs () const;
@@ -264,18 +281,16 @@
         // Common initialization tasks.
         void _init ();
         
+        // Set the number.
+        template <class T> Arb& _set_int (T const number);
+        template <class T> Arb& _set_oth (T const number);
+        
         // Reduce the number to its most compact representation.
         Arb& _reduce      ();
         Arb& _forcereduce (_DigsT const& q);
         
         // Normalize this number to another number.
         Arb& _normalize (Arb& number);
-        
-        // Find a whole-number root of this number.
-        Arb& _root (_DigsT const& root);
-        
-        // Root finding function, x^y - z.
-        Arb _f (Arb const& x, Arb const& y) const;
         
     };
     
@@ -290,19 +305,41 @@
   std::istream& operator >> (std::istream& l, DAC::Arb&        r);
   
   // Arithmetic operators.
-  DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r);
-  DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r);
-  DAC::Arb operator % (DAC::Arb const& l, DAC::Arb const& r);
-  DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r);
-  DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r);
+                     DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> DAC::Arb operator * (DAC::Arb const& l, T        const  r);
+  template <class T> DAC::Arb operator * (T        const  l, DAC::Arb const& r);
+                     DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> DAC::Arb operator / (DAC::Arb const& l, T        const  r);
+  template <class T> DAC::Arb operator / (T        const  l, DAC::Arb const& r);
+                     DAC::Arb operator % (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> DAC::Arb operator % (DAC::Arb const& l, T        const  r);
+  template <class T> DAC::Arb operator % (T        const  l, DAC::Arb const& r);
+                     DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> DAC::Arb operator + (DAC::Arb const& l, T        const  r);
+  template <class T> DAC::Arb operator + (T        const  l, DAC::Arb const& r);
+                     DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> DAC::Arb operator - (DAC::Arb const& l, T        const  r);
+  template <class T> DAC::Arb operator - (T        const  l, DAC::Arb const& r);
   
   // Comparison operators.
-  bool operator >  (DAC::Arb const& l, DAC::Arb const& r);
-  bool operator >= (DAC::Arb const& l, DAC::Arb const& r);
-  bool operator <  (DAC::Arb const& l, DAC::Arb const& r);
-  bool operator <= (DAC::Arb const& l, DAC::Arb const& r);
-  bool operator == (DAC::Arb const& l, DAC::Arb const& r);
-  bool operator != (DAC::Arb const& l, DAC::Arb const& r);
+                     bool operator >  (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> bool operator >  (DAC::Arb const& l, T        const  r);
+  template <class T> bool operator >  (T        const  l, DAC::Arb const& r);
+                     bool operator >= (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> bool operator >= (DAC::Arb const& l, T        const  r);
+  template <class T> bool operator >= (T        const  l, DAC::Arb const& r);
+                     bool operator <  (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> bool operator <  (DAC::Arb const& l, T        const  r);
+  template <class T> bool operator <  (T        const  l, DAC::Arb const& r);
+                     bool operator <= (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> bool operator <= (DAC::Arb const& l, T        const  r);
+  template <class T> bool operator <= (T        const  l, DAC::Arb const& r);
+                     bool operator == (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> bool operator == (DAC::Arb const& l, T        const  r);
+  template <class T> bool operator == (T        const  l, DAC::Arb const& r);
+                     bool operator != (DAC::Arb const& l, DAC::Arb const& r);
+  template <class T> bool operator != (DAC::Arb const& l, T        const  r);
+  template <class T> bool operator != (T        const  l, DAC::Arb const& r);
   
   /***************************************************************************
    * Error declarations.
@@ -350,9 +387,6 @@
     template <> inline Arb& Arb::set (signed   int       const number);
     template <> inline Arb& Arb::set (unsigned long int  const number);
     template <> inline Arb& Arb::set (signed   long int  const number);
-    template <> inline Arb& Arb::set (float              const number);
-    template <> inline Arb& Arb::set (double             const number);
-    template <> inline Arb& Arb::set (long double        const number);
     
   };
   
@@ -392,9 +426,9 @@
     inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
     
     // Increment / decrement operators.
-    inline Arb& Arb::operator ++ ()    { return op_add(1);                         }
+    inline Arb& Arb::operator ++ ()    { return op_add(1);                            }
     inline Arb  Arb::operator ++ (int) { Arb retval(*this); op_add(1); return retval; }
-    inline Arb& Arb::operator -- ()    { return op_sub(1);                         }
+    inline Arb& Arb::operator -- ()    { return op_sub(1);                            }
     inline Arb  Arb::operator -- (int) { Arb retval(*this); op_sub(1); return retval; }
     
     // Assignment operator.
@@ -403,11 +437,16 @@
     template <class T> inline Arb& Arb::operator = (T           const  number) { return set<T>(number);                                               }
     
     // Arithmetic assignment operators.
-    inline Arb& Arb::operator *= (Arb const& number) { return op_mul(number); }
-    inline Arb& Arb::operator /= (Arb const& number) { return op_div(number); }
-    inline Arb& Arb::operator %= (Arb const& number) { return op_mod(number); }
-    inline Arb& Arb::operator += (Arb const& number) { return op_add(number); }
-    inline Arb& Arb::operator -= (Arb const& number) { return op_sub(number); }
+                       inline Arb& Arb::operator *= (Arb const& number) { return op_mul(number); }
+    template <class T> inline Arb& Arb::operator *= (T   const  number) { return op_mul(number); }
+                       inline Arb& Arb::operator /= (Arb const& number) { return op_div(number); }
+    template <class T> inline Arb& Arb::operator /= (T   const  number) { return op_div(number); }
+                       inline Arb& Arb::operator %= (Arb const& number) { return op_mod(number); }
+    template <class T> inline Arb& Arb::operator %= (T   const  number) { return op_mod(number); }
+                       inline Arb& Arb::operator += (Arb const& number) { return op_add(number); }
+    template <class T> inline Arb& Arb::operator += (T   const  number) { return op_add(number); }
+                       inline Arb& Arb::operator -= (Arb const& number) { return op_sub(number); }
+    template <class T> inline Arb& Arb::operator -= (T   const  number) { return op_sub(number); }
     
     // Accessors.
                        inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                                                               }
@@ -425,21 +464,183 @@
     template <class T> inline T                      Arb::Value    ()                                      const { if (!isInteger()) { throw "Unimplemented"; } else { return _data->p.Value<T>(); } }
     
     // Set from a built-in type.
-    template <> inline Arb& Arb::set (bool               const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (unsigned char      const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (signed   char      const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (unsigned short int const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (signed   short int const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (unsigned int       const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (signed   int       const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (unsigned long int  const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (signed   long int  const number) { setInt(number);   }
-    template <> inline Arb& Arb::set (float              const number) { setFloat(number); }
-    template <> inline Arb& Arb::set (double             const number) { setFloat(number); }
-    template <> inline Arb& Arb::set (long double        const number) { setFloat(number); }
+    template <>        inline Arb& Arb::set (bool               const number) { return _set_int(number); }
+    template <>        inline Arb& Arb::set (unsigned char      const number) { return _set_int(number); }
+    template <>        inline Arb& Arb::set (signed   char      const number) { return _set_int(number); }
+    template <>        inline Arb& Arb::set (unsigned short int const number) { return _set_int(number); }
+    template <>        inline Arb& Arb::set (signed   short int const number) { return _set_int(number); }
+    template <>        inline Arb& Arb::set (unsigned int       const number) { return _set_int(number); }
+    template <>        inline Arb& Arb::set (signed   int       const number) { return _set_int(number); }
+    template <>        inline Arb& Arb::set (unsigned long int  const number) { return _set_int(number); }
+    template <>        inline Arb& Arb::set (signed   long int  const number) { return _set_int(number); }
+    template <class T> inline Arb& Arb::set (T                  const number) { return _set_oth(number); }
+    
+    // Multiply by an integral type
+    template <class T> inline Arb& Arb::op_mul (T const number) {
+      
+      // Multiplying 0 is easy.
+      if (isZero()) {
+        return *this;
+      }
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // Multiplying by 0 is also easy.
+      if (tmpnum == 0) {
+        Arb retval(*this, true);
+        retval._data->p = 0;
+        retval._data->q = 1;
+        _data = retval._data;
+        return *this;
+      }
+      
+      // Multiplying by 1.
+      if (tmpnum == 1) {
+        return *this;
+      }
+      
+      // Multiplying by -1.
+      if (tmpnum == -1) {
+        Arb retval(*this, true);
+        retval._data->positive = (_data->positive == (tmpnum > 0));
+        _data = retval._data;
+        return *this;
+      }
+      
+      // Multiply the easy way if this is an integer.
+      if (std::numeric_limits<T>::is_integer) {
+        Arb retval(*this, true);
+        retval._data->p        *= abs(number) * retval._data->q;
+        retval._data->positive  = (_data->positive == (tmpnum > 0));
+        retval._reduce();
+        _data = retval._data;
+        return *this;
+        
+      // Otherwise do it the hard way.
+      } else {
+        return op_mul(Arb(number));
+      }
+      
+    }
+    
+    // Divide by an integral type.
+    template <class T> inline Arb& Arb::op_div (T const number) {
+      
+      // Dividing 0 is easy.
+      if (isZero()) {
+        return *this;
+      }
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // Dividing by 0 is verboten.
+      if (tmpnum == 0) {
+        throw ArbErrors::DivByZero();
+      }
+      
+      // Dividing by 1.
+      if (tmpnum == 1) {
+        return *this;
+      }
+      
+      // Dividing by -1.
+      if (tmpnum == -1) {
+        Arb retval(*this, true);
+        retval._data->positive = (_data->positive == (tmpnum > 0));
+        _data = retval._data;
+        return *this;
+      }
+      
+      // Divide the easy way if this is an integer.
+      if (std::numeric_limits<T>::is_integer) {
+        Arb retval(*this, true);
+        retval._data->q        *= number;
+        retval._data->positive  = (_data->positive == (tmpnum > 0));
+        retval._reduce();
+        _data = retval._data;
+        return *this;
+        
+      // Otherwise do it the hard way.
+      } else {
+        return op_div(Arb(number));
+      }
+      
+    }
+    
+    // Modulo division by an integral type.
+    template <class T> inline Arb& Arb::op_mod (T const number) {
+      
+      // Dividing by 0 is verboten.
+      if (tmpnum == 0) {
+        throw ArbErrors::DivByZero();
+      }
+      
+      // Throw an error if both numbers are not integer.
+      if (!std::numeric_limits<T>::is_integer || !isInteger()) {
+        throw ArbErrors::NonInteger();
+      }
+      
+      // Work area.
+      Arb retval(*this, true);
+      
+      // Modulo divide p.
+      retval._data->p %= number;
+      
+      // We done.
+      _data = retval._data;
+      return *this;
+      
+    }
+    
+    // Addition of an integral type.
+    template <class T> inline Arb& Arb::op_add (T const number) {
+      
+      // Adding to 0 is easy.
+      if (isZero()) {
+        return set(number);
+      }
+      
+      
+      
+    }
+    
+    // Comparison operator backends.
+                       inline bool Arb::op_ge (Arb const& number) const { return !op_lt(number); }
+    template <class T> inline bool Arb::op_ge (T   const  number) const { return !op_lt(number); }
+                       inline bool Arb::op_le (Arb const& number) const { return !op_gt(number); }
+    template <class T> inline bool Arb::op_le (T   const  number) const { return !op_gt(number); }
+                       inline bool Arb::op_ne (Arb const& number) const { return !op_eq(number); }
+    template <class T> inline bool Arb::op_ne (T   const  number) const { return !op_eq(number); }
+    
+    // Return whether this number is an integer.
+    inline bool Arb::isInteger () const { return (_data->q == _DigsT(1)); }
+    
+    // Return whether this number is positive.
+    inline bool Arb::isPositive () const { return _data->positive; }
+    
+    // Return whether this number is equal to zero.
+    inline bool Arb::isZero () const { return _data->p.isZero(); }
+    
+    // Return whether this number is even or odd.
+    inline bool Arb::isOdd  () const { return (isInteger() && _data->p.isOdd());  }
+    inline bool Arb::isEven () const { return (isInteger() && _data->p.isEven()); }
+    
+    // Return the integer portion of this number.
+    inline Arb Arb::toInt () const { Arb retval(*this, true); retval._data->p /= retval._data->q; retval._data->q = 1; return retval; }
+    
+    // Raise this number to a given power.
+    template <class T> inline Arb Arb::pow (T const exp) const { return pow(Arb(exp)); }
+    
+    // Get a given root of this number.
+    template <class T> inline Arb Arb::root (T const n) const { return root(Arb(n)); }
+    
+    // Return the absolute value of this number.
+    inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }
     
     // Set from an integer type.
-    template <class T> Arb& Arb::setInt (T const number) {
+    template <class T> Arb& Arb::_set_int (T const number) {
       
       // Work area.
       Arb new_num;
@@ -463,37 +664,8 @@
       
     }
     
-    // Set from a floating-point type.
-    template <class T> inline Arb& Arb::setFloat (T const number) { return set(DAC::toString(number)); }
-    
-    // Comparison operator backends.
-    inline bool Arb::op_ge (Arb const& number) const { return (op_gt(number) || op_eq(number));  }
-    inline bool Arb::op_lt (Arb const& number) const { return number.op_gt(*this);               }
-    inline bool Arb::op_le (Arb const& number) const { return (op_lt(number) || op_eq(number));  }
-    inline bool Arb::op_eq (Arb const& number) const { return !(op_gt(number) || op_lt(number)); }
-    inline bool Arb::op_ne (Arb const& number) const { return (op_gt(number) || op_lt(number));  }
-    
-    // Return whether this number is an integer.
-    inline bool Arb::isInteger () const { return (_data->q == _DigsT(1)); }
-    
-    // Return whether this number is positive.
-    inline bool Arb::isPositive () const { return _data->positive; }
-    
-    // Return whether this number is equal to zero.
-    inline bool Arb::isZero () const { return _data->p.isZero(); }
-    
-    // Return whether this number is even or odd.
-    inline bool Arb::isOdd  () const { return (isInteger() && _data->p.isOdd());  }
-    inline bool Arb::isEven () const { return (isInteger() && _data->p.isEven()); }
-    
-    // Return the integer portion of this number.
-    inline Arb Arb::toInt () const { Arb retval(*this, true); retval._data->p /= retval._data->q; retval._data->q = 1; return retval; }
-    
-    // Return the absolute value of this number.
-    inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }
-    
-    // Root finding function, x^y - z.
-    inline Arb Arb::_f (Arb const& x, Arb const& y) const { return x.pow(y) - *this; }
+    // Set from a non-integer type.
+    template <class T> inline Arb& Arb::_set_oth (T const number) { return set(DAC::toString(number)); }
     
   };
   
@@ -506,18 +678,40 @@
   inline std::istream& operator >> (std::istream& l, DAC::Arb&        r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   // Arithmetic operators.
-  inline DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mul(r); }
-  inline DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_div(r); }
-  inline DAC::Arb operator % (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mod(r); }
-  inline DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_add(r); }
-  inline DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_sub(r); }
+                     inline DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mul(r);    }
+  template <class T> inline DAC::Arb operator * (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_mul(r);    }
+  template <class T> inline DAC::Arb operator * (T        const  l, DAC::Arb const& r) { return DAC::Arb(r).op_mul(l);    }
+                     inline DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_div(r);    }
+  template <class T> inline DAC::Arb operator / (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_div(r);    }
+  template <class T> inline DAC::Arb operator / (T        const  l, DAC::Arb const& r) { return DAC::Arb(l).op_div(r);    }
+                     inline DAC::Arb operator % (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mod(r);    }
+  template <class T> inline DAC::Arb operator % (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_mod(r);    }
+  template <class T> inline DAC::Arb operator % (T        const  l, DAC::Arb const& r) { return DAC::Arb(l).op_mod(r);    }
+                     inline DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_add(r);    }
+  template <class T> inline DAC::Arb operator + (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_add(r);    }
+  template <class T> inline DAC::Arb operator + (T        const  l, DAC::Arb const& r) { return DAC::Arb(r).op_add(l);    }
+                     inline DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_sub(r);    }
+  template <class T> inline DAC::Arb operator - (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_sub(r);    }
+  template <class T> inline DAC::Arb operator - (T        const  l, DAC::Arb const& r) { return -(DAC::Arb(r).op_sub(l)); }
   
   // Comparison operators.
-  inline bool operator >  (DAC::Arb const& l, DAC::Arb const& r) { return l.op_gt(r); }
-  inline bool operator >= (DAC::Arb const& l, DAC::Arb const& r) { return l.op_ge(r); }
-  inline bool operator <  (DAC::Arb const& l, DAC::Arb const& r) { return l.op_lt(r); }
-  inline bool operator <= (DAC::Arb const& l, DAC::Arb const& r) { return l.op_le(r); }
-  inline bool operator == (DAC::Arb const& l, DAC::Arb const& r) { return l.op_eq(r); }
-  inline bool operator != (DAC::Arb const& l, DAC::Arb const& r) { return l.op_ne(r); }
+                     inline bool operator >  (DAC::Arb const& l, DAC::Arb const& r) { return l.op_gt(r); }
+  template <class T> inline bool operator >  (DAC::Arb const& l, T        const  r) { return l.op_gt(r); }
+  template <class T> inline bool operator >  (T        const  l, DAC::Arb const& r) { return r.op_le(l); }
+                     inline bool operator >= (DAC::Arb const& l, DAC::Arb const& r) { return l.op_ge(r); }
+  template <class T> inline bool operator >= (DAC::Arb const& l, T        const  r) { return l.op_ge(r); }
+  template <class T> inline bool operator >= (T        const  l, DAC::Arb const& r) { return r.op_lt(l); }
+                     inline bool operator <  (DAC::Arb const& l, DAC::Arb const& r) { return l.op_lt(r); }
+  template <class T> inline bool operator <  (DAC::Arb const& l, T        const  r) { return l.op_lt(r); }
+  template <class T> inline bool operator <  (T        const  l, DAC::Arb const& r) { return r.op_ge(l); }
+                     inline bool operator <= (DAC::Arb const& l, DAC::Arb const& r) { return l.op_le(r); }
+  template <class T> inline bool operator <= (DAC::Arb const& l, T        const  r) { return l.op_le(r); }
+  template <class T> inline bool operator <= (T        const  l, DAC::Arb const& r) { return r.op_gt(l); }
+                     inline bool operator == (DAC::Arb const& l, DAC::Arb const& r) { return l.op_eq(r); }
+  template <class T> inline bool operator == (DAC::Arb const& l, T        const  r) { return l.op_eq(r); }
+  template <class T> inline bool operator == (T        const  l, DAC::Arb const& r) { return r.op_eq(l); }
+                     inline bool operator != (DAC::Arb const& l, DAC::Arb const& r) { return l.op_ne(r); }
+  template <class T> inline bool operator != (DAC::Arb const& l, T        const  r) { return l.op_ne(r); }
+  template <class T> inline bool operator != (T        const  l, DAC::Arb const& r) { return r.op_ne(l); }
   
 #endif

@@ -1132,7 +1132,7 @@
     template <class T> template <class RT> bool SafeInteger<T>::op_log_ior (SafeInteger<RT> const& number) const { return (_number || number._number); }
     template <class T> template <class RT> bool SafeInteger<T>::op_log_ior (RT              const  number) const { return (_number || number);         }
     
-    // Reliable comparison operators.
+    // Greater than.
     template <class T> template <class LT, class RT> bool SafeInteger<T>::s_gt (LT const left, RT const right) {
       
       // Check signs first. After this we know both numbers are of the same
@@ -1159,14 +1159,53 @@
       
     }
     
-    // Other comparison operators are made with combinations of s_gt because
-    // I want to get this done someday, but should be optimized on their own
-    // in the future.
-    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_ge (LT const left, RT const right) { return (s_gt(left, right) || s_eq(left, right));   }
-    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_lt (LT const left, RT const right) { return !s_ge(left, right);                         }
-    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_le (LT const left, RT const right) { return (s_lt(left, right) || s_eq(left, right));   }
-    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_eq (LT const left, RT const right) { return (!s_gt(left, right) && !s_gt(right, left)); }
-    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_ne (LT const left, RT const right) { return !s_eq(left, right);                         }
+    // Less than.
+    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_lt (LT const left, RT const right) {
+      
+      // Check signs first.
+      if (right == 0) {
+        return (left < 0);
+      }
+      if ((left < 0) && (right >= 0)) {
+        return true;
+      }
+      if ((left > 0) && (right <= 0)) {
+        return false;
+      }
+      
+      // Upcast to the larger of the two types and compare. Signs are same.
+      if (std::numeric_limits<LT>::digits >= std::numeric_limits<RT>::digits) {
+        return (left < static_cast<LT>(right));
+      } else {
+        return (static_cast<RT>(left) < right);
+      }
+      
+    }
+    
+    // Equal.
+    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_eq (LT const left, RT const right) {
+      
+      // Check signs first.
+      if ((left >= 0) && (right <  0)) {
+        return false;
+      }
+      if ((left <  0) && (right >= 0)) {
+        return false;
+      }
+      
+      // Upcast to the larger of the two types and compare. Signs are same.
+      if (std::numeric_limits<LT>::digits >= std::numeric_limits<RT>::digits) {
+        return (left == static_cast<LT>(right));
+      } else {
+        return (static_cast<RT>(left) == right);
+      }
+      
+    }
+    
+    // Derived comparisons.
+    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_ge (LT const left, RT const right) { return !s_lt(left, right); }
+    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_le (LT const left, RT const right) { return !s_gt(left, right); }
+    template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_ne (LT const left, RT const right) { return !s_eq(left, right); }
     
   };
   
