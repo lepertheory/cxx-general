@@ -918,7 +918,7 @@
         
         // Work area, but don't bother copying anything more than the least
         // significant digit. In fact, do the AND right here, it's easy.
-        ArbInt retval(SafeInteger<_DigsT>(((*(_digits))[0] & number).Value()).Value());
+        ArbInt retval(((*(_digits))[0] & tmpnum).Value());
         
         // Copy into place and return.
         _digits = retval._digits;

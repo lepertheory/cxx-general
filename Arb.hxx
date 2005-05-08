@@ -12,6 +12,7 @@
   #include <iostream>
   #include <string>
   #include <limits>
+  #include <cmath>
   
   // Internal includes.
   #include "SafeInteger.hxx"
@@ -511,7 +512,7 @@
       // Multiply the easy way if this is an integer.
       if (std::numeric_limits<T>::is_integer) {
         Arb retval(*this, true);
-        retval._data->p        *= abs(number) * retval._data->q;
+        retval._data->p        *= std::abs(number) * retval._data->q;
         retval._data->positive  = (_data->positive == (tmpnum > 0));
         retval._reduce();
         _data = retval._data;
@@ -556,7 +557,7 @@
       // Divide the easy way if this is an integer.
       if (std::numeric_limits<T>::is_integer) {
         Arb retval(*this, true);
-        retval._data->q        *= number;
+        retval._data->q        *= std::abs(number);
         retval._data->positive  = (_data->positive == (tmpnum > 0));
         retval._reduce();
         _data = retval._data;
@@ -602,9 +603,77 @@
         return set(number);
       }
       
+      // Adding 0 is easy.
+      if (number == 0) {
+        return *this;
+      }
       
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // If adding an opposite sign, subtract the opposite.
+      if (_data->positive != (tmpnum > 0)) {
+        return op_sub((-tmpnum).Value());
+      }
+      
+      // Add the easy way if this is an integer.
+      if (std::numeric_limits<T>::is_integer) {
+        Arb retval(*this, true);
+        retval._data->p += std::abs(number) * retval._data->q;
+        retval._reduce();
+        _data = retval._data;
+        return *this;
+      } else {
+        return op_add(Arb(number));
+      }
       
     }
+    
+    // Subtraction of an integral type.
+    template <class T> inline Arb& Arb::op_sub (T const number) {
+      
+      // Subtracting from 0 is easy.
+      if (isZero()) {
+        Arb retval(*this);
+        retval.set(number);
+        retval._data->positive = !retval._data->positive;
+        _data = retval._data;
+        return *this;
+      }
+      
+      // Subtracting 0 is easy.
+      if (number == 0) {
+        return *this;
+      }
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // If subtracting an opposite sign, add the opposite.
+      if (_data->positive != (tmpnum > 0)) {
+        return op_add((-tmpnum).Value());
+      }
+      
+      // Subtract the eays way if this is an integer.
+      if (std::numeric_limits<T>::is_integer) {
+        Arb    retval(*this, true);
+        ArbInt avalue(std::abs(number) * retval._data->q);
+        if (avalue > retval._data->p) {
+          retval._data->positive = !retval._data->positive;
+          retval._data->p        = avalue - retval._data->p;
+        } else {
+          retval._data->p -= avalue;
+        }
+        _data = retval._data;
+        return *this;
+      } else {
+        return op_sub(Arb(number));
+      }
+      
+    }
+    
+    // Greater than an integral type.
+    template <class T>
     
     // Comparison operator backends.
                        inline bool Arb::op_ge (Arb const& number) const { return !op_lt(number); }
