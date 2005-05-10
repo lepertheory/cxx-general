@@ -260,7 +260,7 @@
             
             // Common initialization routines.
             void _init ();
-          
+            
         };
         
         /*********************************************************************/
@@ -285,6 +285,23 @@
         // Set the number.
         template <class T> Arb& _set_int (T const number);
         template <class T> Arb& _set_oth (T const number);
+        
+        /*
+        // Integer arithmetic operator backends.
+        template <class T> Arb& _op_mul_int (T const number);
+        template <class T> Arb& _op_div_int (T const number);
+        template <class T> Arb& _op_mod_int (T const number);
+        template <class T> Arb& _op_add_int (T const number);
+        template <class T> Arb& _op_sub_int (T const number);
+        
+        // Integer comparison operator backends.
+        template <class T> Arb& _op_gt_int (T const number);
+        template <class T> Arb& _op_ge_int (T const number);
+        template <class T> Arb& _op_lt_int (T const number);
+        template <class T> Arb& _op_le_int (T const number);
+        template <class T> Arb& _op_eq_int (T const number);
+        template <class T> Arb& _op_ne_int (T const number);
+        */
         
         // Reduce the number to its most compact representation.
         Arb& _reduce      ();
@@ -378,6 +395,17 @@
      * Class Arb.
      *************************************************************************/
     
+    // Construct from a built-in type.
+    template <> inline Arb::Arb (bool               const number);
+    template <> inline Arb::Arb (unsigned char      const number);
+    template <> inline Arb::Arb (signed   char      const number);
+    template <> inline Arb::Arb (unsigned short int const number);
+    template <> inline Arb::Arb (signed   short int const number);
+    template <> inline Arb::Arb (unsigned int       const number);
+    template <> inline Arb::Arb (signed   int       const number);
+    template <> inline Arb::Arb (unsigned long int  const number);
+    template <> inline Arb::Arb (signed   long int  const number);
+    
     // Set from a built-in type.
     template <> inline Arb& Arb::set (bool               const number);
     template <> inline Arb& Arb::set (unsigned char      const number);
@@ -388,6 +416,57 @@
     template <> inline Arb& Arb::set (signed   int       const number);
     template <> inline Arb& Arb::set (unsigned long int  const number);
     template <> inline Arb& Arb::set (signed   long int  const number);
+    
+    /*
+    // Arithmetic operators from built-in types.
+    template <> inline Arb& Arb::op_mul (bool               const number);
+    template <> inline Arb& Arb::op_mul (unsigned char      const number);
+    template <> inline Arb& Arb::op_mul (signed   char      const number);
+    template <> inline Arb& Arb::op_mul (unsigned short int const number);
+    template <> inline Arb& Arb::op_mul (signed   short int const number);
+    template <> inline Arb& Arb::op_mul (unsigned int       const number);
+    template <> inline Arb& Arb::op_mul (signed   int       const number);
+    template <> inline Arb& Arb::op_mul (unsigned long int  const number);
+    template <> inline Arb& Arb::op_mul (signed   long int  const number);
+    template <> inline Arb& Arb::op_div (bool               const number);
+    template <> inline Arb& Arb::op_div (unsigned char      const number);
+    template <> inline Arb& Arb::op_div (signed   char      const number);
+    template <> inline Arb& Arb::op_div (unsigned short int const number);
+    template <> inline Arb& Arb::op_div (signed   short int const number);
+    template <> inline Arb& Arb::op_div (unsigned int       const number);
+    template <> inline Arb& Arb::op_div (signed   int       const number);
+    template <> inline Arb& Arb::op_div (unsigned long int  const number);
+    template <> inline Arb& Arb::op_div (signed   long int  const number);
+    template <> inline Arb& Arb::op_mod (bool               const number);
+    template <> inline Arb& Arb::op_mod (unsigned char      const number);
+    template <> inline Arb& Arb::op_mod (signed   char      const number);
+    template <> inline Arb& Arb::op_mod (unsigned short int const number);
+    template <> inline Arb& Arb::op_mod (signed   short int const number);
+    template <> inline Arb& Arb::op_mod (unsigned int       const number);
+    template <> inline Arb& Arb::op_mod (signed   int       const number);
+    template <> inline Arb& Arb::op_mod (unsigned long int  const number);
+    template <> inline Arb& Arb::op_mod (signed   long int  const number);
+    template <> inline Arb& Arb::op_add (bool               const number);
+    template <> inline Arb& Arb::op_add (unsigned char      const number);
+    template <> inline Arb& Arb::op_add (signed   char      const number);
+    template <> inline Arb& Arb::op_add (unsigned short int const number);
+    template <> inline Arb& Arb::op_add (signed   short int const number);
+    template <> inline Arb& Arb::op_add (unsigned int       const number);
+    template <> inline Arb& Arb::op_add (signed   int       const number);
+    template <> inline Arb& Arb::op_add (unsigned long int  const number);
+    template <> inline Arb& Arb::op_add (signed   long int  const number);
+    template <> inline Arb& Arb::op_sub (bool               const number);
+    template <> inline Arb& Arb::op_sub (unsigned char      const number);
+    template <> inline Arb& Arb::op_sub (signed   char      const number);
+    template <> inline Arb& Arb::op_sub (unsigned short int const number);
+    template <> inline Arb& Arb::op_sub (signed   short int const number);
+    template <> inline Arb& Arb::op_sub (unsigned int       const number);
+    template <> inline Arb& Arb::op_sub (signed   int       const number);
+    template <> inline Arb& Arb::op_sub (unsigned long int  const number);
+    template <> inline Arb& Arb::op_sub (signed   long int  const number);
+    
+    // Comparison operators from built-in types.
+    */
     
   };
   
@@ -413,6 +492,17 @@
      *************************************************************************/
     
     // Conversion constructor.
+    template <>        Arb::Arb (bool               const number) { _init(); set<bool              >(number); }
+    template <>        Arb::Arb (unsigned char      const number) { _init(); set<unsigned char     >(number); }
+    template <>        Arb::Arb (signed   char      const number) { _init(); set<signed   char     >(number); }
+    template <>        Arb::Arb (unsigned short int const number) { _init(); set<unsigned short int>(number); }
+    template <>        Arb::Arb (signed   short int const number) { _init(); set<signed   short int>(number); }
+    template <>        Arb::Arb (unsigned int       const number) { _init(); set<unsigned int      >(number); }
+    template <>        Arb::Arb (signed   int       const number) { _init(); set<signed   int      >(number); }
+    template <>        Arb::Arb (unsigned long int  const number) { _init(); set<unsigned long int >(number); }
+    template <>        Arb::Arb (signed   long int  const number) { _init(); set<signed   long int >(number); }
+    template <class T> Arb::Arb (T                  const number) { _init(); set(DAC::toString(number));      }
+    /*
     template <class T> Arb::Arb (T const number) {
       
       // Call common init.
@@ -422,6 +512,7 @@
       set<T>(number);
       
     }
+    */
     
     // Negation operator.
     inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
@@ -489,11 +580,18 @@
       
       // Multiplying by 0 is also easy.
       if (tmpnum == 0) {
+        
+        // Work area.
         Arb retval(*this, true);
+        
+        // Set to zero.
         retval._data->p = 0;
         retval._data->q = 1;
+        
+        // Copy in result and return.
         _data = retval._data;
         return *this;
+        
       }
       
       // Multiplying by 1.
@@ -503,18 +601,35 @@
       
       // Multiplying by -1.
       if (tmpnum == -1) {
+        
+        // Work area.
         Arb retval(*this, true);
-        retval._data->positive = (_data->positive == (tmpnum > 0));
+        
+        // Reverse the sign.
+        retval._data->positive = !_data->positive;
+        
+        // Copy in result and return.
         _data = retval._data;
         return *this;
+        
       }
       
       // Multiply the easy way if this is an integer.
       if (std::numeric_limits<T>::is_integer) {
+        
+        // Work area.
         Arb retval(*this, true);
-        retval._data->p        *= std::abs(number) * retval._data->q;
-        retval._data->positive  = (_data->positive == (tmpnum > 0));
+        
+        // Multiply.
+        retval._data->p *= std::abs(number);
+        
+        // Set the sign.
+        retval._data->positive = (_data->positive == (tmpnum > 0));
+        
+        // Reduce.
         retval._reduce();
+        
+        // Move in the result and return.
         _data = retval._data;
         return *this;
         
@@ -548,18 +663,35 @@
       
       // Dividing by -1.
       if (tmpnum == -1) {
+        
+        // Work area.
         Arb retval(*this, true);
-        retval._data->positive = (_data->positive == (tmpnum > 0));
+        
+        // Flip the sign.
+        retval._data->positive = !_data->positive;
+        
+        // Move in the result and return.
         _data = retval._data;
         return *this;
+        
       }
       
       // Divide the easy way if this is an integer.
       if (std::numeric_limits<T>::is_integer) {
+        
+        // Work area.
         Arb retval(*this, true);
-        retval._data->q        *= std::abs(number);
-        retval._data->positive  = (_data->positive == (tmpnum > 0));
+        
+        // Divide.
+        retval._data->q *= std::abs(number);
+        
+        // Set the sign.
+        retval._data->positive = (_data->positive == (tmpnum > 0));
+        
+        // Reduce.
         retval._reduce();
+        
+        // Move the result in and return.
         _data = retval._data;
         return *this;
         
@@ -572,6 +704,14 @@
     
     // Modulo division by an integral type.
     template <class T> inline Arb& Arb::op_mod (T const number) {
+      
+      // Dividing 0 is easy.
+      if (isZero()) {
+        return *this;
+      }
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
       
       // Dividing by 0 is verboten.
       if (tmpnum == 0) {
@@ -603,13 +743,13 @@
         return set(number);
       }
       
-      // Adding 0 is easy.
-      if (number == 0) {
-        return *this;
-      }
-      
       // Make the number safe.
       SafeInteger<T> tmpnum = number;
+      
+      // Adding 0 is easy.
+      if (tmpnum == 0) {
+        return *this;
+      }
       
       // If adding an opposite sign, subtract the opposite.
       if (_data->positive != (tmpnum > 0)) {
@@ -618,11 +758,25 @@
       
       // Add the easy way if this is an integer.
       if (std::numeric_limits<T>::is_integer) {
+        
+        // Work area.
         Arb retval(*this, true);
-        retval._data->p += std::abs(number) * retval._data->q;
+        
+        // Add the very easy way if this is an integer, otherwise scale.
+        if (retval.isInteger()) {
+          retval._data->p += std::abs(number);
+        } else {
+          retval._data->p += std::abs(number) * retval._data->q;
+        }
+        
+        // Reduce.
         retval._reduce();
+        
+        // Move the result in and return.
         _data = retval._data;
         return *this;
+        
+      // Otherwise add the hard way.
       } else {
         return op_add(Arb(number));
       }
@@ -641,31 +795,54 @@
         return *this;
       }
       
-      // Subtracting 0 is easy.
-      if (number == 0) {
-        return *this;
-      }
-      
       // Make the number safe.
       SafeInteger<T> tmpnum = number;
+      
+      // Subtracting 0 is easy.
+      if (tmpnum == 0) {
+        return *this;
+      }
       
       // If subtracting an opposite sign, add the opposite.
       if (_data->positive != (tmpnum > 0)) {
         return op_add((-tmpnum).Value());
       }
       
-      // Subtract the eays way if this is an integer.
+      // Subtract the easy way if this is an integer.
       if (std::numeric_limits<T>::is_integer) {
-        Arb    retval(*this, true);
-        ArbInt avalue(std::abs(number) * retval._data->q);
-        if (avalue > retval._data->p) {
-          retval._data->positive = !retval._data->positive;
-          retval._data->p        = avalue - retval._data->p;
+        
+        // Work area.
+        Arb retval(*this, true);
+        
+        // Subtract the very easy way if this is an integer.
+        T anum = std::abs(number);
+        if (retval.isInteger()) {
+          if (anum > retval._data->p) {
+            retval._data->positive = !retval._data->positive;
+            retval._data->p        = anum - retval._data->p;
+          } else {
+            retval._data->p -= anum;
+          }
+          
+        // Otherwise do it the slightly harder way.
         } else {
-          retval._data->p -= avalue;
+          ArbInt ainum(anum * retval._data->q);
+          if (ainum > retval._data->p) {
+            retval._data->positive = !retval._data->positive;
+            retval._data->p        = ainum - retval._data->p;
+          } else {
+            retval._data->p -= ainum;
+          }
         }
+        
+        // Reduce.
+        retval._reduce();
+        
+        // Move the result in and return.
         _data = retval._data;
         return *this;
+        
+      // Subtract the hard way.
       } else {
         return op_sub(Arb(number));
       }
@@ -673,7 +850,115 @@
     }
     
     // Greater than an integral type.
-    template <class T>
+    template <class T> inline bool Arb::op_gt (T const number) const {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // Check for zeros.
+      if (_data->p.isZero()) {
+        if (tmpnum == 0) {
+          return false;
+        } else {
+          return (tmpnum < 0);
+        }
+      } else if (tmpnum == 0) {
+        return _data->positive;
+      }
+      
+      // Check signs.
+      if (_data->positive && (tmpnum < 0)) {
+        return true;
+      } else if (!_data->positive && (tmpnum > 0)) {
+        return false;
+      }
+      
+      // Compare the number.
+      if (isInteger()) {
+        if (_data->positive) {
+          return (_data->p > number);
+        } else {
+          return (_data->p < number);
+        }
+      } else {
+        ArbInt atmp(number * _data->q);
+        if (_data->positive) {
+          return (_data->p > atmp);
+        } else {
+          return (_data->p < atmp);
+        }
+      }
+      
+    }
+    
+    // Less than an integral type.
+    template <class T> inline bool Arb::op_lt (T const number) const {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // Check for zeros.
+      if (_data->p.isZero()) {
+        if (tmpnum == 0) {
+          return false;
+        } else {
+          return (tmpnum > 0);
+        }
+      } else if (tmpnum == 0) {
+        return !_data->positive;
+      }
+      
+      // Check signs.
+      if (_data->positive && (tmpnum < 0)) {
+        return false;
+      } else if (!_data->positive && (tmpnum > 0)) {
+        return true;
+      }
+      
+      // Compare the number.
+      if (isInteger()) {
+        if (_data->positive) {
+          return (_data->p < number);
+        } else {
+          return (_data->p > number);
+        }
+      } else {
+        ArbInt atmp(number * _data->q);
+        if (_data->positive) {
+          return (_data->p < atmp);
+        } else {
+          return (_data->p > atmp);
+        }
+      }
+      
+    }
+    
+    // Equal to an integral type.
+    template <class T> inline bool Arb::op_eq (T const number) const {
+      
+      // Make the number safe.
+      SafeInteger<T> tmpnum = number;
+      
+      // Check for zeros.
+      if (_data->p.isZero()) {
+        return (tmpnum == 0);
+      } else if (tmpnum == 0) {
+        return false;
+      }
+      
+      // Neither number is zero, check signs.
+      if (_data->positive != (tmpnum > 0)) {
+        return false;
+      }
+      
+      // Check numbers.
+      if (isInteger()) {
+        return (_data->p == number);
+      } else {
+        return (_data->p == (number * _data->q));
+      }
+      
+    }
     
     // Comparison operator backends.
                        inline bool Arb::op_ge (Arb const& number) const { return !op_lt(number); }
@@ -684,7 +969,7 @@
     template <class T> inline bool Arb::op_ne (T   const  number) const { return !op_eq(number); }
     
     // Return whether this number is an integer.
-    inline bool Arb::isInteger () const { return (_data->q == _DigsT(1)); }
+    inline bool Arb::isInteger () const { return (_data->q == 1); }
     
     // Return whether this number is positive.
     inline bool Arb::isPositive () const { return _data->positive; }

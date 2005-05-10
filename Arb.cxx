@@ -214,7 +214,7 @@ namespace DAC {
                 ++numeric;
               } break;
               case ROUND_NORMAL: {
-                if (remainder * _DigsT(2) >= _data->q) {
+                if (remainder * 2 >= _data->q) {
                   ++numeric;
                 }
               } break;
@@ -695,8 +695,8 @@ namespace DAC {
     }
     
     // Signs are the same, we will have to compare numbers.
-    Arb tmp_l(*this, true);
-    Arb tmp_r(*this, true);
+    Arb tmp_l(*this,  true);
+    Arb tmp_r(number, true);
     
     // Numbers must have the same denominator to compare.
     tmp_l._normalize(tmp_r);
@@ -716,10 +716,8 @@ namespace DAC {
     // Check for 0.
     if (_data->p.isZero()) {
       return number._data->p.isZero();
-    } else {
-      if (number._data->p.isZero()) {
-        return false;
-      }
+    } else if (number._data->p.isZero()) {
+      return false;
     }
     
     // Neither number is zero. Check signs.
@@ -765,10 +763,9 @@ namespace DAC {
     
     // Work area.
     Arb retval(*this, true);
-    Arb one(1);
     
     // No work if this is zero or if we are raising to the 1.
-    if (!isZero() || (exp == one)) {
+    if (!isZero() || (exp == 1)) {
       
       // Only raise if we have to.
       if (exp != 0) {
@@ -777,7 +774,7 @@ namespace DAC {
         if (exp.isInteger()) {
           
           // No need to raise 1 or to 1.
-          if ((retval.abs() != one) && (exp.abs() != one)) {
+          if ((retval.abs() != 1) && (exp.abs() != 1)) {
             
             // Raise p & q.
             retval._data->p = retval._data->p.pow(exp._data->p);
@@ -811,13 +808,13 @@ namespace DAC {
         
         // If exp is negative, 1/pow.
         if (!exp.isPositive()) {
-          retval = one / retval;
+          retval = 1 / retval;
         }
         
       // Raising to the 0 power is always 1.
       } else {
         
-        retval = one;
+        retval = 1;
         
       }
       
@@ -843,30 +840,28 @@ namespace DAC {
     
     // Common work area.
     Arb retval(1);
-    Arb one(1);
     
     // Only find integer roots.
     if (n.isInteger()) {
       
       // Work area.
       Arb lastguess;
-      Arb two(2);
       Arb accuracy(Arb(_data->base).pow(-Arb(_maxradix)));
       
       // Create an initial guess, will be within at least one ^2, so Newton's
       // algorithm should begin converging by doubling correct # of bits each
       // iteration.
-      if (abs() > one) {
-        retval = two;
+      if (abs() > 1) {
+        retval = 2;
         while (retval.pow(n) < *this) {
-          retval *= two;
+          retval *= 2;
         }
       }
       
       Arb precision = retval;
       
       // Newton's algorithm. 
-      Arb nmo(n - one);
+      Arb nmo(n - 1);
       do {
         
         // Save the last guess for comparison and make a new one.
@@ -889,7 +884,7 @@ namespace DAC {
     // If non-integer, let pow() take care of making it an integer.
     } else {
       
-      retval = pow(one / n);
+      retval = pow(1 / n);
       
     }
     

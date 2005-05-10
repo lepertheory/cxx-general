@@ -58,42 +58,13 @@
         // Classes.
         
         // Interval classes, for function overloading.
-        class I_Millisecond : public TimeVal {
-          public:
-                               I_Millisecond ();
-            template <class T> I_Millisecond (T const value);
-        };
-        class I_Second : public TimeVal {
-          public:
-                               I_Second ();
-            template <class T> I_Second (T const value);
-        };
-        class I_Minute : public TimeVal {
-          public:
-                               I_Minute ();
-            template <class T> I_Minute (T const value);
-        };
-        class I_Hour : public TimeVal {
-          public:
-                               I_Hour ();
-            template <class T> I_Hour (T const value);
-        };
-        class I_Day : public TimeVal {
-          public:
-                               I_Day ();
-            template <class T> I_Day (T const value);
-        };
-        class I_Month : public TimeVal {
-          public:
-                               I_Month ();
-            template <class T> I_Month (T const value);
-            I_Day daysInMonth (I_Year const& year) const;
-        };
-        class I_Year : public TimeVal {
-          public:
-                               I_Year ();
-            template <class T> I_Year (T const value);
-        };
+        class I_Millisecond : public TimeVal { public: I_Millisecond (); template <class T> explicit I_Millisecond (T const value); };
+        class I_Second      : public TimeVal { public: I_Second      (); template <class T> explicit I_Second      (T const value); };
+        class I_Minute      : public TimeVal { public: I_Minute      (); template <class T> explicit I_Minute      (T const value); };
+        class I_Hour        : public TimeVal { public: I_Hour        (); template <class T> explicit I_Hour        (T const value); };
+        class I_Day         : public TimeVal { public: I_Day         (); template <class T> explicit I_Day         (T const value); };
+        class I_Month       : public TimeVal { public: I_Month       (); template <class T> explicit I_Month       (T const value); };
+        class I_Year        : public TimeVal { public: I_Year        (); template <class T> explicit I_Year        (T const value); };
         
         // Year, month, and day grouped.
         class YMD {
@@ -101,6 +72,7 @@
             YMD () {};
             YMD (YMD const& ymd) : Year(ymd.Year), Month(ymd.Month), Day(ymd.Day) {};
             YMD (I_Year const& year, I_Month const& month, I_Day const& day) : Year(year), Month(month), Day(day) {};
+            template <class T> YMD (T const year, T const month, T const day) : Year(year), Month(month), Day(day) {};
             I_Year  Year;
             I_Month Month;
             I_Day   Day;
@@ -111,6 +83,7 @@
           public:
             LeapSecondDay () {};
             LeapSecondDay (YMD const& ymd, I_Second const& leap) : YMD(ymd), Leap(leap) {};
+            template <class T> LeapSecondDay (YMD const& ymd, T const leap) : YMD(ymd), Leap(leap) {};
             I_Second Leap;
         };
         
@@ -271,6 +244,206 @@
   
   // Stream I/O operators.
   std::ostream& operator << (std::ostream& l, DAC::Timestamp const& r);
+  
+  // Arithmetic operators.
+  DAC::Timestamp::I_Millisecond operator * (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  DAC::Timestamp::I_Millisecond operator * (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Second      operator * (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  DAC::Timestamp::I_Second      operator * (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Minute      operator * (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  DAC::Timestamp::I_Minute      operator * (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Hour        operator * (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  DAC::Timestamp::I_Hour        operator * (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Day         operator * (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  DAC::Timestamp::I_Day         operator * (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Month       operator * (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  DAC::Timestamp::I_Month       operator * (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Year        operator * (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  DAC::Timestamp::I_Year        operator * (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Millisecond operator / (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  DAC::Timestamp::I_Millisecond operator / (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Second      operator / (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  DAC::Timestamp::I_Second      operator / (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Minute      operator / (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  DAC::Timestamp::I_Minute      operator / (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Hour        operator / (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  DAC::Timestamp::I_Hour        operator / (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Day         operator / (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  DAC::Timestamp::I_Day         operator / (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Month       operator / (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  DAC::Timestamp::I_Month       operator / (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Year        operator / (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  DAC::Timestamp::I_Year        operator / (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Millisecond operator % (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  DAC::Timestamp::I_Millisecond operator % (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Second      operator % (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  DAC::Timestamp::I_Second      operator % (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Minute      operator % (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  DAC::Timestamp::I_Minute      operator % (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Hour        operator % (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  DAC::Timestamp::I_Hour        operator % (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Day         operator % (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  DAC::Timestamp::I_Day         operator % (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Month       operator % (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  DAC::Timestamp::I_Month       operator % (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Year        operator % (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  DAC::Timestamp::I_Year        operator % (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Millisecond operator + (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  DAC::Timestamp::I_Millisecond operator + (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Second      operator + (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  DAC::Timestamp::I_Second      operator + (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Minute      operator + (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  DAC::Timestamp::I_Minute      operator + (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Hour        operator + (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  DAC::Timestamp::I_Hour        operator + (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Day         operator + (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  DAC::Timestamp::I_Day         operator + (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Month       operator + (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  DAC::Timestamp::I_Month       operator + (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Year        operator + (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  DAC::Timestamp::I_Year        operator + (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Millisecond operator - (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  DAC::Timestamp::I_Millisecond operator - (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Second      operator - (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  DAC::Timestamp::I_Second      operator - (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Minute      operator - (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  DAC::Timestamp::I_Minute      operator - (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Hour        operator - (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  DAC::Timestamp::I_Hour        operator - (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Day         operator - (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  DAC::Timestamp::I_Day         operator - (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Month       operator - (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  DAC::Timestamp::I_Month       operator - (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  DAC::Timestamp::I_Year        operator - (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  DAC::Timestamp::I_Year        operator - (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  
+  // Comparison operators.
+  bool operator >  (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator >  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator >  (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >  (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator >  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator >  (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >  (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator >  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator >  (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >  (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator >  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator >  (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >  (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator >  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator >  (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >  (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator >  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator >  (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >  (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator >  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator >  (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >= (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator >= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator >= (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >= (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator >= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator >= (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >= (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator >= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator >= (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >= (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator >= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator >= (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >= (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator >= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator >= (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >= (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator >= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator >= (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator >= (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator >= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator >= (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <  (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator <  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator <  (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <  (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator <  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator <  (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <  (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator <  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator <  (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <  (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator <  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator <  (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <  (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator <  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator <  (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <  (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator <  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator <  (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <  (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator <  (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator <  (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <= (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator <= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator <= (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <= (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator <= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator <= (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <= (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator <= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator <= (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <= (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator <= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator <= (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <= (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator <= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator <= (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <= (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator <= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator <= (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator <= (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator <= (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator <= (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator == (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator == (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator == (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator == (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator == (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator == (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator == (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator == (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator == (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator == (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator == (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator == (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator == (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator == (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator == (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator == (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator == (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator == (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator == (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator == (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator == (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator != (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator != (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Year        const& r);
+  bool operator != (DAC::Timestamp::I_Year        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator != (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator != (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Month       const& r);
+  bool operator != (DAC::Timestamp::I_Month       const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator != (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator != (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Day         const& r);
+  bool operator != (DAC::Timestamp::I_Day         const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator != (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator != (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Hour        const& r);
+  bool operator != (DAC::Timestamp::I_Hour        const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator != (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator != (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Minute      const& r);
+  bool operator != (DAC::Timestamp::I_Minute      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator != (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator != (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Second      const& r);
+  bool operator != (DAC::Timestamp::I_Second      const& l, DAC::Timestamp::TimeVal       const& r);
+  bool operator != (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator != (DAC::Timestamp::TimeVal       const& l, DAC::Timestamp::I_Millisecond const& r);
+  bool operator != (DAC::Timestamp::I_Millisecond const& l, DAC::Timestamp::TimeVal       const& r);
   
   /***************************************************************************
    * Error declarations.

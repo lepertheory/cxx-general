@@ -35,6 +35,7 @@ namespace DAC {
   // Function members.
   
   // Get the number of days in this month.
+  /*
   Timestamp::I_Day Timestamp::I_Month::daysInMonth (I_Year const& year) const {
     
     // Work area.
@@ -55,7 +56,7 @@ namespace DAC {
         break;
         
         case 2:
-          days = ((year % I_Year(4) != 0) && ((year % I_Year(100) == 0) || (year % I_Year(400) != 0))) ? 29 : 28;
+          days = ((year % 4 != 0) && ((year % 100 == 0) || (year % 400 != 0))) ? 29 : 28;
         break;
         
         case 4:
@@ -78,6 +79,7 @@ namespace DAC {
     return days;
     
   }
+  */
   
   /***************************************************************************
    * Class Timestamp.
@@ -127,13 +129,13 @@ namespace DAC {
         !time.isSet_Day()         ||
         !time.isSet_Month()       ||
         !time.isSet_Year()        ||
-        !time.Year().isInteger()        || (time.Year() == 0)                ||
-        !time.Month().isInteger()       || (time.Month()       < TimeVal(1)) || (time.Month()       > TimeVal(12))                                                      ||
-        !time.Day().isInteger()         || (time.Day()         < TimeVal(1)) || (time.Day()         > time.Month().daysInMonth(time.Year()))                            ||
-        !time.Hour().isInteger()        || (time.Hour()        < TimeVal(0)) || (time.Hour()        > TimeVal(23))                                                      ||
-        !time.Minute().isInteger()      || (time.Minute()      < TimeVal(0)) || (time.Minute()      > TimeVal(59))                                                      ||
-        !time.Second().isInteger()      || (time.Second()      < TimeVal(0)) || (time.Second()      > TimeVal(59) + _leapSecond(time.Year(), time.Month(), time.Day())) ||
-        !time.Millisecond().isInteger() || (time.Millisecond() < TimeVal(0)) || (time.Millisecond() > TimeVal(999))
+        !time.Year().isInteger()        || (time.Year() == 0)       ||
+        !time.Month().isInteger()       || (time.Month()       < 1) || (time.Month()       > 12)                                                      ||
+        //!time.Day().isInteger()         || (time.Day()         < 1) || (time.Day()         > time.Month().daysInMonth(time.Year()))                   ||
+        !time.Hour().isInteger()        || (time.Hour()        < 0) || (time.Hour()        > 23)                                                      ||
+        !time.Minute().isInteger()      || (time.Minute()      < 0) || (time.Minute()      > 59)                                                      ||
+        !time.Second().isInteger()      || (time.Second()      < 0) || (time.Second()      > 59 + _leapSecond(time.Year(), time.Month(), time.Day())) ||
+        !time.Millisecond().isInteger() || (time.Millisecond() < 0) || (time.Millisecond() > 999)
     ) {
       throw TimestampErrors::InvalidTime();
     }
@@ -163,18 +165,18 @@ namespace DAC {
        ) {
       
       // Gregorian.
-      newtime._jd = TimeVal(367) * time.Year() - (TimeVal(7) * (time.Year() + ((time.Month() + TimeVal(9)) / TimeVal(12)).toInt()) / TimeVal(4)).toInt()
-                  - (TimeVal(3) * (((time.Year() + (time.Month() - TimeVal(9)) / TimeVal(7)) / TimeVal(100)).toInt() + TimeVal(1)) / TimeVal(4)).toInt()
-                  + (TimeVal(275) * time.Month() / TimeVal(9)).toInt() + time.Day() + TimeVal(1721028.5)
-                  + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / TimeVal(1000))) / TimeVal(60)) / TimeVal(60)) / TimeVal(24);
+      newtime._jd = 367 * time.Year() - (7 * (time.Year() + ((time.Month() + 9) / 12).toInt()) / 4).toInt()
+                  - (3 * (((time.Year() + (time.Month() - 9) / 7) / 100).toInt() + 1) / 4).toInt()
+                  + (275 * time.Month() / 9).toInt() + time.Day() + 1721028.5
+                  + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / 1000)) / 60) / 60) / 24;
       
     } else {
       
       // Julian.
-      TimeVal y   = time.Year() + TimeVal(time.Year().isPositive() ? 0 : 1);
-      newtime._jd = TimeVal(367) * y - (TimeVal(7) * (y + TimeVal(5001) + ((time.Month() - TimeVal(9)) / TimeVal(7)).toInt()) / TimeVal(4)).toInt()
-                  + (TimeVal(275) * time.Month() / TimeVal(9)).toInt() + time.Day() + TimeVal(1729776.5)
-                  + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / TimeVal(1000))) / TimeVal(60)) / TimeVal(60)) / TimeVal(24);
+      TimeVal y   = time.Year() + (time.Year().isPositive() ? 0 : 1);
+      newtime._jd = 367 * y - (7 * (y + 5001 + ((time.Month() - 9) / 7).toInt()) / 4).toInt()
+                  + (275 * time.Month() / 9).toInt() + time.Day() + 1729776.5
+                  + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / 1000)) / 60) / 60) / 24;
       
     }
     
@@ -190,8 +192,10 @@ namespace DAC {
     // Work area.
     Interval retval;
     
+    /*
     retval.Year((_jd / TimeVal(365.2425)).toInt() - TimeVal(4712));
     retval.Month(_jd - ((retval.Year() + TimeVal(4712)) * TimeVal(365.2425)));
+    */
     
     // Return.
     return retval;
@@ -244,13 +248,13 @@ namespace DAC {
     // Set the interval.
   #if   defined(PLAT_WIN32)
     GetSystemTime(&systime);
-    interval.Millisecond(systime.wMilliseconds)
-            .Second(systime.wSecond)
-            .Minute(systime.wMinute)
-            .Hour(systime.wHour)
-            .Day(systime.wDay)
-            .Month(systime.wMonth)
-            .Year(systime.wYear);
+    interval.Millisecond(I_Millisecond(systime.wMilliseconds))
+            .Second(I_Second(systime.wSecond))
+            .Minute(I_Minute(systime.wMinute))
+            .Hour(I_Hour(systime.wHour))
+            .Day(I_Day(systime.wDay))
+            .Month(I_Month(systime.wMonth))
+            .Year(I_Year(systime.wYear));
   #elif defined(PLAT_POSIX)
     TimeVal ms;
     #if defined(USE_TIME)
@@ -273,13 +277,13 @@ namespace DAC {
       throw TimestampErrors::SysCallError();
     }
     #endif
-    interval.Millisecond(ms)
-            .Second(stp->tm_sec)
-            .Minute(stp->tm_min)
-            .Hour(stp->tm_hour)
-            .Day(stp->tm_mday)
-            .Month(TimeVal(1) + TimeVal(stp->tm_mon))
-            .Year(TimeVal(1900) + TimeVal(stp->tm_year));
+    interval.Millisecond(I_Millisecond(ms))
+            .Second(I_Second(stp->tm_sec))
+            .Minute(I_Minute(stp->tm_min))
+            .Hour(I_Hour(stp->tm_hour))
+            .Day(I_Day(stp->tm_mday))
+            .Month(I_Month(1) + stp->tm_mon)
+            .Year(I_Year(1900) + stp->tm_year);
   #endif
     
     // Set the new time.
