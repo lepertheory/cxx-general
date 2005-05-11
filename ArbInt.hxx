@@ -253,6 +253,9 @@
         // Common initialization tasks.
         void _init ();
         
+        // Set from an integer type.
+        template <class T> ArbInt& _set_int (T const number);
+        
         // Perform carry or borrow.
         ArbInt& _carry  (_DigsT::size_type start);
         ArbInt& _borrow (_DigsT::size_type start);
@@ -498,43 +501,22 @@
     inline ArbInt& ArbInt::set (ArbInt const& number) { _digits = number._digits; return *this; }
     
     // Set this number from another number.
-    template <class T> ArbInt& ArbInt::set (T const number) {
-      
-      // Work area.
-      _DataPT new_digits(new _DigsT);
-      
-      // Only something to set if the number is not zero.
-      if (number != 0) {
-        
-        // If number is less than zero, throw an error.
-        if (number < 0) {
-          throw ArbIntErrors::Negative();
-        }
-        
-        // If the number is less than base, simply set it.
-        SafeInteger<T> tmp_number(number);
-        if (tmp_number < s_digitbase) {
-          
-          // Easy :)
-          new_digits->push_back(SafeInteger<_DigT>(tmp_number.Value()).Value());
-          
-        // Otherwise, full conversion.
-        } else {
-        
-          // Convert with repeated division.
-          while (tmp_number > 0) {
-            new_digits->push_back(SafeInteger<_DigT>((tmp_number % s_digitbase).Value()).Value());
-            tmp_number /= s_digitbase;
-          }
-          
-        }
-        
+    template <>        inline ArbInt& ArbInt::set (bool               const number) { return _set_int(number); }
+    template <>        inline ArbInt& ArbInt::set (unsigned char      const number) { return _set_int(number); }
+    template <>        inline ArbInt& ArbInt::set (signed   char      const number) { return _set_int(number); }
+    template <>        inline ArbInt& ArbInt::set (unsigned short int const number) { return _set_int(number); }
+    template <>        inline ArbInt& ArbInt::set (signed   short int const number) { return _set_int(number); }
+    template <>        inline ArbInt& ArbInt::set (unsigned int       const number) { return _set_int(number); }
+    template <>        inline ArbInt& ArbInt::set (signed   int       const number) { return _set_int(number); }
+    template <>        inline ArbInt& ArbInt::set (unsigned long int  const number) { return _set_int(number); }
+    template <>        inline ArbInt& ArbInt::set (signed   long int  const number) { return _set_int(number); }
+    template <class T>        ArbInt& ArbInt::set (T                  const number) {
+      std::string                     num(DAC::toString(number));
+      typename std::string::size_type pos(num.find_first_of('.'));
+      if (pos != std::string::npos) {
+        num.erase(pos);
       }
-      
-      // Swap in the new digits and return.
-      _digits = new_digits;
-      return *this;
-      
+      return set(num);
     }
     
     // Push a string onto the back of this number.
@@ -1023,11 +1005,158 @@
     // Return the maximum string input base.
     inline ArbInt::value_type ArbInt::max_input_base () { return SafeInteger<value_type>(s_numidigits).Value(); }
     
+    // Set from an integer type.
+    template <class T> ArbInt& ArbInt::_set_int (T const number) {
+      
+      // Work area.
+      _DataPT new_digits(new _DigsT);
+      
+      // Only something to set if the number is not zero.
+      if (number != 0) {
+        
+        // If number is less than zero, throw an error.
+        if (number < 0) {
+          throw ArbIntErrors::Negative();
+        }
+        
+        // If the number is less than base, simply set it.
+        SafeInteger<T> tmp_number(number);
+        if (tmp_number < s_digitbase) {
+          
+          // Easy :)
+          new_digits->push_back(SafeInteger<_DigT>(tmp_number.Value()).Value());
+          
+        // Otherwise, full conversion.
+        } else {
+        
+          // Convert with repeated division.
+          while (tmp_number > 0) {
+            new_digits->push_back(SafeInteger<_DigT>((tmp_number % s_digitbase).Value()).Value());
+            tmp_number /= s_digitbase;
+          }
+          
+        }
+        
+      }
+      
+      // Swap in the new digits and return.
+      _digits = new_digits;
+      return *this;
+      
+    }
+    
     // Trim insignificant zeros.
     inline ArbInt& ArbInt::_trimZeros () { s_trimZerosE(*_digits); return *this; }
     
     // Trim leading and trailing zeros from a given container.
     template <class T> void ArbInt::s_trimZeros (T& c) { s_trimZerosB(c); s_trimZerosE(c); }
+    
+    // Trim leading zeros from a given container.
+    template <class T> void ArbInt::s_trimZerosB (T& c) {
+      
+      // Nothing to do if empty.
+      if (!c.empty()) {
+        
+        // Work data.
+        typename T::iterator pos;
+        
+        // Trim leading zeros.
+        for (pos = c.begin(); (pos != c.end()) && (*pos == 0); ++pos) {}
+        if (pos >= c.begin()) {
+          c.erase(c.begin(), pos);
+        }
+        
+      }
+      
+    }
+    
+    // Trim trailing zeros from a given container.
+    template <class T> void ArbInt::s_trimZerosE (T& c) {
+      
+      // Nothing to do if empty.
+      if (!c.empty()) {
+        
+        // Work data.
+        typename T::iterator pos;
+        
+        // Trim trailing zeros.
+        for (pos = (c.end() - 1); (pos != (c.begin() - 1)) && (*pos == 0); --pos) {}
+        if (pos++ < (c.end() - 1)) {
+          c.erase(pos, c.end());
+        }
+        
+      }
+      
+    }
+    
+    // Do long division on a given container in the specified base. Divisor
+    // type must be 2x base. This is not checked, so be careful!
+    template <class DivndT, class DivorT> DivorT ArbInt::s_longDiv (DivndT& divnd, DivorT const divor, value_type const base) {
+      
+      // Group of digits to divide.
+      SafeInteger<DivorT> dgroup;
+      SafeInteger<DivorT> dquot;
+      
+      // Quotient.
+      DivndT quotient;
+      
+      // Long division steps through each digit of the dividend.
+      for (typename DivndT::reverse_iterator i = divnd.rbegin(); i != divnd.rend(); ++i) {
+        
+        // Add this digit to the group.
+        dgroup += *i;
+        
+        // Divide the group and add the result to the quotient.
+        dquot = dgroup / divor;
+        quotient.insert(quotient.begin(), SafeInteger<typename DivndT::value_type>(dquot.Value()).Value());
+        
+        // Take out what we've divided.
+        dgroup -= dquot * divor;
+        
+        // Move the remainder up to the next order of magnitude.
+        dgroup *= base;
+        
+      }
+      
+      // Trim insignificant zeros from the quotient.
+      s_trimZerosE(quotient);
+      
+      // Set the result in place.
+      divnd.swap(quotient);
+      
+      // Undo the last base shift, this is the remainder. Return it.
+      return SafeInteger<DivorT>((dgroup / base).Value()).Value();
+      
+    }
+    
+    // Convert a container from one base to another. Frombase must be
+    // 2^(bits/2) of from or smaller, tobase must be 2^(bits/2) of to or
+    // smaller.
+    template <class FT, class TT> void ArbInt::s_baseConv (FT const& from, value_type const frombase, TT& to, value_type const tobase) {
+      
+      // Verify that bases are valid. Base must be at least two, and at most
+      // half of the significant bits of the target container's number type.
+      // Maximum base is static, and so should only be calculated once per
+      // type combination.
+      static SafeInteger<typename TT::value_type> maxbase = rppower(SafeInteger<typename TT::value_type>(2), std::numeric_limits<typename TT::value_type>::digits >> 1);
+      if ((SafeInteger<value_type>(frombase) < 2) || (SafeInteger<value_type>(tobase) < 2) || (SafeInteger<value_type>(frombase) > maxbase) || (SafeInteger<value_type>(tobase) > maxbase)) {
+        throw ArbIntErrors::BaseOutOfRange();
+      }
+      
+      // Empty out target container.
+      to.clear();
+      
+      // Temporary, since work will be done in place.
+      FT tmp_from(from);
+      
+      // Convert base by storing the remainder of repeated division by the
+      // base that we will be converting to, in the base that we are
+      // converting from. Least significant digits come out first.
+      while (tmp_from.size() > 0) {
+        to.push_back(SafeInteger<typename TT::value_type>(s_longDiv(tmp_from, tobase, frombase)).Value());
+      }
+      
+    }
     
   };
   

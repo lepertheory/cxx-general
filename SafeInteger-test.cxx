@@ -6,11 +6,14 @@
 
 // STL includes.
 #include <iostream>
+#include <vector>
 
 // Internal includes.
 #include "SafeInteger.hxx"
 #include "toString.hxx"
 #include "Exception.hxx"
+#include "demangle.hxx"
+#include "Arb.hxx"
 
 // Namespace declarations.
 using namespace std;
@@ -18,577 +21,98 @@ using namespace DAC;
 
 enum Operation { ADD, SUB, MUL, DIV };
 
+// Run all tests on two given types.
+template <class T1, T2> void gamut (char const* const type1, char const* const type2);
+
 // Test operation.
-template <class lT, class rT> void testOp (SafeInteger<lT> const& left, Operation const op, SafeInteger<rT> const& right) {
-  try {
-    switch (op) {
-      case ADD:
-        cout << left << " + " << right << " = ";
-        cout << (left + right);
-      break;
-      case SUB:
-        cout << left << " - " << right << " = ";
-        cout << (left - right);
-      break;
-      case MUL:
-        cout << left << " * " << right << " = ";
-        cout << (left * right);
-      break;
-      case DIV:
-        cout << left << " / " << right << " = ";
-        cout << (left / right);
-      break;
-    }
-  } catch (SafeIntegerErrors::Base& e) {
-    cout << e;
-  } catch (Exception& e) {
-    cout << "Unexpected error: " << e;
-  } catch (...) {
-    cout << "Unexpected unknown error.";
-  }
-  cout << endl;
-};
-template <class lT, class rT> void testOp (SafeInteger<lT> const& left, Operation const op, rT const right) {
-  try {
-    switch (op) {
-      case ADD:
-        cout << left << " + " << toString(right) << " = ";
-        cout << (left + right);
-      break;
-      case SUB:
-        cout << left << " - " << toString(right) << " = ";
-        cout << (left - right);
-      break;
-      case MUL:
-        cout << left << " * " << toString(right) << " = ";
-        cout << (left * right);
-      break;
-      case DIV:
-        cout << left << " / " << toString(right) << " = ";
-        cout << (left / right);
-      break;
-    }
-  } catch (SafeIntegerErrors::Base& e) {
-    cout << e;
-  } catch (Exception& e) {
-    cout << "Unexpected error: " << e;
-  } catch (...) {
-    cout << "Unexpected unknown error.";
-  }
-  cout << endl;
-};
+template <class LT, RT> void testOp (LT const l, Operation const op, RT const& r);
 
 // This is where it all happens.
 int main (int argc, char** argv, char** envp) {
   
   try {
     
-    {
-      cout << "Testing unsigned char:" << endl;
-      SafeInteger<unsigned char> test1;
-      {
-        cout << "  With unsigned char:" << endl;
-        SafeInteger<unsigned char> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = 1;
-          cout << "      Over maximum: ";
-          testOp(test1, ADD, test2);
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = numeric_limits<unsigned char>::min();
-          test2 = 1;
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2);
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<unsigned char>::max() / 2 + 1;
-          test2 = 2;
-          cout << "      Over maximum: ";
-          testOp(test1, MUL, test2);
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2);
-        }
-      }
-      {
-        cout << "  With signed char:" << endl;
-        SafeInteger<signed char> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = 0;
-          test2 = -1;
-          cout << "      Under minimum: ";
-          testOp(test1, ADD, test2.Value());
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = 1;
-          cout << "      Over maximum:  ";
-          testOp(test1, ADD, test2.Value());
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = 0;
-          test2 = 1;
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = -1;
-          cout << "      Over maximum:  ";
-          testOp(test1, SUB, test2.Value());
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<unsigned char>::max() / 2 + 1;
-          test2 = 2;
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2.Value());
-          test1 = 1;
-          test2 = -1;
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2.Value());
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2.Value());
-        }
-      }
-      {
-        cout << "  With unsigned short int:" << endl;
-        SafeInteger<unsigned short int> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = 0;
-          test2 = numeric_limits<unsigned char>::max() + 1;
-          cout << "      Over maximum: ";
-          testOp(test1, ADD, test2.Value());
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = numeric_limits<unsigned char>::max() + 1;
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = numeric_limits<unsigned short int>::max();
-          cout << "      Over maximum: ";
-          testOp(test1, MUL, test2.Value());
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2.Value());
-        }
-      }
-      {
-        cout << "  With signed short int:" << endl;
-        SafeInteger<signed short int> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = 1;
-          cout << "      Over maximum:  ";
-          testOp(test1, ADD, test2.Value());
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = -numeric_limits<unsigned char>::max() - 1;
-          cout << "      Under minimum: ";
-          testOp(test1, ADD, test2.Value());
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = 0;
-          test2 = 1;
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-          test1 = 0;
-          test2 = -numeric_limits<unsigned char>::max() - 1;
-          cout << "      Over maximum:  ";
-          testOp(test1, SUB, test2.Value());
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = numeric_limits<signed short int>::max();
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2.Value());
-          test1 = numeric_limits<unsigned char>::max();
-          test2 = numeric_limits<signed short int>::min();
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2.Value());
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test2, DIV, test2.Value());
-        }
-      }
-    }
-    {
-      cout << "Testing signed char:" << endl;
-      SafeInteger<signed char> test1;
-      {
-        cout << "  With unsigned char:" << endl;
-        SafeInteger<unsigned char> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = 0;
-          test2 = numeric_limits<signed char>::max() + 1;
-          cout << "      Over maximum: ";
-          testOp(test1, ADD, test2.Value());
-          test1 = -1;
-          test2 = numeric_limits<signed char>::max() + 2;
-          cout << "      Over maximum: ";
-          testOp(test1, ADD, test2.Value());
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = 0;
-          test2 = -numeric_limits<signed char>::min() + 1;
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-          test1 = 1;
-          test2 = -numeric_limits<signed char>::min() + 2;
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<signed char>::max() / 2 + 1;
-          test2 = 2;
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2.Value());
-          test1 = -1;
-          test2 = -numeric_limits<signed char>::min() + 1;
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2.Value());
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2.Value());
-        }
-      }
-      {
-        cout << "  With signed char:" << endl;
-        SafeInteger<signed char> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = numeric_limits<signed char>::max();
-          test2 = 1;
-          cout << "      Over maximum:  ";
-          testOp(test1, ADD, test2);
-          test1 = numeric_limits<signed char>::min();
-          test2 = -1;
-          cout << "      Under minimum: ";
-          testOp(test1, ADD, test2);
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = numeric_limits<signed char>::max();
-          test2 = -1;
-          cout << "      Over maximum:  ";
-          testOp(test1, SUB, test2);
-          test1 = numeric_limits<signed char>::min();
-          test2 = 1;
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2);
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<signed char>::max() / 2 + 1;
-          test2 = 2;
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2);
-          test1 = numeric_limits<signed char>::min() / 2 - 1;
-          test2 = 2;
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2);
-          test1 = numeric_limits<signed char>::max() / 2 + 2;
-          test2 = -2;
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2);
-          test1 = numeric_limits<signed char>::min();
-          test2 = -1;
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2);
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = numeric_limits<signed char>::min();
-          test2 = -1;
-          cout << "      Over maximum:   ";
-          testOp(test1, DIV, test2);
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2);
-        }
-      }
-      {
-        cout << "  With unsigned short int:" << endl;
-        SafeInteger<unsigned short int> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = -1;
-          test2 = numeric_limits<signed char>::max() + 2;
-          cout << "      Over maximum: ";
-          testOp(test1, ADD, test2.Value());
-          test1 = 1;
-          test2 = numeric_limits<unsigned short int>::max();
-          cout << "      Over maximum: ";
-          testOp(test1, ADD, test2.Value());
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = -1;
-          test2 = -numeric_limits<signed char>::min();
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-          test1 = 1;
-          test2 = numeric_limits<unsigned short int>::max();
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<signed char>::max() / 2 + 1;
-          test2 = 2;
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2.Value());
-          test1 = numeric_limits<signed char>::min() / 2 - 1;
-          test2 = 2;
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2.Value());
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2.Value());
-        }
-      }
-      {
-        cout << "  With signed short int:" << endl;
-        SafeInteger<signed short int> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = 0;
-          test2 = numeric_limits<signed short int>::max();
-          cout << "      Over maximum:  ";
-          testOp(test1, ADD, test2.Value());
-          test1 = numeric_limits<signed char>::max();
-          test2 = numeric_limits<signed short int>::min();
-          cout << "      Under minimum: ";
-          testOp(test1, ADD, test2.Value());
-          test1 = -1;
-          test2 = numeric_limits<signed char>::max() + 2;
-          cout << "      Over maximum:  ";
-          testOp(test1, ADD, test2.Value());
-          test1 = -1;
-          test2 = numeric_limits<signed char>::min();
-          cout << "      Under minimum: ";
-          testOp(test1, ADD, test2.Value());
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = numeric_limits<signed char>::max();
-          test2 = numeric_limits<signed short int>::max();
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-          test1 = 1;
-          test2 = numeric_limits<signed short int>::max();
-          cout << "      Over maximum:  ";
-          testOp(test1, SUB, test2.Value());
-          test1 = -1;
-          test2 = -numeric_limits<signed char>::min();
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-          test1 = numeric_limits<signed char>::min();
-          test2 = numeric_limits<signed short int>::min();
-          cout << "      Over maximum:  ";
-          testOp(test1, SUB, test2.Value());
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<signed char>::max() / 2 + 1;
-          test2 = 2;
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2.Value());
-          test1 = -(numeric_limits<signed char>::min() / 2) + 1;
-          test2 = -2;
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2.Value());
-          test1 = -1;
-          test2 = -numeric_limits<signed char>::min() + 1;
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2.Value());
-          test1 = -1;
-          test2 = numeric_limits<signed char>::min();
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2.Value());
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = numeric_limits<signed char>::min();
-          test2 = -1;
-          cout << "      Over maximum:   ";
-          testOp(test1, DIV, test2.Value());
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2.Value());
-        }
-      }
-    }
-    {
-      cout << "Testing unsigned short int:" << endl;
-      SafeInteger<unsigned short int> test1;
-      {
-        cout << "  With unsigned char:" << endl;
-        SafeInteger<unsigned char> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = numeric_limits<unsigned short int>::max();
-          test2 = 1;
-          cout << "      Over maximum: ";
-          testOp(test1, ADD, test2.Value());
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = numeric_limits<unsigned char>::max() -1;
-          test2 = numeric_limits<unsigned char>::max();
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<unsigned short int>::max() / 2 + 1;
-          test2 = 2;
-          cout << "      Over maximum: ";
-          testOp(test1, MUL, test2.Value());
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = numeric_limits<unsigned short int>::max();
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2.Value());
-        }
-      }
-      {
-        cout << "  With signed char:" << endl;
-        SafeInteger<signed char> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = numeric_limits<signed char>::max();
-          test2 = numeric_limits<signed char>::min();
-          cout << "      Under minimum: ";
-          testOp(test1, ADD, test2.Value());
-          test1 = numeric_limits<unsigned short int>::max();
-          test2 = 1;
-          cout << "      Over maximum:  ";
-          testOp(test1, ADD, test2.Value());
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = 0;
-          test2 = 1;
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2.Value());
-          test1 = numeric_limits<unsigned short int>::max();
-          test2 = -1;
-          cout << "      Over maximum:  ";
-          testOp(test1, SUB, test2.Value());
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = 1;
-          test2 = -1;
-          cout << "      Under minimum: ";
-          testOp(test1, MUL, test2.Value());
-          test1 = numeric_limits<unsigned short int>::max() / 2 + 1;
-          test2 = 2;
-          cout << "      Over maximum:  ";
-          testOp(test1, MUL, test2.Value());
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = numeric_limits<unsigned short int>::max();
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2.Value());
-        }
-      }
-      {
-        cout << "  With unsigned short int:" << endl;
-        SafeInteger<unsigned short int> test2;
-        {
-          cout << "    Addition:" << endl;
-          test1 = numeric_limits<unsigned short int>::max();
-          test2 = 1;
-          cout << "      Over maximum: ";
-          testOp(test1, ADD, test2);
-        }
-        {
-          cout << "    Subtraction:" << endl;
-          test1 = numeric_limits<unsigned short int>::max() - 1;
-          test2 = numeric_limits<unsigned short int>::max();
-          cout << "      Under minimum: ";
-          testOp(test1, SUB, test2);
-        }
-        {
-          cout << "    Multiplication:" << endl;
-          test1 = numeric_limits<unsigned short int>::max() / 3 + 1;
-          test2 = 3;
-          cout << "      Over maximum: ";
-          testOp(test1, MUL, test2);
-        }
-        {
-          cout << "    Division:" << endl;
-          test1 = 1;
-          test2 = 0;
-          cout << "      Divide by zero: ";
-          testOp(test1, DIV, test2);
-        }
-      }
-    }
-    {
-      cout << "Testing signed short int:" << endl;
-      SafeInteger<signed short int> test1;
-      {
-        cout << "  With unsigned char:" << endl;
-        SafeInteger<unsigned char> test2;
-        {
-          cout << "    Addition:" << endl;
-        }
-      }
-    }
-    
-    {
-      cout << "Testing negative comparison: ";
-      signed char test1 = -1;
-      unsigned int test2 = 0xffffffff;
-      cout << test1 << " < " << test2 << " = " << (test1 < test2) << endl;
-    }
+    gamut<bool,               bool              >("bool              ", "bool              ");
+    gamut<bool,               unsigned char     >("bool              ", "unsigned char     ");
+    gamut<bool,               signed   char     >("bool              ", "signed   char     ");
+    gamut<bool,               unsigned short int>("bool              ", "unsigned short int");
+    gamut<bool,               signed   short int>("bool              ", "signed   short int");
+    gamut<bool,               unsigned int      >("bool              ", "unsigned int      ");
+    gamut<bool,               signed   int      >("bool              ", "signed   int      ");
+    gamut<bool,               unsigned long int >("bool              ", "unsigned long int ");
+    gamut<bool,               signed   long int >("bool              ", "signed   long int ");
+    gamut<unsigned char,      bool              >("unsigned char     ", "bool              ");
+    gamut<unsigned char,      unsigned char     >("unsigned char     ", "unsigned char     ");
+    gamut<unsigned char,      signed   char     >("unsigned char     ", "signed   char     ");
+    gamut<unsigned char,      unsigned short int>("unsigned char     ", "unsigned short int");
+    gamut<unsigned char,      signed   short int>("unsigned char     ", "signed   short int");
+    gamut<unsigned char,      unsigned int      >("unsigned char     ", "unsigned int      ");
+    gamut<unsigned char,      signed   int      >("unsigned char     ", "signed   int      ");
+    gamut<unsigned char,      unsigned long int >("unsigned char     ", "unsigned long int ");
+    gamut<unsigned char,      signed   long int >("unsigned char     ", "signed   long int ");
+    gamut<signed   char,      bool              >("signed   char     ", "bool              ");
+    gamut<signed   char,      unsigned char     >("signed   char     ", "unsigned char     ");
+    gamut<signed   char,      signed   char     >("signed   char     ", "signed   char     ");
+    gamut<signed   char,      unsigned short int>("signed   char     ", "unsigned short int");
+    gamut<signed   char,      signed   short int>("signed   char     ", "signed   short int");
+    gamut<signed   char,      unsigned int      >("signed   char     ", "unsigned int      ");
+    gamut<signed   char,      signed   int      >("signed   char     ", "signed   int      ");
+    gamut<signed   char,      unsigned long int >("signed   char     ", "unsigned long int ");
+    gamut<signed   char,      signed   long int >("signed   char     ", "signed   long int ");
+    gamut<unsigned short int, bool              >("unsigned short int", "bool              ");
+    gamut<unsigned short int, unsigned char     >("unsigned short int", "unsigned char     ");
+    gamut<unsigned short int, signed   char     >("unsigned short int", "signed   char     ");
+    gamut<unsigned short int, unsigned short int>("unsigned short int", "unsigned short int");
+    gamut<unsigned short int, signed   short int>("unsigned short int", "signed   short int");
+    gamut<unsigned short int, unsigned int      >("unsigned short int", "unsigned int      ");
+    gamut<unsigned short int, signed   int      >("unsigned short int", "signed   int      ");
+    gamut<unsigned short int, unsigned long int >("unsigned short int", "unsigned long int ");
+    gamut<unsigned short int, signed   long int >("unsigned short int", "signed   long int ");
+    gamut<signed   short int, bool              >("signed   short int", "bool              ");
+    gamut<signed   short int, unsigned char     >("signed   short int", "unsigned char     ");
+    gamut<signed   short int, signed   char     >("signed   short int", "signed   char     ");
+    gamut<signed   short int, unsigned short int>("signed   short int", "unsigned short int");
+    gamut<signed   short int, signed   short int>("signed   short int", "signed   short int");
+    gamut<signed   short int, unsigned int      >("signed   short int", "unsigned int      ");
+    gamut<signed   short int, signed   int      >("signed   short int", "signed   int      ");
+    gamut<signed   short int, unsigned long int >("signed   short int", "unsigned long int ");
+    gamut<signed   short int, signed   long int >("signed   short int", "signed   long int ");
+    gamut<unsigned int,       bool              >("unsigned int      ", "bool              ");
+    gamut<unsigned int,       unsigned char     >("unsigned int      ", "unsigned char     ");
+    gamut<unsigned int,       signed   char     >("unsigned int      ", "signed   char     ");
+    gamut<unsigned int,       unsigned short int>("unsigned int      ", "unsigned short int");
+    gamut<unsigned int,       signed   short int>("unsigned int      ", "signed   short int");
+    gamut<unsigned int,       unsigned int      >("unsigned int      ", "unsigned int      ");
+    gamut<unsigned int,       signed   int      >("unsigned int      ", "signed   int      ");
+    gamut<unsigned int,       unsigned long int >("unsigned int      ", "unsigned long int ");
+    gamut<unsigned int,       signed   long int >("unsigned int      ", "signed   long int ");
+    gamut<signed   int,       bool              >("signed   int      ", "bool              ");
+    gamut<signed   int,       unsigned char     >("signed   int      ", "unsigned char     ");
+    gamut<signed   int,       signed   char     >("signed   int      ", "signed   char     ");
+    gamut<signed   int,       unsigned short int>("signed   int      ", "unsigned short int");
+    gamut<signed   int,       signed   short int>("signed   int      ", "signed   short int");
+    gamut<signed   int,       unsigned int      >("signed   int      ", "unsigned int      ");
+    gamut<signed   int,       signed   int      >("signed   int      ", "signed   int      ");
+    gamut<signed   int,       unsigned long int >("signed   int      ", "unsigned long int ");
+    gamut<signed   int,       signed   long int >("signed   int      ", "signed   long int ");
+    gamut<unsigned long int,  bool              >("unsigned long int ", "bool              ");
+    gamut<unsigned long int,  unsigned char     >("unsigned long int ", "unsigned char     ");
+    gamut<unsigned long int,  signed   char     >("unsigned long int ", "signed   char     ");
+    gamut<unsigned long int,  unsigned short int>("unsigned long int ", "unsigned short int");
+    gamut<unsigned long int,  signed   short int>("unsigned long int ", "signed   short int");
+    gamut<unsigned long int,  unsigned int      >("unsigned long int ", "unsigned int      ");
+    gamut<unsigned long int,  signed   int      >("unsigned long int ", "signed   int      ");
+    gamut<unsigned long int,  unsigned long int >("unsigned long int ", "unsigned long int ");
+    gamut<unsigned long int,  signed   long int >("unsigned long int ", "signed   long int ");
+    gamut<signed   long int,  bool              >("signed   long int ", "bool              ");
+    gamut<signed   long int,  unsigned char     >("signed   long int ", "unsigned char     ");
+    gamut<signed   long int,  signed   char     >("signed   long int ", "signed   char     ");
+    gamut<signed   long int,  unsigned short int>("signed   long int ", "unsigned short int");
+    gamut<signed   long int,  signed   short int>("signed   long int ", "signed   short int");
+    gamut<signed   long int,  unsigned int      >("signed   long int ", "unsigned int      ");
+    gamut<signed   long int,  signed   int      >("signed   long int ", "signed   int      ");
+    gamut<signed   long int,  unsigned long int >("signed   long int ", "unsigned long int ");
+    gamut<signed   long int,  signed   long int >("signed   long int ", "signed   long int ");
   
   } catch (Exception& e) {
     
@@ -603,3 +127,81 @@ int main (int argc, char** argv, char** envp) {
   }
   
 };
+
+// Run all tests on two given types.
+template <class T1, T2> void gamut (char const* const type1, char const* const type2) {
+  
+  vector<Arb> edge1;
+  vector<Arb> edge2;
+  
+  try {
+    
+    if (numeric_limits<T1>::is_signed) {
+      edge1.push_back(Arb(numeric_limits<T1>::min()));
+      edge1.push_back(Arb(numeric_limits<T1>::min() + 1));
+      edge1.push_back(Arb(-1));
+    }
+    edge1.push_back(Arb(0));
+    edge1.push_back(Arb(1));
+    edge1.push_back(Arb(numeric_limits<T1>::max() - 1));
+    edge1.push_back(Arb(numeric_limits<T1>::max()));
+    
+    if (numeric_limits<T2>::is_signed) {
+      edge2.push_back(Arb(numeric_limits<T2>::min()));
+      edge2.push_back(Arb(numeric_limits<T2>::min() + 1));
+      edge2.push_back(Arb(-1));
+    }
+    edge2.push_back(Arb(0));
+    edge2.push_back(Arb(1));
+    edge2.push_back(Arb(numeric_limits<T2>::max() - 1));
+    edge2.push_back(Arb(numeric_limits<T2>::max()));
+    
+    
+    
+  } catch (SafeIntegerErrors::Base& e) {
+    cout << e;
+  } catch (Exception& e) {
+    cout << "Unexpected error: " << e;
+  } catch (exception& e) {
+    cout << "Unexpected error: Type: " << demangle(e) << "  Reason: " << e.what();
+  } catch (...) {
+    cout << "Unexpected unknown error.";
+  }
+  
+}
+
+// Test operation.
+template <class LT, class RT> void testOp (LT const l, Operation const op, RT const right) {
+  
+  try {
+    
+    cout << l;
+    switch (op) {
+      case MUL: cout << " * "; break;
+      case DIV: cout << " / "; break;
+      case MOD: cout << " % "; break;
+      case SUB: cout << " - "; break;
+      case ADD: cout << " + "; break;
+    }
+    cout << r << " = ";
+    switch (op) {
+      case MUL: cout << (l * r); break;
+      case DIV: cout << (l / r); break;
+      case MOD: cout << (l % r); break;
+      case SUB: cout << (l - r); break;
+      case ADD: cout << (l + r); break;
+    }
+    
+  } catch (SafeIntegerErrors::Base& e) {
+    cout << e;
+  } catch (Exception& e) {
+    cout << "Unexpected error: " << e;
+  } catch (exception& e) {
+    cout << "Unexpected error: Type: " << demangle(e) << "  Reason: " << e.what();
+  } catch (...) {
+    cout << "Unexpected unknown error.";
+  }
+  
+  cout << endl;
+  
+}

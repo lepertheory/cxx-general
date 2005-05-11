@@ -28,60 +28,6 @@ using namespace std;
 namespace DAC {
   
   /***************************************************************************
-   * Class Timestamp::I_Month.
-   ***************************************************************************/
-  
-  /***************************************************************************/
-  // Function members.
-  
-  // Get the number of days in this month.
-  /*
-  Timestamp::I_Day Timestamp::I_Month::daysInMonth (I_Year const& year) const {
-    
-    // Work area.
-    Timestamp::I_Day days;
-    
-    // Easy.
-    try {
-      switch (Value<int>()) {
-        
-        case 1:
-        case 3:
-        case 5:
-        case 7:
-        case 8:
-        case 10:
-        case 12:
-          days = 31;
-        break;
-        
-        case 2:
-          days = ((year % 4 != 0) && ((year % 100 == 0) || (year % 400 != 0))) ? 29 : 28;
-        break;
-        
-        case 4:
-        case 6:
-        case 9:
-        case 11:
-          days = 30;
-        break;
-        
-        default:
-          days = 0;
-        break;
-        
-      }
-    } catch (ArbIntErrors::ScalarOverflow) {
-      days = 0;
-    }
-    
-    // We done.
-    return days;
-    
-  }
-  */
-  
-  /***************************************************************************
    * Class Timestamp.
    ***************************************************************************/
   
@@ -131,7 +77,7 @@ namespace DAC {
         !time.isSet_Year()        ||
         !time.Year().isInteger()        || (time.Year() == 0)       ||
         !time.Month().isInteger()       || (time.Month()       < 1) || (time.Month()       > 12)                                                      ||
-        //!time.Day().isInteger()         || (time.Day()         < 1) || (time.Day()         > time.Month().daysInMonth(time.Year()))                   ||
+        !time.Day().isInteger()         || (time.Day()         < 1) || (time.Day()         > _daysInMonth(time.Year(), time.Month()))                 ||
         !time.Hour().isInteger()        || (time.Hour()        < 0) || (time.Hour()        > 23)                                                      ||
         !time.Minute().isInteger()      || (time.Minute()      < 0) || (time.Minute()      > 59)                                                      ||
         !time.Second().isInteger()      || (time.Second()      < 0) || (time.Second()      > 59 + _leapSecond(time.Year(), time.Month(), time.Day())) ||
@@ -174,9 +120,35 @@ namespace DAC {
       
       // Julian.
       TimeVal y   = time.Year() + (time.Year().isPositive() ? 0 : 1);
+      /*
       newtime._jd = 367 * y - (7 * (y + 5001 + ((time.Month() - 9) / 7).toInt()) / 4).toInt()
                   + (275 * time.Month() / 9).toInt() + time.Day() + 1729776.5
                   + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / 1000)) / 60) / 60) / 24;
+      */
+      TimeVal a(367 * y);
+      TimeVal b(y + 5001);
+      TimeVal c(time.Month() - 9);
+      TimeVal d(c / 7);
+      TimeVal e(d.toInt());
+      TimeVal f(b + e);
+      TimeVal g(7 * f);
+      TimeVal h(g / 4);
+      TimeVal i(h.toInt());
+      TimeVal j(a - i);
+      TimeVal k(275 * time.Month());
+      TimeVal l(k / 9);
+      TimeVal m(l.toInt());
+      TimeVal n(j + m);
+      TimeVal o(n + time.Day());
+      TimeVal p(o + 1729776.5);
+      TimeVal q(time.Millisecond() / 1000);
+      TimeVal r(time.Second() + q);
+      TimeVal s(r / 60);
+      TimeVal t(time.Minute() + s);
+      TimeVal u(t / 60);
+      TimeVal v(time.Hour() + u);
+      TimeVal w(v / 24);
+      newtime._jd = p + w;
       
     }
     
@@ -248,13 +220,13 @@ namespace DAC {
     // Set the interval.
   #if   defined(PLAT_WIN32)
     GetSystemTime(&systime);
-    interval.Millisecond(I_Millisecond(systime.wMilliseconds))
-            .Second(I_Second(systime.wSecond))
-            .Minute(I_Minute(systime.wMinute))
-            .Hour(I_Hour(systime.wHour))
-            .Day(I_Day(systime.wDay))
-            .Month(I_Month(systime.wMonth))
-            .Year(I_Year(systime.wYear));
+    interval.Millisecond(TimeVal(systime.wMilliseconds))
+            .Second(TimeVal(systime.wSecond))
+            .Minute(TimeVal(systime.wMinute))
+            .Hour(TimeVal(systime.wHour))
+            .Day(TimeVal(systime.wDay))
+            .Month(TimeVal(systime.wMonth))
+            .Year(TimeVal(systime.wYear));
   #elif defined(PLAT_POSIX)
     TimeVal ms;
     #if defined(USE_TIME)
@@ -277,13 +249,13 @@ namespace DAC {
       throw TimestampErrors::SysCallError();
     }
     #endif
-    interval.Millisecond(I_Millisecond(ms))
-            .Second(I_Second(stp->tm_sec))
-            .Minute(I_Minute(stp->tm_min))
-            .Hour(I_Hour(stp->tm_hour))
-            .Day(I_Day(stp->tm_mday))
-            .Month(I_Month(1) + stp->tm_mon)
-            .Year(I_Year(1900) + stp->tm_year);
+    interval.Millisecond(TimeVal(ms))
+            .Second(TimeVal(stp->tm_sec))
+            .Minute(TimeVal(stp->tm_min))
+            .Hour(TimeVal(stp->tm_hour))
+            .Day(TimeVal(stp->tm_mday))
+            .Month(TimeVal(1) + stp->tm_mon)
+            .Year(TimeVal(1900) + stp->tm_year);
   #endif
     
     // Set the new time.
@@ -358,8 +330,53 @@ namespace DAC {
     
   }
   
+  // Get the number of days in this month.
+  Timestamp::TimeVal Timestamp::_daysInMonth (TimeVal const& year, TimeVal const& month) const {
+    
+    // Work area.
+    Timestamp::TimeVal days;
+    
+    // Easy.
+    try {
+      switch (month.Value<int>()) {
+        
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+        case 8:
+        case 10:
+        case 12:
+          days = 31;
+        break;
+        
+        case 2:
+          days = ((year % 4 != 0) && ((year % 100 == 0) || (year % 400 != 0))) ? 29 : 28;
+        break;
+        
+        case 4:
+        case 6:
+        case 9:
+        case 11:
+          days = 30;
+        break;
+        
+        default:
+          days = 0;
+        break;
+        
+      }
+    } catch (ArbIntErrors::ScalarOverflow) {
+      days = 0;
+    }
+    
+    // We done.
+    return days;
+    
+  }
+  
   // Return the leap seconds of a given day.
-  Timestamp::I_Second Timestamp::_leapSecond (I_Year const& year, I_Month const& month, I_Day const& day) {
+  Timestamp::TimeVal Timestamp::_leapSecond (TimeVal const& year, TimeVal const& month, TimeVal const& day) const {
     
     // List should be very short, just iterate through it and determine if this is a leap second.
     for (LeapSecondList::iterator i = _leapseconds->begin(); i != _leapseconds->end(); ++i) {
@@ -369,7 +386,7 @@ namespace DAC {
     }
     
     // No leap second found.
-    return I_Second(0);
+    return TimeVal(0);
     
   }
   

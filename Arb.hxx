@@ -286,23 +286,6 @@
         template <class T> Arb& _set_int (T const number);
         template <class T> Arb& _set_oth (T const number);
         
-        /*
-        // Integer arithmetic operator backends.
-        template <class T> Arb& _op_mul_int (T const number);
-        template <class T> Arb& _op_div_int (T const number);
-        template <class T> Arb& _op_mod_int (T const number);
-        template <class T> Arb& _op_add_int (T const number);
-        template <class T> Arb& _op_sub_int (T const number);
-        
-        // Integer comparison operator backends.
-        template <class T> Arb& _op_gt_int (T const number);
-        template <class T> Arb& _op_ge_int (T const number);
-        template <class T> Arb& _op_lt_int (T const number);
-        template <class T> Arb& _op_le_int (T const number);
-        template <class T> Arb& _op_eq_int (T const number);
-        template <class T> Arb& _op_ne_int (T const number);
-        */
-        
         // Reduce the number to its most compact representation.
         Arb& _reduce      ();
         Arb& _forcereduce (_DigsT const& q);

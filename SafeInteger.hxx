@@ -299,9 +299,19 @@
       // Private members.
       private:
         
+        /*********************************************************************/
+        // Data members.
+        
         // This is the number itself.
         T _number;
-
+        
+        /*********************************************************************/
+        // Function members.
+        
+        // Return the minimum and maximums for this type.
+        T _min () const;
+        T _max () const;
+        
         // Reliable comparison operators.
         template <class LT, class RT> static bool s_gt (LT const left, RT const right);
         template <class LT, class RT> static bool s_ge (LT const left, RT const right);
@@ -397,10 +407,10 @@
     template <class T> template <class RT> SafeInteger<T>& SafeInteger<T>::Value (RT const number) {
       
       // Check for overflow.
-      if (s_gt(number, std::numeric_limits<T>::max())) {
+      if (s_gt(number, _max())) {
         throw SafeIntegerErrors::MaxOverflow();
       }
-      if (s_lt(number, std::numeric_limits<T>::min())) {
+      if (s_lt(number, _min())) {
         throw SafeIntegerErrors::MinOverflow();
       }
       
@@ -420,24 +430,24 @@
         // Check for overflow.
         if (std::numeric_limits<T>::is_signed) {
           if ((_number > 0) && (number._number > 0)) {
-            if (number._number > (std::numeric_limits<T>::max() / _number)) {
+            if (number._number > (_max() / _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           } else if ((_number < 0) && (number._number < 0)) {
-            if (number._number < (std::numeric_limits<T>::max() / _number)) {
+            if (number._number < (_max() / _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           } else if ((_number > 0) && (number._number < 0)) {
-            if (number._number < (std::numeric_limits<T>::min() / _number)) {
+            if (number._number < (_min() / _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           } else if ((_number < 0) && (number._number > 0)) {
-            if (-number._number < -(std::numeric_limits<T>::min() / _number)) {
+            if (-number._number < -(_min() / _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           }
         } else {
-          if (number._number > (std::numeric_limits<T>::max() / _number)) {
+          if (number._number > (_max() / _number)) {
               throw SafeIntegerErrors::MaxOverflow();
           }
         }
@@ -464,7 +474,7 @@
           // Neither number is signed.
           if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
             
-            if (number > (std::numeric_limits<T>::max() / _number)) {
+            if (number > (_max() / _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
             
@@ -472,16 +482,16 @@
           } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
             
             if (_number > 0) {
-              if (number > (std::numeric_limits<T>::max() / _number)) {
+              if (number > (_max() / _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             } else {
               if (_number == -1) {
-                if (-static_cast<T>(number) < std::numeric_limits<T>::min()) {
+                if (-static_cast<T>(number) < _min()) {
                   throw SafeIntegerErrors::MinOverflow();
                 }
               } else {
-                if (number > (std::numeric_limits<T>::min() / _number)) {
+                if (number > (_min() / _number)) {
                   throw SafeIntegerErrors::MinOverflow();
                 }
               }
@@ -491,7 +501,7 @@
           } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
             
             if (number > 0) {
-              if (number > (std::numeric_limits<T>::max() / _number)) {
+              if (number > (_max() / _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             } else if (number < 0) {
@@ -504,19 +514,19 @@
           } else {
             
             if ((_number > 0) && (number > 0)) {
-              if (number > (std::numeric_limits<T>::max() / _number)) {
+              if (number > (_max() / _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             } else if ((_number > 0) && (number < 0)) {
-              if (number < (std::numeric_limits<T>::min() / _number)) {
+              if (number < (_min() / _number)) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             } else if ((_number < 0) && (number > 0)) {
-              if (-number < -(std::numeric_limits<T>::min() / _number)) {
+              if (-number < -(_min() / _number)) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             } else if ((_number < 0) && (number < 0)) {
-              if (number < (std::numeric_limits<T>::max() / _number)) {
+              if (number < (_max() / _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             }
@@ -528,7 +538,7 @@
           // Neither number is signed.
           if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
             
-            if (number > (std::numeric_limits<T>::max() / _number)) {
+            if (number > (_max() / _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
             
@@ -536,16 +546,16 @@
           } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
             
             if (_number > 0) {
-              if (number > (std::numeric_limits<T>::max() / _number)) {
+              if (number > (_max() / _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             } else if (_number < 0) {
               if (_number == -1) {
-                if (number > (static_cast<RT>(-(std::numeric_limits<T>::min() + 1)) + 1)) {
+                if (number > (static_cast<RT>(-(_min() + 1)) + 1)) {
                   throw SafeIntegerErrors::MinOverflow();
                 }
               } else {
-                if (number > (std::numeric_limits<T>::min() / _number)) {
+                if (number > (_min() / _number)) {
                   throw SafeIntegerErrors::MinOverflow();
                 }
               }
@@ -555,11 +565,11 @@
           } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
             
             if (number > 0) {
-              if (number > (std::numeric_limits<T>::max() / _number)) {
+              if (number > (_max() / _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             } else {
-              if (number < -static_cast<RT>(std::numeric_limits<T>::min() / _number)) {
+              if (number < -static_cast<RT>(_min() / _number)) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             }
@@ -568,19 +578,19 @@
           } else {
             
             if ((_number > 0) && (number > 0)) {
-              if (number > (std::numeric_limits<T>::max() / _number)) {
+              if (number > (_max() / _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             } else if ((_number > 0) && (number < 0)) {
-              if (number < (std::numeric_limits<T>::min() / _number)) {
+              if (number < (_min() / _number)) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             } else if ((_number < 0) && (number > 0)) {
-              if (-number < -(static_cast<RT>(std::numeric_limits<T>::min()) / static_cast<RT>(_number))) {
+              if (-number < -(static_cast<RT>(_min()) / static_cast<RT>(_number))) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             } else if ((_number < 0) && (number < 0)) {
-              if (number < (std::numeric_limits<T>::max() / _number)) {
+              if (number < (_max() / _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             }
@@ -607,7 +617,7 @@
       
       // Check for overflow.
       if (std::numeric_limits<T>::is_signed) {
-        if ((_number == std::numeric_limits<T>::min()) && (number._number == -1)) {
+        if ((_number == _min()) && (number._number == -1)) {
           throw SafeIntegerErrors::MaxOverflow();
         }
       }
@@ -633,7 +643,7 @@
         // Both numbers are signed.
         if (std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
           
-          if ((_number == std::numeric_limits<T>::min()) && (number == -1)) {
+          if ((_number == _min()) && (number == -1)) {
             throw SafeIntegerErrors::MaxOverflow();
           }
           
@@ -644,7 +654,7 @@
         // Both numbers are signed.
         if (std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
           
-          if ((_number == std::numeric_limits<T>::min()) && (number == -1)) {
+          if ((_number == _min()) && (number == -1)) {
             throw SafeIntegerErrors::MaxOverflow();
           }
           
@@ -693,16 +703,16 @@
       // Check for overflow.
       if (std::numeric_limits<T>::is_signed) {
         if ((_number > 0) && (number._number > 0)) {
-          if (number._number > (std::numeric_limits<T>::max() - _number)) {
+          if (number._number > (_max() - _number)) {
             throw SafeIntegerErrors::MaxOverflow();
           }
         } else if ((_number < 0) && (number._number < 0)) {
-          if (number._number < (std::numeric_limits<T>::min() - _number)) {
+          if (number._number < (_min() - _number)) {
             throw SafeIntegerErrors::MinOverflow();
           }
         }
       } else {
-        if (number._number > (std::numeric_limits<T>::max() - _number)) {
+        if (number._number > (_max() - _number)) {
           throw SafeIntegerErrors::MaxOverflow();
         }
       }
@@ -723,7 +733,7 @@
         // Neither number is signed.
         if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
-          if (number > (std::numeric_limits<T>::max() - _number)) {
+          if (number > (_max() - _number)) {
             throw SafeIntegerErrors::MaxOverflow();
           }
           
@@ -731,7 +741,7 @@
         } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
           if (_number > 0) {
-            if (number > (std::numeric_limits<T>::max() - _number)) {
+            if (number > (_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           }
@@ -740,11 +750,11 @@
         } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
           
           if (number < 0) {
-            if (s_lt(number, -(std::numeric_limits<T>::min() + _number))) {
+            if (s_lt(number, -(_min() + _number))) {
               throw SafeIntegerErrors::MinOverflow();
             }
           } else if (number > 0) {
-            if (number > (std::numeric_limits<T>::max() - _number)) {
+            if (number > (_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           }
@@ -753,11 +763,11 @@
         } else {
           
           if ((_number >= 0) && (number > 0)) {
-            if (number > (std::numeric_limits<T>::max() - _number)) {
+            if (number > (_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           } else if ((_number < 0) && (number < 0)) {
-            if (number < (std::numeric_limits<T>::min() - _number)) {
+            if (number < (_min() - _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           }
@@ -769,7 +779,7 @@
         // Neither number is signed.
         if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
-          if (number > (std::numeric_limits<T>::max() - _number)) {
+          if (number > (_max() - _number)) {
             throw SafeIntegerErrors::MaxOverflow();
           }
           
@@ -777,12 +787,12 @@
         } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
           if (_number >= 0) {
-            if (number > (std::numeric_limits<T>::max() - _number)) {
+            if (number > (_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           } else {
             if (number > -_number) {
-              if ((number + _number) > std::numeric_limits<T>::max()) {
+              if ((number + _number) > _max()) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             }
@@ -792,11 +802,11 @@
         } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
           
           if (number >= 0) {
-            if (number > (std::numeric_limits<T>::max() - _number)) {
+            if (number > (_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           } else {
-            if (number < -(static_cast<RT>(std::numeric_limits<T>::min() + _number))) {
+            if (number < -(static_cast<RT>(_min() + _number))) {
               throw SafeIntegerErrors::MinOverflow();
             }
           }
@@ -805,23 +815,23 @@
         } else {
           
           if ((_number >= 0) && (number > 0)) {
-            if (number > (std::numeric_limits<T>::max() - _number)) {
+            if (number > (_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           } else if ((_number >= 0) && (number < 0)) {
             if (number < -_number) {
-              if ((number + _number) < std::numeric_limits<T>::min()) {
+              if ((number + _number) < _min()) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             }
           } else if ((_number < 0) && (number > 0)) {
             if (-number < _number) {
-              if ((number + _number) > std::numeric_limits<T>::max()) {
+              if ((number + _number) > _max()) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             }
           } else if ((_number < 0) && (number < 0)) {
-            if (number < (std::numeric_limits<T>::min() - _number)) {
+            if (number < (_min() - _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           }
@@ -842,16 +852,16 @@
       // Check for overflow.
       if (std::numeric_limits<T>::is_signed) {
         if ((_number > 0) && (number._number < 0)) {
-          if (number._number < -(std::numeric_limits<T>::max() - _number)) {
+          if (number._number < -(_max() - _number)) {
             throw SafeIntegerErrors::MaxOverflow();
           }
         } else if ((_number < 0) && (number._number > 0)) {
-          if (-number._number < (std::numeric_limits<T>::min() - _number)) {
+          if (-number._number < (_min() - _number)) {
             throw SafeIntegerErrors::MinOverflow();
           }
         }
       } else {
-        if (number._number > (std::numeric_limits<T>::min() + _number)) {
+        if (number._number > (_min() + _number)) {
           throw SafeIntegerErrors::MinOverflow();
         }
       }
@@ -872,7 +882,7 @@
         // Neither number is signed.
         if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
-          if (number > (std::numeric_limits<T>::min() + _number)) {
+          if (number > (_min() + _number)) {
             throw SafeIntegerErrors::MinOverflow();
           }
           
@@ -880,7 +890,7 @@
         } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
           if (_number <= 0) {
-            if (-static_cast<T>(number) < (std::numeric_limits<T>::min() - _number)) {
+            if (-static_cast<T>(number) < (_min() - _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           }
@@ -889,16 +899,16 @@
         } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
           
           if (number > 0) {
-            if (number > (std::numeric_limits<T>::min() + _number)) {
+            if (number > (_min() + _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           } else if (number < 0) {
-            if (number == std::numeric_limits<T>::min()) {
-              if ((-(static_cast<T>(std::numeric_limits<T>::min() + 1)) + 1) > (std::numeric_limits<T>::max()) - _number) {
+            if (number == _min()) {
+              if ((-(static_cast<T>(_min() + 1)) + 1) > (_max()) - _number) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             } else {
-              if (-number > (std::numeric_limits<T>::max() - _number)) {
+              if (-number > (_max() - _number)) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             }
@@ -908,11 +918,11 @@
         } else {
           
           if ((_number >= 0) && (number < 0)) {
-            if (number < -(std::numeric_limits<T>::max() - _number)) {
+            if (number < -(_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           } else if ((_number < 0) && (number > 0)) {
-            if (-number < (std::numeric_limits<T>::min() - _number)) {
+            if (-number < (_min() - _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           }
@@ -924,7 +934,7 @@
         // Neither number is signed.
         if (!std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
-          if (number > (std::numeric_limits<T>::min() + _number)) {
+          if (number > (_min() + _number)) {
             throw SafeIntegerErrors::MinOverflow();
           }
           
@@ -932,12 +942,12 @@
         } else if (std::numeric_limits<T>::is_signed && !std::numeric_limits<RT>::is_signed) {
           
           if (_number < 0) {
-            if (number > -(std::numeric_limits<T>::min() - _number)) {
+            if (number > -(_min() - _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           } else {
             if (number > _number) {
-              if ((number - _number) > (static_cast<T>(-(std::numeric_limits<T>::min() + 1)) + 1)) {
+              if ((number - _number) > (static_cast<T>(-(_min() + 1)) + 1)) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             }
@@ -947,11 +957,11 @@
         } else if (!std::numeric_limits<T>::is_signed && std::numeric_limits<RT>::is_signed) {
           
           if (number > 0) {
-            if (number > (std::numeric_limits<T>::min() + _number)) {
+            if (number > (_min() + _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           } else {
-            if (number < -static_cast<RT>(std::numeric_limits<T>::max() - _number)) {
+            if (number < -static_cast<RT>(_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           }
@@ -961,21 +971,21 @@
           
           if ((_number >= 0) && (number > 0)) {
             if (number > _number) {
-              if (-(number - _number) < std::numeric_limits<T>::min()) {
+              if (-(number - _number) < _min()) {
                 throw SafeIntegerErrors::MinOverflow();
               }
             }
           } else if ((_number >= 0) && (number < 0)) {
-            if (number < -(std::numeric_limits<T>::max() - _number)) {
+            if (number < -(_max() - _number)) {
               throw SafeIntegerErrors::MaxOverflow();
             }
           } else if ((_number < 0) && (number > 0)) {
-            if (-number < (std::numeric_limits<T>::min() - _number)) {
+            if (-number < (_min() - _number)) {
               throw SafeIntegerErrors::MinOverflow();
             }
           } else if ((_number < 0) && (number < 0)) {
             if (number < _number) {
-              if ((number - _number) < -std::numeric_limits<T>::max()) {
+              if ((number - _number) < -_max()) {
                 throw SafeIntegerErrors::MaxOverflow();
               }
             }
@@ -1201,6 +1211,10 @@
       }
       
     }
+    
+    // Return the minimums and maximums.
+    template <class T> inline T SafeInteger<T>::_min () const { return (std::numeric_limits<T>::is_integer ? std::numeric_limits<T>::min() : (std::numeric_limits<T>::max() * -1)); }
+    template <class T> inline T SafeInteger<T>::_max () const { return std::numeric_limits<T>::max(); }
     
     // Derived comparisons.
     template <class T> template <class LT, class RT> inline bool SafeInteger<T>::s_ge (LT const left, RT const right) { return !s_lt(left, right); }
