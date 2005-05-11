@@ -19,13 +19,13 @@
 using namespace std;
 using namespace DAC;
 
-enum Operation { ADD, SUB, MUL, DIV };
+enum Operation { MUL, DIV, MOD, ADD, SUB };
 
 // Run all tests on two given types.
-template <class T1, T2> void gamut (char const* const type1, char const* const type2);
+template <class T1, class T2> void gamut (char const* const type1, char const* const type2);
 
 // Test operation.
-template <class LT, RT> void testOp (LT const l, Operation const op, RT const& r);
+template <class LT, class RT> void testOp (LT const l, Operation const op, RT const& r);
 
 // This is where it all happens.
 int main (int argc, char** argv, char** envp) {
@@ -129,13 +129,19 @@ int main (int argc, char** argv, char** envp) {
 };
 
 // Run all tests on two given types.
-template <class T1, T2> void gamut (char const* const type1, char const* const type2) {
+template <class T1, class T2> void gamut (char const* const type1, char const* const type2) {
   
   vector<Arb> edge1;
   vector<Arb> edge2;
   
   try {
     
+    if (numeric_limits<T1>::is_signed) {
+      edge1.push_back(Arb(numeric_limits<T1>::min()));
+    }
+    edge1.push_back(Arb(0));
+    
+    /*
     if (numeric_limits<T1>::is_signed) {
       edge1.push_back(Arb(numeric_limits<T1>::min()));
       edge1.push_back(Arb(numeric_limits<T1>::min() + 1));
@@ -155,23 +161,23 @@ template <class T1, T2> void gamut (char const* const type1, char const* const t
     edge2.push_back(Arb(1));
     edge2.push_back(Arb(numeric_limits<T2>::max() - 1));
     edge2.push_back(Arb(numeric_limits<T2>::max()));
-    
+    */
     
     
   } catch (SafeIntegerErrors::Base& e) {
-    cout << e;
+    cout << e << endl;
   } catch (Exception& e) {
-    cout << "Unexpected error: " << e;
+    cout << "Unexpected error: " << e << endl;
   } catch (exception& e) {
-    cout << "Unexpected error: Type: " << demangle(e) << "  Reason: " << e.what();
+    cout << "Unexpected error: Type: " << demangle(e) << "  Reason: " << e.what() << endl;
   } catch (...) {
-    cout << "Unexpected unknown error.";
+    cout << "Unexpected unknown error." << endl;
   }
   
 }
 
 // Test operation.
-template <class LT, class RT> void testOp (LT const l, Operation const op, RT const right) {
+template <class LT, class RT> void testOp (LT const l, Operation const op, RT const r) {
   
   try {
     

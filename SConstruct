@@ -13,7 +13,7 @@ doconfig = BUILD_TARGETS != []
 
 # Set compiler options.
 if (env['CC'] == 'gcc') :
-  env.Append(CCFLAGS = '-g -O0 -ansi -w -pipe')
+  env.Append(CCFLAGS = '-g -O0 -ansi -pedantic-errors -Wall -Wno-long-long -pipe')
 
 # Create an environment for platform-dependant modules.
 env_platd = env.Copy()
@@ -59,6 +59,7 @@ if doconfig :
   env_Timestamp = conf.Finish()
 
 # Object files.
+SafeInt_test     =           env.Object(target = 'SafeInt-test',     source = ['SafeInt-test.cxx']    )
 SafeInteger_test =           env.Object(target = 'SafeInteger-test', source = ['SafeInteger-test.cxx'])
 ArbInt           =           env.Object(target = 'ArbInt',           source = ['ArbInt.cxx']          )
 ArbInt_test      =           env.Object(target = 'ArbInt-test',      source = ['ArbInt-test.cxx']     )
@@ -69,7 +70,8 @@ Timestamp_test   =           env.Object(target = 'Timestamp-test',   source = ['
 ibc              =           env.Object(target = 'ibc',              source = ['ibc.cxx']             )
 
 # Program files.
-env.Program(target = 'SafeInteger-test', source = [SafeInteger_test]                      )
+env.Program(target = 'SafeInt-test',     source = [SafeInt_test]                          )
+env.Program(target = 'SafeInteger-test', source = [ArbInt, Arb, SafeInteger_test]         )
 env.Program(target = 'ArbInt-test',      source = [ArbInt, ArbInt_test]                   )
 env.Program(target = 'Arb-test',         source = [ArbInt, Arb, Arb_test]                 )
 env.Program(target = 'Timestamp-test',   source = [ArbInt, Arb, Timestamp, Timestamp_test])

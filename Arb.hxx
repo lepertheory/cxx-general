@@ -12,7 +12,6 @@
   #include <iostream>
   #include <string>
   #include <limits>
-  #include <cmath>
   
   // Internal includes.
   #include "SafeInteger.hxx"
@@ -979,6 +978,9 @@
     // Set from an integer type.
     template <class T> Arb& Arb::_set_int (T const number) {
       
+      // Make the number safe.
+      SafeInteger<T> tmpnum(number);
+      
       // Work area.
       Arb new_num;
       
@@ -989,8 +991,9 @@
       new_num._data->fixq     = _data->fixq;
       
       // This number is 1s.
-      new_num._data->p = number;
-      new_num._data->q = 1;
+      new_num._data->p        = (tmpnum >= 0) ? tmpnum : (tmpnum * -1);
+      new_num._data->q        = 1;
+      new_num._data->positive = (tmpnum >= 0);
       
       // Reduce the fraction.
       new_num._reduce();
