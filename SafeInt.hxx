@@ -32,7 +32,7 @@ namespace DAC {
     };
     
   }
-    
+  
   /***************************************************************************
    * SafeInt
    ***************************************************************************
@@ -73,6 +73,19 @@ namespace DAC {
       
       // Bitwise compliment.
       SafeInt operator ~ () const;
+      
+      // Casting operators.
+      operator bool                   () const;
+      operator signed   char          () const;
+      operator unsigned char          () const;
+      operator signed   short int     () const;
+      operator unsigned short int     () const;
+      operator signed   int           () const;
+      operator unsigned int           () const;
+      operator signed   long int      () const;
+      operator unsigned long int      () const;
+      operator signed   long long int () const;
+      operator unsigned long long int () const;
       
       // Assignment operator.
                          SafeInt& operator = (SafeInt<T> const& value);
@@ -217,8 +230,6 @@ namespace DAC {
       template <class U> class _Relationship {
         public:
           const static SafeIntUtil::RelType value;
-        private:
-          static SafeIntUtil::RelType s_checkRelationship ();
       };
       
       // Safely cast.
@@ -257,8 +268,7 @@ namespace DAC {
       public:
         virtual char const* what () const throw();
         virtual ~Overflow () throw();
-      private:
-        std::string _message;
+        std::string message;
     };
     
     // Overflow resulting from a cast.
@@ -417,8 +427,8 @@ namespace DAC {
   template <class T> inline SafeInt<T>::SafeInt (SafeInt<T> const& value) { _value = value._value; }
   
   // Conversion constructor.
-  template <class T> template <class U> inline SafeInt<T>::SafeInt (U          const  value) { _value = _SafeCaster<U, _Relationship<U>::value>::cast(value);        }
-  template <class T> template <class U> inline SafeInt<T>::SafeInt (SafeInt<U> const& value) { _value = _SafeCaster<U, _Relationship<U>::value>::cast(value._value); }
+  template <class T> template <class U> inline SafeInt<T>::SafeInt (U          const  value) { _value = _SafeCaster<U, _Relationship<U>::value>::cast(value); }
+  template <class T> template <class U> inline SafeInt<T>::SafeInt (SafeInt<U> const& value) { _value = static_cast<T>(value);                                }
   
   // Increment / decrement operators.
   template <class T> inline SafeInt<T>& SafeInt<T>::operator ++ ()    { return op_add(1);                                   }
@@ -436,9 +446,22 @@ namespace DAC {
   // Bitwise compliment.
   template <class T> inline SafeInt<T> SafeInt<T>::operator ~ () const { return SafeInt<T>(*this).op_bit_cpm(); }
   
+  // Casting operators.
+  template <class T> inline SafeInt<T>::operator bool                   () const { return _SafeCaster<bool,                   _Relationship<bool                  >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator signed   char          () const { return _SafeCaster<signed   char,          _Relationship<signed   char         >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned char          () const { return _SafeCaster<unsigned char,          _Relationship<unsigned char         >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator signed   short int     () const { return _SafeCaster<signed   short int,     _Relationship<signed   short int    >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned short int     () const { return _SafeCaster<unsigned short int,     _Relationship<unsigned short int    >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator signed   int           () const { return _SafeCaster<signed   int,           _Relationship<signed   int          >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned int           () const { return _SafeCaster<unsigned int,           _Relationship<unsigned int          >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator signed   long int      () const { return _SafeCaster<signed   long int,      _Relationship<signed   long int     >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned long int      () const { return _SafeCaster<unsigned long int,      _Relationship<unsigned long int     >::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator signed   long long int () const { return _SafeCaster<signed   long long int, _Relationship<signed   long long int>::value>::cast(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned long long int () const { return _SafeCaster<unsigned long long int, _Relationship<unsigned long long int>::value>::cast(_value); }
+  
   // Assignment operator.
-  template <class T>                    inline SafeInt<T>& SafeInt<T>::operator = (SafeInt<T> const& value) { _value = value._value;                                                                              return *this; }
-  template <class T>                    inline SafeInt<T>& SafeInt<T>::operator = (T          const  value) { _value = value;                                                                                     return *this; }
+  template <class T>                    inline SafeInt<T>& SafeInt<T>::operator = (SafeInt<T> const& value) { _value = value._value;                                                return *this; }
+  template <class T>                    inline SafeInt<T>& SafeInt<T>::operator = (T          const  value) { _value = value;                                                       return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator = (SafeInt<U> const& value) { _value = _SafeCaster<U, _Relationship<U>::value>::cast(value._value); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator = (U          const  value) { _value = _SafeCaster<U, _Relationship<U>::value>::cast(value);        return *this; }
   
@@ -498,60 +521,53 @@ namespace DAC {
   // Static data members.
   
   // Relationship between T and U.
-  template <class T> template <class U> const SafeIntUtil::RelType SafeInt<T>::_Relationship<U>::value(s_checkRelationship());
-  
-  /*************************************************************************/
-  // Static function members.
-  
-  // Find the size / sign relationship between type T and type U.
-  template <class T> template <class U> SafeIntUtil::RelType SafeInt<T>::_Relationship<U>::s_checkRelationship () {
-    
-    // Check the size relationship.
-    if (std::numeric_limits<T>::digits > std::numeric_limits<U>::digits) {
-      if (std::numeric_limits<T>::is_signed) {
-        if (std::numeric_limits<U>::is_signed) {
-          return SafeIntUtil::SL_SS;
-        } else {
-          return SafeIntUtil::SL_US;
-        }
-      } else {
-        if (std::numeric_limits<U>::is_signed) {
-          return SafeIntUtil::UL_SS;
-        } else {
-          return SafeIntUtil::UL_US;
-        }
-      }
-    } else if (std::numeric_limits<T>::digits < std::numeric_limits<U>::digits) {
-      if (std::numeric_limits<T>::is_signed) {
-        if (std::numeric_limits<U>::is_signed) {
-          return SafeIntUtil::SS_SL;
-        } else {
-          return SafeIntUtil::SS_UL;
-        }
-      } else {
-        if (std::numeric_limits<U>::is_signed) {
-          return SafeIntUtil::US_SL;
-        } else {
-          return SafeIntUtil::US_UL;
-        }
-      }
-    } else {
-      if (std::numeric_limits<T>::is_signed) {
-        if (std::numeric_limits<U>::is_signed) {
-          return SafeIntUtil::SE_SE;
-        } else {
-          return SafeIntUtil::SE_UE;
-        }
-      } else {
-        if (std::numeric_limits<U>::is_signed) {
-          return SafeIntUtil::UE_SE;
-        } else {
-          return SafeIntUtil::UE_UE;
-        }
-      }
-    }
-    
-  }
+  template <class T> template <class U> const SafeIntUtil::RelType SafeInt<T>::_Relationship<U>::value(
+    (std::numeric_limits<T>::digits > std::numeric_limits<U>::digits) ? (
+      std::numeric_limits<T>::is_signed ? (
+        std::numeric_limits<U>::is_signed ? (
+          SafeIntUtil::SL_SS
+        ) : (
+          SafeIntUtil::SL_US
+        )
+      ) : (
+        std::numeric_limits<U>::is_signed ? (
+          SafeIntUtil::UL_SS
+        ) : (
+          SafeIntUtil::UL_US
+        )
+      )
+    ) : (
+      (std::numeric_limits<T>::digits < std::numeric_limits<U>::digits) ? (
+        std::numeric_limits<T>::is_signed ? (
+          std::numeric_limits<U>::is_signed ? (
+            SafeIntUtil::SS_SL
+          ) : (
+            SafeIntUtil::SS_UL
+          )
+        ) : (
+          std::numeric_limits<U>::is_signed ? (
+            SafeIntUtil::US_SL
+          ) : (
+            SafeIntUtil::US_UL
+          )
+        )
+      ) : (
+        std::numeric_limits<T>::is_signed ? (
+          std::numeric_limits<U>::is_signed ? (
+            SafeIntUtil::SE_SE
+          ) : (
+            SafeIntUtil::SE_UE
+          )
+        ) : (
+          std::numeric_limits<U>::is_signed ? (
+            SafeIntUtil::UE_SE
+          ) : (
+            SafeIntUtil::UE_UE
+          )
+        )
+      )
+    )
+  );
   
   /***************************************************************************
    * SafeInt Errors.
@@ -561,8 +577,8 @@ namespace DAC {
     
     inline char const* Overflow::what () const throw() {
       try {
-        if (!_message.empty()) {
-          return _message.c_str();
+        if (!message.empty()) {
+          return message.c_str();
         } else {
           return "Overflow.";
         }
@@ -574,9 +590,9 @@ namespace DAC {
     
     template <class T, class U> CastOverflow::CastOverflow (T const num, U const limit) throw () {
       try {
-        _message = toString(num) + " overflows type limit of " + toString(limit) + " in attempted cast.";
+        message = toString(num) + " overflows type limit of " + toString(limit) + " in attempted cast.";
       } catch (...) {
-        _message.clear();
+        message.clear();
       }
     }
   }
