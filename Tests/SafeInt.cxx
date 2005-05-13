@@ -30,6 +30,10 @@ int main (int argc, char** argv, char** envp) {
   
   try {
     
+    SafeInt<int> poo(-1);
+    SafeInt<unsigned int> poo2(poo);
+    
+    /*
     gamut<bool,                   bool                  >("bool",                   "bool"                  );
     gamut<bool,                   unsigned char         >("bool",                   "unsigned char"         );
     gamut<bool,                   signed   char         >("bool",                   "signed char"           );
@@ -151,6 +155,7 @@ int main (int argc, char** argv, char** envp) {
     gamut<signed   long long int, signed   long int     >("signed long long int",   "signed long int"       );
     gamut<signed   long long int, unsigned long long int>("signed long long int",   "unsigned long long int");
     gamut<signed   long long int, signed   long long int>("signed long long int",   "signed long long int"  );
+    */
     
   } catch (Exception& e) {
     

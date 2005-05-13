@@ -46,7 +46,7 @@
         virtual ~Exception () throw();
         
         // Get the cause of this error.
-        virtual const char* what () const throw();
+        virtual char const* what () const throw();
         
         // Get the type of this error.
         std::string type () const throw();

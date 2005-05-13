@@ -1,0 +1,8 @@
+# Imports from caller.
+Import('*')
+
+env.Append(CPPPATH = ['..'])
+
+o_SafeInt = env.Object(target = 'SafeInt', source = ['SafeInt.cxx'])
+
+env.Program(target = 'SafeInt', source = [o_SafeInt])
