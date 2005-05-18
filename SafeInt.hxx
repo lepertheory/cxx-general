@@ -10,6 +10,7 @@
 
 // STL includes.
   #include <string>
+  #include <cmath>
 
 // Internal includes.
   #include "Exception.hxx"
@@ -729,15 +730,15 @@ namespace DAC {
     // Cast.
     template <class T, class U> inline U SafeCast<T, U, SE_SE>::op (T const value) { return static_cast<U>(value); }
     template <class T, class U> inline U SafeCast<T, U, SE_UE>::op (T const value) {
-      if (value < 0) {
-        throw SafeIntErrors::CastOverflow(value, 0);
+      if (value < static_cast<T>(0)) {
+        throw SafeIntErrors::CastOverflow(value, static_cast<U>(0));
       }
       return static_cast<U>(value);
     }
     template <class T, class U> inline U SafeCast<T, U, SS_SL>::op (T const value) { return static_cast<U>(value); }
     template <class T, class U> inline U SafeCast<T, U, SS_UL>::op (T const value) {
-      if (value < 0) {
-        throw SafeIntErrors::CastOverflow(value, 0);
+      if (value < static_cast<T>(0)) {
+        throw SafeIntErrors::CastOverflow(value, static_cast<U>(0));
       }
       return static_cast<U>(value);
     }
@@ -751,8 +752,8 @@ namespace DAC {
       return static_cast<U>(value);
     }
     template <class T, class U> inline U SafeCast<T, U, SL_US>::op (T const value) {
-      if (value < 0) {
-        throw SafeIntErrors::CastOverflow(value, 0);
+      if (value < static_cast<T>(0)) {
+        throw SafeIntErrors::CastOverflow(value, static_cast<U>(0));
       }
       if (value > static_cast<T>(std::numeric_limits<U>::max())) {
         throw SafeIntErrors::CastOverflow(value, std::numeric_limits<U>::max());
@@ -783,26 +784,26 @@ namespace DAC {
     
     // Multiply.
     template <class T, class U> T SafeMul<T, U, SE_SE>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (r == -1) {
+      if (r == static_cast<U>(-1)) {
         if (l == std::numeric_limits<T>::min()) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
         return (l * static_cast<T>(-1));
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
-      if (l == -1) {
+      if (l == static_cast<T>(-1)) {
         if (r == static_cast<U>(std::numeric_limits<T>::min())) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
-        return static_cast<T>(r * -1);
+        return static_cast<T>(r * static_cast<U>(-1));
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
@@ -828,19 +829,19 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, SE_UE>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
-      if (l == -1) {
-        return static_cast<T>(r * -1);
+      if (l == static_cast<T>(-1)) {
+        return static_cast<T>(r * static_cast<U>(-1));
       }
-      if (l > 0) {
+      if (l > static_cast<T>(0)) {
         if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
@@ -852,19 +853,19 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, SS_SL>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (r == -1) {
+      if (r == static_cast<U>(-1)) {
         if (l == std::numeric_limits<T>::min()) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
         return (l * static_cast<T>(-1));
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
@@ -873,7 +874,7 @@ namespace DAC {
         }
         return static_cast<T>(r);
       }
-      if (l == -1) {
+      if (l == static_cast<T>(-1)) {
         if (r <= static_cast<U>(std::numeric_limits<T>::min())) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
@@ -881,8 +882,8 @@ namespace DAC {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::min());
         }
       }
-      if (l > 0) {
-        if (r > 0) {
+      if (l > static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
           if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
             throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
           }
@@ -892,7 +893,7 @@ namespace DAC {
           }
         }
       } else {
-        if (r > 0) {
+        if (r > static_cast<U>(0)) {
           if (r > static_cast<U>(std::numeric_limits<T>::min() / l)) {
             throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::min());
           }
@@ -905,29 +906,29 @@ namespace DAC {
       return static_cast<T>(static_cast<U>(l) * r);
     }
     template <class T, class U> T SafeMul<T, U, SS_UL>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
         return static_cast<T>(r);
       }
-      if (l == -1) {
-        if (r > static_cast<U>(std::numeric_limits<T>::max()) + 1) {
+      if (l == static_cast<T>(-1)) {
+        if (r > static_cast<U>(std::numeric_limits<T>::max()) + static_cast<U>(1)) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::min());
         }
-        if (r == static_cast<U>(std::numeric_limits<T>::max()) + 1) {
+        if (r == static_cast<U>(std::numeric_limits<T>::max()) + static_cast<U>(1)) {
           return std::numeric_limits<T>::min();
         } else {
           return (static_cast<T>(r) * static_cast<T>(-1));
         }
       }
-      if (l > 0) {
+      if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
@@ -939,26 +940,26 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, SL_SS>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (r == -1) {
+      if (r == static_cast<U>(-1)) {
         if (l == std::numeric_limits<T>::min()) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
         return (l * static_cast<T>(r));
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
-      if (l == -1) {
+      if (l == static_cast<T>(-1)) {
         return (static_cast<T>(r) * static_cast<T>(-1));
       }
-      if (l > 0) {
-        if (r > 0) {
+      if (l > static_cast<T>(0)) {
+        if (r > static_cast<T>(0)) {
           if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
             throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
           }
@@ -968,7 +969,7 @@ namespace DAC {
           }
         }
       } else {
-        if (r > 0) {
+        if (r > static_cast<T>(0)) {
           if (static_cast<T>(r) > std::numeric_limits<T>::min() / l) {
             throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::min());
           }
@@ -981,19 +982,19 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, SL_US>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
-      if (l == -1) {
+      if (l == static_cast<T>(-1)) {
         return (static_cast<T>(r) * static_cast<T>(-1));
       }
-      if (l > 0) {
+      if (l > static_cast<T>(0)) {
         if (r > std::numeric_limits<T>::max() / l) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
@@ -1005,49 +1006,49 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, UE_UE>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
-      if (r > std::numeric_limits<T>::max() / l) {
+      if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
         throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
       }
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, UE_SE>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (r < 0) {
+      if (r < static_cast<U>(0)) {
         throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::min());
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
-      if (r > std::numeric_limits<T>::max() / l) {
+      if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
         throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
       }
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, US_SL>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (r < 0) {
+      if (r < static_cast<U>(0)) {
         throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::min());
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
@@ -1059,13 +1060,13 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, US_UL>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
           throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::max());
         }
@@ -1077,16 +1078,16 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, UL_SS>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (r < 0) {
+      if (r < static_cast<U>(0)) {
         throw SafeIntErrors::BinOpOverflow(l, "*", r, std::numeric_limits<T>::min());
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
       if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
@@ -1095,13 +1096,13 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     template <class T, class U> T SafeMul<T, U, UL_US>::op (T const l, U const r) {
-      if ((l == 0) || (r == 0)) {
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if (l == 1) {
+      if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
       if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
@@ -1112,107 +1113,623 @@ namespace DAC {
     
     // Divide.
     template <class T, class U> T SafeDiv<T, U, SE_SE>::op (T const l, U const r) {
-      if (r == 0) {
+      if (r == static_cast<U>(0)) {
         throw SafeIntErrors::DivByZero(l, "/", r);
       }
-      if (l == 0) {
+      if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if ((l == std::numeric_limits<T>::min()) || (r == static_cast<U>(-1))) {
+      if ((l == std::numeric_limits<T>::min()) && (r == static_cast<U>(-1))) {
         throw SafeIntErrors::BinOpOverflow(l, "/", r, std::numeric_limits<T>::max());
       }
       return (l / static_cast<T>(r));
     }
     template <class T, class U> T SafeDiv<T, U, SE_UE>::op (T const l, U const r) {
-      if (r == 0) {
+      if (r == static_cast<U>(0)) {
         throw SafeIntErrors::DivByZero(l, "/", r);
       }
-      if (l == 0) {
+      if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      return (l / static_cast<T>(r);
+      return (l / static_cast<T>(r));
     }
     template <class T, class U> T SafeDiv<T, U, SS_SL>::op (T const l, U const r) {
-      if (r == 0) {
+      if (r == static_cast<U>(0)) {
         throw SafeIntErrors::DivByZero(l, "/", r);
       }
-      if (l == 0) {
+      if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if ((l == std::numeric_limits<T>::min()) || (r == static_cast<U>(-1))) {
+      if ((l == std::numeric_limits<T>::min()) && (r == static_cast<U>(-1))) {
         throw SafeIntErrors::BinOpOverflow(l, "/", r, std::numeric_limits<T>::max());
       }
       return static_cast<T>(static_cast<U>(l) / r);
     }
     template <class T, class U> T SafeDiv<T, U, SS_UL>::op (T const l, U const r) {
-      if (r == 0) {
+      if (r == static_cast<U>(0)) {
         throw SafeIntErrors::DivByZero(l, "/", r);
       }
-      if (l == 0) {
+      if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
       if (l > 0) {
         return static_cast<T>(static_cast<U>(l) / r);
       } else {
-        return static_cast<T>(static_cast<U>(l * static_cast
-        
+        return (static_cast<T>((static_cast<U>((l + 1) * static_cast<T>(-1)) + static_cast<U>(1)) / r) * static_cast<T>(-1));
+      }
     }
     template <class T, class U> T SafeDiv<T, U, SL_SS>::op (T const l, U const r) {
-      if (r == 0) {
+      if (r == static_cast<U>(0)) {
         throw SafeIntErrors::DivByZero(l, "/", r);
       }
-      if (l == 0) {
+      if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if ((l == std::numeric_limits<T>::min()) || (r == static_cast<U>(-1))) {
+      if ((l == std::numeric_limits<T>::min()) && (r == static_cast<U>(-1))) {
         throw SafeIntErrors::BinOpOverflow(l, "/", r, std::numeric_limits<T>::max());
       }
+      return (l / static_cast<T>(r));
     }
     template <class T, class U> T SafeDiv<T, U, SL_US>::op (T const l, U const r) {
-      if (r == 0) {
+      if (r == static_cast<U>(0)) {
         throw SafeIntErrors::DivByZero(l, "/", r);
       }
-      if (l == 0) {
+      if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
-      if ((l == std::numeric_limits<T>::min()) || (r == static_cast<U>(-1))) {
-        throw SafeIntErrors::BinOpOverflow(l, "/", r, std::numeric_limits<T>::max());
-      }
+      return (l / static_cast<T>(r));
     }
     template <class T, class U> T SafeDiv<T, U, UE_UE>::op (T const l, U const r) {
-      if (r == 0) {
+      if (r == static_cast<U>(0)) {
         throw SafeIntErrors::DivByZero(l, "/", r);
       }
-      if (l == 0) {
+      if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
       }
-      if (r == 1) {
+      if (r == static_cast<U>(1)) {
         return l;
       }
+      return (l / static_cast<T>(r));
     }
-    template <class T, class U> T SafeDiv<T, U, UE_SE>::op (T const l, U const r) {}
-    template <class T, class U> T SafeDiv<T, U, US_SL>::op (T const l, U const r) {}
-    template <class T, class U> T SafeDiv<T, U, US_UL>::op (T const l, U const r) {}
-    template <class T, class U> T SafeDiv<T, U, UL_SS>::op (T const l, U const r) {}
-    template <class T, class U> T SafeDiv<T, U, UL_US>::op (T const l, U const r) {}
+    template <class T, class U> T SafeDiv<T, U, UE_SE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "/", r);
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(0);
+      }
+      if (r == static_cast<U>(1)) {
+        return l;
+      }
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpOverflow(l, "/", r, static_cast<T>(0));
+      }
+      return (l / static_cast<T>(r));
+    }
+    template <class T, class U> T SafeDiv<T, U, US_SL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "/", r);
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(0);
+      }
+      if (r == static_cast<U>(1)) {
+        return l;
+      }
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpOverflow(l, "/", r, static_cast<T>(0));
+      }
+      return static_cast<T>(static_cast<U>(l) / r);
+    }
+    template <class T, class U> T SafeDiv<T, U, US_UL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "/", r);
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(0);
+      }
+      if (r == static_cast<U>(1)) {
+        return l;
+      }
+      return static_cast<T>(static_cast<U>(l) / r);
+    }
+    template <class T, class U> T SafeDiv<T, U, UL_SS>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "/", r);
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(0);
+      }
+      if (r == static_cast<U>(1)) {
+        return l;
+      }
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpOverflow(l, "/", r, static_cast<T>(0));
+      }
+      return (l / static_cast<T>(r));
+    }
+    template <class T, class U> T SafeDiv<T, U, UL_US>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "/", r);
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(0);
+      }
+      if (r == static_cast<U>(1)) {
+        return l;
+      }
+      return (l / static_cast<T>(r));
+    }
+    
+    // Modulo divide
+    template <class T, class U> T SafeMod<T, U, SE_SE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return (l % static_cast<T>(r));
+    }
+    template <class T, class U> T SafeMod<T, U, SE_UE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return (l % static_cast<T>(r));
+    }
+    template <class T, class U> T SafeMod<T, U, SS_SL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return static_cast<T>(static_cast<U>(l) % r);
+    }
+    template <class T, class U> T SafeMod<T, U, SS_UL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      if (l > static_cast<T>(0)) {
+        return static_cast<T>(static_cast<U>(l) % r);
+      } else {
+        return (static_cast<T>((static_cast<U>((l + 1) * static_cast<T>(-1)) + static_cast<U>(1)) % r) * static_cast<T>(-1));
+      }
+    }
+    template <class T, class U> T SafeMod<T, U, SL_SS>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return (l % static_cast<T>(r));
+    }
+    template <class T, class U> T SafeMod<T, U, SL_US>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return (l % static_cast<T>(r));
+    }
+    template <class T, class U> T SafeMod<T, U, UE_UE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return (l % static_cast<T>(r));
+    }
+    template <class T, class U> T SafeMod<T, U, UE_SE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return static_cast<T>(static_cast<U>(l) % r);
+    }
+    template <class T, class U> T SafeMod<T, U, US_SL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return static_cast<T>(static_cast<U>(l) % r);
+    }
+    template <class T, class U> T SafeMod<T, U, US_UL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return static_cast<T>(static_cast<U>(l) % r);
+    }
+    template <class T, class U> T SafeMod<T, U, UL_SS>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return (l % static_cast<T>(std::abs(r)));
+    }
+    template <class T, class U> T SafeMod<T, U, UL_US>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        throw SafeIntErrors::DivByZero(l, "%", r);
+      }
+      if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
+        return static_cast<T>(0);
+      }
+      return (l % static_cast<T>(r));
+    }
+    
+    // Add.
+    template <class T, class U> T SafeAdd<T, U, SE_SE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
+          if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
+            throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+          }
+        }
+      } else {
+        if (r < static_cast<U>(0)) {
+          if (static_cast<T>(r) < std::numeric_limits<T>::min() - l) {
+            throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::min());
+          }
+        }
+      }
+      return (l + static_cast<T>(r));
+    }
+    template <class T, class U> T SafeAdd<T, U, SE_UE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+      }
+      return (l + static_cast<T>(r));
+    }
+    template <class T, class U> T SafeAdd<T, U, SS_SL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r > static_cast<U>(std::numeric_limits<T>::max())) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+        if (r < static_cast<U>(std::numeric_limits<T>::min())) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::min());
+        }
+        return static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
+          if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
+            throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+          }
+        } else {
+          if (r < (static_cast<U>(l) * static_cast<U>(-1))) {
+            if (r - static_cast<U>(l) < static_cast<U>(std::numeric_limits<T>::min())) {
+              throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::min());
+            }
+          }
+        }
+      } else {
+        if (r > static_cast<U>(0)) {
+          if (r > (static_cast<U>(l) * static_cast<U>(-1))) {
+            if (r + static_cast<U>(l) > static_cast<U>(std::numeric_limits<T>::max())) {
+              throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+            }
+          }
+        } else {
+          if (r < static_cast<U>(std::numeric_limits<T>::min() - l)) {
+            throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::min());
+          }
+        }
+      }
+      return static_cast<T>(static_cast<U>(l) + r);
+    }
+    template <class T, class U> T SafeAdd<T, U, SS_UL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r > static_cast<U>(std::numeric_limits<T>::max())) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+        return static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+        return static_cast<T>(static_cast<U>(l) + r);
+      } else {
+        U tmp(static_cast<U>((l + static_cast<T>(1)) * static_cast<T>(-1)) + static_cast<U>(1));
+        if (r > tmp) {
+          if (r - tmp > static_cast<U>(std::numeric_limits<T>::max())) {
+            throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+          }
+          return static_cast<T>(r - tmp);
+        } else {
+          return (static_cast<T>(tmp - r - static_cast<U>(1)) * static_cast<T>(-1) - static_cast<T>(1));
+        }
+      }
+    }
+    template <class T, class U> T SafeAdd<T, U, SL_SS>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
+          if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
+            throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+          }
+        }
+      } else {
+        if (r < static_cast<U>(0)) {
+          if (static_cast<T>(r) < std::numeric_limits<T>::min() - l) {
+            throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::min());
+          }
+        }
+      }
+      return (l + static_cast<T>(r));
+    }
+    template <class T, class U> T SafeAdd<T, U, SL_US>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+      }
+      return (l + static_cast<T>(r));
+    }
+    template <class T, class U> T SafeAdd<T, U, UE_UE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(r);
+      }
+      if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
+        throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+      }
+      return (l + static_cast<T>(r));
+    }
+    template <class T, class U> T SafeAdd<T, U, UE_SE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r < static_cast<U>(0)) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, static_cast<T>(0));
+        }
+        return static_cast<T>(r);
+      }
+      if (r > static_cast<U>(0)) {
+        if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+      } else {
+        if (r < static_cast<U>(l) * static_cast<U>(-1)) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, static_cast<T>(0));
+        }
+      }
+      return static_cast<T>(static_cast<U>(l) + r);
+    }
+    template <class T, class U> T SafeAdd<T, U, US_SL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r < static_cast<U>(0)) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, static_cast<T>(0));
+        }
+        if (r > static_cast<U>(std::numeric_limits<T>::max())) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+        return static_cast<T>(r);
+      }
+      if (r > static_cast<U>(0)) {
+        if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+      } else {
+        if (r < static_cast<U>(l) * static_cast<U>(-1)) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, static_cast<T>(0));
+        }
+      }
+      return static_cast<T>(static_cast<U>(l) + r);
+    }
+    template <class T, class U> T SafeAdd<T, U, US_UL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r > static_cast<U>(std::numeric_limits<T>::max())) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+        return static_cast<T>(r);
+      }
+      if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
+        throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+      }
+      return static_cast<T>(static_cast<U>(l) + r);
+    }
+    template <class T, class U> T SafeAdd<T, U, UL_SS>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r < static_cast<U>(0)) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, static_cast<T>(0));
+        }
+        return static_cast<T>(r);
+      }
+      if (r > static_cast<U>(0)) {
+        if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+        }
+        return (l + static_cast<T>(r));
+      } else {
+        T tmp(static_cast<T>((r + 1) * static_cast<U>(-1)) + static_cast<T>(1));
+        if (tmp > l) {
+          throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::min());
+        }
+        return (l - tmp);
+      }
+    }
+    template <class T, class U> T SafeAdd<T, U, UL_US>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(r);
+      }
+      if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
+        throw SafeIntErrors::BinOpOverflow(l, "+", r, std::numeric_limits<T>::max());
+      }
+      return (l + static_cast<T>(r));
+    }
+    
+    // Subtract.
+    template <class T, class U> T SafeSub<T, U, SE_SE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (r < static_cast<U>(0)) {
+          if (static_cast<T>(r) < std::numeric_limits<T>::max() - l * static_cast<T>(-1)) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+          }
+        }
+      } else {
+        if (r > static_cast<U>(0)) {
+          if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+          }
+        }
+      }
+      return (l - static_cast<T>(r));
+    }
+    template <class T, class U> T SafeSub<T, U, SE_UE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(r);
+      }
+      if (l < static_cast<T>(0)) {
+        if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+        }
+      }
+      return (l - static_cast<T>(r));
+    }
+    template <class T, class U> T SafeSub<T, U, SS_SL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r > 0) {
+          if (r * static_cast<U>(-1) < static_cast<U>(std::numeric_limits<T>::min())) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+          }
+        } else {
+          if (r < static_cast<U>(std::numeric_limits<T>::max()) * static_cast<U>(-1)) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+          }
+        }
+        return static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
+          if (r > static_cast<U>(l)) {
+            if ((r - static_cast<U>(l)) * static_cast<U>(-1) < static_cast<U>(std::numeric_limits<T>::min())) {
+              throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+            }
+          }
+        } else {
+          if (r < static_cast<U>(std::numeric_limits<T>::max() - l) * static_cast<U>(-1)) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+          }
+        }
+      } else {
+        if (r > static_cast<U>(0)) {
+          if (r * static_cast<U>(-1) < static_cast<U>(std::numeric_limits<T>::min() - l)) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+          }
+        } else {
+          if (r < static_cast<U>(l)) {
+            if ((r - static_cast<U>(l)) < static_cast<U>(std::numeric_limits<T>::max()) * static_cast<U>(-1)) {
+              throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+            }
+          }
+        }
+      }
+      return static_cast<T>(static_cast<U>(l) - r)
+    }
+    template <class T, class U> T SafeSub<T, U, SS_UL>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, SL_SS>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, SL_US>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, UE_UE>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, UE_SE>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, US_SL>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, US_UL>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, UL_SS>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, UL_US>::op (T const l, U const r) {}
     
     /*************************************************************************
      * Class SafeInt::_Relationship.
@@ -1307,7 +1824,7 @@ namespace DAC {
       }
     }
     
-    template <class T, class U> DivByZero::DivByZero (T const l, char const& const op, U const r) throw() {
+    template <class T, class U> DivByZero::DivByZero (T const l, char const* const op, U const r) throw() {
       try {
         message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + ": divide by zero.";
       } catch (...) {
@@ -1344,5 +1861,14 @@ template <class T> inline std::istream& operator >> (std::istream& l, DAC::SafeI
 template <class T, class U> inline DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mul(r); }
 template <class T, class U> inline DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_mul(r); }
 template <class T, class U> inline DAC::SafeInt<T> operator * (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mul(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_div(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_div(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator / (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_div(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mod(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_mod(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator % (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mod(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_add(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_add(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator + (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_add(r); }
 
 #endif

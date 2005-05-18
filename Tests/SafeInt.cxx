@@ -19,7 +19,10 @@ using namespace DAC;
 
 // Operations.
 enum Op {
-  OP_MUL
+  OP_MUL,
+  OP_DIV,
+  OP_MOD,
+  OP_ADD
 };
 
 // This is where it all happens.
@@ -35,11 +38,8 @@ template <class ArgT, class FromT, class ToT> void testVal (ArgT const value);
 template <class T> void test (T const& l, T const& r);
 
 // Cast.
-template <class T, class U> void castl (T const& l, U const& r);
-template <class T, class U> void castr (T const& l, U const& r);
-
-// Cast and catch any errors.
-template <class T, class U> SafeInt<U> catchCast (SafeInt<T> const& value);
+template <class T, class U> void castl (char const* const t, T const& l, U const& r);
+template <class T, class U> void castr (char const* const t, T const& l, char const* const u, U const& r);
 
 // Test all know operations.
 template <class T, class U> void testOp (T const& l, Op const op, U const& r);
@@ -277,7 +277,7 @@ template <class ArgT, class FromT, class ToT> void testVal (ArgT const value) {
 template <class T> void test (T const& l, T const& r) {
   
   try {
-    castl(SafeInt<bool                  >(l), r);
+    castl("bool                  ", SafeInt<bool                  >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -286,7 +286,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<signed   char         >(l), r);
+    castl("signed   char         ", SafeInt<signed   char         >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -295,7 +295,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<unsigned char         >(l), r);
+    castl("unsigned char         ", SafeInt<unsigned char         >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -304,7 +304,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<signed   short int    >(l), r);
+    castl("signed   short int    ", SafeInt<signed   short int    >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -313,7 +313,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<unsigned short int    >(l), r);
+    castl("unsigned short int    ", SafeInt<unsigned short int    >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -322,7 +322,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<signed   int          >(l), r);
+    castl("signed   int          ", SafeInt<signed   int          >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -331,7 +331,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<unsigned int          >(l), r);
+    castl("unsigned int          ", SafeInt<unsigned int          >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -340,7 +340,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<signed   long int     >(l), r);
+    castl("signed   long int     ", SafeInt<signed   long int     >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -349,7 +349,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<unsigned long int     >(l), r);
+    castl("unsigned long int     ", SafeInt<unsigned long int     >(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -358,7 +358,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<signed   long long int>(l), r);
+    castl("signed   long long int", SafeInt<signed   long long int>(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -367,7 +367,7 @@ template <class T> void test (T const& l, T const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castl(SafeInt<unsigned long long int>(l), r);
+    castl("unsigned long long int", SafeInt<unsigned long long int>(l), r);
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -378,10 +378,10 @@ template <class T> void test (T const& l, T const& r) {
   
 }
 
-template <class T, class U> void castl (T const& l, U const& r) {
+template <class T, class U> void castl (char const* const t, T const& l, U const& r) {
   
   try {
-    castr(l, SafeInt<bool                  >(r));
+    castr(t, l, "bool                  ", SafeInt<bool                  >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -390,7 +390,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<signed   char         >(r));
+    castr(t, l, "signed   char         ", SafeInt<signed   char         >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -399,7 +399,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<unsigned char         >(r));
+    castr(t, l, "unsigned char         ", SafeInt<unsigned char         >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -408,7 +408,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<signed   short int    >(r));
+    castr(t, l, "signed   short int    ", SafeInt<signed   short int    >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -417,7 +417,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<unsigned short int    >(r));
+    castr(t, l, "unsigned short int    ", SafeInt<unsigned short int    >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -426,7 +426,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<signed   int          >(r));
+    castr(t, l, "signed   int          ", SafeInt<signed   int          >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -435,7 +435,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<unsigned int          >(r));
+    castr(t, l, "unsigned int          ", SafeInt<unsigned int          >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -444,7 +444,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<signed   long int     >(r));
+    castr(t, l, "signed   long int     ", SafeInt<signed   long int     >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -453,7 +453,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<unsigned long int     >(r));
+    castr(t, l, "unsigned long int     ", SafeInt<unsigned long int     >(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -462,7 +462,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<signed   long long int>(r));
+    castr(t, l, "signed   long long int", SafeInt<signed   long long int>(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -471,7 +471,7 @@ template <class T, class U> void castl (T const& l, U const& r) {
     cout << "Unexpected exception." << endl;
   }
   try {
-    castr(l, SafeInt<unsigned long long int>(r));
+    castr(t, l, "unsigned long long int", SafeInt<unsigned long long int>(r));
   } catch (Exception& e) {
     cout << "Exception: [" << e.type() << "]: " << e << endl;
   } catch (exception& e) {
@@ -482,9 +482,16 @@ template <class T, class U> void castl (T const& l, U const& r) {
   
 }
 
-template <class T, class U> void castr (T const& l, U const& r) {
+template <class T, class U> void castr (char const* const t, T const& l, char const* const u, U const& r) {
+  
+  cout << t << " : " << u << endl;
   
   testOp(l, OP_MUL, r);
+  testOp(l, OP_DIV, r);
+  testOp(l, OP_MOD, r);
+  testOp(l, OP_ADD, r);
+  
+  cout << endl;
   
 }
 
@@ -492,13 +499,19 @@ template <class T, class U> void testOp (T const& l, Op const op, U const& r) {
   
   try {
     
-    cout << l;
+    cout << "  " << l;
     switch (op) {
       case OP_MUL: cout << " * "; break;
+      case OP_DIV: cout << " / "; break;
+      case OP_MOD: cout << " % "; break;
+      case OP_ADD: cout << " + "; break;
     }
     cout << r << " = ";
     switch (op) {
       case OP_MUL: cout << (l * r); break;
+      case OP_DIV: cout << (l / r); break;
+      case OP_MOD: cout << (l % r); break;
+      case OP_ADD: cout << (l + r); break;
     }
     cout << endl;
     
@@ -515,29 +528,5 @@ template <class T, class U> void testOp (T const& l, Op const op, U const& r) {
     cout << "Unexpected exception." << endl;
     
   }
-  
-}
-
-template <class T, class U> SafeInt<U> catchCast (SafeInt<T> const& value) {
-  
-  try {
-    
-    return SafeInt<U>(value);
-    
-  } catch (Exception& e) {
-    
-    cout << "Exception: [" << e.type() << "]: " << e << endl;
-    
-  } catch (exception& e) {
-    
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-    
-  } catch (...) {
-    
-    cout << "Unexpected exception." << endl;
-    
-  }
-  
-  return SafeInt<U>(0);
   
 }
