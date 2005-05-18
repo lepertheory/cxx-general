@@ -17,6 +17,11 @@
 using namespace std;
 using namespace DAC;
 
+// Operations.
+enum Op {
+  OP_MUL
+};
+
 // This is where it all happens.
 int main (int argc, char** argv, char** envp);
 
@@ -26,12 +31,34 @@ template <class T1, class T2> void gamut (char const* const type1, char const* c
 // Test casting a number from one type to another.
 template <class ArgT, class FromT, class ToT> void testVal (ArgT const value);
 
+// Run all tests on two numbers.
+template <class T> void test (T const& l, T const& r);
+
+// Cast.
+template <class T, class U> void castl (T const& l, U const& r);
+template <class T, class U> void castr (T const& l, U const& r);
+
+// Cast and catch any errors.
+template <class T, class U> SafeInt<U> catchCast (SafeInt<T> const& value);
+
+// Test all know operations.
+template <class T, class U> void testOp (T const& l, Op const op, U const& r);
+
 int main (int argc, char** argv, char** envp) {
   
   try {
     
-    SafeInt<int> poo(-1);
-    SafeInt<unsigned int> poo2(poo);
+    SafeInt<signed long long int> test1;
+    SafeInt<signed long long int> test2;
+    
+    cout << "test1: ";
+    cin  >> test1;
+    cout << "test1: " << test1 << endl;
+    cout << "test2: ";
+    cin  >> test2;
+    cout << "test2: " << test2 << endl;
+    
+    test(test1, test2);
     
     /*
     gamut<bool,                   bool                  >("bool",                   "bool"                  );
@@ -159,7 +186,7 @@ int main (int argc, char** argv, char** envp) {
     
   } catch (Exception& e) {
     
-    cout << "Exception: " << e << endl;
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
     exit(1);
     
   } catch (exception& e) {
@@ -247,3 +274,270 @@ template <class ArgT, class FromT, class ToT> void testVal (ArgT const value) {
   
 }
 
+template <class T> void test (T const& l, T const& r) {
+  
+  try {
+    castl(SafeInt<bool                  >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<signed   char         >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<unsigned char         >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<signed   short int    >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<unsigned short int    >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<signed   int          >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<unsigned int          >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<signed   long int     >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<unsigned long int     >(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<signed   long long int>(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castl(SafeInt<unsigned long long int>(l), r);
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  
+}
+
+template <class T, class U> void castl (T const& l, U const& r) {
+  
+  try {
+    castr(l, SafeInt<bool                  >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<signed   char         >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<unsigned char         >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<signed   short int    >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<unsigned short int    >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<signed   int          >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<unsigned int          >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<signed   long int     >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<unsigned long int     >(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<signed   long long int>(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  try {
+    castr(l, SafeInt<unsigned long long int>(r));
+  } catch (Exception& e) {
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+  } catch (exception& e) {
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+  } catch (...) {
+    cout << "Unexpected exception." << endl;
+  }
+  
+}
+
+template <class T, class U> void castr (T const& l, U const& r) {
+  
+  testOp(l, OP_MUL, r);
+  
+}
+
+template <class T, class U> void testOp (T const& l, Op const op, U const& r) {
+  
+  try {
+    
+    cout << l;
+    switch (op) {
+      case OP_MUL: cout << " * "; break;
+    }
+    cout << r << " = ";
+    switch (op) {
+      case OP_MUL: cout << (l * r); break;
+    }
+    cout << endl;
+    
+  } catch (Exception& e) {
+    
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+    
+  } catch (exception& e) {
+    
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+    
+  } catch (...) {
+    
+    cout << "Unexpected exception." << endl;
+    
+  }
+  
+}
+
+template <class T, class U> SafeInt<U> catchCast (SafeInt<T> const& value) {
+  
+  try {
+    
+    return SafeInt<U>(value);
+    
+  } catch (Exception& e) {
+    
+    cout << "Exception: [" << e.type() << "]: " << e << endl;
+    
+  } catch (exception& e) {
+    
+    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
+    
+  } catch (...) {
+    
+    cout << "Unexpected exception." << endl;
+    
+  }
+  
+  return SafeInt<U>(0);
+  
+}
