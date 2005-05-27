@@ -1721,7 +1721,24 @@ namespace DAC {
       }
       return static_cast<T>(static_cast<U>(l) - r)
     }
-    template <class T, class U> T SafeSub<T, U, SS_UL>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, SS_UL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r > static_cast<U>((std::numeric_limits<T>::min() + static_cast<T>(1)) * static_cast<T>(-1)) + static_cast<U>(1)) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+        }
+        if (r == static_cast<U>(0)) {
+          return static_cast<T>(0);
+        } else {
+          return static_cast<T>(r - static_cast<U>(1)) * static_cast<T>(-1) - static_cast<T>(1);
+        }
+      }
+      if (l > static_cast<T>(0)) {
+        if (r > static_cast<U>(l)) {
+          
+    }
     template <class T, class U> T SafeSub<T, U, SL_SS>::op (T const l, U const r) {}
     template <class T, class U> T SafeSub<T, U, SL_US>::op (T const l, U const r) {}
     template <class T, class U> T SafeSub<T, U, UE_UE>::op (T const l, U const r) {}
