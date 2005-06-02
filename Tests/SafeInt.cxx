@@ -22,7 +22,19 @@ enum Op {
   OP_MUL,
   OP_DIV,
   OP_MOD,
-  OP_ADD
+  OP_ADD,
+  OP_SUB,
+  OP_SHL,
+  OP_SHR,
+  OP_CGT,
+  OP_CGE,
+  OP_CLT,
+  OP_CLE,
+  OP_CEQ,
+  OP_CNE,
+  OP_BAN,
+  OP_BIO,
+  OP_BXO
 };
 
 // This is where it all happens.
@@ -276,6 +288,8 @@ template <class ArgT, class FromT, class ToT> void testVal (ArgT const value) {
 
 template <class T> void test (T const& l, T const& r) {
   
+  cout << boolalpha;
+  
   try {
     castl("bool                  ", SafeInt<bool                  >(l), r);
   } catch (Exception& e) {
@@ -490,6 +504,18 @@ template <class T, class U> void castr (char const* const t, T const& l, char co
   testOp(l, OP_DIV, r);
   testOp(l, OP_MOD, r);
   testOp(l, OP_ADD, r);
+  testOp(l, OP_SUB, r);
+  testOp(l, OP_SHL, r);
+  testOp(l, OP_SHR, r);
+  testOp(l, OP_CGT, r);
+  testOp(l, OP_CGE, r);
+  testOp(l, OP_CLT, r);
+  testOp(l, OP_CLE, r);
+  testOp(l, OP_CEQ, r);
+  testOp(l, OP_CNE, r);
+  testOp(l, OP_BAN, r);
+  testOp(l, OP_BIO, r);
+  testOp(l, OP_BXO, r);
   
   cout << endl;
   
@@ -501,17 +527,41 @@ template <class T, class U> void testOp (T const& l, Op const op, U const& r) {
     
     cout << "  " << l;
     switch (op) {
-      case OP_MUL: cout << " * "; break;
-      case OP_DIV: cout << " / "; break;
-      case OP_MOD: cout << " % "; break;
-      case OP_ADD: cout << " + "; break;
+      case OP_MUL: cout << " *  "; break;
+      case OP_DIV: cout << " /  "; break;
+      case OP_MOD: cout << " %  "; break;
+      case OP_ADD: cout << " +  "; break;
+      case OP_SUB: cout << " -  "; break;
+      case OP_SHL: cout << " << "; break;
+      case OP_SHR: cout << " >> "; break;
+      case OP_CGT: cout << " >  "; break;
+      case OP_CGE: cout << " >= "; break;
+      case OP_CLT: cout << " <  "; break;
+      case OP_CLE: cout << " <= "; break;
+      case OP_CEQ: cout << " == "; break;
+      case OP_CNE: cout << " != "; break;
+      case OP_BAN: cout << " &  "; break;
+      case OP_BIO: cout << " |  "; break;
+      case OP_BXO: cout << " ^  "; break;
     }
     cout << r << " = ";
     switch (op) {
-      case OP_MUL: cout << (l * r); break;
-      case OP_DIV: cout << (l / r); break;
-      case OP_MOD: cout << (l % r); break;
-      case OP_ADD: cout << (l + r); break;
+      case OP_MUL: cout << (l *  r); break;
+      case OP_DIV: cout << (l /  r); break;
+      case OP_MOD: cout << (l %  r); break;
+      case OP_ADD: cout << (l +  r); break;
+      case OP_SUB: cout << (l -  r); break;
+      case OP_SHL: cout << (l << r); break;
+      case OP_SHR: cout << (l >> r); break;
+      case OP_CGT: cout << (l >  r); break;
+      case OP_CGE: cout << (l >= r); break;
+      case OP_CLT: cout << (l <  r); break;
+      case OP_CLE: cout << (l <= r); break;
+      case OP_CEQ: cout << (l == r); break;
+      case OP_CNE: cout << (l != r); break;
+      case OP_BAN: cout << (l &  r); break;
+      case OP_BIO: cout << (l |  r); break;
+      case OP_BXO: cout << (l ^  r); break;
     }
     cout << endl;
     

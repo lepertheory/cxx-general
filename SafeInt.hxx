@@ -53,6 +53,21 @@ namespace DAC {
     template <class T, class U> class SafeCast<T, U, UL_SS> { public: static U op (T const value); };
     template <class T, class U> class SafeCast<T, U, UL_US> { public: static U op (T const value); };
     
+    // Raw cast.
+    template <class T, class U, RelType> class RawCast;
+    template <class T, class U> class RawCast<T, U, SE_SE> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, SE_UE> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, SS_SL> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, SS_UL> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, SL_SS> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, SL_US> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, UE_UE> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, UE_SE> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, US_SL> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, US_UL> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, UL_SS> { public: static U op (T const value); };
+    template <class T, class U> class RawCast<T, U, UL_US> { public: static U op (T const value); };
+    
     // Safely multiply.
     template <class T, class U, RelType> class SafeMul;
     template <class T, class U> class SafeMul<T, U, SE_SE> { public: static T op (T const l, U const r); };
@@ -128,7 +143,7 @@ namespace DAC {
     template <class T, class U> class SafeSub<T, U, UL_SS> { public: static T op (T const l, U const r); };
     template <class T, class U> class SafeSub<T, U, UL_US> { public: static T op (T const l, U const r); };
     
-    // Safely subtract.
+    // Safely shift left.
     template <class T, class U, RelType> class SafeShL;
     template <class T, class U> class SafeShL<T, U, SE_SE> { public: static T op (T const l, U const r); };
     template <class T, class U> class SafeShL<T, U, SE_UE> { public: static T op (T const l, U const r); };
@@ -143,7 +158,7 @@ namespace DAC {
     template <class T, class U> class SafeShL<T, U, UL_SS> { public: static T op (T const l, U const r); };
     template <class T, class U> class SafeShL<T, U, UL_US> { public: static T op (T const l, U const r); };
     
-    // Safely subtract.
+    // Safely shift right.
     template <class T, class U, RelType> class SafeShR;
     template <class T, class U> class SafeShR<T, U, SE_SE> { public: static T op (T const l, U const r); };
     template <class T, class U> class SafeShR<T, U, SE_UE> { public: static T op (T const l, U const r); };
@@ -160,93 +175,93 @@ namespace DAC {
     
     // Safely test for greater than.
     template <class T, class U, RelType> class SafeGT;
-    template <class T, class U> class SafeGT<T, U, SE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, SE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, SS_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, SS_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, SL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, SL_US> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, UE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, UE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, US_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, US_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, UL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGT<T, U, UL_US> { public: static T op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, SE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, SE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, SS_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, SS_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, SL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, SL_US> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, UE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, UE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, US_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, US_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, UL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGT<T, U, UL_US> { public: static bool op (T const l, U const r); };
     
     // Safely test for greater than or equal to.
     template <class T, class U, RelType> class SafeGE;
-    template <class T, class U> class SafeGE<T, U, SE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, SE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, SS_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, SS_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, SL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, SL_US> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, UE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, UE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, US_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, US_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, UL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeGE<T, U, UL_US> { public: static T op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, SE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, SE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, SS_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, SS_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, SL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, SL_US> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, UE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, UE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, US_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, US_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, UL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeGE<T, U, UL_US> { public: static bool op (T const l, U const r); };
     
     // Safely test for less than.
     template <class T, class U, RelType> class SafeLT;
-    template <class T, class U> class SafeLT<T, U, SE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, SE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, SS_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, SS_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, SL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, SL_US> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, UE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, UE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, US_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, US_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, UL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLT<T, U, UL_US> { public: static T op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, SE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, SE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, SS_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, SS_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, SL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, SL_US> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, UE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, UE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, US_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, US_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, UL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLT<T, U, UL_US> { public: static bool op (T const l, U const r); };
     
     // Safely test for less than or equal to.
     template <class T, class U, RelType> class SafeLE;
-    template <class T, class U> class SafeLE<T, U, SE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, SE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, SS_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, SS_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, SL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, SL_US> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, UE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, UE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, US_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, US_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, UL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLE<T, U, UL_US> { public: static T op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, SE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, SE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, SS_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, SS_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, SL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, SL_US> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, UE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, UE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, US_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, US_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, UL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeLE<T, U, UL_US> { public: static bool op (T const l, U const r); };
     
     // Safely test for equal to.
     template <class T, class U, RelType> class SafeEQ;
-    template <class T, class U> class SafeEQ<T, U, SE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, SE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, SS_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, SS_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, SL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, SL_US> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, UE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, UE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, US_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, US_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, UL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeEQ<T, U, UL_US> { public: static T op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, SE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, SE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, SS_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, SS_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, SL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, SL_US> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, UE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, UE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, US_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, US_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, UL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeEQ<T, U, UL_US> { public: static bool op (T const l, U const r); };
     
     // Safely test for not equal.
     template <class T, class U, RelType> class SafeNE;
-    template <class T, class U> class SafeNE<T, U, SE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, SE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, SS_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, SS_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, SL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, SL_US> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, UE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, UE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, US_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, US_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, UL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeNE<T, U, UL_US> { public: static T op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, SE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, SE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, SS_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, SS_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, SL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, SL_US> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, UE_UE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, UE_SE> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, US_SL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, US_UL> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, UL_SS> { public: static bool op (T const l, U const r); };
+    template <class T, class U> class SafeNE<T, U, UL_US> { public: static bool op (T const l, U const r); };
     
     // Safely bitwise AND.
     template <class T, class U, RelType> class SafeBitAnd;
@@ -511,6 +526,20 @@ namespace DAC {
         std::string message;
     };
     
+    // Result of operation is undefined.
+    class Undefined : public Base {
+      public:
+        virtual char const* what () const throw();
+        virtual ~Undefined () throw();
+        std::string message;
+    };
+    
+    // Undefined binary operation.
+    class BinOpUndefined : public Undefined {
+      public:
+        template <class T, class U> BinOpUndefined (T const l, char const* const op, U const r) throw ();
+    };
+    
   }
   
 }
@@ -627,7 +656,7 @@ namespace DAC {
   template <class T> inline SafeInt<T> SafeInt<T>::operator ~ () const { return SafeInt<T>(*this).op_bit_cpm(); }
   
   // Casting operators.
-  template <class T> inline SafeInt<T>::operator bool                   () const { return SafeIntUtil::SafeCast<T, bool,                   SafeIntUtil::Relationship<T, bool                  >::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator bool                   () const { return _value != static_cast<T>(0);                                                                                               }
   template <class T> inline SafeInt<T>::operator signed   char          () const { return SafeIntUtil::SafeCast<T, signed   char,          SafeIntUtil::Relationship<T, signed   char         >::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator unsigned char          () const { return SafeIntUtil::SafeCast<T, unsigned char,          SafeIntUtil::Relationship<T, unsigned char         >::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator signed   short int     () const { return SafeIntUtil::SafeCast<T, signed   short int,     SafeIntUtil::Relationship<T, signed   short int    >::value>::op(_value); }
@@ -728,14 +757,18 @@ namespace DAC {
      *************************************************************************/
     
     // Cast.
-    template <class T, class U> inline U SafeCast<T, U, SE_SE>::op (T const value) { return static_cast<U>(value); }
+    template <class T, class U> inline U SafeCast<T, U, SE_SE>::op (T const value) {
+      return static_cast<U>(value);
+    }
     template <class T, class U> inline U SafeCast<T, U, SE_UE>::op (T const value) {
       if (value < static_cast<T>(0)) {
         throw SafeIntErrors::CastOverflow(value, static_cast<U>(0));
       }
       return static_cast<U>(value);
     }
-    template <class T, class U> inline U SafeCast<T, U, SS_SL>::op (T const value) { return static_cast<U>(value); }
+    template <class T, class U> inline U SafeCast<T, U, SS_SL>::op (T const value) {
+      return static_cast<U>(value);
+    }
     template <class T, class U> inline U SafeCast<T, U, SS_UL>::op (T const value) {
       if (value < static_cast<T>(0)) {
         throw SafeIntErrors::CastOverflow(value, static_cast<U>(0));
@@ -760,9 +793,15 @@ namespace DAC {
       }
       return static_cast<U>(value);
     }
-    template <class T, class U> inline U SafeCast<T, U, UE_UE>::op (T const value) { return static_cast<U>(value); }
-    template <class T, class U> inline U SafeCast<T, U, UE_SE>::op (T const value) { return static_cast<U>(value); }
-    template <class T, class U> inline U SafeCast<T, U, US_SL>::op (T const value) { return static_cast<U>(value); }
+    template <class T, class U> inline U SafeCast<T, U, UE_UE>::op (T const value) {
+      return static_cast<U>(value);
+    }
+    template <class T, class U> inline U SafeCast<T, U, UE_SE>::op (T const value) {
+      return static_cast<U>(value);
+    }
+    template <class T, class U> inline U SafeCast<T, U, US_SL>::op (T const value) {
+      return static_cast<U>(value);
+    }
     template <class T, class U> inline U SafeCast<T, U, US_UL>::op (T const value) {
       if (value > static_cast<T>(std::numeric_limits<U>::max())) {
         throw SafeIntErrors::CastOverflow(value, std::numeric_limits<U>::max());
@@ -780,6 +819,52 @@ namespace DAC {
         throw SafeIntErrors::CastOverflow(value, std::numeric_limits<U>::max());
       }
       return static_cast<U>(value);
+    }
+    
+    // Raw cast.
+    template <class T, class U> U RawCast<T, U, SE_SE>::op (T const value) {
+      return static_cast<U>(value);
+    }
+    template <class T, class U> U RawCast<T, U, SE_UE>::op (T const value) {
+      return static_cast<U>(value & std::numeric_limits<T>::max());
+    }
+    template <class T, class U> U RawCast<T, U, SS_SL>::op (T const value) {
+      if (value < static_cast<T>(0)) {
+        return static_cast<U>(value & std::numeric_limits<T>::max()) | static_cast<U>(1) << std::numeric_limits<T>::digits;
+      } else {
+        return static_cast<U>(value);
+      }
+    }
+    template <class T, class U> U RawCast<T, U, SS_UL>::op (T const value) {
+      if (value < static_cast<T>(0)) {
+        return static_cast<U>(value & std::numeric_limits<T>::max()) | static_cast<U>(1) << std::numeric_limits<T>::digits;
+      } else {
+        return static_cast<U>(value);
+      }
+    }
+    template <class T, class U> U RawCast<T, U, SL_SS>::op (T const value) {
+      return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max())) | static_cast<U>(static_cast<T>(1) << std::numeric_limits<U>::digits & value);
+    }
+    template <class T, class U> U RawCast<T, U, SL_US>::op (T const value) {
+      return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max()));
+    }
+    template <class T, class U> U RawCast<T, U, UE_UE>::op (T const value) {
+      return static_cast<U>(value);
+    }
+    template <class T, class U> U RawCast<T, U, UE_SE>::op (T const value) {
+      return static_cast<U>(value);
+    }
+    template <class T, class U> U RawCast<T, U, US_SL>::op (T const value) {
+      return static_cast<U>(value);
+    }
+    template <class T, class U> U RawCast<T, U, US_UL>::op (T const value) {
+      return static_cast<U>(value);
+    }
+    template <class T, class U> U RawCast<T, U, UL_SS>::op (T const value) {
+      return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max())) | static_cast<U>(static_cast<T>(1) << std::numeric_limits<U>::digits & value);
+    }
+    template <class T, class U> U RawCast<T, U, UL_US>::op (T const value) {
+      return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max()));
     }
     
     // Multiply.
@@ -1647,7 +1732,10 @@ namespace DAC {
         return l;
       }
       if (l == static_cast<T>(0)) {
-        return static_cast<T>(r);
+        if (r == static_cast<U>(std::numeric_limits<T>::min())) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+        }
+        return static_cast<T>(static_cast<U>(0) - r);
       }
       if (l > static_cast<T>(0)) {
         if (r < static_cast<U>(0)) {
@@ -1669,7 +1757,7 @@ namespace DAC {
         return l;
       }
       if (l == static_cast<T>(0)) {
-        return static_cast<T>(r);
+        return static_cast<T>(0) - static_cast<T>(r);
       }
       if (l < static_cast<T>(0)) {
         if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
@@ -1692,7 +1780,7 @@ namespace DAC {
             throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
           }
         }
-        return static_cast<T>(r);
+        return static_cast<T>(static_cast<U>(0) - r);
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
@@ -1719,7 +1807,7 @@ namespace DAC {
           }
         }
       }
-      return static_cast<T>(static_cast<U>(l) - r)
+      return static_cast<T>(static_cast<U>(l) - r);
     }
     template <class T, class U> T SafeSub<T, U, SS_UL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
@@ -1729,24 +1817,612 @@ namespace DAC {
         if (r > static_cast<U>((std::numeric_limits<T>::min() + static_cast<T>(1)) * static_cast<T>(-1)) + static_cast<U>(1)) {
           throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
         }
-        if (r == static_cast<U>(0)) {
-          return static_cast<T>(0);
-        } else {
-          return static_cast<T>(r - static_cast<U>(1)) * static_cast<T>(-1) - static_cast<T>(1);
-        }
+        return static_cast<T>(r - static_cast<U>(1)) * static_cast<T>(-1) - static_cast<T>(1);
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(l)) {
-          
+          if (r - static_cast<U>(l) > static_cast<U>(std::numeric_limits<T>::max()) + static_cast<U>(1)) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+          }
+          return (static_cast<T>(r - static_cast<U>(l) - static_cast<U>(1)) * static_cast<T>(-1)) - static_cast<T>(1);
+        } else {
+          return static_cast<T>(static_cast<U>(l) - r);
+        }
+      } else {
+        if (r > static_cast<U>((std::numeric_limits<T>::min() - l) * static_cast<T>(-1))) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+        }
+        return static_cast<T>(static_cast<U>(l * static_cast<T>(-1)) + r - static_cast<U>(1)) * static_cast<T>(-1) - static_cast<T>(1);
+      }
     }
-    template <class T, class U> T SafeSub<T, U, SL_SS>::op (T const l, U const r) {}
-    template <class T, class U> T SafeSub<T, U, SL_US>::op (T const l, U const r) {}
-    template <class T, class U> T SafeSub<T, U, UE_UE>::op (T const l, U const r) {}
-    template <class T, class U> T SafeSub<T, U, UE_SE>::op (T const l, U const r) {}
-    template <class T, class U> T SafeSub<T, U, US_SL>::op (T const l, U const r) {}
-    template <class T, class U> T SafeSub<T, U, US_UL>::op (T const l, U const r) {}
-    template <class T, class U> T SafeSub<T, U, UL_SS>::op (T const l, U const r) {}
-    template <class T, class U> T SafeSub<T, U, UL_US>::op (T const l, U const r) {}
+    template <class T, class U> T SafeSub<T, U, SL_SS>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(0) - static_cast<T>(r);
+      }
+      if (l > static_cast<T>(0)) {
+        if (r < static_cast<U>(0)) {
+          if (static_cast<T>(r) * static_cast<T>(-1) > std::numeric_limits<T>::max() - l) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+          }
+        }
+      } else {
+        if (r > static_cast<U>(0)) {
+          if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+          }
+        }
+      }
+      return l - static_cast<T>(r);
+    }
+    template <class T, class U> T SafeSub<T, U, SL_US>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        return static_cast<T>(0) - static_cast<T>(r);
+      }
+      if (l < static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
+          if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
+            throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::min());
+          }
+        }
+      }
+      return l - static_cast<T>(r);
+    }
+    template <class T, class U> T SafeSub<T, U, UE_UE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (r > static_cast<U>(l)) {
+        throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+      }
+      return l - static_cast<T>(r);
+    }
+    template <class T, class U> T SafeSub<T, U, UE_SE>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+        }
+        if (r < static_cast<U>(std::numeric_limits<T>::max())) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+        }
+        return static_cast<T>(static_cast<U>(0) - r);
+      }
+      if (r > static_cast<U>(0)) {
+        if (r > static_cast<U>(l)) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+        }
+      } else {
+        if (r < static_cast<U>(std::numeric_limits<T>::max() - l) * static_cast<U>(-1)) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+        }
+      }
+      return static_cast<T>(static_cast<U>(l) - r);
+    }
+    template <class T, class U> T SafeSub<T, U, US_SL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+        }
+        if (r < static_cast<U>(0) - static_cast<U>(std::numeric_limits<T>::max())) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+        }
+        return static_cast<T>(static_cast<U>(0) - r);
+      }
+      if (r > static_cast<U>(0)) {
+        if (r > static_cast<U>(l)) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+        }
+      } else {
+        if (r < static_cast<U>(0) - static_cast<U>(std::numeric_limits<T>::max() - l)) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+        }
+      }
+      return static_cast<T>(static_cast<U>(l) - r);
+    }
+    template <class T, class U> T SafeSub<T, U, US_UL>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (r > static_cast<U>(l)) {
+        throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+      }
+      return static_cast<T>(static_cast<U>(l) - r);
+    }
+    template <class T, class U> T SafeSub<T, U, UL_SS>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (l == static_cast<T>(0)) {
+        if (r > static_cast<U>(0)) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+        }
+        if (r == std::numeric_limits<U>::min()) {
+          return static_cast<T>((std::numeric_limits<U>::min() + static_cast<U>(1)) * static_cast<U>(-1)) + static_cast<T>(1);
+        } else {
+          return static_cast<T>(r * static_cast<U>(-1));
+        }
+      }
+      if (r > static_cast<U>(0)) {
+        if (static_cast<T>(r) > l) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+        }
+        return l - static_cast<T>(r);
+      } else {
+        T tmpnum = static_cast<T>((r + static_cast<U>(1)) * static_cast<U>(-1)) + static_cast<T>(1);
+        if (tmpnum > std::numeric_limits<T>::max() - l) {
+          throw SafeIntErrors::BinOpOverflow(l, "-", r, std::numeric_limits<T>::max());
+        }
+        return l + tmpnum;
+      }
+    }
+    template <class T, class U> T SafeSub<T, U, UL_US>::op (T const l, U const r) {
+      if (r == static_cast<U>(0)) {
+        return l;
+      }
+      if (static_cast<T>(r) > l) {
+        throw SafeIntErrors::BinOpOverflow(l, "-", r, static_cast<T>(0));
+      }
+      return l - static_cast<T>(r);
+    }
+    
+    // Shift left.
+    template <class T, class U> T SafeShL<T, U, SE_SE>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, SE_UE>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, SS_SL>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, SS_UL>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, SL_SS>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, SL_US>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, UE_UE>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, UE_SE>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, US_SL>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, US_UL>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, UL_SS>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    template <class T, class U> T SafeShL<T, U, UL_US>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, "<<", r);
+      }
+      return l << r;
+    }
+    
+    // Shift right.
+    template <class T, class U> T SafeShR<T, U, SE_SE>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
+        return static_cast<T>(0);
+      }
+      if (l < static_cast<T>(0)) {
+        return (l & std::numeric_limits<T>::max()) >> r | static_cast<T>(1) << std::numeric_limits<T>::digits - r;
+      } else {
+        return l >> r;
+      }
+    }
+    template <class T, class U> T SafeShR<T, U, SE_UE>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
+        return static_cast<T>(0);
+      }
+      if (l < static_cast<T>(0)) {
+        return (l & std::numeric_limits<T>::max()) >> r | static_cast<T>(1) << std::numeric_limits<T>::digits - r;
+      } else {
+        return l >> r;
+      }
+    }
+    template <class T, class U> T SafeShR<T, U, SS_SL>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
+        return static_cast<T>(0);
+      }
+      if (l < static_cast<T>(0)) {
+        return (l & std::numeric_limits<T>::max()) >> r | static_cast<T>(1) << std::numeric_limits<T>::digits - r;
+      } else {
+        return l >> r;
+      }
+    }
+    template <class T, class U> T SafeShR<T, U, SS_UL>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
+        return static_cast<T>(0);
+      }
+      if (l < static_cast<T>(0)) {
+        return (l & std::numeric_limits<T>::max()) >> r | static_cast<T>(1) << std::numeric_limits<T>::digits - r;
+      } else {
+        return l >> r;
+      }
+    }
+    template <class T, class U> T SafeShR<T, U, SL_SS>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
+        return static_cast<T>(0);
+      }
+      if (l < static_cast<T>(0)) {
+        return (l & std::numeric_limits<T>::max()) >> r | static_cast<T>(1) << std::numeric_limits<T>::digits - r;
+      } else {
+        return l >> r;
+      }
+    }
+    template <class T, class U> T SafeShR<T, U, SL_US>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
+        return static_cast<T>(0);
+      }
+      if (l < static_cast<T>(0)) {
+        return (l & std::numeric_limits<T>::max()) >> r | static_cast<T>(1) << std::numeric_limits<T>::digits - r;
+      } else {
+        return l >> r;
+      }
+    }
+    template <class T, class U> T SafeShR<T, U, UE_UE>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      return l >> r;
+    }
+    template <class T, class U> T SafeShR<T, U, UE_SE>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      return l >> r;
+    }
+    template <class T, class U> T SafeShR<T, U, US_SL>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      return l >> r;
+    }
+    template <class T, class U> T SafeShR<T, U, US_UL>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      return l >> r;
+    }
+    template <class T, class U> T SafeShR<T, U, UL_SS>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      return l >> r;
+    }
+    template <class T, class U> T SafeShR<T, U, UL_US>::op (T const l, U const r) {
+      if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
+        throw SafeIntErrors::BinOpUndefined(l, ">>", r);
+      }
+      return l >> r;
+    }
+    
+    // Test for greater than.
+    template <class T, class U> inline bool SafeGT<T, U, SE_SE>::op (T const l, U const r) {
+      return l > static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeGT<T, U, SE_UE>::op (T const l, U const r) {
+      return l > static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeGT<T, U, SS_SL>::op (T const l, U const r) {
+      return static_cast<U>(l) > r;
+    }
+    template <class T, class U> inline bool SafeGT<T, U, SS_UL>::op (T const l, U const r) {
+      if (l < static_cast<T>(0)) {
+        return false;
+      } else {
+        return static_cast<U>(l) > r;
+      }
+    }
+    template <class T, class U> inline bool SafeGT<T, U, SL_SS>::op (T const l, U const r) {
+      return l > static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeGT<T, U, SL_US>::op (T const l, U const r) {
+      return l > static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeGT<T, U, UE_UE>::op (T const l, U const r) {
+      return l > static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeGT<T, U, UE_SE>::op (T const l, U const r) {
+      return static_cast<U>(l) > r;
+    }
+    template <class T, class U> inline bool SafeGT<T, U, US_SL>::op (T const l, U const r) {
+      return static_cast<U>(l) > r;
+    }
+    template <class T, class U> inline bool SafeGT<T, U, US_UL>::op (T const l, U const r) {
+      return static_cast<U>(l) > r;
+    }
+    template <class T, class U> inline bool SafeGT<T, U, UL_SS>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        return true;
+      } else {
+        return l > static_cast<T>(r);
+      }
+    }
+    template <class T, class U> inline bool SafeGT<T, U, UL_US>::op (T const l, U const r) {
+      return l > static_cast<T>(r);
+    }
+    
+    // Test for greater than or equal to.
+    template <class T, class U> inline bool SafeGE<T, U, SE_SE>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, SE_UE>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, SS_SL>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, SS_UL>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, SL_SS>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, SL_US>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, UE_UE>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, UE_SE>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, US_SL>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, US_UL>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, UL_SS>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeGE<T, U, UL_US>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
+    
+    // Test for less than.
+    template <class T, class U> inline bool SafeLT<T, U, SE_SE>::op (T const l, U const r) {
+      return l < static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeLT<T, U, SE_UE>::op (T const l, U const r) {
+      return l < static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeLT<T, U, SS_SL>::op (T const l, U const r) {
+      return static_cast<U>(l) < r;
+    }
+    template <class T, class U> inline bool SafeLT<T, U, SS_UL>::op (T const l, U const r) {
+      if (l < static_cast<T>(0)) {
+        return true;
+      } else {
+        return static_cast<U>(l) < r;
+      }
+    }
+    template <class T, class U> inline bool SafeLT<T, U, SL_SS>::op (T const l, U const r) {
+      return l < static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeLT<T, U, SL_US>::op (T const l, U const r) {
+      return l < static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeLT<T, U, UE_UE>::op (T const l, U const r) {
+      return l < static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeLT<T, U, UE_SE>::op (T const l, U const r) {
+      return static_cast<U>(l) < r;
+    }
+    template <class T, class U> inline bool SafeLT<T, U, US_SL>::op (T const l, U const r) {
+      return static_cast<U>(l) < r;
+    }
+    template <class T, class U> inline bool SafeLT<T, U, US_UL>::op (T const l, U const r) {
+      return static_cast<U>(l) < r;
+    }
+    template <class T, class U> inline bool SafeLT<T, U, UL_SS>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        return false;
+      } else {
+        return l < static_cast<T>(r);
+      }
+    }
+    template <class T, class U> inline bool SafeLT<T, U, UL_US>::op (T const l, U const r) {
+      return l < static_cast<T>(r);
+    }
+    
+    // Test for less than or equal to.
+    template <class T, class U> inline bool SafeLE<T, U, SE_SE>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, SE_UE>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, SS_SL>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, SS_UL>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, SL_SS>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, SL_US>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, UE_UE>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, UE_SE>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, US_SL>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, US_UL>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, UL_SS>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeLE<T, U, UL_US>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
+    
+    // Test for equal to.
+    template <class T, class U> inline bool SafeEQ<T, U, SE_SE>::op (T const l, U const r) {
+      return l == static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, SE_UE>::op (T const l, U const r) {
+      return l == static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, SS_SL>::op (T const l, U const r) {
+      return static_cast<U>(l) == r;
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, SS_UL>::op (T const l, U const r) {
+      if (l < static_cast<T>(0)) {
+        return false;
+      } else {
+        return static_cast<U>(l) == r;
+      }
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, SL_SS>::op (T const l, U const r) {
+      return l == static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, SL_US>::op (T const l, U const r) {
+      return l == static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, UE_UE>::op (T const l, U const r) {
+      return l == static_cast<T>(r);
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, UE_SE>::op (T const l, U const r) {
+      return static_cast<U>(l) == r;
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, US_SL>::op (T const l, U const r) {
+      return static_cast<U>(l) == r;
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, US_UL>::op (T const l, U const r) {
+      return static_cast<U>(l) == r;
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, UL_SS>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        return false;
+      } else {
+        return l == static_cast<T>(r);
+      }
+    }
+    template <class T, class U> inline bool SafeEQ<T, U, UL_US>::op (T const l, U const r) {
+      return l == static_cast<T>(r);
+    }
+    
+    // Test for not equal.
+    template <class T, class U> inline bool SafeNE<T, U, SE_SE>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, SE_UE>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, SS_SL>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, SS_UL>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, SL_SS>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, SL_US>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, UE_UE>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, UE_SE>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, US_SL>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, US_UL>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, UL_SS>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    template <class T, class U> inline bool SafeNE<T, U, UL_US>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
+    
+    // Bitwise AND.
+    template <class T, class U> inline T SafeBitAnd<T, U, SE_SE>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, SE_UE>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, SS_SL>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, SS_UL>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, SL_SS>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, SL_US>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, UE_UE>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, UE_SE>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, US_SL>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, US_UL>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, UL_SS>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitAnd<T, U, UL_US>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    
+    // Bitwise inclusive OR.
+    template <class T, class U> inline T SafeBitIOr<T, U, SE_SE>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, SE_UE>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, SS_SL>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, SS_UL>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, SL_SS>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, SL_US>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, UE_UE>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, UE_SE>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, US_SL>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, US_UL>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, UL_SS>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, UL_US>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    
+    // Bitwise exclusive OR.
+    template <class T, class U> inline T SafeBitXOr<T, U, SE_SE>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, SE_UE>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, SS_SL>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, SS_UL>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, SL_SS>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, SL_US>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, UE_UE>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, UE_SE>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, US_SL>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, US_UL>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, UL_SS>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, UL_US>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
     
     /*************************************************************************
      * Class SafeInt::_Relationship.
@@ -1843,12 +2519,11 @@ namespace DAC {
     
     template <class T, class U> DivByZero::DivByZero (T const l, char const* const op, U const r) throw() {
       try {
-        message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + ": divide by zero.";
+        message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + ": Divide by zero.";
       } catch (...) {
         message.clear();
       }
     }
-    
     char const* DivByZero::what () const throw() {
       try {
         if (!message.empty()) {
@@ -1861,6 +2536,27 @@ namespace DAC {
       }
     }
     inline DivByZero::~DivByZero () throw() {}
+    
+    char const* Undefined::what () const throw() {
+      try {
+        if (!message.empty()) {
+          return message.c_str();
+        } else {
+          return "Result of operation is undefined.";
+        }
+      } catch (...) {
+        return "Error returning message string.";
+      }
+    }
+    inline Undefined::~Undefined () throw() {}
+    
+    template <class T, class U> BinOpUndefined::BinOpUndefined (T const l, char const* const op, U const r) throw () {
+      try {
+        message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + ": The result of this operation is undefined.";
+      } catch (...) {
+        message.clear();
+      }
+    }
     
   }
   
@@ -1887,5 +2583,47 @@ template <class T, class U> inline DAC::SafeInt<T> operator % (T               c
 template <class T, class U> inline DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_add(r); }
 template <class T, class U> inline DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_add(r); }
 template <class T, class U> inline DAC::SafeInt<T> operator + (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_add(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_sub(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_sub(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator - (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_sub(r); }
+
+// Bit shift operators.
+template <class T, class U> inline DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shl(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_shl(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator << (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shl(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shr(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_shr(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator >> (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shr(r); }
+
+// Comparison operators.
+template <class T, class U> inline bool operator >  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_gt(r); }
+template <class T, class U> inline bool operator >  (DAC::SafeInt<T> const& l, U               const  r) { return l.op_gt(r); }
+template <class T, class U> inline bool operator >  (T               const  l, DAC::SafeInt<U> const& r) { return r.op_le(l); }
+template <class T, class U> inline bool operator >= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_ge(r); }
+template <class T, class U> inline bool operator >= (DAC::SafeInt<T> const& l, U               const  r) { return l.op_ge(r); }
+template <class T, class U> inline bool operator >= (T               const  l, DAC::SafeInt<U> const& r) { return r.op_lt(l); }
+template <class T, class U> inline bool operator <  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_lt(r); }
+template <class T, class U> inline bool operator <  (DAC::SafeInt<T> const& l, U               const  r) { return l.op_lt(r); }
+template <class T, class U> inline bool operator <  (T               const  l, DAC::SafeInt<U> const& r) { return r.op_ge(l); }
+template <class T, class U> inline bool operator <= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_le(r); }
+template <class T, class U> inline bool operator <= (DAC::SafeInt<T> const& l, U               const  r) { return l.op_le(r); }
+template <class T, class U> inline bool operator <= (T               const  l, DAC::SafeInt<U> const& r) { return r.op_gt(l); }
+template <class T, class U> inline bool operator == (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_eq(r); }
+template <class T, class U> inline bool operator == (DAC::SafeInt<T> const& l, U               const  r) { return l.op_eq(r); }
+template <class T, class U> inline bool operator == (T               const  l, DAC::SafeInt<U> const& r) { return r.op_eq(l); }
+template <class T, class U> inline bool operator != (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_ne(r); }
+template <class T, class U> inline bool operator != (DAC::SafeInt<T> const& l, U               const  r) { return l.op_ne(r); }
+template <class T, class U> inline bool operator != (T               const  l, DAC::SafeInt<U> const& r) { return r.op_ne(l); }
+
+// Bitwise operators.
+template <class T, class U> inline DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_and(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_bit_and(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator & (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_and(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_ior(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_bit_ior(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator | (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_ior(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_xor(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_bit_xor(r); }
+template <class T, class U> inline DAC::SafeInt<T> operator ^ (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_xor(r); }
 
 #endif
