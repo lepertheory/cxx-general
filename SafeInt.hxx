@@ -309,37 +309,9 @@ namespace DAC {
     template <class T, class U> class SafeBitXOr<T, U, UL_US> { public: static T op (T const l, U const r); };
     
     // Safely bitwise compliment.
-    template <class T> class SafeBitCpm { public: static T op (T const value); };
-    
-    // Safely logical AND.
-    template <class T, class U, RelType> class SafeLogAnd;
-    template <class T, class U> class SafeLogAnd<T, U, SE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, SE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, SS_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, SS_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, SL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, SL_US> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, UE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, UE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, US_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, US_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, UL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogAnd<T, U, UL_US> { public: static T op (T const l, U const r); };
-    
-    // Safely logical inclusive OR.
-    template <class T, class U, RelType> class SafeLogIOr;
-    template <class T, class U> class SafeLogIOr<T, U, SE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, SE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, SS_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, SS_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, SL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, SL_US> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, UE_UE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, UE_SE> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, US_SL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, US_UL> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, UL_SS> { public: static T op (T const l, U const r); };
-    template <class T, class U> class SafeLogIOr<T, U, UL_US> { public: static T op (T const l, U const r); };
+    template <class T, RelType> class SafeBitCpm;
+    template <class T> class SafeBitCpm<T, SE_SE> { public: static T op (T const value); };
+    template <class T> class SafeBitCpm<T, UE_UE> { public: static T op (T const value); };
     
   }
   
@@ -517,6 +489,12 @@ namespace DAC {
         template <class T, class U> BinOpOverflow (T const l, char const* const op, U const r, T const limit) throw();
     };
     
+    // Overflow from bitwise operator.
+    class BitOverflow : public Overflow {
+      public:
+        template <class T, class U> BitOverflow (T const l, char const* const op, U const r) throw();
+    };
+    
     // Divide by zero.
     class DivByZero : public Base {
       public:
@@ -607,14 +585,6 @@ template <class T, class U> DAC::SafeInt<T> operator | (T               const  l
 template <class T, class U> DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
 template <class T, class U> DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, U               const  r);
 template <class T, class U> DAC::SafeInt<T> operator ^ (T               const  l, DAC::SafeInt<U> const& r);
-
-// Logical operators.
-template <class T, class U> DAC::SafeInt<T> operator && (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator && (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator && (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator || (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator || (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator || (T               const  l, DAC::SafeInt<U> const& r);
 
 /*****************************************************************************
  * Inline and template definitions.
@@ -739,13 +709,13 @@ namespace DAC {
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_ior (U          const  value) { _value = SafeIntUtil::SafeBitIOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_xor (SafeInt<U> const& value) { _value = SafeIntUtil::SafeBitXOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_xor (U          const  value) { _value = SafeIntUtil::SafeBitXOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
-  template <class T>                    inline SafeInt<T>& SafeInt<T>::op_bit_cpm ()                        { _value = SafeIntUtil::SafeBitCpm<T>                                           ::op(_value);                        return *this; }
+  template <class T>                    inline SafeInt<T>& SafeInt<T>::op_bit_cpm ()                        { _value = SafeIntUtil::SafeBitCpm<T,    SafeIntUtil::Relationship<T, T>::value>::op(_value);                        return *this; }
   
   // Logical operator backends.
-  template <class T> template <class U> inline bool SafeInt<T>::op_log_and (SafeInt<U> const& value) const { return SafeIntUtil::SafeLogAnd<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); }
-  template <class T> template <class U> inline bool SafeInt<T>::op_log_and (U          const  value) const { return SafeIntUtil::SafeLogAnd<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 }
-  template <class T> template <class U> inline bool SafeInt<T>::op_log_ior (SafeInt<U> const& value) const { return SafeIntUtil::SafeLogIOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); }
-  template <class T> template <class U> inline bool SafeInt<T>::op_log_ior (U          const  value) const { return SafeIntUtil::SafeLogIOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 }
+  template <class T> template <class U> inline bool SafeInt<T>::op_log_and (SafeInt<U> const& value) const { return static_cast<bool>(*this) && static_cast<bool>(value); }
+  template <class T> template <class U> inline bool SafeInt<T>::op_log_and (U          const  value) const { return static_cast<bool>(*this) && static_cast<bool>(value); }
+  template <class T> template <class U> inline bool SafeInt<T>::op_log_ior (SafeInt<U> const& value) const { return static_cast<bool>(*this) || static_cast<bool>(value); }
+  template <class T> template <class U> inline bool SafeInt<T>::op_log_ior (U          const  value) const { return static_cast<bool>(*this) || static_cast<bool>(value); }
   
   /***************************************************************************
    * SafeIntUtil.
@@ -2397,32 +2367,118 @@ namespace DAC {
     template <class T, class U> inline T SafeBitAnd<T, U, UL_US>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
     
     // Bitwise inclusive OR.
-    template <class T, class U> inline T SafeBitIOr<T, U, SE_SE>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, SE_UE>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, SS_SL>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, SS_UL>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, SL_SS>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, SL_US>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, UE_UE>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, UE_SE>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, US_SL>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, US_UL>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, UL_SS>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitIOr<T, U, UL_US>::op (T const l, U const r) { return l | RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitIOr<T, U, SE_SE>::op (T const l, U const r) {
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, SE_UE>::op (T const l, U const r) {
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, SS_SL>::op (T const l, U const r) {
+      if (r < static_cast<U>(0) || r > (static_cast<U>(std::numeric_limits<T>::max()) << 1) + static_cast<U>(1)) {
+        throw SafeIntErrors::BitOverflow(l, "|", r);
+      }
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, SS_UL>::op (T const l, U const r) {
+      if (r > (static_cast<U>(std::numeric_limits<T>::max()) << 1) + static_cast<U>(1)) {
+        throw SafeIntErrors::BitOverflow(l, "|", r);
+      }
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, SL_SS>::op (T const l, U const r) {
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, SL_US>::op (T const l, U const r) {
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, UE_UE>::op (T const l, U const r) {
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, UE_SE>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BitOverflow(l, "|", r);
+      }
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, US_SL>::op (T const l, U const r) {
+      if (r < static_cast<U>(0) || r > static_cast<U>(std::numeric_limits<T>::max())) {
+        throw SafeIntErrors::BitOverflow(l, "|", r);
+      }
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, US_UL>::op (T const l, U const r) {
+      if (r > static_cast<U>(std::numeric_limits<T>::max())) {
+        throw SafeIntErrors::BitOverflow(l, "|", r);
+      }
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, UL_SS>::op (T const l, U const r) {
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitIOr<T, U, UL_US>::op (T const l, U const r) {
+      return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
     
     // Bitwise exclusive OR.
-    template <class T, class U> inline T SafeBitXOr<T, U, SE_SE>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, SE_UE>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, SS_SL>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, SS_UL>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, SL_SS>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, SL_US>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, UE_UE>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, UE_SE>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, US_SL>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, US_UL>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, UL_SS>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
-    template <class T, class U> inline T SafeBitXOr<T, U, UL_US>::op (T const l, U const r) { return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r); }
+    template <class T, class U> inline T SafeBitXOr<T, U, SE_SE>::op (T const l, U const r) {
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, SE_UE>::op (T const l, U const r) {
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, SS_SL>::op (T const l, U const r) {
+      if (r < static_cast<U>(0) || r > (static_cast<U>(std::numeric_limits<T>::max()) << 1) + static_cast<U>(1)) {
+        throw SafeIntErrors::BitOverflow(l, "^", r);
+      }
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, SS_UL>::op (T const l, U const r) {
+      if (r > (static_cast<U>(std::numeric_limits<T>::max()) << 1) + static_cast<U>(1)) {
+        throw SafeIntErrors::BitOverflow(l, "^", r);
+      }
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, SL_SS>::op (T const l, U const r) {
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, SL_US>::op (T const l, U const r) {
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, UE_UE>::op (T const l, U const r) {
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, UE_SE>::op (T const l, U const r) {
+      if (r < static_cast<U>(0)) {
+        throw SafeIntErrors::BitOverflow(l, "^", r);
+      }
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, US_SL>::op (T const l, U const r) {
+      if (r < static_cast<U>(0) || r > static_cast<U>(std::numeric_limits<T>::max())) {
+        throw SafeIntErrors::BitOverflow(l, "^", r);
+      }
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, US_UL>::op (T const l, U const r) {
+      if (r > static_cast<U>(std::numeric_limits<T>::max())) {
+        throw SafeIntErrors::BitOverflow(l, "^", r);
+      }
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, UL_SS>::op (T const l, U const r) {
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    template <class T, class U> inline T SafeBitXOr<T, U, UL_US>::op (T const l, U const r) {
+      return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
+    }
+    
+    // Bitwise compliment.
+    template <class T> inline T SafeBitCpm<T, SE_SE>::op (T const value) {
+      return value ^ std::numeric_limits<T>::min();
+    }
+    template <class T> inline T SafeBitCpm<T, UE_UE>::op (T const value) {
+      return value ^ std::numeric_limits<T>::max();
+    }
     
     /*************************************************************************
      * Class SafeInt::_Relationship.
@@ -2512,6 +2568,14 @@ namespace DAC {
     template <class T, class U> BinOpOverflow::BinOpOverflow (T const l, char const* const op, U const r, T const limit) throw() {
       try {
         message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + " overflows type limit of " + toString(limit) + ".";
+      } catch (...) {
+        message.clear();
+      }
+    }
+    
+    template <class T, class U> BitOverflow::BitOverflow (T const l, char const* const op, U const r) throw() {
+      try {
+        message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + " requires more than " + toString(std::numeric_limits<T>::digits + (std::numeric_limits<T>::is_signed ? 1 : 0)) + " bits of storage.";
       } catch (...) {
         message.clear();
       }

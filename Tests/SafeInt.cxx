@@ -34,7 +34,9 @@ enum Op {
   OP_CNE,
   OP_BAN,
   OP_BIO,
-  OP_BXO
+  OP_BXO,
+  OP_LAN,
+  OP_LIO
 };
 
 // This is where it all happens.
@@ -516,6 +518,8 @@ template <class T, class U> void castr (char const* const t, T const& l, char co
   testOp(l, OP_BAN, r);
   testOp(l, OP_BIO, r);
   testOp(l, OP_BXO, r);
+  testOp(l, OP_LAN, r);
+  testOp(l, OP_LIO, r);
   
   cout << endl;
   
@@ -543,6 +547,8 @@ template <class T, class U> void testOp (T const& l, Op const op, U const& r) {
       case OP_BAN: cout << " &  "; break;
       case OP_BIO: cout << " |  "; break;
       case OP_BXO: cout << " ^  "; break;
+      case OP_LAN: cout << " && "; break;
+      case OP_LIO: cout << " || "; break;
     }
     cout << r << " = ";
     switch (op) {
@@ -562,6 +568,8 @@ template <class T, class U> void testOp (T const& l, Op const op, U const& r) {
       case OP_BAN: cout << (l &  r); break;
       case OP_BIO: cout << (l |  r); break;
       case OP_BXO: cout << (l ^  r); break;
+      case OP_LAN: cout << (l && r); break;
+      case OP_LIO: cout << (l || r); break;
     }
     cout << endl;
     
