@@ -159,6 +159,7 @@ namespace DAC {
       } break;
       
       // Output in radix notation.
+      case FMT_DEFAULT:
       case FMT_RADIX: {
         
         // Work area.
@@ -213,6 +214,7 @@ namespace DAC {
               case ROUND_FROM_ZERO: {
                 ++numeric;
               } break;
+              case ROUND_DEFAULT:
               case ROUND_NORMAL: {
                 if (remainder * 2 >= _data->q) {
                   ++numeric;
@@ -949,6 +951,7 @@ namespace DAC {
           case ROUND_FROM_ZERO: {
             ++_data->p;
           } break;
+          case ROUND_DEFAULT:
           case ROUND_NORMAL: {
             if (remainder * _DigsT(2) >= _data->q) {
               ++_data->p;
@@ -1056,6 +1059,9 @@ namespace DAC {
     pointpos = data.pointpos;
     fix      = data.fix;
     base     = data.base;
+    
+    // We done.
+    return *this;
     
   }
   

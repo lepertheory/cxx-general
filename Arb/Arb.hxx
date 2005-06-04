@@ -177,7 +177,7 @@ namespace DAC {
       template <class T> bool op_ge (SafeInt<T> const& number) const;
       template <class T> bool op_ge (T          const  number) const;
                          bool op_lt (Arb        const& number) const;
-      template <class T> bool op_le (SafeInt<T> const& number) const;
+      template <class T> bool op_lt (SafeInt<T> const& number) const;
       template <class T> bool op_lt (T          const  number) const;
                          bool op_le (Arb        const& number) const;
       template <class T> bool op_le (SafeInt<T> const& number) const;
@@ -305,8 +305,11 @@ namespace DAC {
       void _init ();
       
       // Set the number.
-      template <class T> Arb& _set_int (T const number);
-      template <class T> Arb& _set_oth (T const number);
+      template <class T> Arb& _set_uint (SafeInt<T> const& number);
+      template <class T> Arb& _set_uint (T          const  number);
+      template <class T> Arb& _set_sint (SafeInt<T> const& number);
+      template <class T> Arb& _set_sint (T          const  number);
+      template <class T> Arb& _set_othr (T          const  number);
       
       // Reduce the number to its most compact representation.
       Arb& _reduce      ();
@@ -422,17 +425,6 @@ namespace DAC {
    * Class Arb.
    *************************************************************************/
   
-  // Construct from a built-in type.
-  template <> inline Arb::Arb (bool               const number);
-  template <> inline Arb::Arb (unsigned char      const number);
-  template <> inline Arb::Arb (signed   char      const number);
-  template <> inline Arb::Arb (unsigned short int const number);
-  template <> inline Arb::Arb (signed   short int const number);
-  template <> inline Arb::Arb (unsigned int       const number);
-  template <> inline Arb::Arb (signed   int       const number);
-  template <> inline Arb::Arb (unsigned long int  const number);
-  template <> inline Arb::Arb (signed   long int  const number);
-  
   // Set from a built-in type.
   template <> inline Arb& Arb::set (bool               const number);
   template <> inline Arb& Arb::set (unsigned char      const number);
@@ -468,30 +460,24 @@ namespace DAC {
    *************************************************************************/
   
   // Conversion constructor.
-  template <>        Arb::Arb (bool               const number) { _init(); set<bool              >(number); }
-  template <>        Arb::Arb (unsigned char      const number) { _init(); set<unsigned char     >(number); }
-  template <>        Arb::Arb (signed   char      const number) { _init(); set<signed   char     >(number); }
-  template <>        Arb::Arb (unsigned short int const number) { _init(); set<unsigned short int>(number); }
-  template <>        Arb::Arb (signed   short int const number) { _init(); set<signed   short int>(number); }
-  template <>        Arb::Arb (unsigned int       const number) { _init(); set<unsigned int      >(number); }
-  template <>        Arb::Arb (signed   int       const number) { _init(); set<signed   int      >(number); }
-  template <>        Arb::Arb (unsigned long int  const number) { _init(); set<unsigned long int >(number); }
-  template <>        Arb::Arb (signed   long int  const number) { _init(); set<signed   long int >(number); }
-  template <class T> Arb::Arb (T                  const number) { _init(); set(DAC::toString(number));      }
-  /*
-  template <class T> Arb::Arb (T const number) {
+  template <class T> inline Arb::Arb (SafeInt<T> const& number) {
     
-    // Call common init.
+    // Construct fully.
+    _init();
+    
+    // Set the number.
+    set< SafeInt<T> >(number);
+    
+  }
+  template <class T> inline Arb::Arb (T const number) {
+    
+    // Construct fully.
     _init();
     
     // Set the number.
     set<T>(number);
     
   }
-  */
-  
-  // Negation operator.
-  inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
   
   // Increment / decrement operators.
   inline Arb& Arb::operator ++ ()    { return op_add(1);                            }
@@ -499,22 +485,32 @@ namespace DAC {
   inline Arb& Arb::operator -- ()    { return op_sub(1);                            }
   inline Arb  Arb::operator -- (int) { Arb retval(*this); op_sub(1); return retval; }
   
+  // Negation operator.
+  inline Arb Arb::operator + () const { return *this;                                                                             }
+  inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
+  
   // Assignment operator.
-                     inline Arb& Arb::operator = (std::string const& number) { return set(number);                                                  }
                      inline Arb& Arb::operator = (Arb         const& number) { if (_propcopy) { return copy(number); } else { return set(number); } }
+                     inline Arb& Arb::operator = (std::string const& number) { return set(number);                                                  }
+  template <class T> inline Arb& Arb::operator = (SafeInt<T>  const& number) { return set< SafeInt<T> >(number);                                    }
   template <class T> inline Arb& Arb::operator = (T           const  number) { return set<T>(number);                                               }
   
   // Arithmetic assignment operators.
-                     inline Arb& Arb::operator *= (Arb const& number) { return op_mul(number); }
-  template <class T> inline Arb& Arb::operator *= (T   const  number) { return op_mul(number); }
-                     inline Arb& Arb::operator /= (Arb const& number) { return op_div(number); }
-  template <class T> inline Arb& Arb::operator /= (T   const  number) { return op_div(number); }
-                     inline Arb& Arb::operator %= (Arb const& number) { return op_mod(number); }
-  template <class T> inline Arb& Arb::operator %= (T   const  number) { return op_mod(number); }
-                     inline Arb& Arb::operator += (Arb const& number) { return op_add(number); }
-  template <class T> inline Arb& Arb::operator += (T   const  number) { return op_add(number); }
-                     inline Arb& Arb::operator -= (Arb const& number) { return op_sub(number); }
-  template <class T> inline Arb& Arb::operator -= (T   const  number) { return op_sub(number); }
+                     inline Arb& Arb::operator *= (Arb        const& number) { return op_mul(number); }
+  template <class T> inline Arb& Arb::operator *= (SafeInt<T> const& number) { return op_mul(number); }
+  template <class T> inline Arb& Arb::operator *= (T          const  number) { return op_mul(number); }
+                     inline Arb& Arb::operator /= (Arb        const& number) { return op_div(number); }
+  template <class T> inline Arb& Arb::operator /= (SafeInt<T> const& number) { return op_div(number); }
+  template <class T> inline Arb& Arb::operator /= (T          const  number) { return op_div(number); }
+                     inline Arb& Arb::operator %= (Arb        const& number) { return op_mod(number); }
+  template <class T> inline Arb& Arb::operator %= (SafeInt<T> const& number) { return op_mod(number); }
+  template <class T> inline Arb& Arb::operator %= (T          const  number) { return op_mod(number); }
+                     inline Arb& Arb::operator += (Arb        const& number) { return op_add(number); }
+  template <class T> inline Arb& Arb::operator += (SafeInt<T> const& number) { return op_add(number); }
+  template <class T> inline Arb& Arb::operator += (T          const  number) { return op_add(number); }
+                     inline Arb& Arb::operator -= (Arb        const& number) { return op_sub(number); }
+  template <class T> inline Arb& Arb::operator -= (SafeInt<T> const& number) { return op_sub(number); }
+  template <class T> inline Arb& Arb::operator -= (T          const  number) { return op_sub(number); }
   
   // Accessors.
                      inline Arb::BaseT             Arb::Base     ()                                      const { return _data->base;                                                               }
@@ -532,30 +528,28 @@ namespace DAC {
   template <class T> inline T                      Arb::Value    ()                                      const { if (!isInteger()) { throw "Unimplemented"; } else { return _data->p.Value<T>(); } }
   
   // Set from a built-in type.
-  template <>        inline Arb& Arb::set (bool               const number) { return _set_int(number); }
-  template <>        inline Arb& Arb::set (unsigned char      const number) { return _set_int(number); }
-  template <>        inline Arb& Arb::set (signed   char      const number) { return _set_int(number); }
-  template <>        inline Arb& Arb::set (unsigned short int const number) { return _set_int(number); }
-  template <>        inline Arb& Arb::set (signed   short int const number) { return _set_int(number); }
-  template <>        inline Arb& Arb::set (unsigned int       const number) { return _set_int(number); }
-  template <>        inline Arb& Arb::set (signed   int       const number) { return _set_int(number); }
-  template <>        inline Arb& Arb::set (unsigned long int  const number) { return _set_int(number); }
-  template <>        inline Arb& Arb::set (signed   long int  const number) { return _set_int(number); }
-  template <class T> inline Arb& Arb::set (T                  const number) { return _set_oth(number); }
+  template <class T> inline Arb& Arb::set (SafeInt<T>         const& number) { return set(number.Value()); }
+  template <>        inline Arb& Arb::set (bool               const  number) { return _set_uint(1);       }
+  template <>        inline Arb& Arb::set (unsigned char      const  number) { return _set_uint(number);  }
+  template <>        inline Arb& Arb::set (signed   char      const  number) { return _set_sint(number);  }
+  template <>        inline Arb& Arb::set (unsigned short int const  number) { return _set_uint(number);  }
+  template <>        inline Arb& Arb::set (signed   short int const  number) { return _set_sint(number);  }
+  template <>        inline Arb& Arb::set (unsigned int       const  number) { return _set_uint(number);  }
+  template <>        inline Arb& Arb::set (signed   int       const  number) { return _set_sint(number);  }
+  template <>        inline Arb& Arb::set (unsigned long int  const  number) { return _set_uint(number);  }
+  template <>        inline Arb& Arb::set (signed   long int  const  number) { return _set_sint(number);  }
+  template <class T> inline Arb& Arb::set (T                  const  number) { return _set_othr(number);  }
   
   // Multiply by an integral type
-  template <class T> inline Arb& Arb::op_mul (T const number) {
+  template <class T> Arb& Arb::op_mul (SafeInt<T> const& number) {
     
     // Multiplying 0 is easy.
     if (isZero()) {
       return *this;
     }
     
-    // Make the number safe.
-    SafeInteger<T> tmpnum = number;
-    
     // Multiplying by 0 is also easy.
-    if (tmpnum == 0) {
+    if (number == 0) {
       
       // Work area.
       Arb retval(*this, true);
@@ -571,12 +565,12 @@ namespace DAC {
     }
     
     // Multiplying by 1.
-    if (tmpnum == 1) {
+    if (number == 1) {
       return *this;
     }
     
     // Multiplying by -1.
-    if (tmpnum == -1) {
+    if (number == -1) {
       
       // Work area.
       Arb retval(*this, true);
@@ -597,10 +591,10 @@ namespace DAC {
       Arb retval(*this, true);
       
       // Multiply.
-      retval._data->p *= std::abs(number);
+      retval._data->p *= std::abs(number.Value());
       
       // Set the sign.
-      retval._data->positive = (_data->positive == (tmpnum > 0));
+      retval._data->positive = (_data->positive == (number > 0));
       
       // Reduce.
       retval._reduce();
@@ -615,30 +609,28 @@ namespace DAC {
     }
     
   }
+  template <class T> inline Arb& Arb::op_mul (T const number) { return op_mul(SafeInt<T>(number)); }
   
   // Divide by an integral type.
-  template <class T> inline Arb& Arb::op_div (T const number) {
+  template <class T> Arb& Arb::op_div (SafeInt<T> const& number) {
     
     // Dividing 0 is easy.
     if (isZero()) {
       return *this;
     }
     
-    // Make the number safe.
-    SafeInteger<T> tmpnum = number;
-    
     // Dividing by 0 is verboten.
-    if (tmpnum == 0) {
+    if (number == 0) {
       throw ArbErrors::DivByZero();
     }
     
     // Dividing by 1.
-    if (tmpnum == 1) {
+    if (number == 1) {
       return *this;
     }
     
     // Dividing by -1.
-    if (tmpnum == -1) {
+    if (number == -1) {
       
       // Work area.
       Arb retval(*this, true);
@@ -662,7 +654,7 @@ namespace DAC {
       retval._data->q *= std::abs(number);
       
       // Set the sign.
-      retval._data->positive = (_data->positive == (tmpnum > 0));
+      retval._data->positive = (_data->positive == (number > 0));
       
       // Reduce.
       retval._reduce();
@@ -677,20 +669,18 @@ namespace DAC {
     }
     
   }
+  template <class T> inline Arb& Arb::op_div (T const number) { return op_div(SafeInt<T>(number)); }
   
   // Modulo division by an integral type.
-  template <class T> inline Arb& Arb::op_mod (T const number) {
+  template <class T> Arb& Arb::op_mod (SafeInt<T> const& number) {
     
     // Dividing 0 is easy.
     if (isZero()) {
       return *this;
     }
     
-    // Make the number safe.
-    SafeInteger<T> tmpnum = number;
-    
     // Dividing by 0 is verboten.
-    if (tmpnum == 0) {
+    if (number == 0) {
       throw ArbErrors::DivByZero();
     }
     
@@ -710,26 +700,24 @@ namespace DAC {
     return *this;
     
   }
+  template <class T> inline Arb& Arb::op_mod (T const number) { return op_mod(SafeInt<T>(number)); }
   
   // Addition of an integral type.
-  template <class T> inline Arb& Arb::op_add (T const number) {
+  template <class T> Arb& Arb::op_add (SafeInt<T> const& number) {
     
     // Adding to 0 is easy.
     if (isZero()) {
       return set(number);
     }
     
-    // Make the number safe.
-    SafeInteger<T> tmpnum = number;
-    
     // Adding 0 is easy.
-    if (tmpnum == 0) {
+    if (number == 0) {
       return *this;
     }
     
     // If adding an opposite sign, subtract the opposite.
-    if (_data->positive != (tmpnum > 0)) {
-      return op_sub((-tmpnum).Value());
+    if (_data->positive != (number > 0)) {
+      return op_sub(-number);
     }
     
     // Add the easy way if this is an integer.
@@ -740,9 +728,9 @@ namespace DAC {
       
       // Add the very easy way if this is an integer, otherwise scale.
       if (retval.isInteger()) {
-        retval._data->p += std::abs(number);
+        retval._data->p += SafeInt<T>(std::abs(number.Value()));
       } else {
-        retval._data->p += std::abs(number) * retval._data->q;
+        retval._data->p += SafeInt<T>(std::abs(number.Value())) * retval._data->q;
       }
       
       // Reduce.
@@ -758,9 +746,10 @@ namespace DAC {
     }
     
   }
+  template <class T> inline Arb& Arb::op_add (T const number) { return op_add(SafeInt<T>(number)); }
   
   // Subtraction of an integral type.
-  template <class T> inline Arb& Arb::op_sub (T const number) {
+  template <class T> Arb& Arb::op_sub (SafeInt<T> const& number) {
     
     // Subtracting from 0 is easy.
     if (isZero()) {
@@ -771,17 +760,14 @@ namespace DAC {
       return *this;
     }
     
-    // Make the number safe.
-    SafeInteger<T> tmpnum = number;
-    
     // Subtracting 0 is easy.
-    if (tmpnum == 0) {
+    if (number == 0) {
       return *this;
     }
     
     // If subtracting an opposite sign, add the opposite.
-    if (_data->positive != (tmpnum > 0)) {
-      return op_add((-tmpnum).Value());
+    if (_data->positive != (number > 0)) {
+      return op_add(-number);
     }
     
     // Subtract the easy way if this is an integer.
@@ -791,7 +777,7 @@ namespace DAC {
       Arb retval(*this, true);
       
       // Subtract the very easy way if this is an integer.
-      T anum = std::abs(number);
+      SafeInt<T> anum = SafeInt<T>(std::abs(number.Value()));
       if (retval.isInteger()) {
         if (anum > retval._data->p) {
           retval._data->positive = !retval._data->positive;
@@ -824,28 +810,26 @@ namespace DAC {
     }
     
   }
+  template <class T> inline Arb& Arb::op_sub (T const number) { return op_sub(SafeInt<T>(number)); }
   
   // Greater than an integral type.
-  template <class T> inline bool Arb::op_gt (T const number) const {
-    
-    // Make the number safe.
-    SafeInteger<T> tmpnum = number;
+  template <class T> bool Arb::op_gt (SafeInt<T> const& number) const {
     
     // Check for zeros.
     if (_data->p.isZero()) {
-      if (tmpnum == 0) {
+      if (number == 0) {
         return false;
       } else {
-        return (tmpnum < 0);
+        return (number < 0);
       }
-    } else if (tmpnum == 0) {
+    } else if (number == 0) {
       return _data->positive;
     }
     
     // Check signs.
-    if (_data->positive && (tmpnum < 0)) {
+    if (_data->positive && (number < 0)) {
       return true;
-    } else if (!_data->positive && (tmpnum > 0)) {
+    } else if (!_data->positive && (number > 0)) {
       return false;
     }
     
@@ -866,28 +850,26 @@ namespace DAC {
     }
     
   }
+  template <class T> inline bool Arb::op_gt (T const number) const { return op_gt(SafeInt<T>(number)); }
   
   // Less than an integral type.
-  template <class T> inline bool Arb::op_lt (T const number) const {
-    
-    // Make the number safe.
-    SafeInteger<T> tmpnum = number;
+  template <class T> bool Arb::op_lt (SafeInt<T> const& number) const {
     
     // Check for zeros.
     if (_data->p.isZero()) {
-      if (tmpnum == 0) {
+      if (number == 0) {
         return false;
       } else {
-        return (tmpnum > 0);
+        return (number > 0);
       }
-    } else if (tmpnum == 0) {
+    } else if (number == 0) {
       return !_data->positive;
     }
     
     // Check signs.
-    if (_data->positive && (tmpnum < 0)) {
+    if (_data->positive && (number < 0)) {
       return false;
-    } else if (!_data->positive && (tmpnum > 0)) {
+    } else if (!_data->positive && (number > 0)) {
       return true;
     }
     
@@ -908,22 +890,20 @@ namespace DAC {
     }
     
   }
+  template <class T> inline bool Arb::op_lt (T const number) const { return op_lt(SafeInt<T>(number)); }
   
   // Equal to an integral type.
-  template <class T> inline bool Arb::op_eq (T const number) const {
-    
-    // Make the number safe.
-    SafeInteger<T> tmpnum = number;
+  template <class T> bool Arb::op_eq (SafeInt<T> const& number) const {
     
     // Check for zeros.
     if (_data->p.isZero()) {
-      return (tmpnum == 0);
-    } else if (tmpnum == 0) {
+      return (number == 0);
+    } else if (number == 0) {
       return false;
     }
     
     // Neither number is zero, check signs.
-    if (_data->positive != (tmpnum > 0)) {
+    if (_data->positive != (number > 0)) {
       return false;
     }
     
@@ -935,14 +915,18 @@ namespace DAC {
     }
     
   }
+  template <class T> inline bool Arb::op_eq (T const number) const { return op_eq(SafeInt<T>(number)); }
   
   // Comparison operator backends.
-                     inline bool Arb::op_ge (Arb const& number) const { return !op_lt(number); }
-  template <class T> inline bool Arb::op_ge (T   const  number) const { return !op_lt(number); }
-                     inline bool Arb::op_le (Arb const& number) const { return !op_gt(number); }
-  template <class T> inline bool Arb::op_le (T   const  number) const { return !op_gt(number); }
-                     inline bool Arb::op_ne (Arb const& number) const { return !op_eq(number); }
-  template <class T> inline bool Arb::op_ne (T   const  number) const { return !op_eq(number); }
+                     inline bool Arb::op_ge (Arb        const& number) const { return !op_lt(number); }
+  template <class T> inline bool Arb::op_ge (SafeInt<T> const& number) const { return !op_lt(number); }
+  template <class T> inline bool Arb::op_ge (T          const  number) const { return !op_lt(number); }
+                     inline bool Arb::op_le (Arb        const& number) const { return !op_gt(number); }
+  template <class T> inline bool Arb::op_le (SafeInt<T> const& number) const { return !op_gt(number); }
+  template <class T> inline bool Arb::op_le (T          const  number) const { return !op_gt(number); }
+                     inline bool Arb::op_ne (Arb        const& number) const { return !op_eq(number); }
+  template <class T> inline bool Arb::op_ne (SafeInt<T> const& number) const { return !op_eq(number); }
+  template <class T> inline bool Arb::op_ne (T          const  number) const { return !op_eq(number); }
   
   // Return whether this number is an integer.
   inline bool Arb::isInteger () const { return (_data->q == 1); }
@@ -970,10 +954,7 @@ namespace DAC {
   inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }
   
   // Set from an integer type.
-  template <class T> Arb& Arb::_set_int (T const number) {
-    
-    // Make the number safe.
-    SafeInteger<T> tmpnum(number);
+  template <class T> Arb& Arb::_set_sint (SafeInt<T> const& number) {
     
     // Work area.
     Arb new_num;
@@ -985,9 +966,9 @@ namespace DAC {
     new_num._data->fixq     = _data->fixq;
     
     // This number is 1s.
-    new_num._data->p        = (tmpnum >= 0) ? tmpnum : (tmpnum * -1);
+    new_num._data->p        = (number >= 0) ? number : (number * -1);
     new_num._data->q        = 1;
-    new_num._data->positive = (tmpnum >= 0);
+    new_num._data->positive = (number >= 0);
     
     // Reduce the fraction.
     new_num._reduce();
@@ -997,9 +978,35 @@ namespace DAC {
     return *this;
     
   }
+  template <class T> inline Arb& Arb::_set_sint (T const number) { return _set_sint(SafeInt<T>(number)); }
+  template <class T> Arb& Arb::_set_uint (SafeInt<T> const& number) {
+    
+    // Work area.
+    Arb new_num;
+    
+    // Carry over old fixed-point properties.
+    new_num._data->fix      = _data->fix;
+    new_num._data->pointpos = _data->pointpos;
+    new_num._data->base     = _data->base;
+    new_num._data->fixq     = _data->fixq;
+    
+    // This number is 1s.
+    new_num._data->p        = number;
+    new_num._data->q        = 1;
+    new_num._data->positive = true;
+    
+    // Reduce the fraction.
+    new_num._reduce();
+    
+    // Move the new data into place and return.
+    _data = new_num._data;
+    return *this;
+    
+  }
+  template <class T> inline Arb& Arb::_set_uint (T const number) { return _set_uint(SafeInt<T>(number)); }
   
   // Set from a non-integer type.
-  template <class T> inline Arb& Arb::_set_oth (T const number) { return set(DAC::toString(number)); }
+  template <class T> inline Arb& Arb::_set_othr (T const number) { return set(DAC::toString(number)); }
   
 };
 
@@ -1012,40 +1019,62 @@ inline std::ostream& operator << (std::ostream& l, DAC::Arb  const& r) { l << r.
 inline std::istream& operator >> (std::istream& l, DAC::Arb&        r) { std::string input; std::cin >> input; r.set(input); return l; }
 
 // Arithmetic operators.
-                   inline DAC::Arb operator * (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mul(r);    }
-template <class T> inline DAC::Arb operator * (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_mul(r);    }
-template <class T> inline DAC::Arb operator * (T        const  l, DAC::Arb const& r) { return DAC::Arb(r).op_mul(l);    }
-                   inline DAC::Arb operator / (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_div(r);    }
-template <class T> inline DAC::Arb operator / (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_div(r);    }
-template <class T> inline DAC::Arb operator / (T        const  l, DAC::Arb const& r) { return DAC::Arb(l).op_div(r);    }
-                   inline DAC::Arb operator % (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_mod(r);    }
-template <class T> inline DAC::Arb operator % (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_mod(r);    }
-template <class T> inline DAC::Arb operator % (T        const  l, DAC::Arb const& r) { return DAC::Arb(l).op_mod(r);    }
-                   inline DAC::Arb operator + (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_add(r);    }
-template <class T> inline DAC::Arb operator + (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_add(r);    }
-template <class T> inline DAC::Arb operator + (T        const  l, DAC::Arb const& r) { return DAC::Arb(r).op_add(l);    }
-                   inline DAC::Arb operator - (DAC::Arb const& l, DAC::Arb const& r) { return DAC::Arb(l).op_sub(r);    }
-template <class T> inline DAC::Arb operator - (DAC::Arb const& l, T        const  r) { return DAC::Arb(l).op_sub(r);    }
-template <class T> inline DAC::Arb operator - (T        const  l, DAC::Arb const& r) { return -(DAC::Arb(r).op_sub(l)); }
+                   inline DAC::Arb operator * (DAC::Arb        const& l, DAC::Arb        const& r) { return DAC::Arb(l).op_mul(r);    }
+template <class T> inline DAC::Arb operator * (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return DAC::Arb(l).op_mul(r);    }
+template <class T> inline DAC::Arb operator * (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return DAC::Arb(r).op_mul(l);    }
+template <class T> inline DAC::Arb operator * (DAC::Arb        const& l, T               const  r) { return DAC::Arb(l).op_mul(r);    }
+template <class T> inline DAC::Arb operator * (T               const  l, DAC::Arb        const& r) { return DAC::Arb(r).op_mul(l);    }
+                   inline DAC::Arb operator / (DAC::Arb        const& l, DAC::Arb        const& r) { return DAC::Arb(l).op_div(r);    }
+template <class T> inline DAC::Arb operator / (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return DAC::Arb(l).op_div(r);    }
+template <class T> inline DAC::Arb operator / (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return DAC::Arb(l).op_div(r);    }
+template <class T> inline DAC::Arb operator / (DAC::Arb        const& l, T               const  r) { return DAC::Arb(l).op_div(r);    }
+template <class T> inline DAC::Arb operator / (T               const  l, DAC::Arb        const& r) { return DAC::Arb(l).op_div(r);    }
+                   inline DAC::Arb operator % (DAC::Arb        const& l, DAC::Arb        const& r) { return DAC::Arb(l).op_mod(r);    }
+template <class T> inline DAC::Arb operator % (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return DAC::Arb(l).op_mod(r);    }
+template <class T> inline DAC::Arb operator % (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return DAC::Arb(l).op_mod(r);    }
+template <class T> inline DAC::Arb operator % (DAC::Arb        const& l, T               const  r) { return DAC::Arb(l).op_mod(r);    }
+template <class T> inline DAC::Arb operator % (T               const  l, DAC::Arb        const& r) { return DAC::Arb(l).op_mod(r);    }
+                   inline DAC::Arb operator + (DAC::Arb        const& l, DAC::Arb        const& r) { return DAC::Arb(l).op_add(r);    }
+template <class T> inline DAC::Arb operator + (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return DAC::Arb(l).op_add(r);    }
+template <class T> inline DAC::Arb operator + (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return DAC::Arb(r).op_add(l);    }
+template <class T> inline DAC::Arb operator + (DAC::Arb        const& l, T               const  r) { return DAC::Arb(l).op_add(r);    }
+template <class T> inline DAC::Arb operator + (T               const  l, DAC::Arb        const& r) { return DAC::Arb(r).op_add(l);    }
+                   inline DAC::Arb operator - (DAC::Arb        const& l, DAC::Arb        const& r) { return DAC::Arb(l).op_sub(r);    }
+template <class T> inline DAC::Arb operator - (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return DAC::Arb(l).op_sub(r);    }
+template <class T> inline DAC::Arb operator - (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return -(DAC::Arb(r).op_sub(l)); }
+template <class T> inline DAC::Arb operator - (DAC::Arb        const& l, T               const  r) { return DAC::Arb(l).op_sub(r);    }
+template <class T> inline DAC::Arb operator - (T               const  l, DAC::Arb        const& r) { return -(DAC::Arb(r).op_sub(l)); }
 
 // Comparison operators.
-                   inline bool operator >  (DAC::Arb const& l, DAC::Arb const& r) { return l.op_gt(r); }
-template <class T> inline bool operator >  (DAC::Arb const& l, T        const  r) { return l.op_gt(r); }
-template <class T> inline bool operator >  (T        const  l, DAC::Arb const& r) { return r.op_le(l); }
-                   inline bool operator >= (DAC::Arb const& l, DAC::Arb const& r) { return l.op_ge(r); }
-template <class T> inline bool operator >= (DAC::Arb const& l, T        const  r) { return l.op_ge(r); }
-template <class T> inline bool operator >= (T        const  l, DAC::Arb const& r) { return r.op_lt(l); }
-                   inline bool operator <  (DAC::Arb const& l, DAC::Arb const& r) { return l.op_lt(r); }
-template <class T> inline bool operator <  (DAC::Arb const& l, T        const  r) { return l.op_lt(r); }
-template <class T> inline bool operator <  (T        const  l, DAC::Arb const& r) { return r.op_ge(l); }
-                   inline bool operator <= (DAC::Arb const& l, DAC::Arb const& r) { return l.op_le(r); }
-template <class T> inline bool operator <= (DAC::Arb const& l, T        const  r) { return l.op_le(r); }
-template <class T> inline bool operator <= (T        const  l, DAC::Arb const& r) { return r.op_gt(l); }
-                   inline bool operator == (DAC::Arb const& l, DAC::Arb const& r) { return l.op_eq(r); }
-template <class T> inline bool operator == (DAC::Arb const& l, T        const  r) { return l.op_eq(r); }
-template <class T> inline bool operator == (T        const  l, DAC::Arb const& r) { return r.op_eq(l); }
-                   inline bool operator != (DAC::Arb const& l, DAC::Arb const& r) { return l.op_ne(r); }
-template <class T> inline bool operator != (DAC::Arb const& l, T        const  r) { return l.op_ne(r); }
-template <class T> inline bool operator != (T        const  l, DAC::Arb const& r) { return r.op_ne(l); }
+                   inline bool operator >  (DAC::Arb        const& l, DAC::Arb        const& r) { return  l.op_gt(r); }
+template <class T> inline bool operator >  (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return  l.op_gt(r); }
+template <class T> inline bool operator >  (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return !r.op_ge(l); }
+template <class T> inline bool operator >  (DAC::Arb        const& l, T               const  r) { return  l.op_gt(r); }
+template <class T> inline bool operator >  (T               const  l, DAC::Arb        const& r) { return !r.op_ge(l); }
+                   inline bool operator >= (DAC::Arb        const& l, DAC::Arb        const& r) { return  l.op_ge(r); }
+template <class T> inline bool operator >= (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return  l.op_ge(r); }
+template <class T> inline bool operator >= (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return !r.op_gt(l); }
+template <class T> inline bool operator >= (DAC::Arb        const& l, T               const  r) { return  l.op_ge(r); }
+template <class T> inline bool operator >= (T               const  l, DAC::Arb        const& r) { return !r.op_gt(l); }
+                   inline bool operator <  (DAC::Arb        const& l, DAC::Arb        const& r) { return  l.op_lt(r); }
+template <class T> inline bool operator <  (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return  l.op_lt(r); }
+template <class T> inline bool operator <  (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return !r.op_le(l); }
+template <class T> inline bool operator <  (DAC::Arb        const& l, T               const  r) { return  l.op_lt(r); }
+template <class T> inline bool operator <  (T               const  l, DAC::Arb        const& r) { return !r.op_le(l); }
+                   inline bool operator <= (DAC::Arb        const& l, DAC::Arb        const& r) { return  l.op_le(r); }
+template <class T> inline bool operator <= (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return  l.op_le(r); }
+template <class T> inline bool operator <= (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return !r.op_lt(l); }
+template <class T> inline bool operator <= (DAC::Arb        const& l, T               const  r) { return  l.op_le(r); }
+template <class T> inline bool operator <= (T               const  l, DAC::Arb        const& r) { return !r.op_lt(l); }
+                   inline bool operator == (DAC::Arb        const& l, DAC::Arb        const& r) { return  l.op_eq(r); }
+template <class T> inline bool operator == (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return  l.op_eq(r); }
+template <class T> inline bool operator == (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return  r.op_eq(l); }
+template <class T> inline bool operator == (DAC::Arb        const& l, T               const  r) { return  l.op_eq(r); }
+template <class T> inline bool operator == (T               const  l, DAC::Arb        const& r) { return  r.op_eq(l); }
+                   inline bool operator != (DAC::Arb        const& l, DAC::Arb        const& r) { return  l.op_ne(r); }
+template <class T> inline bool operator != (DAC::Arb        const& l, DAC::SafeInt<T> const& r) { return  l.op_ne(r); }
+template <class T> inline bool operator != (DAC::SafeInt<T> const& l, DAC::Arb        const& r) { return  r.op_ne(l); }
+template <class T> inline bool operator != (DAC::Arb        const& l, T               const  r) { return  l.op_ne(r); }
+template <class T> inline bool operator != (T               const  l, DAC::Arb        const& r) { return  r.op_ne(l); }
 
 #endif
