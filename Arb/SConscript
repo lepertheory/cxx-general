@@ -1,0 +1,19 @@
+# Imports from caller.
+Import('*')
+
+# Include the parent directory.
+env.Append(CPPPATH = ['..'])
+
+# Include dependeny directories.
+for incdir in cArbInt['include']:
+  env.Append(CPPPATH = ['#' + incdir])
+
+# Object files.
+o_Arb = env.Object(target = 'Arb', source = ['Arb.cxx'])
+
+# Create a dictionary containing all necessary information and objects to
+# compile with Arb.
+cArb = { 'obj': list(cArbInt['obj']) + [o_Arb], 'include': list(cArbInt['include']) + ['Arb'] }
+
+# Return.
+Return('cArb')

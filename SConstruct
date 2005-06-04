@@ -28,4 +28,12 @@ elif (env_platd['PLATFORM'] == 'posix') :
 if not env.GetOption('clean') :
   env.Default(None)
 
-SConscript(['Tests/SConscript'], exports = 'env')
+# Make a backup of env so SConscript files do not modify it.
+tmpenv = env.Copy()
+
+cArbInt = SConscript(['ArbInt/SConscript'], exports = 'env')
+env = tmpenv.Copy()
+cArb    = SConscript(['Arb/SConscript'],    exports = 'env cArbInt')
+env = tmpenv.Copy()
+SConscript(['Tests/SConscript'],            exports = 'env cArbInt cArb')
+env = tmpenv.Copy()

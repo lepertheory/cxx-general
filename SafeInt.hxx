@@ -401,6 +401,10 @@ namespace DAC {
       template <class U> SafeInt& operator ^= (SafeInt<U> const& value);
       template <class U> SafeInt& operator ^= (U          const  value);
       
+      // Accessors.
+      SafeInt& Value (T const value);
+      T        Value ()              const;
+      
       // Arithmetic operator backends.
       template <class U> SafeInt& op_mul (SafeInt<U> const& value);
       template <class U> SafeInt& op_mul (U          const  value);
@@ -669,6 +673,10 @@ namespace DAC {
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator |= (U          const  value) { return op_bit_ior(value); }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator ^= (SafeInt<U> const& value) { return op_bit_xor(value); }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator ^= (U          const  value) { return op_bit_xor(value); }
+  
+  // Accessors.
+  template <class T> inline SafeInt<T>& SafeInt<T>::Value (T const value)       { _value = value; return *this; }
+  template <class T> inline T           SafeInt<T>::Value ()              const { return _value;                }
   
   // Arithmetic operator backends.
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_mul (SafeInt<U> const& value) { _value = SafeIntUtil::SafeMul<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
@@ -2544,7 +2552,7 @@ namespace DAC {
   
   namespace SafeIntErrors {
     
-    char const* Overflow::what () const throw() {
+    inline char const* Overflow::what () const throw() {
       try {
         if (!message.empty()) {
           return message.c_str();
@@ -2588,7 +2596,7 @@ namespace DAC {
         message.clear();
       }
     }
-    char const* DivByZero::what () const throw() {
+    inline char const* DivByZero::what () const throw() {
       try {
         if (!message.empty()) {
           return message.c_str();
@@ -2601,7 +2609,7 @@ namespace DAC {
     }
     inline DivByZero::~DivByZero () throw() {}
     
-    char const* Undefined::what () const throw() {
+    inline char const* Undefined::what () const throw() {
       try {
         if (!message.empty()) {
           return message.c_str();
@@ -2660,24 +2668,24 @@ template <class T, class U> inline DAC::SafeInt<T> operator >> (DAC::SafeInt<T> 
 template <class T, class U> inline DAC::SafeInt<T> operator >> (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shr(r); }
 
 // Comparison operators.
-template <class T, class U> inline bool operator >  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_gt(r); }
-template <class T, class U> inline bool operator >  (DAC::SafeInt<T> const& l, U               const  r) { return l.op_gt(r); }
-template <class T, class U> inline bool operator >  (T               const  l, DAC::SafeInt<U> const& r) { return r.op_le(l); }
-template <class T, class U> inline bool operator >= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_ge(r); }
-template <class T, class U> inline bool operator >= (DAC::SafeInt<T> const& l, U               const  r) { return l.op_ge(r); }
-template <class T, class U> inline bool operator >= (T               const  l, DAC::SafeInt<U> const& r) { return r.op_lt(l); }
-template <class T, class U> inline bool operator <  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_lt(r); }
-template <class T, class U> inline bool operator <  (DAC::SafeInt<T> const& l, U               const  r) { return l.op_lt(r); }
-template <class T, class U> inline bool operator <  (T               const  l, DAC::SafeInt<U> const& r) { return r.op_ge(l); }
-template <class T, class U> inline bool operator <= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_le(r); }
-template <class T, class U> inline bool operator <= (DAC::SafeInt<T> const& l, U               const  r) { return l.op_le(r); }
-template <class T, class U> inline bool operator <= (T               const  l, DAC::SafeInt<U> const& r) { return r.op_gt(l); }
-template <class T, class U> inline bool operator == (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_eq(r); }
-template <class T, class U> inline bool operator == (DAC::SafeInt<T> const& l, U               const  r) { return l.op_eq(r); }
-template <class T, class U> inline bool operator == (T               const  l, DAC::SafeInt<U> const& r) { return r.op_eq(l); }
-template <class T, class U> inline bool operator != (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return l.op_ne(r); }
-template <class T, class U> inline bool operator != (DAC::SafeInt<T> const& l, U               const  r) { return l.op_ne(r); }
-template <class T, class U> inline bool operator != (T               const  l, DAC::SafeInt<U> const& r) { return r.op_ne(l); }
+template <class T, class U> inline bool operator >  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_gt(r); }
+template <class T, class U> inline bool operator >  (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_gt(r); }
+template <class T, class U> inline bool operator >  (T               const  l, DAC::SafeInt<U> const& r) { return !r.op_ge(l); }
+template <class T, class U> inline bool operator >= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_ge(r); }
+template <class T, class U> inline bool operator >= (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_ge(r); }
+template <class T, class U> inline bool operator >= (T               const  l, DAC::SafeInt<U> const& r) { return !r.op_gt(l); }
+template <class T, class U> inline bool operator <  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_lt(r); }
+template <class T, class U> inline bool operator <  (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_lt(r); }
+template <class T, class U> inline bool operator <  (T               const  l, DAC::SafeInt<U> const& r) { return !r.op_le(l); }
+template <class T, class U> inline bool operator <= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_le(r); }
+template <class T, class U> inline bool operator <= (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_le(r); }
+template <class T, class U> inline bool operator <= (T               const  l, DAC::SafeInt<U> const& r) { return !r.op_lt(l); }
+template <class T, class U> inline bool operator == (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_eq(r); }
+template <class T, class U> inline bool operator == (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_eq(r); }
+template <class T, class U> inline bool operator == (T               const  l, DAC::SafeInt<U> const& r) { return  r.op_eq(l); }
+template <class T, class U> inline bool operator != (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_ne(r); }
+template <class T, class U> inline bool operator != (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_ne(r); }
+template <class T, class U> inline bool operator != (T               const  l, DAC::SafeInt<U> const& r) { return  r.op_ne(l); }
 
 // Bitwise operators.
 template <class T, class U> inline DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_and(r); }

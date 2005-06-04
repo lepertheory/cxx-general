@@ -7,23 +7,23 @@
 // Include guard.
 #if !defined(LOGBASE_i9o8heux978do)
   #define LOGBASE_i9o8heux978do
-  
-  // STL includes.
+
+// STL includes.
   #include <cmath>
+
+// Contain in namespace.
+namespace DAC {
   
-  // Contain in namespace.
-  namespace DAC {
+  /*************************************************************************/
+  // Get the logarithm of a number in a given base.
+  template <class NumT, class BaseT> NumT logBase (NumT const& number, BaseT const& base) {
     
-    /*************************************************************************/
-    // Get the logarithm of a number in a given base.
-    template <class NumT, class BaseT> NumT logBase (NumT const& number, BaseT const& base) {
-      
-      return static_cast<NumT>((std::log(static_cast<long double>(number)) / std::log(static_cast<long double>(base))));
-      
-    }
-    /*************************************************************************/
+    return static_cast<NumT>((std::log(static_cast<long double>(number)) / std::log(static_cast<long double>(base))));
     
-  };
+  }
+  /*************************************************************************/
   
+}
+
 // End include guard.
 #endif

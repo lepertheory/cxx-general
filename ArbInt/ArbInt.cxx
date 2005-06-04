@@ -11,7 +11,7 @@
 #include <algorithm>
 
 // Internal includes.
-#include "SafeInteger.hxx"
+#include "SafeInt.hxx"
 #include "ReferencePointer.hxx"
 #include "toString.hxx"
 #include "rppower.hxx"
@@ -138,7 +138,7 @@ namespace DAC {
       _NumChrT digval = s_idigits[number[i]];
       
       // Make sure this digit is within the number base.
-      if ((digval >= SafeInteger<_DigT>(_base).Value() || (digval == numeric_limits<_NumChrT>::max()))) {
+      if ((digval >= SafeInt<_DigT>(_base) || (digval == numeric_limits<_NumChrT>::max()))) {
         throw ArbIntErrors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
       }
       
@@ -203,7 +203,7 @@ namespace DAC {
       
       // Load this into the string. If the base is greater than the number
       // of digits defined, output the raw numbers of each digit.
-      if (SafeInteger<_DigT>(_base) > s_numodigits) {
+      if (SafeInt<_DigT>(_base) > s_numodigits) {
         for (_DigsT::reverse_iterator i = num.rbegin(); i != num.rend(); ++i) {
           retval += "'" + DAC::toString(*i) + "'";
           if (i != (num.rend() - 1)) {
@@ -248,7 +248,7 @@ namespace DAC {
           }
           
           // Multiply into the digit product and carry.
-          (*(digproduct._digits))[j] = (SafeInteger<_DigT>((*(digproduct._digits))[j]) + (SafeInteger<_DigT>((*(number._digits))[i]) * SafeInteger<_DigT>((*_digits)[j]))).Value();
+          (*(digproduct._digits))[j] = SafeInt<_DigT>((*(digproduct._digits))[j]) + (SafeInt<_DigT>((*(number._digits))[i]) * SafeInt<_DigT>((*_digits)[j]));
           digproduct._carry(j);
           
         }
@@ -291,7 +291,7 @@ namespace DAC {
     } else {
       
       // Cache a copy of the high-order digit of the dividend.
-      SafeInteger<_DigT> roughdivnd = number._digits->back();
+      SafeInt<_DigT> roughdivnd(number._digits->back());
       
       // Seed the group of digits we will be dividing, then iterate through
       // the divisor. diggroup is set to *this's last number._digits's size
@@ -306,8 +306,8 @@ namespace DAC {
         // Guess and test. Guess is a single native digit so we can use the
         // computer to do some of our division for us. These need to be set
         // to zero at each iteration, possible cause of bug if they are not.
-        SafeInteger<_DigT> guess = 0;
-        ArbInt             test;
+        SafeInt<_DigT> guess;
+        ArbInt         test;
         
         // Make sure that the digit group is greater than or equal to the
         // dividend. If not, the quotient for this digit is zero, move on.
@@ -323,7 +323,7 @@ namespace DAC {
           // roughdivor can never overflow, since it will always spend at
           // least one iteration greater than roughdivnd but cannot be
           // greater than the type maximum.
-          SafeInteger<_DigT> roughdivor = diggroup._digits->back();
+          SafeInt<_DigT> roughdivor(diggroup._digits->back());
           _DigsT::size_type j;
           for (j = 0; j != (diggroup._digits->size() - number._digits->size()); ++j) {
             roughdivor *= s_digitbase;
@@ -350,11 +350,11 @@ namespace DAC {
           // ensure that floor and ceil do not overflow, and even with those
           // guarantees the better guesses may not even help significantly
           // since they will still almost always be wrong.
-          test = number * guess.Value();
+          test = number * guess;
           //SafeInteger<_DigT> guessfloor = (roughdivor - rppower(SafeInteger<_DigT>(s_digitbase), j)) / (roughdivnd + 1);
           //SafeInteger<_DigT> guessceil  = (roughdivor + rppower(SafeInteger<_DigT>(s_digitbase), j)) / ((roughdivnd == 1) ? 1 : (roughdivnd - 1));
-          SafeInteger<_DigT> guessfloor = 1;
-          SafeInteger<_DigT> guessceil  = numeric_limits<_DigT>::max();
+          SafeInt<_DigT> guessfloor(1);
+          SafeInt<_DigT> guessceil(numeric_limits<_DigT>::max());
           
           // Loop until the test is within the correct range.
           while ((test > diggroup) || ((test + number) <= diggroup)) {
@@ -366,7 +366,7 @@ namespace DAC {
             if (test > diggroup) {
               guessceil = guess - 1;
               guess     = guess - (((guess - guessfloor) >> 1) + 1);
-              test      = number * guess.Value();
+              test      = number * guess;
             
             // If there is room for more dividends, we need to raise our
             // guess. Raise it halfway toward the ceiling. Update the floor,
@@ -374,7 +374,7 @@ namespace DAC {
             } else if ((test + number) <= diggroup) {
               guessfloor = guess + 1;
               guess      = guess + (((guessceil - guess) >> 1) + 1);
-              test       = number * guess.Value();
+              test       = number * guess;
             }
             
           }
@@ -385,7 +385,7 @@ namespace DAC {
         // and prepare for the next iteration by removing the current digit
         // from the digit group, shift the digit group up one digit, and add
         // the next digit of the divisor.
-        retval._digits->insert(retval._digits->begin(), guess.Value());
+        retval._digits->insert(retval._digits->begin(), guess);
         diggroup -= test;
         if (i != (_digits->rend() - 1)) {
           diggroup._digits->insert(diggroup._digits->begin(), *(i + 1));
@@ -436,7 +436,7 @@ namespace DAC {
       }
       
       // Add this digit and carry.
-      (*(retval._digits))[i] = (SafeInteger<_DigT>((*(retval._digits))[i]) + SafeInteger<_DigT>((*(number._digits))[i])).Value();
+      (*(retval._digits))[i] = SafeInt<_DigT>((*(retval._digits))[i]) + SafeInt<_DigT>((*(number._digits))[i]);
       retval._carry(i);
       
     }
@@ -465,7 +465,7 @@ namespace DAC {
       if ((*(retval._digits))[i] < (*(number._digits))[i]) {
         retval._borrow(i);
       }
-      (*(retval._digits))[i] = (SafeInteger<_DigT>((*(retval._digits))[i]) - SafeInteger<_DigT>((*(number._digits))[i])).Value();
+      (*(retval._digits))[i] = SafeInt<_DigT>((*(retval._digits))[i]) - SafeInt<_DigT>((*(number._digits))[i]);
       
     }
     
@@ -704,10 +704,10 @@ namespace DAC {
       }
       
       // FIXME: This should be picked.
-      SafeInteger<_DigsT::size_type> maxextra = 10;
+      SafeInt<_DigsT::size_type> maxextra(10);
       
       // Get the root in integral form.
-      SafeInteger<_DigsT::size_type> iroot;
+      SafeInt<_DigsT::size_type> iroot;
       try {
         iroot = root.Value<_DigsT::size_type>();
       } catch (ArbIntErrors::ScalarOverflow()) {
@@ -716,42 +716,42 @@ namespace DAC {
       
       // Get the number of aligned digit groups in the number before
       // expansion.
-      SafeInteger<_DigsT::size_type> groups = (_digits->size() - 1) / iroot + 1;
+      SafeInt<_DigsT::size_type> groups = (_digits->size() - 1) / iroot + 1;
       
       // Cache type conversions.
       ArbInt abase(s_digitbase);
       
       // Iterate through the number, stop when desired precision is reached
       // or a perfect root is found.
-      SafeInteger<_DigsT::size_type> group = 0;
-      SafeInteger<_DigsT::size_type> extra = 0;
+      SafeInt<_DigsT::size_type> group;
+      SafeInt<_DigsT::size_type> extra;
       do {
         
         // Get the next aligned block of digits from the radicand.
         ArbInt diggroup;
         if (group < groups) {
-          SafeInteger<_DigsT::size_type> spos = (groups - 1 - group) * iroot;
-          SafeInteger<_DigsT::size_type> epos = spos + iroot - 1;
+          SafeInt<_DigsT::size_type> spos = (groups - 1 - group) * iroot;
+          SafeInt<_DigsT::size_type> epos = spos + iroot - 1;
           if (epos >= _digits->size()) {
             epos = _digits->size() - 1;
           }
           *(diggroup._digits) = _DigsT(_digits->begin() + spos.Value(), _digits->begin() + (epos + 1).Value());
           ++group;
         } else {
-          *(diggroup._digits) = _DigsT(iroot.Value(), 0);
+          *(diggroup._digits) = _DigsT(iroot, 0);
           edivor *= abase;
           ++extra;
         }
         
         // Find the next digit of the root with a binary search.
-        SafeInteger<_DigT> guess = 0;
-        SafeInteger<_DigT> min   = 0;
-        SafeInteger<_DigT> max   = s_digitbase - 1;
-        ArbInt             arbguess;
-        ArbInt             abpr  = ArbInt(abase).pow(root);
+        SafeInt<_DigT> guess;
+        SafeInt<_DigT> min;
+        SafeInt<_DigT> max(SafeInt<_DigT>(s_digitbase) - 1);
+        ArbInt         arbguess;
+        ArbInt         abpr  = ArbInt(abase).pow(root);
         while (min <= max) {
           guess    = (min + max) / 2;
-          arbguess = guess.Value();
+          arbguess = guess;
           if ((abase * eroot + arbguess).pow(root) - abpr * ArbInt(eroot).pow(root) <= abpr * erem + diggroup) {
             min = guess + 1;
           } else {
@@ -761,7 +761,7 @@ namespace DAC {
         if (guess == min) {
           guess -= 1;
         }
-        arbguess = guess.Value();
+        arbguess = guess;
         
         // Get the next iteration's values.
         erem  = abpr * erem + diggroup - ((abase * eroot + arbguess).pow(root) - abpr * ArbInt(eroot).pow(root));
@@ -824,9 +824,9 @@ namespace DAC {
         // digit. No need to check i + 1 for overflow; i is the size_type of
         // _DigsT, and we just added an element, we would have recieved an
         // error when we did that.
-        SafeInteger<_DigsT::value_type> overflow = SafeInteger<_DigsT::value_type>((*_digits)[i]) / s_digitbase;
-        (*_digits)[i + 1]                        = (SafeInteger<_DigsT::value_type>((*_digits)[i + 1]) + overflow).Value();
-        (*_digits)[i]                            = (SafeInteger<_DigsT::value_type>((*_digits)[i]) - (overflow * s_digitbase)).Value();
+        SafeInt<_DigsT::value_type> overflow = SafeInt<_DigsT::value_type>((*_digits)[i]) / s_digitbase;
+        (*_digits)[i + 1]                    = SafeInt<_DigsT::value_type>((*_digits)[i + 1]) + overflow;
+        (*_digits)[i]                        = SafeInt<_DigsT::value_type>((*_digits)[i]) - (overflow * s_digitbase);
         
       // If there is no overflow now, there will be no more overflow.
       } else {
@@ -837,6 +837,9 @@ namespace DAC {
       }
       
     }
+    
+    // We done.
+    return *this;
     
   }
   
@@ -853,7 +856,7 @@ namespace DAC {
     for (_DigsT::size_type i = start; i != (_digits->size() - 1); ++i) {
       
       // Add base to this digit.
-      (*_digits)[i] = (SafeInteger<_DigT>((*_digits)[i]) + s_digitbase).Value();
+      (*_digits)[i] = SafeInt<_DigT>((*_digits)[i]) + s_digitbase;
       
       // If this is not the first digit, we are only here because we
       // borrowed for the previous digit. Subtract one for the borrow.
@@ -920,7 +923,7 @@ namespace DAC {
           _DigT carry    = 0;
           _DigT oldcarry = 0;
           if (dir == _DIR_L) {
-            _DigT bitmask  = ((rppower(SafeInteger<_DigT>(2), bitshift) - 1) << (s_digitbits - bitshift)).Value();
+            _DigT bitmask  = (rppower(SafeInt<_DigT>(2), bitshift) - 1) << (s_digitbits - bitshift);
             for (_DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
               carry      = *i & bitmask;
               *i       <<= bitshift;
@@ -928,7 +931,7 @@ namespace DAC {
               oldcarry   = carry >> (s_digitbits - bitshift);
             }
           } else {
-            _DigT bitmask  = (rppower(SafeInteger<_DigT>(2), bitshift) - 1).Value();
+            _DigT bitmask  = rppower(SafeInt<_DigT>(2), bitshift) - 1;
             for (_DigsT::reverse_iterator i = _digits->rbegin(); i != _digits->rend(); ++i) {
               carry      = *i & bitmask;
               *i       >>= bitshift;
@@ -955,19 +958,19 @@ namespace DAC {
     
     // Get the maximum number that can be held in a single digit.
     s_digitbits = numeric_limits<_DigT>::digits >> 1;
-    s_digitbase = rppower(SafeInteger<_DigT>(2), s_digitbits).Value();
-    s_bitmask   = (SafeInteger<_DigT>(s_digitbase) - 1).Value();
+    s_digitbase = rppower(SafeInt<_DigT>(2), s_digitbits);
+    s_bitmask   = SafeInt<_DigT>(s_digitbase) - 1;
     
     // Get the input digits.
-    SafeInteger<_NumChrT> j;
+    SafeInt<_NumChrT> j;
     for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {
       j = i;
-      SafeInteger<_NumChrT> digit;
+      SafeInt<_NumChrT> digit;
       if      ((j >= '0') && (j <= '9')) { digit = j - '0';                         }
       else if ((j >= 'A') && (j <= 'Z')) { digit = j - 'A' + 10;                    }
       else if ((j >= 'a') && (j <= 'z')) { digit = j - 'a' + 10;                    }
       else                               { digit = numeric_limits<_NumChrT>::max(); }
-      s_idigits.push_back(digit.Value());
+      s_idigits.push_back(digit);
     }
     s_numidigits = 36;
     
@@ -976,4 +979,4 @@ namespace DAC {
     
   }
   
-};
+}

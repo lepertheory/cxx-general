@@ -15,10 +15,15 @@
 namespace DAC {
   
   // Convert the number to a string.
-  template <class T> std::string toString (T const& from);
+  template <class T> std::string toString (SafeInt<T> const& from);
+  template <class T> std::string toString (T          const& from);
   
   // Convert a character to a string.
   std::string toStringChr (char const from);
+  
+  template <class T> inline std::string toString (SafeInt<T> const& from) {
+    return toString(static_cast<T>(from));
+  }
   
   template <> inline std::string toString<char> (char const& from) {
     std::ostringstream os;
