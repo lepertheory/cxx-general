@@ -172,7 +172,7 @@ namespace DAC {
     // Return.
     return retval;
     
-  };
+  }
   
   // Get the current system time.
   Timestamp& Timestamp::getSystemTime () {
@@ -423,4 +423,4 @@ namespace DAC {
     
   }
   
-};
+}

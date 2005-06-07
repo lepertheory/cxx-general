@@ -55,7 +55,7 @@
             YMD () {};
             YMD (YMD const& ymd) : Year(ymd.Year), Month(ymd.Month), Day(ymd.Day) {};
             YMD (TimeVal const& year, TimeVal const& month, TimeVal const& day) : Year(year), Month(month), Day(day) {};
-            template <class T> YMD (T const year, T const month, T const day) : Year(year), Month(month), Day(day) {};
+            template <class T> YMD (T const year, T const month, T const day) : Year(year), Month(month), Day(day) {}
             TimeVal  Year;
             TimeVal Month;
             TimeVal   Day;
@@ -66,7 +66,7 @@
           public:
             LeapSecondDay () {};
             LeapSecondDay (YMD const& ymd, TimeVal const& leap) : YMD(ymd), Leap(leap) {};
-            template <class T> LeapSecondDay (YMD const& ymd, T const leap) : YMD(ymd), Leap(leap) {};
+            template <class T> LeapSecondDay (YMD const& ymd, T const leap) : YMD(ymd), Leap(leap) {}
             TimeVal Leap;
         };
         
@@ -216,7 +216,7 @@
         
     };
     
-  };
+  }
   
   /***************************************************************************
    * Global operators.
@@ -237,9 +237,9 @@
       class InvalidTime       : public Base      { public: virtual char const* what () const throw(); };
       class SysCallError      : public Base      { public: virtual char const* what () const throw(); };
       class MissingSysSupport : public Base      { public: virtual char const* what () const throw(); };
-    };
+    }
     
-  };
+  }
   
   /***************************************************************************
    * Inline and template definitions.
@@ -254,7 +254,7 @@
       inline char const* InvalidTime::what       () const throw() { return "The specified time is invalid.";                                                 }
       inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                        }
       inline char const* MissingSysSupport::what () const throw() { return "Missing necessary system-provided support.";                                     }
-    };
+    }
     
     /*************************************************************************
      * Class Timestamp.
@@ -271,7 +271,7 @@
      *************************************************************************/
     
     // Default constructor.
-    inline Timestamp::Interval::Interval () {};
+    inline Timestamp::Interval::Interval () {}
     
     // Set properties.
     inline Timestamp::Interval& Timestamp::Interval::Millisecond (TimeVal const& millisecond) { _millisecond = millisecond; _set_millisecond = true; return *this; }
@@ -300,7 +300,7 @@
     inline bool Timestamp::Interval::isSet_Month       () const { return _set_month;       }
     inline bool Timestamp::Interval::isSet_Year        () const { return _set_year;        }
     
-  };
+  }
   
   // Stream I/O operators.
   inline std::ostream& operator << (std::ostream& l, DAC::Timestamp const& r) { l << r.toString(); return l; }

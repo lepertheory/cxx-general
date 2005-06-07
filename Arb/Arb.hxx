@@ -18,6 +18,7 @@
   #include "ReferencePointer.hxx"
   #include "toString.hxx"
   #include "ArbInt.hxx"
+  #include "abs.hxx"
 
 // Namespace wrapping.
 namespace DAC {
@@ -436,6 +437,17 @@ namespace DAC {
   template <> inline Arb& Arb::set (unsigned long int  const number);
   template <> inline Arb& Arb::set (signed   long int  const number);
   
+  // Add a built-in type.
+  template <> inline Arb& Arb::op_add (bool               const number);
+  template <> inline Arb& Arb::op_add (unsigned char      const number);
+  template <> inline Arb& Arb::op_add (signed   char      const number);
+  template <> inline Arb& Arb::op_add (unsigned short int const number);
+  template <> inline Arb& Arb::op_add (signed   short int const number);
+  template <> inline Arb& Arb::op_add (unsigned int       const number);
+  template <> inline Arb& Arb::op_add (signed   int       const number);
+  template <> inline Arb& Arb::op_add (unsigned long int  const number);
+  template <> inline Arb& Arb::op_add (signed   long int  const number);
+  
 }
 
 /***************************************************************************
@@ -591,7 +603,7 @@ namespace DAC {
       Arb retval(*this, true);
       
       // Multiply.
-      retval._data->p *= std::abs(number.Value());
+      retval._data->p *= DAC::abs(number.Value());
       
       // Set the sign.
       retval._data->positive = (_data->positive == (number > 0));
@@ -609,7 +621,18 @@ namespace DAC {
     }
     
   }
-  template <class T> inline Arb& Arb::op_mul (T const number) { return op_mul(SafeInt<T>(number)); }
+  template <>        inline Arb& Arb::op_mul (bool                   const number) { return op_mul(SafeInt<bool                  >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   char          const number) { return op_mul(SafeInt<signed   char         >(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned char          const number) { return op_mul(SafeInt<unsigned char         >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   short int     const number) { return op_mul(SafeInt<signed   short int    >(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned short int     const number) { return op_mul(SafeInt<unsigned short int    >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   int           const number) { return op_mul(SafeInt<signed   int          >(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned int           const number) { return op_mul(SafeInt<unsigned int          >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   long int      const number) { return op_mul(SafeInt<signed   long int     >(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned long int      const number) { return op_mul(SafeInt<unsigned long int     >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   long long int const number) { return op_mul(SafeInt<signed   long long int>(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned long long int const number) { return op_mul(SafeInt<unsigned long long int>(number)); }
+  template <class T> inline Arb& Arb::op_mul (T                      const number) { return op_mul(Arb(number));                             }
   
   // Divide by an integral type.
   template <class T> Arb& Arb::op_div (SafeInt<T> const& number) {
@@ -651,7 +674,7 @@ namespace DAC {
       Arb retval(*this, true);
       
       // Divide.
-      retval._data->q *= std::abs(number);
+      retval._data->q *= DAC::abs(number.Value());
       
       // Set the sign.
       retval._data->positive = (_data->positive == (number > 0));
@@ -728,9 +751,9 @@ namespace DAC {
       
       // Add the very easy way if this is an integer, otherwise scale.
       if (retval.isInteger()) {
-        retval._data->p += SafeInt<T>(std::abs(number.Value()));
+        retval._data->p += SafeInt<T>(DAC::abs(number.Value()));
       } else {
-        retval._data->p += SafeInt<T>(std::abs(number.Value())) * retval._data->q;
+        retval._data->p += SafeInt<T>(DAC::abs(number.Value())) * retval._data->q;
       }
       
       // Reduce.
@@ -746,7 +769,18 @@ namespace DAC {
     }
     
   }
-  template <class T> inline Arb& Arb::op_add (T const number) { return op_add(SafeInt<T>(number)); }
+  template <>        inline Arb& Arb::op_add (bool                   const number) { return op_add(SafeInt<bool                  >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   char          const number) { return op_add(SafeInt<signed   char         >(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned char          const number) { return op_add(SafeInt<unsigned char         >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   short int     const number) { return op_add(SafeInt<signed   short int    >(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned short int     const number) { return op_add(SafeInt<unsigned short int    >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   int           const number) { return op_add(SafeInt<signed   int          >(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned int           const number) { return op_add(SafeInt<unsigned int          >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   long int      const number) { return op_add(SafeInt<signed   long int     >(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned long int      const number) { return op_add(SafeInt<unsigned long int     >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   long long int const number) { return op_add(SafeInt<signed   long long int>(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned long long int const number) { return op_add(SafeInt<unsigned long long int>(number)); }
+  template <class T> inline Arb& Arb::op_add (T                      const number) { return op_add(Arb(number));                             }
   
   // Subtraction of an integral type.
   template <class T> Arb& Arb::op_sub (SafeInt<T> const& number) {
@@ -777,7 +811,7 @@ namespace DAC {
       Arb retval(*this, true);
       
       // Subtract the very easy way if this is an integer.
-      SafeInt<T> anum = SafeInt<T>(std::abs(number.Value()));
+      SafeInt<T> anum = SafeInt<T>(DAC::abs(number.Value()));
       if (retval.isInteger()) {
         if (anum > retval._data->p) {
           retval._data->positive = !retval._data->positive;
@@ -1008,7 +1042,7 @@ namespace DAC {
   // Set from a non-integer type.
   template <class T> inline Arb& Arb::_set_othr (T const number) { return set(DAC::toString(number)); }
   
-};
+}
 
 /***************************************************************************
  * Inline and template definitions.

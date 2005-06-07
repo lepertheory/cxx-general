@@ -29,7 +29,7 @@ namespace DAC {
     // Relationship types.
     enum RelType {
       SE_SE, SE_UE, SS_SL, SS_UL, SL_SS, SL_US,
-      UE_UE, UE_SE, US_SL, US_UL, UL_SS, UL_US
+      UE_UE, UE_SE, US_SL, US_UL, UL_SS, UL_US, INT_ONLY
     };
     
     // Determine the relationship between two types.
@@ -337,7 +337,7 @@ namespace DAC {
       SafeInt (SafeInt<T> const& value);
       
       // Conversion constructor.
-      template <class U> explicit SafeInt (U          const  value);
+      template <class U> explicit SafeInt (U          const  value = 0);
       template <class U> explicit SafeInt (SafeInt<U> const& value);
       
       // Increment / decrement operators.
@@ -2497,50 +2497,54 @@ namespace DAC {
     
     // Relationship between T and U.
     template <class T, class U> const RelType Relationship<T, U>::value(
-      (std::numeric_limits<T>::digits > std::numeric_limits<U>::digits) ? (
-        std::numeric_limits<T>::is_signed ? (
-          std::numeric_limits<U>::is_signed ? (
-            SL_SS
+      (std::numeric_limits<T>::is_integer && std::numeric_limits<U>::is_integer) ? (
+        (std::numeric_limits<T>::digits > std::numeric_limits<U>::digits) ? (
+          std::numeric_limits<T>::is_signed ? (
+            std::numeric_limits<U>::is_signed ? (
+              SL_SS
+            ) : (
+              SL_US
+            )
           ) : (
-            SL_US
+            std::numeric_limits<U>::is_signed ? (
+              UL_SS
+            ) : (
+              UL_US
+            )
           )
         ) : (
-          std::numeric_limits<U>::is_signed ? (
-            UL_SS
+          (std::numeric_limits<T>::digits < std::numeric_limits<U>::digits) ? (
+            std::numeric_limits<T>::is_signed ? (
+              std::numeric_limits<U>::is_signed ? (
+                SS_SL
+              ) : (
+                SS_UL
+              )
+            ) : (
+              std::numeric_limits<U>::is_signed ? (
+                US_SL
+              ) : (
+                US_UL
+              )
+            )
           ) : (
-            UL_US
+            std::numeric_limits<T>::is_signed ? (
+              std::numeric_limits<U>::is_signed ? (
+                SE_SE
+              ) : (
+                SE_UE
+              )
+            ) : (
+              std::numeric_limits<U>::is_signed ? (
+                UE_SE
+              ) : (
+                UE_UE
+              )
+            )
           )
         )
       ) : (
-        (std::numeric_limits<T>::digits < std::numeric_limits<U>::digits) ? (
-          std::numeric_limits<T>::is_signed ? (
-            std::numeric_limits<U>::is_signed ? (
-              SS_SL
-            ) : (
-              SS_UL
-            )
-          ) : (
-            std::numeric_limits<U>::is_signed ? (
-              US_SL
-            ) : (
-              US_UL
-            )
-          )
-        ) : (
-          std::numeric_limits<T>::is_signed ? (
-            std::numeric_limits<U>::is_signed ? (
-              SE_SE
-            ) : (
-              SE_UE
-            )
-          ) : (
-            std::numeric_limits<U>::is_signed ? (
-              UE_SE
-            ) : (
-              UE_UE
-            )
-          )
-        )
+        INT_ONLY
       )
     );
     

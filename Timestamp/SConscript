@@ -1,0 +1,47 @@
+# Imports from caller.
+Import('*')
+
+# Include the parent directory.
+env.Append(CPPPATH = ['..'])
+
+# Include dependency directories.
+for incdir in cArb['include'] :
+  env.Append(CPPPATH = ['#' + incdir])
+
+# Configure the environment.
+if BUILD_TARGETS != [] :
+  
+  conf = Configure(env)
+  if env['PLATFORM'] == 'win32' :
+    
+    if conf.CheckHeader(header = 'windows.h', language = 'C++') :
+      env.Append(CPPDEFINES = [ 'HAS_WINDOWS_H' ])
+      if conf.CheckType(type_name = '_SYSTEMTIME', includes = '#include <windows.h>', language = 'C++') : env.Append(CPPDEFINES = [ 'HAS__SYSTEMTIME' ])
+    
+  elif env['PLATFORM'] == 'posix' :
+    
+    if conf.CheckHeader(header = 'time.h', language = 'C++') :
+      env.Append(CPPDEFINES = [ 'HAS_TIME_H' ])
+      if conf.CheckType(type_name = 'time_t', includes = '#include <time.h>', language = 'C++') : env.Append(CPPDEFINES = [ 'HAS_TIME_T' ])
+      if conf.CheckType(type_name = 'tm',     includes = '#include <time.h>', language = 'C++') : env.Append(CPPDEFINES = [ 'HAS_TM' ]    )
+      if conf.CheckFunc(function_name = 'time',     language = 'C++') : env.Append(CPPDEFINES = [ 'HAS_TIME' ]    )
+      if conf.CheckFunc(function_name = 'gmtime',   language = 'C++') : env.Append(CPPDEFINES = [ 'HAS_GMTIME' ]  )
+      if conf.CheckFunc(function_name = 'gmtime_r', language = 'C++') : env.Append(CPPDEFINES = [ 'HAS_GMTIME_R' ])
+    
+    if conf.CheckHeader(header = 'sys/time.h', language = 'C++') :
+      env.Append(CPPDEFINES = [ 'HAS_SYS_TIME_H' ])
+      if conf.CheckType(type_name = 'timeval',  includes = '#include <sys/time.h>', language = 'C++') : env.Append (CPPDEFINES = [ 'HAS_TIMEVAL' ] )
+      if conf.CheckType(type_name = 'timezone', includes = '#include <sys/time.h>', language = 'C++') : env.Append (CPPDEFINES = [ 'HAS_TIMEZONE' ])
+      if conf.CheckFunc(function_name = 'gettimeofday', language = 'C++') : env.Append(CPPDEFINES = [ 'HAS_GETTIMEOFDAY' ])
+    
+  env = conf.Finish()
+
+# Object files.
+o_Timestamp = env.Object(target = 'Timestamp', source = ['Timestamp.cxx'])
+
+# Create a dictionary containing all necessary information and objects to
+# compile with Timestamp.
+cTimestamp = { 'obj': list(cArb['obj']) + [o_Timestamp], 'include': list(cArb['include']) + ['Timestamp'] }
+
+# Return.
+Return('cTimestamp')

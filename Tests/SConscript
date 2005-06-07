@@ -6,18 +6,23 @@ env.Append(CPPPATH = ['..'])
 
 # Create program-specific environments.
 env_ArbInt = env.Copy()
-for incdir in cArbInt['include']:
+for incdir in cArbInt['include'] :
   env_ArbInt.Append(CPPPATH = ['#' + incdir])
 env_Arb = env.Copy()
-for incdir in cArb['include']:
+for incdir in cArb['include'] :
   env_Arb.Append(CPPPATH = ['#' + incdir])
+env_Timestamp = env.Copy()
+for incdir in cTimestamp['include'] :
+  env_Timestamp.Append(CPPPATH = ['#' + incdir])
 
 # Object files.
-o_SafeInt = env       .Object(target = 'SafeInt', source = ['SafeInt.cxx'])
-o_ArbInt  = env_ArbInt.Object(target = 'ArbInt',  source = ['ArbInt.cxx'] )
-o_Arb     = env_Arb   .Object(target = 'Arb',     source = ['Arb.cxx']    )
+o_SafeInt   = env          .Object(target = 'SafeInt',   source = ['SafeInt.cxx']  )
+o_ArbInt    = env_ArbInt   .Object(target = 'ArbInt',    source = ['ArbInt.cxx']   )
+o_Arb       = env_Arb      .Object(target = 'Arb',       source = ['Arb.cxx']      )
+o_Timestamp = env_Timestamp.Object(target = 'Timestamp', source = ['Timestamp.cxx'])
 
 # Programs.
-env       .Program(target = 'SafeInt', source = [o_SafeInt]                      )
-env_ArbInt.Program(target = 'ArbInt',  source = list(cArbInt['obj']) + [o_ArbInt])
-env_Arb   .Program(target = 'Arb',     source = list(cArb['obj'])    + [o_Arb]   )
+env          .Program(target = 'SafeInt',   source = [o_SafeInt]                            )
+env_ArbInt   .Program(target = 'ArbInt',    source = list(cArbInt['obj'])    + [o_ArbInt]   )
+env_Arb      .Program(target = 'Arb',       source = list(cArb['obj'])       + [o_Arb]      )
+env_Timestamp.Program(target = 'Timestamp', source = list(cTimestamp['obj']) + [o_Timestamp])

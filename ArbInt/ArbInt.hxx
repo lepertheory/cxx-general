@@ -723,6 +723,7 @@ namespace DAC {
       
       // Move the digits into place and return.
       _digits = retval._digits;
+      return *this;
       
     }
     

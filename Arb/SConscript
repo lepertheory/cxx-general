@@ -4,7 +4,7 @@ Import('*')
 # Include the parent directory.
 env.Append(CPPPATH = ['..'])
 
-# Include dependeny directories.
+# Include dependency directories.
 for incdir in cArbInt['include']:
   env.Append(CPPPATH = ['#' + incdir])
 

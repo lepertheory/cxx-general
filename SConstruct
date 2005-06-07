@@ -31,9 +31,8 @@ if not env.GetOption('clean') :
 # Make a backup of env so SConscript files do not modify it.
 tmpenv = env.Copy()
 
-cArbInt = SConscript(['ArbInt/SConscript'], exports = 'env')
-env = tmpenv.Copy()
-cArb    = SConscript(['Arb/SConscript'],    exports = 'env cArbInt')
-env = tmpenv.Copy()
-SConscript(['Tests/SConscript'],            exports = 'env cArbInt cArb')
-env = tmpenv.Copy()
+cArbInt    = SConscript(['ArbInt/SConscript'],    exports = 'env')         ; env = tmpenv.Copy()
+cArb       = SConscript(['Arb/SConscript'],       exports = 'env cArbInt') ; env = tmpenv.Copy()
+cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb')    ; env = tmpenv.Copy()
+
+SConscript(['Tests/SConscript'],     exports = 'env cArbInt cArb cTimestamp') ; env = tmpenv.Copy()
