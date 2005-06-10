@@ -733,6 +733,33 @@ namespace DAC {
     
   }
   
+  // Get the ceiling of this fractional number.
+  Arb Arb::ceil () const {
+    
+    // Work area.
+    Arb retval(*this, true);
+    
+    // Only work if we have to.
+    if (!isInteger()) {
+      
+      // Easy, p/q.
+      _DigsT remainder  = retval._data->p % retval._data->q;
+      retval._data->p  /= retval._data->q;
+      retval._data->q   = 1;
+      
+      // If the number was positive and there was a remainder, we need to add
+      // 1.
+      if (isPositive() && remainder) {
+        ++retval._data->p;
+      }
+      
+    }
+    
+    // We done.
+    return retval;
+    
+  }
+  
   // Get the floor of this fractional number.
   Arb Arb::floor () const {
     
@@ -743,14 +770,14 @@ namespace DAC {
     if (!isInteger()) {
       
       // Easy, p/q.
-      retval._data->p  /= retval._data->q;
       _DigsT remainder  = retval._data->p % retval._data->q;
+      retval._data->p  /= retval._data->q;
       retval._data->q   = 1;
       
       // If the number was negative and there was a remainder, we need to
       // subtract 1.
       if (!isPositive() && (remainder != 0)) {
-        --(retval._data->p);
+        --retval._data->p;
       }
       
     }

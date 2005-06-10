@@ -40,6 +40,11 @@
         class LeapSecondDay;
         
         /*********************************************************************/
+        // Enums.
+        
+        enum CalendarType { CT_DEFAULT, CT_JULIAN, CT_GREGORIAN };
+        
+        /*********************************************************************/
         // Typedefs.
         
         typedef Arb TimeVal;
@@ -202,11 +207,14 @@
         // Common initialization routines.
         void _init ();
         
+        // Return whether a given year is a leap year.
+        static bool _isLeapYear (TimeVal const& year, CalendarType const caltype = CT_DEFAULT) const;
+        
         // Return the number of days in a given month.
-        TimeVal _daysInMonth (TimeVal const& year, TimeVal const& month) const;
+        static TimeVal _daysInMonth (TimeVal const& year, TimeVal const& month, CalendarType const caltype = CT_DEFAULT) const;
         
         // Return the leap seconds of a given day.
-        TimeVal _leapSecond (TimeVal const& year, TimeVal const& month, TimeVal const& day) const;
+        static TimeVal _leapSecond (TimeVal const& year, TimeVal const& month, TimeVal const& day) const;
         
         /*********************************************************************/
         // Static function members.
@@ -232,11 +240,12 @@
     
     // Errors.
     namespace TimestampErrors {
-      class Base              : public Exception { public: virtual char const* what () const throw(); };
-      class UnknownPlatform   : public Base      { public: virtual char const* what () const throw(); };
-      class InvalidTime       : public Base      { public: virtual char const* what () const throw(); };
-      class SysCallError      : public Base      { public: virtual char const* what () const throw(); };
-      class MissingSysSupport : public Base      { public: virtual char const* what () const throw(); };
+      class Base              : public Exception   { public: virtual char const* what () const throw(); };
+      class UnknownPlatform   : public Base        { public: virtual char const* what () const throw(); };
+      class InvalidTime       : public Base        { public: virtual char const* what () const throw(); };
+      class NoYearZero        : public InvalidTime { public: virtual char const* what () const throw(); };
+      class SysCallError      : public Base        { public: virtual char const* what () const throw(); };
+      class MissingSysSupport : public Base        { public: virtual char const* what () const throw(); };
     }
     
   }
@@ -252,6 +261,7 @@
       inline char const* Base::what              () const throw() { return "Undefined error in class Timestamp.";                                            }
       inline char const* UnknownPlatform::what   () const throw() { return "Cannot perform function on unknown platform, requires platform-specific calls."; }
       inline char const* InvalidTime::what       () const throw() { return "The specified time is invalid.";                                                 }
+      inline char const* NoYearZero::what        () const throw() { return "There is no year 0.";                                                            }
       inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                        }
       inline char const* MissingSysSupport::what () const throw() { return "Missing necessary system-provided support.";                                     }
     }

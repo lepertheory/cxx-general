@@ -22,6 +22,7 @@ using namespace DAC;
 enum Operation {
   MUL,
   DIV,
+  MOD,
   ADD,
   SUB,
   CGT,
@@ -51,6 +52,7 @@ int main (int argc, char** argv, char** envp) {
     
     testOp(test1, MUL, test2);
     testOp(test1, DIV, test2);
+    testOp(test1, MOD, test2);
     testOp(test1, ADD, test2);
     testOp(test1, SUB, test2);
     testOp(test1, CGT, test2);
@@ -96,7 +98,7 @@ int main (int argc, char** argv, char** envp) {
     
   }
   
-};
+}
 
 bool testOp (Arb const& l, Operation const op, Arb const& r) {
   
@@ -108,6 +110,7 @@ bool testOp (Arb const& l, Operation const op, Arb const& r) {
     switch (op) {
       case MUL: output += "  * "; break;
       case DIV: output += "  / "; break;
+      case MOD: output += "  % "; break;
       case ADD: output += "  + "; break;
       case SUB: output += "  - "; break;
       case CGT: output += " >  "; break;
@@ -121,6 +124,7 @@ bool testOp (Arb const& l, Operation const op, Arb const& r) {
     switch (op) {
       case MUL: output += (l  * r).toString(); break;
       case DIV: output += (l  / r).toString(); break;
+      case MOD: output += (l  % r).toString(); break;
       case ADD: output += (l  + r).toString(); break;
       case SUB: output += (l  - r).toString(); break;
       case CGT: output += ((l >  r) ? "true" : "false"); break;

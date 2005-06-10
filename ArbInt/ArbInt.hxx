@@ -716,9 +716,9 @@ namespace DAC {
       // Already wrote the long division algorithm, reuse it. Different
       // calls for remainder or not.
       if (remainder) {
-        *remainder = s_longDiv((*(retval._digits)), number, s_digitbase);
+        *remainder = s_longDiv((*(retval._digits)), number.Value(), s_digitbase);
       } else {
-        s_longDiv((*(retval._digits)), number, s_digitbase);
+        s_longDiv((*(retval._digits)), number.Value(), s_digitbase);
       }
       
       // Move the digits into place and return.

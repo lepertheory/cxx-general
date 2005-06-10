@@ -97,6 +97,19 @@ namespace DAC {
       // Not operator.
       bool operator ! () const;
       
+      // Casting operators.
+      operator bool                   () const;
+      operator signed   char          () const;
+      operator unsigned char          () const;
+      operator signed   short int     () const;
+      operator unsigned short int     () const;
+      operator signed   int           () const;
+      operator unsigned int           () const;
+      operator signed   long int      () const;
+      operator unsigned long int      () const;
+      operator signed   long long int () const;
+      operator unsigned long long int () const;
+      
       // Assignment operator.
                          Arb& operator = (Arb         const& number);
                          Arb& operator = (std::string const& number);
@@ -198,6 +211,7 @@ namespace DAC {
       bool isOdd      () const;
       
       // Convert to an interger value. Do not confuse with int.
+      Arb ceil  () const;
       Arb floor () const;
       Arb toInt () const;
       
@@ -391,6 +405,16 @@ template <class T> bool operator != (DAC::Arb        const& l, T               c
 template <class T> bool operator != (T               const  l, DAC::Arb        const& r);
 
 /***************************************************************************
+ * Extensions to std::
+ ***************************************************************************/
+namespace std {
+  
+  DAC::Arb ceil  (DAC::Arb const& x);
+  DAC::Arb floor (DAC::Arb const& x);
+  
+}
+
+/***************************************************************************
  * Error declarations.
  ***************************************************************************/
 namespace DAC {
@@ -453,6 +477,17 @@ namespace DAC {
 /***************************************************************************
  * Inline and template definitions.
  ***************************************************************************/
+ 
+/***************************************************************************
+ * Extensions to std::
+ ***************************************************************************/
+namespace std {
+  
+  inline DAC::Arb ceil  (DAC::Arb const& x) { return x.ceil();  }
+  inline DAC::Arb floor (DAC::Arb const& x) { return x.floor(); }
+  
+}
+
 namespace DAC {
   
   // Errors.
@@ -500,6 +535,22 @@ namespace DAC {
   // Negation operator.
   inline Arb Arb::operator + () const { return *this;                                                                             }
   inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
+  
+  // NOT operator.
+  inline bool Arb::operator ! () const { return !static_cast<bool>(*this); }
+  
+  // Casting operators.
+  inline Arb::operator bool                   () const { return !isZero();                       }
+  inline Arb::operator signed   char          () const { return Value<signed   char         >(); }
+  inline Arb::operator unsigned char          () const { return Value<unsigned char         >(); }
+  inline Arb::operator signed   short int     () const { return Value<signed   short int    >(); }
+  inline Arb::operator unsigned short int     () const { return Value<unsigned short int    >(); }
+  inline Arb::operator signed   int           () const { return Value<signed   int          >(); }
+  inline Arb::operator unsigned int           () const { return Value<unsigned int          >(); }
+  inline Arb::operator signed   long int      () const { return Value<signed   long int     >(); }
+  inline Arb::operator unsigned long int      () const { return Value<unsigned long int     >(); }
+  inline Arb::operator signed   long long int () const { return Value<signed   long long int>(); }
+  inline Arb::operator unsigned long long int () const { return Value<unsigned long long int>(); }
   
   // Assignment operator.
                      inline Arb& Arb::operator = (Arb         const& number) { if (_propcopy) { return copy(number); } else { return set(number); } }
@@ -976,7 +1027,7 @@ namespace DAC {
   inline bool Arb::isEven () const { return (isInteger() && _data->p.isEven()); }
   
   // Return the integer portion of this number.
-  inline Arb Arb::toInt () const { Arb retval(*this, true); retval._data->p /= retval._data->q; retval._data->q = 1; return retval; }
+  inline Arb Arb::toInt () const { Arb retval(*this, true); retval._forcereduce(_DigsT(1)); return retval; }
   
   // Raise this number to a given power.
   template <class T> inline Arb Arb::pow (T const exp) const { return pow(Arb(exp)); }

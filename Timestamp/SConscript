@@ -14,11 +14,15 @@ if BUILD_TARGETS != [] :
   conf = Configure(env)
   if env['PLATFORM'] == 'win32' :
     
+    env.Append(CPPDEFINES = [ 'PLAT_WIN32' ])
+    
     if conf.CheckHeader(header = 'windows.h', language = 'C++') :
       env.Append(CPPDEFINES = [ 'HAS_WINDOWS_H' ])
       if conf.CheckType(type_name = '_SYSTEMTIME', includes = '#include <windows.h>', language = 'C++') : env.Append(CPPDEFINES = [ 'HAS__SYSTEMTIME' ])
     
   elif env['PLATFORM'] == 'posix' :
+    
+    env.Append(CPPDEFINES = [ 'PLAT_POSIX'])
     
     if conf.CheckHeader(header = 'time.h', language = 'C++') :
       env.Append(CPPDEFINES = [ 'HAS_TIME_H' ])
