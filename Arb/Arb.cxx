@@ -787,6 +787,26 @@ namespace DAC {
     
   }
   
+  // Truncate to just the integer portion.
+  Arb Arb::truncate () const {
+    
+    // Work area.
+    Arb retval(*this, true);
+    
+    // Only work if we have to.
+    if (!isInteger()) {
+      
+      // Easy, p/q.
+      retval._data->p /= retval._data->q;
+      retval._data->q  = 1;
+      
+    }
+    
+    // We done.
+    return retval;
+    
+  }
+  
   // Raise this number to a power.
   Arb Arb::pow (Arb const& exp) const {
     

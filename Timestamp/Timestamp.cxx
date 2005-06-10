@@ -63,25 +63,33 @@ namespace DAC {
   }
   
   // Set this timestamp.
-  Timestamp& Timestamp::set (Interval const& time) {
+  Timestamp& Timestamp::set (Interval const& time, CalendarType const caltype) {
     
     // Work area.
     Timestamp newtime(*this);
     
-    // Set temporary values. There is no year 0.
-    TimeVal y((time.Year() < 0) ? (time.Year() + 1) : time.Year());
-    TimeVal m(time.Month());
+    // Determine the calendar type.
+    CalendarType ct(caltype);
+    if (caltype == CT_DEFAULT) {
+      ct = ( time.Year() >  _lastjulian.Year ||
+            (time.Year() == _lastjulian.Year && (time.Month() >  _lastjulian.Month ||
+                                                 time.Month() == _lastjulian.Month && time.Day() > _lastjulian.Day))) ?
+        CT_GREGORIAN
+      :
+        CT_JULIAN
+      ;
+    }
     
     // Verify that the new time is a valid time.
-    if (!time.isSet_Second()      ||
-        !time.isSet_Minute()      ||
-        !time.isSet_Hour()        ||
-        !time.isSet_Day()         ||
-        !time.isSet_Month()       ||
-        !time.isSet_Year()        ||
+    if (!time.isSet_Second()            ||
+        !time.isSet_Minute()            ||
+        !time.isSet_Hour()              ||
+        !time.isSet_Day()               ||
+        !time.isSet_Month()             ||
+        !time.isSet_Year()              ||
         !time.Year().isInteger()        || (time.Year() == 0)       ||
         !time.Month().isInteger()       || (time.Month()       < 1) || (time.Month()       > 12)                                                      ||
-        !time.Day().isInteger()         || (time.Day()         < 1) || (time.Day()         > _daysInMonth(time.Year(), time.Month()))                 ||
+        !time.Day().isInteger()         || (time.Day()         < 1) || (time.Day()         > _daysInMonth(time.Year(), time.Month(), ct))             ||
         !time.Hour().isInteger()        || (time.Hour()        < 0) || (time.Hour()        > 23)                                                      ||
         !time.Minute().isInteger()      || (time.Minute()      < 0) || (time.Minute()      > 59)                                                      ||
         !time.Second().isInteger()      || (time.Second()      < 0) || (time.Second()      > 59 + _leapSecond(time.Year(), time.Month(), time.Day())) ||
@@ -90,8 +98,92 @@ namespace DAC {
       throw TimestampErrors::InvalidTime();
     }
     
-    // Set the julian date.
+    // Adjust BCE years.
+    TimeVal y(time.Year() + ((time.Year() < 0) ? 1 : 0));
     
+    // Set the julian date.
+    switch (ct) {
+      
+      // Gregorian calendar.
+      case CT_DEFAULT:
+      case CT_GREGORIAN: {
+        TimeVal n;
+        TimeVal r;
+        TimeVal p;
+        TimeVal q;
+        TimeVal m;
+        TimeVal k;
+        if (time.Month() < 3) {
+          n = y - 1;
+          r = 3;
+        } else {
+          n = y;
+          r = 1;
+        }
+        p = (30.6001 * (time.Month() + r)).truncate();
+        m = (n / 100).truncate();
+        q = 2 + 2 * (n / 400).truncate();
+        k = q - m - (m / 4).truncate();
+        newtime._jd = 1720995 + floor(n * 365.25) + p + time.Day() + k;
+      } break;
+      
+      // Julian calendar.
+      case CT_JULIAN: {
+        TimeVal n;
+        TimeVal r;
+        TimeVal p;
+        if (time.Month() < 3) {
+          n = y - 1;
+          r = 3;
+        } else {
+          n = y;
+          r = 1;
+        }
+        p = (30.6001 * (time.Month() + r)).truncate();
+        newtime._jd = 1720995 + floor(n * 365.25) + p + time.Day();
+      } break;
+      
+    }
+    
+    // Add the time.
+    newtime._jd += ((time.Hour() - 12) + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24;
+    
+    /*
+Date: Tue, 28 Sep 1999 14:16:48 +0000
+Newsgroups: sci.math
+Subject: Re: How can I calculate the day?
+
+Like Jefferson Airplane, the Julian Day Number will get you there all
+the time, in either the Julian or Gregorian calendar, from 1/1/4713
+B.C. to the next calendar reform. Let the date be day/month/year and
+
+   int() mean integer part and floor() integer part towards -infinity
+   n = year - 1 if month = 1 or 2       otherwise n = year
+   r = 13       if month = 1 or 2       otherwise r = 1
+
+   p = int( 30.6001*( month + r ))
+
+   k = 0 if the calendar date is Julian
+   k = q - m - int( m/4 ) if the calendar date is Gregorian, where
+        m = int( n/100 )
+        q = 2 + 2*int( n/400 )
+Then
+   j = 1720995 + floor( n*365.25 ) + p + day + k
+
+and j is the Julian Day number. It should be 2195883 for 1/1/1300
+(Julian) and 2451545 for 1/1/2000 (Gregorian).
+
+Reduce j modulo 7. Monday is 0, Tuesday is 1 ... Sunday is 6.
+
+The calendrical cutoff date in the Papal States, where Gregorian dates
+were first applied, is 1582 Oct. 5 Julian = 1582 Oct. 15 Gregorian.
+If you want to be clever, calculate
+
+            1720995 + floor( n*365.25 ) + p + day
+
+and if the result is less than 2299171 then force k to 0 because, if
+the input is at all civilized, it *ought* to be Julian.    :)~ 
+    */
     
     /*
     if (m < 3) {
@@ -219,7 +311,7 @@ namespace DAC {
     
     // Verify that we have the necessary system support to get the system
     // time.
-  #if   defined(PLAT_WIN32)
+  #if defined(PLAT_WIN32)
     #if !defined(HAS__SYSTEMTIME)
     throw TimestampErrors::MissingSysSupport();
     #endif
@@ -239,7 +331,7 @@ namespace DAC {
     // Work area.
     Timestamp       newtime(*this);
     Interval        interval;
-  #if   defined(PLAT_WIN32)
+  #if defined(PLAT_WIN32)
     _SYSTEMTIME     systime = { 0, 0, 0, 0, 0, 0, 0, 0 };
   #elif defined(PLAT_POSIX)
     #if !defined(USE_TIME)
@@ -252,7 +344,7 @@ namespace DAC {
   #endif
     
     // Set the interval.
-  #if   defined(PLAT_WIN32)
+  #if defined(PLAT_WIN32)
     GetSystemTime(&systime);
     interval.Millisecond(TimeVal(systime.wMilliseconds))
             .Second(TimeVal(systime.wSecond))
@@ -389,14 +481,26 @@ namespace DAC {
       
       case CT_DEFAULT:
       case CT_GREGORIAN:
-        if (year > 0) {
-          return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+        return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
       break;
+      
+      case CT_JULIAN:
+        if (year > 0) {
+          return year % 4 == 0;
+        } else {
+          return (year - 3) % 4 == 0;
+        }
+      break;
+      
+    }
+    
+    // Dummy instruction to avoid warning.
+    return false;
     
   }
   
   // Get the number of days in this month.
-  Timestamp::TimeVal Timestamp::_daysInMonth (TimeVal const& year, TimeVal const& month) const {
+  Timestamp::TimeVal Timestamp::_daysInMonth (TimeVal const& year, TimeVal const& month, CalendarType const caltype) const {
     
     // Work area.
     Timestamp::TimeVal days;
@@ -416,7 +520,7 @@ namespace DAC {
         break;
         
         case 2:
-          days = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) ? 29 : 28;
+          days = _isLeapYear(year, caltype) ? 29 : 28;
         break;
         
         case 4:

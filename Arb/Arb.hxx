@@ -211,9 +211,10 @@ namespace DAC {
       bool isOdd      () const;
       
       // Convert to an interger value. Do not confuse with int.
-      Arb ceil  () const;
-      Arb floor () const;
-      Arb toInt () const;
+      Arb ceil     () const;
+      Arb floor    () const;
+      Arb truncate () const;
+      Arb toInt    () const;
       
       // Raise this number to a power.
                          Arb pow (Arb const& exp) const;
