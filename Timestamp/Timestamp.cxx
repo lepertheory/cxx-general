@@ -63,22 +63,13 @@ namespace DAC {
   }
   
   // Set this timestamp.
-  Timestamp& Timestamp::set (Interval const& time, CalendarType const caltype) {
+  Timestamp& Timestamp::set (Interval const& time, CalendarType caltype) {
     
     // Work area.
     Timestamp newtime(*this);
     
     // Determine the calendar type.
-    CalendarType ct(caltype);
-    if (caltype == CT_DEFAULT) {
-      ct = ( time.Year() >  _lastjulian.Year ||
-            (time.Year() == _lastjulian.Year && (time.Month() >  _lastjulian.Month ||
-                                                 time.Month() == _lastjulian.Month && time.Day() > _lastjulian.Day))) ?
-        CT_GREGORIAN
-      :
-        CT_JULIAN
-      ;
-    }
+    caltype = (caltype == CT_DEFAULT) ? _getCalendarType(time.Year(), time.Month(), time.Day()) : caltype;
     
     // Verify that the new time is a valid time.
     if (!time.isSet_Second()            ||
@@ -88,11 +79,11 @@ namespace DAC {
         !time.isSet_Month()             ||
         !time.isSet_Year()              ||
         !time.Year().isInteger()        || (time.Year() == 0)       ||
-        !time.Month().isInteger()       || (time.Month()       < 1) || (time.Month()       > 12)                                                      ||
-        !time.Day().isInteger()         || (time.Day()         < 1) || (time.Day()         > _daysInMonth(time.Year(), time.Month(), ct))             ||
-        !time.Hour().isInteger()        || (time.Hour()        < 0) || (time.Hour()        > 23)                                                      ||
-        !time.Minute().isInteger()      || (time.Minute()      < 0) || (time.Minute()      > 59)                                                      ||
-        !time.Second().isInteger()      || (time.Second()      < 0) || (time.Second()      > 59 + _leapSecond(time.Year(), time.Month(), time.Day())) ||
+        !time.Month().isInteger()       || (time.Month()       < 1) || (time.Month()       > 12)                                                                                                         ||
+        !time.Day().isInteger()         || (time.Day()         < 1) || (time.Day()         > _daysInMonth(time.Year(), time.Month(), caltype))                                                                ||
+        !time.Hour().isInteger()        || (time.Hour()        < 0) || (time.Hour()        > 23)                                                                                                         ||
+        !time.Minute().isInteger()      || (time.Minute()      < 0) || (time.Minute()      > 59)                                                                                                         ||
+        !time.Second().isInteger()      || (time.Second()      < 0) || (time.Second()      > 59 + ((time.Hour() == 23 && time.Minute() == 59) ? _leapSecond(time.Year(), time.Month(), time.Day()) : 0)) ||
         !time.Millisecond().isInteger() || (time.Millisecond() < 0) || (time.Millisecond() > 999)
     ) {
       throw TimestampErrors::InvalidTime();
@@ -102,181 +93,24 @@ namespace DAC {
     TimeVal y(time.Year() + ((time.Year() < 0) ? 1 : 0));
     
     // Set the julian date.
-    switch (ct) {
-      
-      // Gregorian calendar.
-      case CT_DEFAULT:
-      case CT_GREGORIAN: {
-        TimeVal n;
-        TimeVal r;
-        TimeVal p;
-        TimeVal q;
-        TimeVal m;
-        TimeVal k;
-        if (time.Month() < 3) {
-          n = y - 1;
-          r = 3;
-        } else {
-          n = y;
-          r = 1;
-        }
-        p = (30.6001 * (time.Month() + r)).truncate();
-        m = (n / 100).truncate();
-        q = 2 + 2 * (n / 400).truncate();
-        k = q - m - (m / 4).truncate();
-        newtime._jd = 1720995 + floor(n * 365.25) + p + time.Day() + k;
-      } break;
-      
-      // Julian calendar.
-      case CT_JULIAN: {
-        TimeVal n;
-        TimeVal r;
-        TimeVal p;
-        if (time.Month() < 3) {
-          n = y - 1;
-          r = 3;
-        } else {
-          n = y;
-          r = 1;
-        }
-        p = (30.6001 * (time.Month() + r)).truncate();
-        newtime._jd = 1720995 + floor(n * 365.25) + p + time.Day();
-      } break;
-      
+    TimeVal n;
+    TimeVal r;
+    if (time.Month() < 3) {
+      n = y - 1;
+      r = 13;
+    } else {
+      n = y;
+      r = 1;
+    }
+    newtime._jd = 1720995 + floor(n * 365.25) + (30.6001 * (time.Month() + r)).truncate() + time.Day();
+    if (caltype == CT_GREGORIAN) {
+      TimeVal m((n / 100).truncate());
+      TimeVal q(2 + 2 * (n / 400).truncate());
+      newtime._jd += q - m - (m / 4).truncate();
     }
     
     // Add the time.
     newtime._jd += ((time.Hour() - 12) + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24;
-    
-    /*
-Date: Tue, 28 Sep 1999 14:16:48 +0000
-Newsgroups: sci.math
-Subject: Re: How can I calculate the day?
-
-Like Jefferson Airplane, the Julian Day Number will get you there all
-the time, in either the Julian or Gregorian calendar, from 1/1/4713
-B.C. to the next calendar reform. Let the date be day/month/year and
-
-   int() mean integer part and floor() integer part towards -infinity
-   n = year - 1 if month = 1 or 2       otherwise n = year
-   r = 13       if month = 1 or 2       otherwise r = 1
-
-   p = int( 30.6001*( month + r ))
-
-   k = 0 if the calendar date is Julian
-   k = q - m - int( m/4 ) if the calendar date is Gregorian, where
-        m = int( n/100 )
-        q = 2 + 2*int( n/400 )
-Then
-   j = 1720995 + floor( n*365.25 ) + p + day + k
-
-and j is the Julian Day number. It should be 2195883 for 1/1/1300
-(Julian) and 2451545 for 1/1/2000 (Gregorian).
-
-Reduce j modulo 7. Monday is 0, Tuesday is 1 ... Sunday is 6.
-
-The calendrical cutoff date in the Papal States, where Gregorian dates
-were first applied, is 1582 Oct. 5 Julian = 1582 Oct. 15 Gregorian.
-If you want to be clever, calculate
-
-            1720995 + floor( n*365.25 ) + p + day
-
-and if the result is less than 2299171 then force k to 0 because, if
-the input is at all civilized, it *ought* to be Julian.    :)~ 
-    */
-    
-    /*
-    if (m < 3) {
-      m += 12;
-      y -= 1;
-    }
-    newtime._jd = time.Day() + ((153 * m - 457) / 5).floor() + 365 * y + (y / 4).floor() - (y / 100).floor() + (y / 400).floor() + 1721118.5;
-    */
-    
-    /*
-    // Set the julian date.
-    newtime._jd = ((time.Year() >  _lastjulian.Year) || (
-                   (time.Year() == _lastjulian.Year) && ((time.Month() >  _lastjulian.Month) || (
-                                                         (time.Month() == _lastjulian.Month) && (time.Day() > _lastjulian.Day)
-                                                        ))
-                  )) ? (
-                    367 * y - floor(7 * (y + floor((time.Month() + 9) / 12)) / 4)
-                    - floor(3 * (floor((y + (time.Month() - 9) / 7) / 100) + 1) / 4)
-                    + floor(275 * time.Month() / 9) + time.Day() + 1721028.5
-                    + (time.Hour() + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24
-                  ) : (
-                    367 * y - floor(7 * (y + floor((time.Month() + 9) / 12)) / 4)
-                    + floor(275 * time.Month() / 9) + time.Day() + 1721026.5
-                    + (time.Hour() + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24
-                  );
-    */
-    
-    // Set the julian date.
-    /*
-    TimeVal a   = ((14 - time.Month()) / 12).floor();
-    TimeVal y   = time.Year() + (time.Year().isPositive() ? 0 : 1) + 4800 - a;
-    TimeVal m   = time.Month() + 12 * a - 3;
-    TimeVal jdn = ((time.Year() >  _lastjulian.Year) || (
-                   (time.Year() == _lastjulian.Year) && ((time.Month() >  _lastjulian.Month) || (
-                                                         (time.Month() == _lastjulian.Month) && (time.Day() > _lastjulian.Day)
-                                                        ))
-                  )) ?
-                    time.Day() + ((153 * m + 2) / 5).floor() + 365 * y + (y / 4).floor() - (y / 100).floor() + (y / 400).floor() - 32045
-                  :
-                    time.Day() + ((153 * m + 2) / 5).floor() + 365 * y + (y / 4).floor() - 32083;
-    newtime._jd = jdn + ((time.Hour() - 12) + (time.Minute() + (time.Second() + (time.Millisecond() / 1000)) / 60) / 60) / 24;
-    */
-    
-    /*
-    // Set the julian date. Different formulas for different calendar systems.
-    if ((time.Year() >  _lastjulian.Year) || (
-        (time.Year() == _lastjulian.Year) && ((time.Month() >  _lastjulian.Month) || (
-                                              (time.Month() == _lastjulian.Month) && (time.Day() > _lastjulian.Day
-                                             ))
-        ))
-       ) {
-      
-      // Gregorian.
-      newtime._jd = 367 * time.Year() - (7 * (time.Year() + ((time.Month() + 9) / 12).toInt()) / 4).toInt()
-                  - (3 * (((time.Year() + (time.Month() - 9) / 7) / 100).toInt() + 1) / 4).toInt()
-                  + (275 * time.Month() / 9).toInt() + time.Day() + 1721028.5
-                  + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / 1000)) / 60) / 60) / 24;
-      
-    } else {
-      
-      // Julian.
-      TimeVal y   = time.Year() + (time.Year().isPositive() ? 0 : 1);
-      newtime._jd = 367 * y - (7 * (y + 5001 + ((time.Month() - 9) / 7).toInt()) / 4).toInt()
-                  + (275 * time.Month() / 9).toInt() + time.Day() + 1729776.5
-                  + (time.Hour() + (time.Minute() + (time.Second() + (time.Millisecond() / 1000)) / 60) / 60) / 24;
-      * /
-      TimeVal a(367 * y);
-      TimeVal b(y + 5001);
-      TimeVal c(time.Month() - 9);
-      TimeVal d(c / 7);
-      TimeVal e(d.toInt());
-      TimeVal f(b + e);
-      TimeVal g(7 * f);
-      TimeVal h(g / 4);
-      TimeVal i(h.toInt());
-      TimeVal j(a - i);
-      TimeVal k(275 * time.Month());
-      TimeVal l(k / 9);
-      TimeVal m(l.toInt());
-      TimeVal n(j + m);
-      TimeVal o(n + time.Day());
-      TimeVal p(o + 1729776.5);
-      TimeVal q(time.Millisecond() / 1000);
-      TimeVal r(time.Second() + q);
-      TimeVal s(r / 60);
-      TimeVal t(time.Minute() + s);
-      TimeVal u(t / 60);
-      TimeVal v(time.Hour() + u);
-      TimeVal w(v / 24);
-      newtime._jd = p + w;
-      
-    }
-    */
     
     // We done, return.
     _jd = newtime._jd;
@@ -290,10 +124,59 @@ the input is at all civilized, it *ought* to be Julian.    :)~
     // Work area.
     Interval retval;
     
-    /*
-    retval.Year((_jd / TimeVal(365.2425)).toInt() - TimeVal(4712));
-    retval.Month(_jd - ((retval.Year() + TimeVal(4712)) * TimeVal(365.2425)));
-    */
+    TimeVal alpha;
+    TimeVal a;
+    TimeVal b;
+    TimeVal c;
+    TimeVal d;
+    TimeVal e;
+    
+    // Create a "corrected" julian date, minus the time. Set propcopy to false
+    // so that we don't grab _jd's fixed-decimal status.
+    TimeVal cjd;
+    cjd.PropCopy(false);
+    cjd = (_jd + 0.5).floor();
+    
+    // I don't know. It works, that's all that matters.
+    if (cjd > _lastjulianjd) {
+      alpha = floor((cjd - 1867216 - 0.25) / 36524.25);
+      a     = cjd + 1 + alpha - floor(alpha * 0.25);
+    } else {
+      a     = cjd;
+    }
+    
+    b = a + 1524;
+    c = 6680 + floor((b - 2439870 - 122.1) / 365.25);
+    d = 365 * c + floor(0.25 * c);
+    e = floor((b - d) / 30.6001);
+    
+    retval.Day(b - d - floor(30.6001 * e));
+    retval.Month(e - 1);
+    if (retval.Month() > 12) {
+      retval.Month(retval.Month() - 12);
+    }
+    retval.Year(c - 4715);
+    if (retval.Month() > 2) {
+      retval.Year(retval.Year() - 1);
+    }
+    if (retval.Year() <= 0) {
+      retval.Year(retval.Year() - 1);
+    }
+    
+    // Get the time.
+    TimeVal time(cjd - _jd + 0.5);
+    cout << "time: " << time << endl;
+    time *= 24;
+    retval.Hour(time.floor());
+    time -= retval.Hour();
+    time *= 60;
+    retval.Minute(time.floor());
+    time -= retval.Minute();
+    time *= 60;
+    retval.Second(time.floor());
+    time -= retval.Second();
+    time *= 1000;
+    retval.Millisecond(time.floor());
     
     // Return.
     return retval;
@@ -401,8 +284,10 @@ the input is at all civilized, it *ought* to be Julian.    :)~
     tmp_jd.PropCopy(false).Base(10).PointPos(8).Fixed(true);
     
     // Make a new lastjulian.
-    YMD new_lastjulian(1582, 10, 4);
-    _lastjulian = new_lastjulian;
+    YMD     new_lastjulianymd(1582, 10, 4);
+    TimeVal new_lastjulianjd(2299160);
+    _lastjulianymd = new_lastjulianymd;
+    _lastjulianjd  = new_lastjulianjd;
     
     // Set the leap second list to the default.
     _leapseconds = s_defaultleapseconds;
@@ -419,7 +304,8 @@ the input is at all civilized, it *ought* to be Julian.    :)~
   Timestamp& Timestamp::copy (Timestamp const& ts) {
     
     // Set the last julian date.
-    _lastjulian = ts._lastjulian;
+    _lastjulianymd = ts._lastjulianymd;
+    _lastjulianjd  = ts._lastjulianjd;
     
     // Set the leap second list.
     _leapseconds = ts._leapseconds;
@@ -457,39 +343,33 @@ the input is at all civilized, it *ought* to be Julian.    :)~
   }
   
   // Get whether a given year is a leap year.
-  bool Timestamp::_isLeapYear (TimeVal const& year, CalendarType const caltype) const {
+  bool Timestamp::_isLeapYear (TimeVal const& year, CalendarType caltype) const {
     
-    // Determine the calendar type.
-    CalendarType ct(caltype);
-    if (ct == CT_DEFAULT) {
-      ct = (year > _lastjulian.Year ||
-            (year == _lastjulian.Year && _lastjulian.Month < 3)
-           ) ?
-             CT_GREGORIAN
-           :
-             CT_JULIAN
-           ;
-    }
+    // Determine the calendar type. The calendar that matters is the one that
+    // was in effect during the (potential) leap day. Since we do not know if
+    // 2/29 occured this year, setting the date to 3/0 will amount to the same
+    // thing. Watch out for bugs here if any changes are made to
+    // _getCalendarType internally.
+    caltype = (caltype == CT_DEFAULT) ? _getCalendarType(year, TimeVal(3), TimeVal(0)) : caltype;
     
     // The year 0 did not exist.
     if (year == 0) {
       throw TimestampErrors::NoYearZero();
     }
     
-    // Choose the calendar type and + or - years, different rules for each.
-    switch (ct) {
+    // Correct for no 0 year.
+    TimeVal y(year + ((year < 0) ? 1 : 0));
+    
+    // Choose the calendar type.
+    switch (caltype) {
       
       case CT_DEFAULT:
       case CT_GREGORIAN:
-        return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+        return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
       break;
       
       case CT_JULIAN:
-        if (year > 0) {
-          return year % 4 == 0;
-        } else {
-          return (year - 3) % 4 == 0;
-        }
+        return y % 4 == 0;
       break;
       
     }

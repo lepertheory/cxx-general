@@ -775,9 +775,9 @@ namespace DAC {
       retval._data->q   = 1;
       
       // If the number was negative and there was a remainder, we need to
-      // subtract 1.
+      // subtract 1. Since the number is negative, adding is subtracting.
       if (!isPositive() && (remainder != 0)) {
-        --retval._data->p;
+        ++retval._data->p;
       }
       
     }

@@ -60,7 +60,7 @@ namespace DAC {
           YMD () {};
           YMD (YMD const& ymd) : Year(ymd.Year), Month(ymd.Month), Day(ymd.Day) {};
           YMD (TimeVal const& year, TimeVal const& month, TimeVal const& day) : Year(year), Month(month), Day(day) {};
-          template <class T> YMD (T const year, T const month, T const day) : Year(year), Month(month), Day(day) {}
+          template <class T, class U, class V> YMD (T const year, U const month, V const day) : Year(year), Month(month), Day(day) {}
           TimeVal  Year;
           TimeVal Month;
           TimeVal   Day;
@@ -164,7 +164,7 @@ namespace DAC {
       Timestamp& copy (Timestamp const& ts);
       
       // Set this timestamp.
-      Timestamp& set (Interval const& time, CalendarType const caltype = CT_DEFAULT);
+      Timestamp& set (Interval const& time, CalendarType caltype = CT_DEFAULT);
       
       // Get the individual values of this timestamp.
       Interval get () const;
@@ -190,7 +190,8 @@ namespace DAC {
       TimeVal _jd;
       
       // Last julian date.
-      YMD _lastjulian;
+      YMD     _lastjulianymd;
+      TimeVal _lastjulianjd;
       
       /***********************************************************************/
       // Static data members.
@@ -208,10 +209,18 @@ namespace DAC {
       void _init ();
       
       // Return whether a given year is a leap year.
-      bool _isLeapYear (TimeVal const& year, CalendarType const caltype = CT_DEFAULT) const;
+      bool _isLeapYear (TimeVal const& year, CalendarType caltype = CT_DEFAULT) const;
+      
+      // Return true if the given date is Gregorian.
+      bool _isGregorian (TimeVal const& year, TimeVal const& month, TimeVal const& day) const;
+      bool _isGregorian (TimeVal const& jd)                                             const;
+      
+      // Get the calendar type.
+      CalendarType _getCalendarType (TimeVal const& year, TimeVal const& month, TimeVal const& day) const;
+      CalendarType _getCalendarType (TimeVal const& jd)                                             const;
       
       // Return the number of days in a given month.
-      TimeVal _daysInMonth (TimeVal const& year, TimeVal const& month, CalendarType const caltype = CT_DEFAULT) const;
+      TimeVal _daysInMonth (TimeVal const& year, TimeVal const& month, CalendarType caltype = CT_DEFAULT) const;
       
       // Return the leap seconds of a given day.
       TimeVal _leapSecond (TimeVal const& year, TimeVal const& month, TimeVal const& day) const;
@@ -271,10 +280,40 @@ namespace DAC {
    ***************************************************************************/
   
   // Properties.
-  inline Timestamp&         Timestamp::LastJulianDate (YMD const& lastjulian)       { _lastjulian = lastjulian; return *this; }
-  inline Timestamp::YMD     Timestamp::LastJulianDate ()                      const { return _lastjulian;                     }
-  inline Timestamp&         Timestamp::Julian         (TimeVal const& jd)           { _jd = jd; return *this;                 }
-  inline Timestamp::TimeVal Timestamp::Julian         ()                      const { return _jd;                             }
+  inline Timestamp& Timestamp::LastJulianDate (YMD const& lastjulian) {
+    Timestamp tmp;
+    tmp.set(
+      Interval().Year(lastjulian.Year)
+                .Month(lastjulian.Month)
+                .Day(lastjulian.Day)
+                .Hour(TimeVal(12))
+                .Minute(TimeVal(0))
+                .Second(TimeVal(0)),
+      CT_JULIAN
+    );
+    _lastjulianymd = lastjulian;
+    _lastjulianjd  = tmp.Julian().floor();
+    return *this;
+  }
+  inline Timestamp::YMD Timestamp::LastJulianDate () const { return _lastjulianymd; }
+  
+  inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _jd = jd; return *this; }
+  inline Timestamp::TimeVal Timestamp::Julian ()                  const { return _jd;             }
+  
+  // Return true if the given date is Gregorian.
+  inline bool Timestamp::_isGregorian (TimeVal const& year, TimeVal const& month, TimeVal const& day) const {
+    return year >  _lastjulianymd.Year || (
+           year == _lastjulianymd.Year && (month >  _lastjulianymd.Month || (
+                                           month == _lastjulianymd.Month && day > _lastjulianymd.Day
+                                          ))
+           );
+  }
+  inline bool Timestamp::_isGregorian (TimeVal const& jd) const { return jd > _lastjulianjd; }
+  
+  // Get the calendar type. _isLeapYear depends on this function counting 3/0
+  // as 2/28 or 2/29.
+  inline Timestamp::CalendarType Timestamp::_getCalendarType (TimeVal const& year, TimeVal const& month, TimeVal const& day) const { return _isGregorian(year, month, day) ? CT_GREGORIAN : CT_JULIAN; }
+  inline Timestamp::CalendarType Timestamp::_getCalendarType (TimeVal const& jd                                            ) const { return _isGregorian(jd)               ? CT_GREGORIAN : CT_JULIAN; }
   
   /***************************************************************************
    * Class Timestamp::Interval.
