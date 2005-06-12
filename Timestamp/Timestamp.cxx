@@ -38,7 +38,10 @@ namespace DAC {
   bool Timestamp::s_initialized = false;
   
   // Default list of leap seconds.
-  ReferencePointer<Timestamp::LeapSecondList> Timestamp::s_defaultleapseconds;
+  Timestamp::LSLptr Timestamp::s_defaultleapseconds;
+  
+  // Default format.
+  Timestamp::Formatptr Timestamp::s_defaultformat("%c");
   
   /***************************************************************************/
   // Function members.
@@ -302,6 +305,9 @@ namespace DAC {
     // Set the leap second list to the default.
     _leapseconds = s_defaultleapseconds;
     
+    // Set the format to the default.
+    _format = s_defaultformat;
+    
     // Clear the jd.
     _jd = tmp_jd;
     
@@ -320,6 +326,9 @@ namespace DAC {
     // Set the leap second list.
     _leapseconds = ts._leapseconds;
     
+    // Set the format.
+    _format = ts._format;
+    
     // Set the jd.
     _jd = ts._jd;
     
@@ -329,10 +338,16 @@ namespace DAC {
   }
   
   // Convert this timestamp to a string.
-  string Timestamp::toString () const {
+  string Timestamp::toString (string const& format) const {
     
     // This is the string we will be returning.
     string retval;
+    
+    // Select the format.
+    string fmt = format.empty() ? _format : format;
+    
+    // Iterate through each character of the format string.
+    
     
     // We done, return the string.
     return retval;

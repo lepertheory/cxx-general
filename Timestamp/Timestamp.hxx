@@ -47,9 +47,14 @@ namespace DAC {
       /***********************************************************************/
       // Typedefs.
       
+      // Type used for all time values.
       typedef Arb TimeVal;
       
+      // List of leap seconds.
       typedef std::vector<LeapSecondDay> LeapSecondList;
+      
+      // Pointer to a list of leap seconds.
+      typedef ReferencePointer<LeapSecondList> LSLptr;
       
       /***********************************************************************/
       // Classes.
@@ -173,7 +178,7 @@ namespace DAC {
       Timestamp& getSystemTime ();
       
       // Convert this timestamp to a string.
-      std::string toString () const;
+      std::string toString (std::string const& format = "") const;
       
     /*
      * Private members.
@@ -184,7 +189,7 @@ namespace DAC {
       // Data members.
       
       // List of leap seconds, must always be sorted.
-      ReferencePointer<LeapSecondList> _leapseconds;
+      LSLptr _leapseconds;
       
       // This is the time.
       TimeVal _jd;
@@ -193,6 +198,9 @@ namespace DAC {
       YMD     _lastjulianymd;
       TimeVal _lastjulianjd;
       
+      // Format string for conversion to string.
+      Formatptr _format;
+      
       /***********************************************************************/
       // Static data members.
       
@@ -200,7 +208,10 @@ namespace DAC {
       static bool s_initialized;
       
       // Default list of leap seconds, must always be sorted.
-      static ReferencePointer<LeapSecondList> s_defaultleapseconds;
+      static LSLptr s_defaultleapseconds;
+      
+      // Default format string.
+      static Formatptr s_defaultformat;
       
       /***********************************************************************/
       // Function members.
