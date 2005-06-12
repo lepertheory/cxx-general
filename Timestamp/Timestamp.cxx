@@ -110,6 +110,7 @@ namespace DAC {
     }
     
     // Add the time.
+    cout << "time: " << ((time.Hour() - 12) + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24 << endl;
     newtime._jd += ((time.Hour() - 12) + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24;
     
     // We done, return.
@@ -121,15 +122,23 @@ namespace DAC {
   // Get the individual values of this timestamp.
   Timestamp::Interval Timestamp::get () const {
     
-    // Work area.
+    // Return value.
     Interval retval;
     
+    // Work area.
     TimeVal alpha;
     TimeVal a;
     TimeVal b;
     TimeVal c;
     TimeVal d;
     TimeVal e;
+    TimeVal ty;
+    TimeVal tm;
+    TimeVal td;
+    TimeVal th;
+    TimeVal tn;
+    TimeVal ts;
+    TimeVal ti;
     
     // Create a "corrected" julian date, minus the time. Set propcopy to false
     // so that we don't grab _jd's fixed-decimal status.
@@ -137,7 +146,7 @@ namespace DAC {
     cjd.PropCopy(false);
     cjd = (_jd + 0.5).floor();
     
-    // I don't know. It works, that's all that matters.
+    // Correct for Julian / Gregorian calendars.
     if (cjd > _lastjulianjd) {
       alpha = floor((cjd - 1867216 - 0.25) / 36524.25);
       a     = cjd + 1 + alpha - floor(alpha * 0.25);
@@ -150,35 +159,36 @@ namespace DAC {
     d = 365 * c + floor(0.25 * c);
     e = floor((b - d) / 30.6001);
     
-    retval.Day(b - d - floor(30.6001 * e));
-    retval.Month(e - 1);
-    if (retval.Month() > 12) {
-      retval.Month(retval.Month() - 12);
+    td = b - d - floor(30.6001 * e);
+    tm = e - 1;
+    if (tm > 12) {
+      tm -= 12;
     }
-    retval.Year(c - 4715);
-    if (retval.Month() > 2) {
-      retval.Year(retval.Year() - 1);
+    ty = c - 4715;
+    if (tm > 2) {
+      --ty;
     }
-    if (retval.Year() <= 0) {
-      retval.Year(retval.Year() - 1);
+    if (ty <= 0) {
+      --ty;
     }
     
     // Get the time.
-    TimeVal time(cjd - _jd + 0.5);
-    cout << "time: " << time << endl;
-    time *= 24;
-    retval.Hour(time.floor());
-    time -= retval.Hour();
-    time *= 60;
-    retval.Minute(time.floor());
-    time -= retval.Minute();
-    time *= 60;
-    retval.Second(time.floor());
-    time -= retval.Second();
-    time *= 1000;
-    retval.Millisecond(time.floor());
+    TimeVal time;
+    time.PropCopy(false);
+    time = _jd + 0.5 - cjd;
+    time *= 24;   th = time.toInt(); time -= th; if (time < 0) { --th; ++time; }
+    time *= 60;   tn = time.toInt(); time -= tn; if (time < 0) { --tn; ++time; }
+    time *= 60;   ts = time.toInt(); time -= ts; if (time < 0) { --ts; ++time; }
+    time *= 1000; ti = time.toInt();
     
     // Return.
+    retval.Millisecond(ti)
+          .Second     (ts)
+          .Minute     (tn)
+          .Hour       (th)
+          .Day        (td)
+          .Month      (tm)
+          .Year       (ty);
     return retval;
     
   }

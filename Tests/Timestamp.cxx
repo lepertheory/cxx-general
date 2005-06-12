@@ -70,16 +70,17 @@ int main (int argc, char** argv, char** envp) {
     
     typedef Timestamp::TimeVal TV;
     
-    TV s, n, h, d, m, y;
+    TV ms, s, n, h, d, m, y;
     
-    cout << "Year:   "; cin >> y;
-    cout << "Month:  "; cin >> m;
-    cout << "Day:    "; cin >> d;
-    cout << "Hour:   "; cin >> h;
-    cout << "Minute: "; cin >> n;
-    cout << "Second: "; cin >> s;
+    cout << "Year:        "; cin >> y;
+    cout << "Month:       "; cin >> m;
+    cout << "Day:         "; cin >> d;
+    cout << "Hour:        "; cin >> h;
+    cout << "Minute:      "; cin >> n;
+    cout << "Second:      "; cin >> s;
+    cout << "Millisecond: "; cin >> ms;
     
-    test2.set(Timestamp::Interval().Year(y).Month(m).Day(d).Hour(h).Minute(n).Second(s));
+    test2.set(Timestamp::Interval().Year(y).Month(m).Day(d).Hour(h).Minute(n).Second(s).Millisecond(ms));
     
     cout << "Julian: " << test2.Julian() << endl;
     
@@ -87,12 +88,13 @@ int main (int argc, char** argv, char** envp) {
     
     ti = test2.get();
     
-    cout << "Year:   " << ti.Year()   << endl
-         << "Month:  " << ti.Month()  << endl
-         << "Day:    " << ti.Day()    << endl
-         << "Hour:   " << ti.Hour()   << endl
-         << "Minute: " << ti.Minute() << endl
-         << "Second: " << ti.Second() << endl;
+    cout << "Year:        " << ti.Year()        << endl
+         << "Month:       " << ti.Month()       << endl
+         << "Day:         " << ti.Day()         << endl
+         << "Hour:        " << ti.Hour()        << endl
+         << "Minute:      " << ti.Minute()      << endl
+         << "Second:      " << ti.Second()      << endl
+         << "Millisecond: " << ti.Millisecond() << endl;
     //*/
     
     return 0;
