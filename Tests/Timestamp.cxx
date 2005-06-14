@@ -95,6 +95,15 @@ int main (int argc, char** argv, char** envp) {
          << "Minute:      " << ti.Minute()      << endl
          << "Second:      " << ti.Second()      << endl
          << "Millisecond: " << ti.Millisecond() << endl;
+    
+    cout << endl
+         << "String version: " << test2 << endl;
+    cout << "Century: " << test2.toString("%C") << endl
+         << endl;
+    
+    string format;
+    cout << "Format: "; cin >> format;
+    cout << "Formatted: "; cout << test2.toString(format) << endl;
     //*/
     
     return 0;

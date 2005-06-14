@@ -42,7 +42,35 @@ namespace DAC {
       /***********************************************************************/
       // Enums.
       
+      // Calendar system.
       enum CalendarType { CT_DEFAULT, CT_JULIAN, CT_GREGORIAN };
+      
+      // Days of the week.
+      enum DayOfWeek {
+        DOW_SUNDAY    = 0,
+        DOW_MONDAY    = 1,
+        DOW_TUESDAY   = 2,
+        DOW_WEDNESDAY = 3,
+        DOW_THURSDAY  = 4,
+        DOW_FRIDAY    = 5,
+        DOW_SATURDAY  = 6
+      };
+      
+      // Months.
+      enum MonthName {
+        MON_JANUARY   =  1,
+        MON_FEBRUARY  =  2,
+        MON_MARCH     =  3,
+        MON_APRIL     =  4,
+        MON_MAY       =  5,
+        MON_JUNE      =  6,
+        MON_JULY      =  7,
+        MON_AUGUST    =  8,
+        MON_SEPTEMBER =  9,
+        MON_OCTOBER   = 10,
+        MON_NOVEMBER  = 11,
+        MON_DECEMBER  = 12
+      };
       
       /***********************************************************************/
       // Typedefs.
@@ -53,8 +81,14 @@ namespace DAC {
       // List of leap seconds.
       typedef std::vector<LeapSecondDay> LeapSecondList;
       
+      // Format string.
+      typedef std::string Format;
+      
       // Pointer to a list of leap seconds.
       typedef ReferencePointer<LeapSecondList> LSLptr;
+      
+      // Pointer to a format.
+      typedef ReferencePointer<Format> Formatptr;
       
       /***********************************************************************/
       // Classes.
@@ -148,6 +182,21 @@ namespace DAC {
       };
       
       /***********************************************************************/
+      // Constants.
+      
+      // 3-letter weekday abbreviations, Sun-Sat, 0 indexed.
+      static char const* const SHORT_WEEKDAY_NAME[];
+      
+      // Full weekday names, Sunday-Saturday, 0 indexed.
+      static char const* const LONG_WEEKDAY_NAME[];
+      
+      // 3-letter month abbreviation, Jan-Dec, 1 indexed.
+      static char const* const SHORT_MONTH_NAME[];
+      
+      // Full month names, January-December, 1 indexed.
+      static char const* const LONG_MONTH_NAME[];
+      
+      /***********************************************************************/
       // Function members.
       
       // Default constructor.
@@ -169,7 +218,7 @@ namespace DAC {
       Timestamp& copy (Timestamp const& ts);
       
       // Set this timestamp.
-      Timestamp& set (Interval const& time, CalendarType caltype = CT_DEFAULT);
+      Timestamp& set (Interval const& time);
       
       // Get the individual values of this timestamp.
       Interval get () const;
@@ -177,8 +226,28 @@ namespace DAC {
       // Get the current system time.
       Timestamp& getSystemTime ();
       
-      // Convert this timestamp to a string.
+      // Follows the formatting rules at the following URL:
+      // http://www.opengroup.org/onlinepubs/009695399/functions/strftime.html
+      // FIXME: This does not, for now, include any locale functionality.
       std::string toString (std::string const& format = "") const;
+      
+      // Get the day of the week.
+      TimeVal dow () const;
+      
+      // Get the ISO day of the week.
+      TimeVal dowISO () const;
+      
+      // Get the day of the year.
+      TimeVal doy () const;
+      
+      // Get the ISO week.
+      TimeVal getISOWeek () const;
+      
+      // Get the ISO year.
+      TimeVal getISOYear () const;
+      
+      // Get the ISO week and year, as a number year * 100 + week.
+      TimeVal getISOWeekAndYear () const;
       
     /*
      * Private members.
@@ -201,6 +270,9 @@ namespace DAC {
       // Format string for conversion to string.
       Formatptr _format;
       
+      // Calendar type of this timestamp.
+      CalendarType _caltype;
+      
       /***********************************************************************/
       // Static data members.
       
@@ -214,13 +286,20 @@ namespace DAC {
       static Formatptr s_defaultformat;
       
       /***********************************************************************/
+      // Constants.
+      
+      // Number of days per month in a leap or non-leap year.
+      static int const _DAYS_OF_YEAR_NY[];
+      static int const _DAYS_OF_YEAR_LY[];
+      
+      /***********************************************************************/
       // Function members.
       
       // Common initialization routines.
       void _init ();
       
       // Return whether a given year is a leap year.
-      bool _isLeapYear (TimeVal const& year, CalendarType caltype = CT_DEFAULT) const;
+      bool _isLeapYear (TimeVal const& year) const;
       
       // Return true if the given date is Gregorian.
       bool _isGregorian (TimeVal const& year, TimeVal const& month, TimeVal const& day) const;
@@ -231,10 +310,13 @@ namespace DAC {
       CalendarType _getCalendarType (TimeVal const& jd)                                             const;
       
       // Return the number of days in a given month.
-      TimeVal _daysInMonth (TimeVal const& year, TimeVal const& month, CalendarType caltype = CT_DEFAULT) const;
+      TimeVal _daysInMonth (TimeVal const& year, TimeVal const& month) const;
       
       // Return the leap seconds of a given day.
       TimeVal _leapSecond (TimeVal const& year, TimeVal const& month, TimeVal const& day) const;
+      
+      // Get the first day of ISO week one.
+      Timestamp _getISOWeekOneStart (TimeVal const& year) const;
       
       /***********************************************************************/
       // Static function members.
@@ -261,6 +343,17 @@ namespace DAC {
   // Errors.
   namespace TimestampErrors {
     class Base              : public Exception   { public: virtual char const* what () const throw(); };
+    class BadFormat  : public Base      {
+      public:
+        virtual char const* what () const throw();
+        virtual BadFormat& Problem  (char const*                   const problem)  throw();
+        virtual BadFormat& Position (std::string::size_type        const position) throw();
+        virtual BadFormat& Format   (ConstReferencePointer<std::string>& number)   throw();
+      protected:
+        char const*                        _problem;
+        std::string::size_type             _position;
+        ConstReferencePointer<std::string> _format;
+    };
     class UnknownPlatform   : public Base        { public: virtual char const* what () const throw(); };
     class InvalidTime       : public Base        { public: virtual char const* what () const throw(); };
     class NoYearZero        : public InvalidTime { public: virtual char const* what () const throw(); };
@@ -278,12 +371,16 @@ namespace DAC {
   
   // Errors
   namespace TimestampErrors {
-    inline char const* Base::what              () const throw() { return "Undefined error in class Timestamp.";                                            }
-    inline char const* UnknownPlatform::what   () const throw() { return "Cannot perform function on unknown platform, requires platform-specific calls."; }
-    inline char const* InvalidTime::what       () const throw() { return "The specified time is invalid.";                                                 }
-    inline char const* NoYearZero::what        () const throw() { return "There is no year 0.";                                                            }
-    inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                        }
-    inline char const* MissingSysSupport::what () const throw() { return "Missing necessary system-provided support.";                                     }
+    inline char const* Base::what              () const throw() { return "Undefined error in class Timestamp.";                                                                                                                  }
+    inline char const* BadFormat::what         () const throw() { return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in format \"" + *_format + "\".").c_str(); }
+    inline BadFormat&  BadFormat::Problem      (char const*                   const problem)  throw() { _problem  = problem;  return *this; }
+    inline BadFormat&  BadFormat::Position     (std::string::size_type        const position) throw() { _position = position; return *this; }
+    inline BadFormat&  BadFormat::Format       (ConstReferencePointer<std::string>& format)   throw() { _format   = format;   return *this; }
+    inline char const* UnknownPlatform::what   () const throw() { return "Cannot perform function on unknown platform, requires platform-specific calls.";                                                                       }
+    inline char const* InvalidTime::what       () const throw() { return "The specified time is invalid.";                                                                                                                       }
+    inline char const* NoYearZero::what        () const throw() { return "There is no year 0.";                                                                                                                                  }
+    inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                                                                                              }
+    inline char const* MissingSysSupport::what () const throw() { return "Missing necessary system-provided support.";                                                                                                           }
   }
   
   /***************************************************************************
@@ -323,8 +420,8 @@ namespace DAC {
   
   // Get the calendar type. _isLeapYear depends on this function counting 3/0
   // as 2/28 or 2/29.
-  inline Timestamp::CalendarType Timestamp::_getCalendarType (TimeVal const& year, TimeVal const& month, TimeVal const& day) const { return _isGregorian(year, month, day) ? CT_GREGORIAN : CT_JULIAN; }
-  inline Timestamp::CalendarType Timestamp::_getCalendarType (TimeVal const& jd                                            ) const { return _isGregorian(jd)               ? CT_GREGORIAN : CT_JULIAN; }
+  inline Timestamp::CalendarType Timestamp::_getCalendarType (TimeVal const& year, TimeVal const& month, TimeVal const& day) const { return (_caltype == CT_DEFAULT) ? (_isGregorian(year, month, day) ? CT_GREGORIAN : CT_JULIAN) : _caltype; }
+  inline Timestamp::CalendarType Timestamp::_getCalendarType (TimeVal const& jd                                            ) const { return (_caltype == CT_DEFAULT) ? (_isGregorian(jd)               ? CT_GREGORIAN : CT_JULIAN) : _caltype; }
   
   /***************************************************************************
    * Class Timestamp::Interval.

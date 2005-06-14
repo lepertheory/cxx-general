@@ -34,6 +34,34 @@ namespace DAC {
   /***************************************************************************/
   // Static data members.
   
+  // Short weekday name array.
+  char const* const Timestamp::SHORT_WEEKDAY_NAME[] = {
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+  };
+  
+  // Long weekday name array.
+  char const* const Timestamp::LONG_WEEKDAY_NAME[] = {
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+  };
+  
+  // Short month name array.
+  char const* const Timestamp::SHORT_MONTH_NAME[] = {
+    "Err",
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  };
+  
+  // Long month name array.
+  char const* const Timestamp::LONG_MONTH_NAME[] = {
+    "Error",
+    "January", "February", "March",     "April",   "May",      "June",
+    "July",    "August",   "September", "October", "November", "December"
+  };
+  
+  // Days of year by month.
+  int const Timestamp::_DAYS_OF_YEAR_NY[]  = { 366, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+  int const Timestamp::_DAYS_OF_MONTH_LY[] = { 367, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 };
+  
   // True when class has been initialized.
   bool Timestamp::s_initialized = false;
   
@@ -41,7 +69,7 @@ namespace DAC {
   Timestamp::LSLptr Timestamp::s_defaultleapseconds;
   
   // Default format.
-  Timestamp::Formatptr Timestamp::s_defaultformat("%c");
+  Timestamp::Formatptr Timestamp::s_defaultformat;
   
   /***************************************************************************/
   // Function members.
@@ -66,13 +94,13 @@ namespace DAC {
   }
   
   // Set this timestamp.
-  Timestamp& Timestamp::set (Interval const& time, CalendarType caltype) {
+  Timestamp& Timestamp::set (Interval const& time) {
     
     // Work area.
     Timestamp newtime(*this);
     
     // Determine the calendar type.
-    caltype = (caltype == CT_DEFAULT) ? _getCalendarType(time.Year(), time.Month(), time.Day()) : caltype;
+    CalendarType caltype = _getCalendarType(time.Year(), time.Month(), time.Day());
     
     // Verify that the new time is a valid time.
     if (!time.isSet_Second()            ||
@@ -113,7 +141,6 @@ namespace DAC {
     }
     
     // Add the time.
-    cout << "time: " << ((time.Hour() - 12) + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24 << endl;
     newtime._jd += ((time.Hour() - 12) + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24;
     
     // We done, return.
@@ -308,6 +335,9 @@ namespace DAC {
     // Set the format to the default.
     _format = s_defaultformat;
     
+    // Set the calendar type to default.
+    _caltype = CT_DEFAULT;
+    
     // Clear the jd.
     _jd = tmp_jd;
     
@@ -329,6 +359,9 @@ namespace DAC {
     // Set the format.
     _format = ts._format;
     
+    // Set the calendar type.
+    _caltype = ts._caltype;
+    
     // Set the jd.
     _jd = ts._jd;
     
@@ -343,14 +376,191 @@ namespace DAC {
     // This is the string we will be returning.
     string retval;
     
+    // Different types of field padding.
+    enum PadType { PAD_DEPAD, PAD_NOPAD, PAD_SPPAD, PAD_ZRPAD };
+    
     // Select the format.
-    string fmt = format.empty() ? _format : format;
+    ConstReferencePointer<Format> fmt;
+    if (format.empty()) {
+      fmt = _format;
+    } else {
+      fmt = new Format(format);
+    }
     
-    // Iterate through each character of the format string.
-    
+    // Check for control characters.
+    for (Format::const_iterator i = fmt->begin(); i != fmt->end(); ++i) {
+      
+      // Escape character.
+      if (*i == '%') {
+        
+        // No dangling escape character.
+        if (++i == fmt->end()) {
+          throw TimestampErrors::BadFormat().Problem("Dangling escape character").Position(i - 1 - fmt->begin()).Format(fmt);
+        }
+        
+        // Modifiers.
+        PadType mod = PAD_DEPAD;
+        switch (*i) {
+          case '-': mod = PAD_NOPAD; ++i; break;
+          case '_': mod = PAD_SPPAD; ++i; break;
+        }
+        
+        // No dangling modifier.
+        if (i == fmt->end()) {
+          throw TimestampErrors::BadFormat().Problem("Dangling modifier").Position(i - 1 - fmt->begin()).Format(fmt);
+        }
+        
+        // Next character is a format option.
+        string::size_type fieldlen = 0;
+        PadType           fieldpad = PAD_ZRPAD;
+        string            numfield;
+        switch (*i) {
+          
+          // Literal %.
+          case '%':
+            retval += '%';
+          break;
+          
+          // Abbreviated weekday name.
+          case 'a':
+            retval += SHORT_WEEKDAY_NAME[dow()];
+          break;
+          
+          // Full weekday name, variable length.
+          case 'A':
+            retval += LONG_WEEKDAY_NAME[dow()];
+          break;
+          
+          // Abbreviated month name.
+          case 'b':
+            retval += SHORT_MONTH_NAME[get().Month()];
+          break;
+          
+          // Full month name, variable length.
+          case 'B':
+            retval += LONG_MONTH_NAME[get().Month()];
+          break;
+          
+          // Default date and time format.
+          case 'c':
+            retval += toString("%a");
+          break;
+          
+          // Century (00..99).
+          case 'C':
+            fieldlen = 2;
+            numfield = ((get().Year() / 100).floor().abs() % 100).toString();
+          break;
+          
+          // Day of month (01..31).
+          case 'd':
+            fieldlen = 2;
+            numfield = get().Month().toString();
+          break;
+          
+          // Date (mm/dd/yy).
+          case 'D':
+            retval += toString("%m/%d/%y");
+          break;
+          
+          // Day of month, blank padded.
+          case 'e':
+            fieldlen = 2;
+            fieldpad = PAD_SPPAD;
+            numfield = get().Month().toString();
+          break;
+          
+          // Same as %Y-%m-%d, ISO 8601:2000.
+          case 'F':
+            retval += toString("%Y-%m-%d");
+          break;
+          
+          // The 2-digit year corresponding to the %V week number.
+          case 'g':
+            
+          break;
+          
+          // Week of year according to ISO-8601 rules, week 1 of a given year
+          // is the week containing the 4th of January, Monday is the first
+          // day of the week. (01..53)
+          case 'V':
+            fieldlen = 2;
+            numfield = getISOWeek();
+          break;
+          
+          // Unknown option.
+          default:
+            throw TimestampErrors::BadFormat().Problem("Invalid character").Position(i - fmt->begin()).Format(fmt);
+          break;
+          
+        }
+        
+        // Add numeric field.
+        if (!numfield.empty()) {
+          
+          // Pad if necessary.
+          if (numfield.length() < fieldlen) {
+            switch ((mod == PAD_DEPAD) ? fieldpad : mod) {
+              case PAD_DEPAD:
+              case PAD_ZRPAD: numfield.insert(0, fieldlen - numfield.length(), '0'); break;
+              case PAD_NOPAD: break;
+              case PAD_SPPAD: numfield.insert(0, fieldlen - numfield.length(), ' '); break;
+            }
+          }
+          
+          // Add the field.
+          retval += numfield;
+          
+        }
+        
+      // Regular character.
+      } else {
+        retval += *i;
+      }
+      
+    }
     
     // We done, return the string.
     return retval;
+    
+  }
+  
+  // Get the day of the week.
+  TimeVal Timestamp::dow () const {
+    
+    // Day of week is simply the JD modulo 7 rot 1.
+    TimeVal dow = (_jd + 0.5).floor() % 7 + 1;
+    return (dow > DOW_SATURDAY) ? dow - 7 : dow;
+    
+  }
+  
+  // Get the ISO day of the week.
+  TimeVal Timestamp::dowISO () const {
+    
+    // ISO day of the week is 1 = Monday through 7 = Sunday.
+    TimeVal retval(dow());
+    if (retval == 0) {
+      retval = 7;
+    }
+    return retval;
+    
+  }
+  
+  // Get the day of the year.
+  TimeVal Timestamp::doy () const {
+    
+    // Cache individual values.
+    Interval now(get());
+    
+    // This is it.
+    return (_isLeapYear(now.Year()) ? _DAYS_OF_YEAR_LY[now.Month()] : _DAYS_OF_YEAR_NY[now.Month()]) + now.Day();
+    
+  }
+  
+  // Get the ISO week and year.
+  TimeVal Timestamp::getISOWeekAndYear () const {
+    
+    
     
   }
   
@@ -368,14 +578,14 @@ namespace DAC {
   }
   
   // Get whether a given year is a leap year.
-  bool Timestamp::_isLeapYear (TimeVal const& year, CalendarType caltype) const {
+  bool Timestamp::_isLeapYear (TimeVal const& year) const {
     
     // Determine the calendar type. The calendar that matters is the one that
     // was in effect during the (potential) leap day. Since we do not know if
     // 2/29 occured this year, setting the date to 3/0 will amount to the same
     // thing. Watch out for bugs here if any changes are made to
     // _getCalendarType internally.
-    caltype = (caltype == CT_DEFAULT) ? _getCalendarType(year, TimeVal(3), TimeVal(0)) : caltype;
+    CalendarType caltype = _getCalendarType(year, TimeVal(3), TimeVal(0));
     
     // The year 0 did not exist.
     if (year == 0) {
@@ -405,7 +615,7 @@ namespace DAC {
   }
   
   // Get the number of days in this month.
-  Timestamp::TimeVal Timestamp::_daysInMonth (TimeVal const& year, TimeVal const& month, CalendarType const caltype) const {
+  Timestamp::TimeVal Timestamp::_daysInMonth (TimeVal const& year, TimeVal const& month) const {
     
     // Work area.
     Timestamp::TimeVal days;
@@ -425,7 +635,7 @@ namespace DAC {
         break;
         
         case 2:
-          days = _isLeapYear(year, caltype) ? 29 : 28;
+          days = _isLeapYear(year) ? 29 : 28;
         break;
         
         case 4:
@@ -464,6 +674,26 @@ namespace DAC {
     
   }
   
+  // Get the first day of ISO week one.
+  Timestamp Timestamp::_getISOWeekOneStart (TimeVal const& year) const {
+    
+    // Return value.
+    Timestamp retval;
+    
+    // Get the date of the 4th of January for this year, will always be in the
+    // 1st ISO week.
+    retval.set(Interval().Year(year)
+                         .Month(TimeVal(MON_JANUARY))
+                         .Day(TimeVal(4))
+                         .Hour(TimeVal(12))
+                         .Minute(TimeVal(0))
+                         .Second(TimeVal(0)));
+    
+    // Return the Monday of this week.
+    return retval - (retval.dowISO() - 1);
+    
+  }
+  
   // Class initialization.
   void Timestamp::s_classInit () {
     
@@ -491,6 +721,9 @@ namespace DAC {
     s_defaultleapseconds->push_back(LeapSecondDay(YMD(1995, 12, 31), 1));
     s_defaultleapseconds->push_back(LeapSecondDay(YMD(1997,  6, 30), 1));
     s_defaultleapseconds->push_back(LeapSecondDay(YMD(1998, 12, 31), 1));
+    
+    // Set the default format.
+    s_defaultformat = new Format("%c");
     
     // Class has been successfully initialized.
     s_initialized = true;

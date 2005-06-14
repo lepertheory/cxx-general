@@ -74,6 +74,9 @@ namespace DAC {
      ***********************************************************************/
     private:
       
+      // Friend classes.
+      template <class U> friend class ConstReferencePointer;
+      
       // The pointer.
       T* _p;
       
