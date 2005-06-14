@@ -315,9 +315,6 @@ namespace DAC {
       // Return the leap seconds of a given day.
       TimeVal _leapSecond (TimeVal const& year, TimeVal const& month, TimeVal const& day) const;
       
-      // Get the first day of ISO week one.
-      Timestamp _getISOWeekOneStart (TimeVal const& year) const;
-      
       /***********************************************************************/
       // Static function members.
       

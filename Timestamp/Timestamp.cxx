@@ -560,7 +560,37 @@ namespace DAC {
   // Get the ISO week and year.
   TimeVal Timestamp::getISOWeekAndYear () const {
     
+    Timestamp testdate;
+    testdate.set(Interval().Year(get().Year())
+                           .Month(TimeVal(MON_DECEMBER))
+                           .Day(TimeVal(29))
+                           .Hour(TimeVal(0))
+                           .Minute(TimeVal(0))
+                           .Second(TimeVal(0)));
     
+    if (*this > testdate) {
+      if (dowISO()
+    
+    // Get the date of the 4th of January for this year, will always be in the
+    // 1st ISO week.
+    Timestamp firstisoweek;
+    firstisoday.set(Interval().Year(get().Year())
+                              .Month(TimeVal(MON_JANUARY))
+                              .Day(TimeVal(4))
+                              .Hour(TimeVal(12))
+                              .Minute(TimeVal(0))
+                              .Second(TimeVal(0)));
+    
+    // Get the Monday of this week, this is the first day of this year
+    // according to ISO.
+    firstisoday -= firstisoday.dowISO() - 1;
+    
+    // Get the diffence of days between the first of the year and this day.
+    TimeVal numdays(*this - firstisoday);
+    
+    // Divide the number of days from the first of the year by 7 and add 1 to
+    // get the week number.
+    TimeVal weeknum(numdays / 7 + 1);
     
   }
   
@@ -671,26 +701,6 @@ namespace DAC {
     
     // No leap second found.
     return TimeVal(0);
-    
-  }
-  
-  // Get the first day of ISO week one.
-  Timestamp Timestamp::_getISOWeekOneStart (TimeVal const& year) const {
-    
-    // Return value.
-    Timestamp retval;
-    
-    // Get the date of the 4th of January for this year, will always be in the
-    // 1st ISO week.
-    retval.set(Interval().Year(year)
-                         .Month(TimeVal(MON_JANUARY))
-                         .Day(TimeVal(4))
-                         .Hour(TimeVal(12))
-                         .Minute(TimeVal(0))
-                         .Second(TimeVal(0)));
-    
-    // Return the Monday of this week.
-    return retval - (retval.dowISO() - 1);
     
   }
   
