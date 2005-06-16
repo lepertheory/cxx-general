@@ -144,8 +144,6 @@ namespace DAC {
                          bool                   Fixed    ()                                      const;
                          Arb&                   Format   (OutputFormat const format);
                          OutputFormat           Format   ()                                      const;
-                         Arb&                   PropCopy (bool const propcopy);
-                         bool                   PropCopy ()                                      const;
                          Arb&                   Round    (RoundMethod const round);
                          RoundMethod            Round    ()                                      const;
       template <class T> Arb&                   Value    (T const number);
@@ -310,8 +308,6 @@ namespace DAC {
       // Properties.
       std::string::size_type _maxradix; // Radix digits to output.
       OutputFormat           _format;   // Format to output this number.
-      bool                   _propcopy; // Copy the properties of other
-                                        // numbers when setting with =.
       RoundMethod            _round;    // Rounding method.
       
       /*********************************************************************/
@@ -333,6 +329,9 @@ namespace DAC {
       
       // Normalize this number to another number.
       Arb& _normalize (Arb& number);
+      
+      // Check if this number is a whole number (x/1).
+      bool _isWhole () const;
       
   };
   
@@ -649,10 +648,10 @@ namespace DAC {
   inline Arb::operator unsigned long long int () const { return Value<unsigned long long int>(); }
   
   // Assignment operator.
-                     inline Arb& Arb::operator = (Arb         const& number) { if (_propcopy) { return copy(number); } else { return set(number); } }
-                     inline Arb& Arb::operator = (std::string const& number) { return set(number);                                                  }
-  template <class T> inline Arb& Arb::operator = (SafeInt<T>  const& number) { return set< SafeInt<T> >(number);                                    }
-  template <class T> inline Arb& Arb::operator = (T           const  number) { return set<T>(number);                                               }
+                     inline Arb& Arb::operator = (Arb         const& number) { return copy(number);              }
+                     inline Arb& Arb::operator = (std::string const& number) { return set(number);               }
+  template <class T> inline Arb& Arb::operator = (SafeInt<T>  const& number) { return set< SafeInt<T> >(number); }
+  template <class T> inline Arb& Arb::operator = (T           const  number) { return set<T>(number);            }
   
   // Arithmetic assignment operators.
                      inline Arb& Arb::operator *= (Arb        const& number) { return op_mul(number); }
@@ -679,27 +678,26 @@ namespace DAC {
                      inline bool                   Arb::Fixed    ()                                      const { return _data->fix;                                                                }
                      inline Arb&                   Arb::Format   (OutputFormat const format)                   { _format = (format == FMT_DEFAULT) ? _format : format; return *this;               }
                      inline Arb::OutputFormat      Arb::Format   ()                                      const { return _format;                                                                   }
-                     inline Arb&                   Arb::PropCopy (bool const propcopy)                         { _propcopy = propcopy; return *this;                                               }
-                     inline bool                   Arb::PropCopy ()                                      const { return _propcopy;                                                                 }
                      inline Arb&                   Arb::Round    (RoundMethod const round)                     { _round = (round == ROUND_DEFAULT) ? _round : round; return *this;                 }
                      inline Arb::RoundMethod       Arb::Round    ()                                      const { return _round;                                                                    }
   template <class T> inline Arb&                   Arb::Value    (T const number)                              { return set<T>(number);                                                            }
+  // FIXME: Implement this!
   template <class T> inline T                      Arb::Value    ()                                      const { if (!isInteger()) { throw "Unimplemented"; } else { return _data->p.Value<T>(); } }
   
   // Set from a built-in type.
   template <class T> inline Arb& Arb::set (SafeInt<T>              const& number) { return set(number.Value()); }
-  template <>        inline Arb& Arb::set (bool                    const  number) { return _set_uint(1);       }
-  template <>        inline Arb& Arb::set (unsigned char           const  number) { return _set_uint(number);  }
-  template <>        inline Arb& Arb::set (signed   char           const  number) { return _set_sint(number);  }
-  template <>        inline Arb& Arb::set (unsigned short int      const  number) { return _set_uint(number);  }
-  template <>        inline Arb& Arb::set (signed   short int      const  number) { return _set_sint(number);  }
-  template <>        inline Arb& Arb::set (unsigned int            const  number) { return _set_uint(number);  }
-  template <>        inline Arb& Arb::set (signed   int            const  number) { return _set_sint(number);  }
-  template <>        inline Arb& Arb::set (unsigned long int       const  number) { return _set_uint(number);  }
-  template <>        inline Arb& Arb::set (signed   long int       const  number) { return _set_sint(number);  }
-  template <>        inline Arb& Arb::set (unsigned long long int  const  number) { return _set_sint(number);  }
-  template <>        inline Arb& Arb::set (signed   long long int  const  number) { return _set_sint(number);  }
-  template <class T> inline Arb& Arb::set (T                       const  number) { return _set_othr(number);  }
+  template <>        inline Arb& Arb::set (bool                    const  number) { return _set_uint(1);        }
+  template <>        inline Arb& Arb::set (unsigned char           const  number) { return _set_uint(number);   }
+  template <>        inline Arb& Arb::set (signed   char           const  number) { return _set_sint(number);   }
+  template <>        inline Arb& Arb::set (unsigned short int      const  number) { return _set_uint(number);   }
+  template <>        inline Arb& Arb::set (signed   short int      const  number) { return _set_sint(number);   }
+  template <>        inline Arb& Arb::set (unsigned int            const  number) { return _set_uint(number);   }
+  template <>        inline Arb& Arb::set (signed   int            const  number) { return _set_sint(number);   }
+  template <>        inline Arb& Arb::set (unsigned long int       const  number) { return _set_uint(number);   }
+  template <>        inline Arb& Arb::set (signed   long int       const  number) { return _set_sint(number);   }
+  template <>        inline Arb& Arb::set (unsigned long long int  const  number) { return _set_sint(number);   }
+  template <>        inline Arb& Arb::set (signed   long long int  const  number) { return _set_sint(number);   }
+  template <class T> inline Arb& Arb::set (T                       const  number) { return _set_othr(number);   }
   
   // Multiply by an integral type
   template <class T> Arb& Arb::op_mul (SafeInt<T> const& number) {
@@ -1256,6 +1254,9 @@ namespace DAC {
   
   // Set from a non-integer type.
   template <class T> inline Arb& Arb::_set_othr (T const number) { return set(DAC::toString(number)); }
+  
+  // Check if this number is a whole number (x/1).
+  inline bool Arb::_isWhole () const { return _data->q == 1; }
   
 }
 

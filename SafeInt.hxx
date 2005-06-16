@@ -357,17 +357,15 @@ namespace DAC {
       SafeInt operator ~ () const;
       
       // Casting operators.
-      operator bool                   () const;
-      operator signed   char          () const;
-      operator unsigned char          () const;
-      operator signed   short int     () const;
-      operator unsigned short int     () const;
-      operator signed   int           () const;
-      operator unsigned int           () const;
-      operator signed   long int      () const;
-      operator unsigned long int      () const;
-      operator signed   long long int () const;
-      operator unsigned long long int () const;
+      operator bool               () const;
+      operator signed   char      () const;
+      operator unsigned char      () const;
+      operator signed   short int () const;
+      operator unsigned short int () const;
+      operator signed   int       () const;
+      operator unsigned int       () const;
+      operator signed   long int  () const;
+      operator unsigned long int  () const;
       
       // Assignment operator.
                          SafeInt& operator = (SafeInt<T> const& value);
@@ -630,17 +628,15 @@ namespace DAC {
   template <class T> inline SafeInt<T> SafeInt<T>::operator ~ () const { return SafeInt<T>(*this).op_bit_cpm(); }
   
   // Casting operators.
-  template <class T> inline SafeInt<T>::operator bool                   () const { return _value != static_cast<T>(0);                                                                                               }
-  template <class T> inline SafeInt<T>::operator signed   char          () const { return SafeIntUtil::SafeCast<T, signed   char,          SafeIntUtil::Relationship<T, signed   char         >::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator unsigned char          () const { return SafeIntUtil::SafeCast<T, unsigned char,          SafeIntUtil::Relationship<T, unsigned char         >::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator signed   short int     () const { return SafeIntUtil::SafeCast<T, signed   short int,     SafeIntUtil::Relationship<T, signed   short int    >::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator unsigned short int     () const { return SafeIntUtil::SafeCast<T, unsigned short int,     SafeIntUtil::Relationship<T, unsigned short int    >::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator signed   int           () const { return SafeIntUtil::SafeCast<T, signed   int,           SafeIntUtil::Relationship<T, signed   int          >::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator unsigned int           () const { return SafeIntUtil::SafeCast<T, unsigned int,           SafeIntUtil::Relationship<T, unsigned int          >::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator signed   long int      () const { return SafeIntUtil::SafeCast<T, signed   long int,      SafeIntUtil::Relationship<T, signed   long int     >::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator unsigned long int      () const { return SafeIntUtil::SafeCast<T, unsigned long int,      SafeIntUtil::Relationship<T, unsigned long int     >::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator signed   long long int () const { return SafeIntUtil::SafeCast<T, signed   long long int, SafeIntUtil::Relationship<T, signed   long long int>::value>::op(_value); }
-  template <class T> inline SafeInt<T>::operator unsigned long long int () const { return SafeIntUtil::SafeCast<T, unsigned long long int, SafeIntUtil::Relationship<T, unsigned long long int>::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator bool               () const { return _value != static_cast<T>(0);                                                                                               }
+  template <class T> inline SafeInt<T>::operator signed   char      () const { return SafeIntUtil::SafeCast<T, signed   char,      SafeIntUtil::Relationship<T, signed   char     >::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned char      () const { return SafeIntUtil::SafeCast<T, unsigned char,      SafeIntUtil::Relationship<T, unsigned char     >::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator signed   short int () const { return SafeIntUtil::SafeCast<T, signed   short int, SafeIntUtil::Relationship<T, signed   short int>::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned short int () const { return SafeIntUtil::SafeCast<T, unsigned short int, SafeIntUtil::Relationship<T, unsigned short int>::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator signed   int       () const { return SafeIntUtil::SafeCast<T, signed   int,       SafeIntUtil::Relationship<T, signed   int      >::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned int       () const { return SafeIntUtil::SafeCast<T, unsigned int,       SafeIntUtil::Relationship<T, unsigned int      >::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator signed   long int  () const { return SafeIntUtil::SafeCast<T, signed   long int,  SafeIntUtil::Relationship<T, signed   long int >::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator unsigned long int  () const { return SafeIntUtil::SafeCast<T, unsigned long int,  SafeIntUtil::Relationship<T, unsigned long int >::value>::op(_value); }
   
   // Assignment operator.
   template <class T>                    inline SafeInt<T>& SafeInt<T>::operator = (SafeInt<T> const& value) { _value = value._value;                                                                   return *this; }

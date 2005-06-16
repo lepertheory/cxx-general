@@ -56,6 +56,17 @@ namespace DAC {
         DOW_SATURDAY  = 6
       };
       
+      // ISO days of the week.
+      enum ISODayOfWeek {
+        ISO_DOW_MONDAY    = 1,
+        ISO_DOW_TUESDAY   = 2,
+        ISO_DOW_WEDNESDAY = 3,
+        ISO_DOW_THURSDAY  = 4,
+        ISO_DOW_FRIDAY    = 5,
+        ISO_DOW_SATURDAY  = 6,
+        ISO_DOW_SUNDAY    = 7
+      };
+      
       // Months.
       enum MonthName {
         MON_JANUARY   =  1,
@@ -70,6 +81,17 @@ namespace DAC {
         MON_OCTOBER   = 10,
         MON_NOVEMBER  = 11,
         MON_DECEMBER  = 12
+      };
+      
+      // Time value types.
+      enum ValueType {
+        VT_YEAR,
+        VT_MONTH,
+        VT_DAY,
+        VT_HOUR,
+        VT_MINUTE,
+        VT_SECOND,
+        VT_MILLISECOND
       };
       
       /***********************************************************************/
@@ -205,11 +227,45 @@ namespace DAC {
       // Copy constructor.
       Timestamp (Timestamp const& ts);
       
+      // Conversion constructor.
+      explicit Timestamp (Interval const& time);
+      explicit Timestamp (TimeVal  const& jd);
+      
+      // Increment / decrement operators.
+      Timestamp& operator ++ ();
+      Timestamp  operator ++ (int);
+      Timestamp& operator -- ();
+      Timestamp  operator -- (int);
+      
+      // Casting operators.
+      operator bool                   () const;
+      operator signed   char          () const;
+      operator unsigned char          () const;
+      operator signed   short int     () const;
+      operator unsigned short int     () const;
+      operator signed   int           () const;
+      operator unsigned int           () const;
+      operator signed   long int      () const;
+      operator unsigned long int      () const;
+      operator signed   long long int () const;
+      operator unsigned long long int () const;
+      
+      // Assignment operator.
+      Timestamp& operator = (Timestamp const& ts);
+      Timestamp& operator = (Interval  const& time);
+      Timestamp& operator = (TimeVal   const& jd);
+      
+      // Arithmetic assignment operators.
+      Timestamp& operator += (TimeVal const& days);
+      Timestamp& operator -= (TimeVal const& days);
+      
       // Properties.
       Timestamp& LastJulianDate (YMD const& lastjulian);
       YMD        LastJulianDate ()                      const;
       Timestamp& Julian         (TimeVal const& jd);
       TimeVal    Julian         ()                      const;
+      Timestamp& IncrementType  (ValueType const vt);
+      ValueType  IncrementType  ()                      const;
       
       // Reset to just-constructed defaults.
       Timestamp& clear ();
@@ -219,6 +275,7 @@ namespace DAC {
       
       // Set this timestamp.
       Timestamp& set (Interval const& time);
+      Timestamp& set (TimeVal  const& jd);
       
       // Get the individual values of this timestamp.
       Interval get () const;
@@ -231,6 +288,22 @@ namespace DAC {
       // FIXME: This does not, for now, include any locale functionality.
       std::string toString (std::string const& format = "") const;
       
+      // Arithmetic operator backends.
+      Timestamp& op_add (TimeVal   const& tv, ValueType const vt = VT_DAY);
+      Timestamp& op_sub (TimeVal   const& tv, ValueType const vt = VT_DAY);
+      TimeVal    op_sub (Timestamp const& ts)                              const;
+      
+      // Comparison operator backends.
+      bool op_gt (Timestamp const& ts) const;
+      bool op_ge (Timestamp const& ts) const;
+      bool op_lt (Timestamp const& ts) const;
+      bool op_le (Timestamp const& ts) const;
+      bool op_eq (Timestamp const& ts) const;
+      bool op_ne (Timestamp const& ts) const;
+      
+      // Get the day only JD.
+      TimeVal jdday () const;
+      
       // Get the day of the week.
       TimeVal dow () const;
       
@@ -240,14 +313,14 @@ namespace DAC {
       // Get the day of the year.
       TimeVal doy () const;
       
+      // Get the week of the year.
+      TimeVal woy (DayOfWeek const base) const;
+      
       // Get the ISO week.
-      TimeVal getISOWeek () const;
+      TimeVal woyISO () const;
       
       // Get the ISO year.
       TimeVal getISOYear () const;
-      
-      // Get the ISO week and year, as a number year * 100 + week.
-      TimeVal getISOWeekAndYear () const;
       
     /*
      * Private members.
@@ -272,6 +345,9 @@ namespace DAC {
       
       // Calendar type of this timestamp.
       CalendarType _caltype;
+      
+      // Increment operations use this value type.
+      ValueType _incrementtype;
       
       /***********************************************************************/
       // Static data members.
@@ -332,6 +408,20 @@ namespace DAC {
 // Stream I/O operators.
 std::ostream& operator << (std::ostream& l, DAC::Timestamp const& r);
 
+// Arithmetic operators.
+DAC::Timestamp          operator + (DAC::Timestamp          const& l, DAC::Timestamp::TimeVal const& r);
+DAC::Timestamp          operator + (DAC::Timestamp::TimeVal const& l, DAC::Timestamp          const& r);
+DAC::Timestamp          operator - (DAC::Timestamp          const& l, DAC::Timestamp::TimeVal const& r);
+DAC::Timestamp::TimeVal operator - (DAC::Timestamp          const& l, DAC::Timestamp          const& r);
+
+// Comparison operators.
+bool operator >  (DAC::Timestamp const& l, DAC::Timestamp const& r);
+bool operator >= (DAC::Timestamp const& l, DAC::Timestamp const& r);
+bool operator <  (DAC::Timestamp const& l, DAC::Timestamp const& r);
+bool operator <= (DAC::Timestamp const& l, DAC::Timestamp const& r);
+bool operator == (DAC::Timestamp const& l, DAC::Timestamp const& r);
+bool operator != (DAC::Timestamp const& l, DAC::Timestamp const& r);
+
 /*****************************************************************************
  * Error declarations.
  *****************************************************************************/
@@ -384,6 +474,34 @@ namespace DAC {
    * Class Timestamp.
    ***************************************************************************/
   
+  // Increment / decrement operators.
+  inline Timestamp& Timestamp::operator ++ ()    { return op_add(TimeVal(1), _incrementtype);                                  }
+  inline Timestamp  Timestamp::operator ++ (int) { Timestamp retval(*this); op_add(TimeVal(1), _incrementtype); return retval; }
+  inline Timestamp& Timestamp::operator -- ()    { return op_sub(TimeVal(1), _incrementtype);                                  }
+  inline Timestamp  Timestamp::operator -- (int) { Timestamp retval(*this); op_sub(TimeVal(1), _incrementtype); return retval; }
+  
+  // Casting operators.
+  inline Timestamp::operator bool                   () const { return Julian(); }
+  inline Timestamp::operator signed   char          () const { return Julian(); }
+  inline Timestamp::operator unsigned char          () const { return Julian(); }
+  inline Timestamp::operator signed   short int     () const { return Julian(); }
+  inline Timestamp::operator unsigned short int     () const { return Julian(); }
+  inline Timestamp::operator signed   int           () const { return Julian(); }
+  inline Timestamp::operator unsigned int           () const { return Julian(); }
+  inline Timestamp::operator signed   long int      () const { return Julian(); }
+  inline Timestamp::operator unsigned long int      () const { return Julian(); }
+  inline Timestamp::operator signed   long long int () const { return Julian(); }
+  inline Timestamp::operator unsigned long long int () const { return Julian(); }
+  
+  // Assignment operator.
+  inline Timestamp& Timestamp::operator = (Timestamp const& ts)   { return copy(ts);  }
+  inline Timestamp& Timestamp::operator = (Interval  const& time) { return set(time); }
+  inline Timestamp& Timestamp::operator = (TimeVal   const& jd)   { return set(jd);   }
+  
+  // Arithmetic assignment operators.
+  inline Timestamp& Timestamp::operator += (TimeVal const& days) { return op_add(days); }
+  inline Timestamp& Timestamp::operator -= (TimeVal const& days) { return op_sub(days); }
+  
   // Properties.
   inline Timestamp& Timestamp::LastJulianDate (YMD const& lastjulian) {
     Timestamp tmp;
@@ -392,9 +510,6 @@ namespace DAC {
                 .Month(lastjulian.Month)
                 .Day(lastjulian.Day)
                 .Hour(TimeVal(12))
-                .Minute(TimeVal(0))
-                .Second(TimeVal(0)),
-      CT_JULIAN
     );
     _lastjulianymd = lastjulian;
     _lastjulianjd  = tmp.Julian().floor();
@@ -404,6 +519,27 @@ namespace DAC {
   
   inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _jd = jd; return *this; }
   inline Timestamp::TimeVal Timestamp::Julian ()                  const { return _jd;             }
+  
+  inline Timestamp&           Timestamp::IncrementType (ValueType const vt)       { _incrementtype = vt; return *this; }
+  inline Timestamp::ValueType Timestamp::IncrementType ()                   const { return _incrementtype;             }
+  
+  // Set the timestamp with a Julian Date.
+  inline Timestamp& Timestamp::set (TimeVal const& jd) { return Julian(jd); }
+  
+  // Subtract.
+  inline Timestamp&         Timestamp::op_sub (TimeVal   const& tv, ValueType const vt)       { return op_add(-tv, vt);                                  }
+  inline Timestamp::TimeVal Timestamp::op_sub (Timestamp const& ts)                     const { TimeVal retval; retval.set(_jd - ts._jd); return retval; }
+  
+  // Comparison operator backends.
+  inline bool Timestamp::op_gt (Timestamp const& ts) const { return _jd >  ts._jd; }
+  inline bool Timestamp::op_ge (Timestamp const& ts) const { return _jd >= ts._jd; }
+  inline bool Timestamp::op_lt (Timestamp const& ts) const { return _jd <  ts._jd; }
+  inline bool Timestamp::op_le (Timestamp const& ts) const { return _jd <= ts._jd; }
+  inline bool Timestamp::op_eq (Timestamp const& ts) const { return _jd == ts._jd; }
+  inline bool Timestamp::op_ne (Timestamp const& ts) const { return _jd != ts._jd; }
+  
+  // Get the day only JD.
+  inline Timestamp::TimeVal Timestamp::jdday () const { TimeVal retval; retval.set((_jd + 0.5).floor()); return retval; }
   
   // Return true if the given date is Gregorian.
   inline bool Timestamp::_isGregorian (TimeVal const& year, TimeVal const& month, TimeVal const& day) const {
@@ -458,5 +594,19 @@ namespace DAC {
 
 // Stream I/O operators.
 inline std::ostream& operator << (std::ostream& l, DAC::Timestamp const& r) { l << r.toString(); return l; }
+
+// Arithmetic operators.
+inline DAC::Timestamp          operator + (DAC::Timestamp          const& l, DAC::Timestamp::TimeVal const& r) { return DAC::Timestamp(l).op_add(r); }
+inline DAC::Timestamp          operator + (DAC::Timestamp::TimeVal const& l, DAC::Timestamp          const& r) { return DAC::Timestamp(r).op_add(l); }
+inline DAC::Timestamp          operator - (DAC::Timestamp          const& l, DAC::Timestamp::TimeVal const& r) { return DAC::Timestamp(l).op_sub(r); }
+inline DAC::Timestamp::TimeVal operator - (DAC::Timestamp          const& l, DAC::Timestamp          const& r) { return l.op_sub(r);                 }
+
+// Comparison operators.
+inline bool operator >  (DAC::Timestamp const& l, DAC::Timestamp const& r) { return l.op_gt(r); }
+inline bool operator >= (DAC::Timestamp const& l, DAC::Timestamp const& r) { return l.op_ge(r); }
+inline bool operator <  (DAC::Timestamp const& l, DAC::Timestamp const& r) { return l.op_lt(r); }
+inline bool operator <= (DAC::Timestamp const& l, DAC::Timestamp const& r) { return l.op_le(r); }
+inline bool operator == (DAC::Timestamp const& l, DAC::Timestamp const& r) { return l.op_eq(r); }
+inline bool operator != (DAC::Timestamp const& l, DAC::Timestamp const& r) { return l.op_ne(r); }
 
 #endif

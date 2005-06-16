@@ -59,8 +59,8 @@ namespace DAC {
   };
   
   // Days of year by month.
-  int const Timestamp::_DAYS_OF_YEAR_NY[]  = { 366, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
-  int const Timestamp::_DAYS_OF_MONTH_LY[] = { 367, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 };
+  int const Timestamp::_DAYS_OF_YEAR_NY[] = { 366, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+  int const Timestamp::_DAYS_OF_YEAR_LY[] = { 367, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 };
   
   // True when class has been initialized.
   bool Timestamp::s_initialized = false;
@@ -93,55 +93,81 @@ namespace DAC {
     
   }
   
+  // Conversion constructor.
+  Timestamp::Timestamp (Interval const& time) {
+    
+    // Call common init.
+    _init();
+    
+    // Set the timestamp.
+    set(time);
+    
+  }
+  
+  // Conversion constructor.
+  Timestamp::Timestamp (TimeVal const& jd) {
+    
+    // Call common init.
+    _init();
+    
+    // Set the timestamp.
+    set(jd);
+    
+  }
+  
   // Set this timestamp.
   Timestamp& Timestamp::set (Interval const& time) {
     
     // Work area.
     Timestamp newtime(*this);
+    Interval  settime(time);
+    
+    // Set default values.
+    if (!settime.isSet_Year()       ) { settime.Year       (TimeVal( 1)); }
+    if (!settime.isSet_Month()      ) { settime.Month      (TimeVal( 1)); }
+    if (!settime.isSet_Day()        ) { settime.Day        (TimeVal( 1)); }
+    if (!settime.isSet_Hour()       ) { settime.Hour       (TimeVal(12)); }
+    if (!settime.isSet_Minute()     ) { settime.Minute     (TimeVal( 0)); }
+    if (!settime.isSet_Second()     ) { settime.Second     (TimeVal( 0)); }
+    if (!settime.isSet_Millisecond()) { settime.Millisecond(TimeVal( 0)); }
     
     // Determine the calendar type.
-    CalendarType caltype = _getCalendarType(time.Year(), time.Month(), time.Day());
+    CalendarType caltype = _getCalendarType(settime.Year(), settime.Month(), settime.Day());
     
     // Verify that the new time is a valid time.
-    if (!time.isSet_Second()            ||
-        !time.isSet_Minute()            ||
-        !time.isSet_Hour()              ||
-        !time.isSet_Day()               ||
-        !time.isSet_Month()             ||
-        !time.isSet_Year()              ||
-        !time.Year().isInteger()        || (time.Year() == 0)       ||
-        !time.Month().isInteger()       || (time.Month()       < 1) || (time.Month()       > 12)                                                                                                         ||
-        !time.Day().isInteger()         || (time.Day()         < 1) || (time.Day()         > _daysInMonth(time.Year(), time.Month(), caltype))                                                                ||
-        !time.Hour().isInteger()        || (time.Hour()        < 0) || (time.Hour()        > 23)                                                                                                         ||
-        !time.Minute().isInteger()      || (time.Minute()      < 0) || (time.Minute()      > 59)                                                                                                         ||
-        !time.Second().isInteger()      || (time.Second()      < 0) || (time.Second()      > 59 + ((time.Hour() == 23 && time.Minute() == 59) ? _leapSecond(time.Year(), time.Month(), time.Day()) : 0)) ||
-        !time.Millisecond().isInteger() || (time.Millisecond() < 0) || (time.Millisecond() > 999)
+    if (!settime.Year().isInteger()        || (settime.Year() == 0)       ||
+        !settime.Month().isInteger()       || (settime.Month()       < 1) || (settime.Month()       > 12)                                                                                                                        ||
+        !settime.Day().isInteger()         || (settime.Day()         < 1) || (settime.Day()         > _daysInMonth(settime.Year(), settime.Month()))                                                                    ||
+        !settime.Hour().isInteger()        || (settime.Hour()        < 0) || (settime.Hour()        > 23)                                                                                                                        ||
+        !settime.Minute().isInteger()      || (settime.Minute()      < 0) || (settime.Minute()      > 59)                                                                                                                        ||
+        !settime.Second().isInteger()      || (settime.Second()      < 0) || (settime.Second()      > 59 + ((settime.Hour() == 23 && settime.Minute() == 59) ? _leapSecond(settime.Year(), settime.Month(), settime.Day()) : 0)) ||
+        !settime.Millisecond().isInteger() || (settime.Millisecond() < 0) || (settime.Millisecond() > 999)
     ) {
       throw TimestampErrors::InvalidTime();
     }
     
     // Adjust BCE years.
-    TimeVal y(time.Year() + ((time.Year() < 0) ? 1 : 0));
+    TimeVal y = settime.Year() + ((settime.Year() < 0) ? 1 : 0);
     
     // Set the julian date.
     TimeVal n;
     TimeVal r;
-    if (time.Month() < 3) {
+    if (settime.Month() < 3) {
       n = y - 1;
       r = 13;
     } else {
       n = y;
       r = 1;
     }
-    newtime._jd = 1720995 + floor(n * 365.25) + (30.6001 * (time.Month() + r)).truncate() + time.Day();
+    newtime._jd.set(1720995 + floor(n * 365.25) + (30.6001 * (settime.Month() + r)).truncate() + settime.Day());
     if (caltype == CT_GREGORIAN) {
-      TimeVal m((n / 100).truncate());
-      TimeVal q(2 + 2 * (n / 400).truncate());
+      TimeVal m = (n / 100).truncate();
+      TimeVal q = 2 + 2 * (n / 400).truncate();
       newtime._jd += q - m - (m / 4).truncate();
     }
     
     // Add the time.
-    newtime._jd += ((time.Hour() - 12) + (time.Minute() + (time.Second() + time.Millisecond() / 1000) / 60) / 60) / 24;
+    newtime._jd += ((settime.Hour() - 12) + (settime.Minute() + (settime.Second() + settime.Millisecond() / 1000) / 60) / 60) / 24;
     
     // We done, return.
     _jd = newtime._jd;
@@ -170,11 +196,10 @@ namespace DAC {
     TimeVal ts;
     TimeVal ti;
     
-    // Create a "corrected" julian date, minus the time. Set propcopy to false
-    // so that we don't grab _jd's fixed-decimal status.
+    // Create a "corrected" julian date, minus the time. Use set() to insulate
+    // from picking up _jd's fixed-pointedness.
     TimeVal cjd;
-    cjd.PropCopy(false);
-    cjd = (_jd + 0.5).floor();
+    cjd.set((_jd + 0.5).floor());
     
     // Correct for Julian / Gregorian calendars.
     if (cjd > _lastjulianjd) {
@@ -202,10 +227,9 @@ namespace DAC {
       --ty;
     }
     
-    // Get the time.
+    // Get the time. Once again, insulate from _jd.
     TimeVal time;
-    time.PropCopy(false);
-    time = _jd + 0.5 - cjd;
+    time.set(_jd + 0.5 - cjd);
     time *= 24;   th = time.toInt(); time -= th; if (time < 0) { --th; ++time; }
     time *= 60;   tn = time.toInt(); time -= tn; if (time < 0) { --tn; ++time; }
     time *= 60;   ts = time.toInt(); time -= ts; if (time < 0) { --ts; ++time; }
@@ -321,7 +345,7 @@ namespace DAC {
     
     // Make a new jd.
     TimeVal tmp_jd;
-    tmp_jd.PropCopy(false).Base(10).PointPos(8).Fixed(true);
+    tmp_jd.Base(10).PointPos(8).Fixed(true);
     
     // Make a new lastjulian.
     YMD     new_lastjulianymd(1582, 10, 4);
@@ -417,81 +441,221 @@ namespace DAC {
         switch (*i) {
           
           // Literal %.
-          case '%':
+          case '%': {
             retval += '%';
-          break;
+          } break;
           
           // Abbreviated weekday name.
-          case 'a':
+          case 'a': {
             retval += SHORT_WEEKDAY_NAME[dow()];
-          break;
+          } break;
           
           // Full weekday name, variable length.
-          case 'A':
+          case 'A': {
             retval += LONG_WEEKDAY_NAME[dow()];
-          break;
+          } break;
           
           // Abbreviated month name.
-          case 'b':
+          case 'b': {
             retval += SHORT_MONTH_NAME[get().Month()];
-          break;
+          } break;
           
           // Full month name, variable length.
-          case 'B':
+          case 'B': {
             retval += LONG_MONTH_NAME[get().Month()];
-          break;
+          } break;
           
           // Default date and time format.
-          case 'c':
-            retval += toString("%a");
-          break;
+          case 'c': {
+            retval += toString("%a %b %e %T %Y");
+          } break;
           
           // Century (00..99).
-          case 'C':
+          case 'C': {
             fieldlen = 2;
             numfield = ((get().Year() / 100).floor().abs() % 100).toString();
-          break;
+          } break;
           
           // Day of month (01..31).
-          case 'd':
+          case 'd': {
             fieldlen = 2;
-            numfield = get().Month().toString();
-          break;
+            numfield = get().Day().toString();
+          } break;
           
           // Date (mm/dd/yy).
-          case 'D':
+          case 'D': {
             retval += toString("%m/%d/%y");
-          break;
+          } break;
           
           // Day of month, blank padded.
-          case 'e':
+          case 'e': {
             fieldlen = 2;
             fieldpad = PAD_SPPAD;
             numfield = get().Month().toString();
-          break;
+          } break;
           
           // Same as %Y-%m-%d, ISO 8601:2000.
-          case 'F':
+          case 'F': {
             retval += toString("%Y-%m-%d");
-          break;
+          } break;
           
           // The 2-digit year corresponding to the %V week number.
-          case 'g':
-            
-          break;
+          case 'g': {
+            fieldlen = 2;
+            numfield = (getISOYear() % 100).abs().toString();
+          } break;
+          
+          // The ISO year.
+          case 'G': {
+            retval += get().Year().toString();
+          } break;
+          
+          // Equivalent to %b.
+          case 'h': {
+            retval += toString("%b");
+          } break;
+          
+          // 24-hour clock hour (00..23).
+          case 'H': {
+            fieldlen = 2;
+            numfield = get().Hour().toString();
+          } break;
+          
+          // 12-hour clock hour (01..12).
+          case 'I': {
+            fieldlen = 2;
+            TimeVal hour = get().Hour();
+            numfield = ((hour > 12) ? hour - 12 : ((hour == 0) ? hour + 12 : hour)).toString();
+          } break;
+          
+          // Day of year (001..366).
+          case 'j': {
+            fieldlen = 3;
+            numfield = doy().toString();
+          } break;
+          
+          // Month (01..12).
+          case 'm': {
+            fieldlen = 2;
+            numfield = get().Month().toString();
+          } break;
+          
+          // Minute (00..59).
+          case 'M': {
+            fieldlen = 2;
+            numfield = get().Minute().toString();
+          } break;
+          
+          // Newline.
+          case 'n': {
+            retval += "\n";
+          } break;
+          
+          // Capital AM/PM indicator.
+          case 'p': {
+            retval += (get().Hour() < 12) ? "AM" : "PM";
+          } break;
+          
+          // Lowercase am/pm indicator.
+          case 'P': {
+            retval += (get().Hour() < 12) ? "am" : "pm";
+          } break;
+          
+          // Time in am/pm notation. In POSIX local this is equivalent to
+          // "%I:%M:%S %p".
+          case 'r': {
+            retval += toString("%I:%M:%S %p");
+          } break;
+          
+          // Time in 24-hour notation (%H:%M).
+          case 'R': {
+            retval += toString("%H:%M");
+          } break;
+          
+          // Second (00..60).
+          case 'S': {
+            fieldlen = 2;
+            numfield = get().Second().toString();
+          } break;
+          
+          // Horizontal tab.
+          case 't': {
+            retval += "\t";
+          } break;
+          
+          // Time (%H:%M:%S).
+          case 'T': {
+            retval += toString("%H:%M:%S");
+          } break;
+          
+          // ISO weekday (1=Monday..7=Sunday).
+          case 'u': {
+            retval += dowISO().toString();
+          } break;
+          
+          // Week number. First Sunday of January is the first day of week 1.
+          // Days before this are week 0 (00..53).
+          case 'U': {
+            fieldlen = 2;
+            numfield = woy(DOW_SUNDAY).toString();
+          } break;
           
           // Week of year according to ISO-8601 rules, week 1 of a given year
           // is the week containing the 4th of January, Monday is the first
-          // day of the week. (01..53)
-          case 'V':
+          // day of the week. (01..53).
+          case 'V': {
             fieldlen = 2;
-            numfield = getISOWeek();
-          break;
+            numfield = woyISO().toString();
+          } break;
+          
+          // Weekday number (0=Sunday..6=Saturday).
+          case 'w': {
+            retval += dow().toString();
+          } break;
+          
+          // Week number. First Monday of January is the first day of week 1.
+          // Days before this are week 0 (00..53).
+          case 'W': {
+            fieldlen = 2;
+            numfield = woy(DOW_MONDAY).toString();
+          } break;
+          
+          // Date represtation (%m/%d/%y).
+          case 'x': {
+            retval += toString("%m/%d/%y");
+          } break;
+          
+          // Time representation (%H:%M:%S).
+          case 'X': {
+            retval += toString("%H:%M:%S");
+          } break;
+          
+          // Last two digits of the year.
+          case 'y': {
+            fieldlen = 2;
+            numfield = (get().Year() % 100).toString();
+          } break;
+          
+          // Year.
+          case 'Y': {
+            retval += get().Year().toString();
+          } break;
+          
+          // Offset from UTC in the ISO 8601:2000 standard format
+          // (+hhmm or -hhmm), or by nothing if no timezone is determinable.
+          // FIXME: implement timezone support.
+          case 'z': {
+          } break;
+          
+          // Timezone name or abbreviation, or nothing if no timezone.
+          // FIXME: implement timezone support.
+          case 'Z': {
+          } break;
           
           // Unknown option.
-          default:
+          default: {
             throw TimestampErrors::BadFormat().Problem("Invalid character").Position(i - fmt->begin()).Format(fmt);
-          break;
+          } break;
           
         }
         
@@ -525,20 +689,83 @@ namespace DAC {
     
   }
   
+  // Add.
+  Timestamp& Timestamp::op_add (TimeVal const& tv, ValueType const vt) {
+    
+    // Work area.
+    Timestamp newtime(*this);
+    
+    // Add differently for the different value types.
+    switch (vt) {
+      
+      // Years.
+      case VT_YEAR: {
+        Interval oldtime(newtime.get());
+        TimeVal  wholeyears = tv.truncate();
+        newtime.set(oldtime.Year(oldtime.Year() + wholeyears));
+        newtime._jd += (tv - wholeyears) * ((_getCalendarType(newtime._jd) == CT_GREGORIAN) ? 365.2425 : 365.25);
+      } break;
+      
+      // Months.
+      case VT_MONTH: {
+        Interval oldtime(newtime.get());
+        TimeVal wholemonths = tv.truncate();
+        TimeVal tmpmonths   = wholemonths + oldtime.Month();
+        TimeVal years       = floor(tmpmonths / 12);
+        oldtime.Year(oldtime.Year() + years);
+        tmpmonths -= years * 12;
+        newtime.set(oldtime.Month(tmpmonths));
+        newtime._jd += (tv - wholemonths) * ((_getCalendarType(newtime._jd) == CT_GREGORIAN) ? 365.2425 : 365.25) / 12;
+      } break;
+      
+      // Days.
+      case VT_DAY: {
+        newtime._jd += tv;
+      } break;
+      
+      // Hours.
+      case VT_HOUR: {
+        newtime._jd += tv / 24;
+      }
+      
+      // Minutes.
+      case VT_MINUTE: {
+        newtime._jd += tv / 24 / 60;
+      }
+      
+      // Seconds.
+      case VT_SECOND: {
+        newtime._jd += tv / 24 / 60 / 60;
+      }
+      
+      // Milliseconds.
+      case VT_MILLISECOND: {
+        newtime._jd += tv / 24 / 60 / 60 / 1000;
+      }
+      
+    }
+    
+    // Move the new time into place and return.
+    _jd = newtime._jd;
+    return *this;
+    
+  }
+  
   // Get the day of the week.
-  TimeVal Timestamp::dow () const {
+  Timestamp::TimeVal Timestamp::dow () const {
     
     // Day of week is simply the JD modulo 7 rot 1.
-    TimeVal dow = (_jd + 0.5).floor() % 7 + 1;
+    TimeVal dow;
+    dow.set((_jd + 0.5).floor() % 7 + 1);
     return (dow > DOW_SATURDAY) ? dow - 7 : dow;
     
   }
   
   // Get the ISO day of the week.
-  TimeVal Timestamp::dowISO () const {
+  Timestamp::TimeVal Timestamp::dowISO () const {
     
     // ISO day of the week is 1 = Monday through 7 = Sunday.
-    TimeVal retval(dow());
+    TimeVal retval = dow();
     if (retval == 0) {
       retval = 7;
     }
@@ -547,7 +774,7 @@ namespace DAC {
   }
   
   // Get the day of the year.
-  TimeVal Timestamp::doy () const {
+  Timestamp::TimeVal Timestamp::doy () const {
     
     // Cache individual values.
     Interval now(get());
@@ -557,40 +784,68 @@ namespace DAC {
     
   }
   
-  // Get the ISO week and year.
-  TimeVal Timestamp::getISOWeekAndYear () const {
+  // Get the week of the year.
+  Timestamp::TimeVal Timestamp::woy (DayOfWeek const base) const {
     
-    Timestamp testdate;
-    testdate.set(Interval().Year(get().Year())
-                           .Month(TimeVal(MON_DECEMBER))
-                           .Day(TimeVal(29))
-                           .Hour(TimeVal(0))
-                           .Minute(TimeVal(0))
-                           .Second(TimeVal(0)));
+    // Get the first day of this year.
+    Timestamp dayone(Interval().Year(get().Year()).Month(TimeVal(MON_JANUARY)).Day(TimeVal(1)));
     
-    if (*this > testdate) {
-      if (dowISO()
+    // Find the next base day.
+    if (dayone.dow() > base) {
+      dayone += 7 - dayone.dow();
+    }
+    dayone += base - dayone.dow();
     
-    // Get the date of the 4th of January for this year, will always be in the
-    // 1st ISO week.
-    Timestamp firstisoweek;
-    firstisoday.set(Interval().Year(get().Year())
-                              .Month(TimeVal(MON_JANUARY))
-                              .Day(TimeVal(4))
-                              .Hour(TimeVal(12))
-                              .Minute(TimeVal(0))
-                              .Second(TimeVal(0)));
+    // Get the difference between today and the first day of the first week of
+    // the year.
+    TimeVal woyday = this->jdday() - (dayone.jdday() - 1);
     
-    // Get the Monday of this week, this is the first day of this year
-    // according to ISO.
-    firstisoday -= firstisoday.dowISO() - 1;
+    // Divide by 7, that's the week.
+    return ceil(woyday / 7);
     
-    // Get the diffence of days between the first of the year and this day.
-    TimeVal numdays(*this - firstisoday);
+  }
+  
+  // Get the ISO week.
+  Timestamp::TimeVal Timestamp::woyISO () const {
     
-    // Divide the number of days from the first of the year by 7 and add 1 to
-    // get the week number.
-    TimeVal weeknum(numdays / 7 + 1);
+    // Get the ISO year so we know what year to calculate from.
+    TimeVal year = getISOYear();
+    
+    // Get the first ISO day. ISO week one is the first week of January that
+    // contains a Thursday, or more easily, the first that contains January
+    // 4th. Get the Monday of the week containing January 4th.
+    Timestamp isodayone;
+    isodayone.set(Interval().Year(year).Month(TimeVal(MON_JANUARY)).Day(TimeVal(4)));
+    isodayone -= isodayone.dowISO() - ISO_DOW_MONDAY;
+    
+    // Get the difference between this date and the 1st ISO day.
+    TimeVal isoday = this->jdday() - (isodayone.jdday() - 1);
+    
+    // Divide by 7, that's the ISO week.
+    return ceil(isoday / 7);
+    
+  }
+  
+  // Get the ISO year.
+  Timestamp::TimeVal Timestamp::getISOYear () const {
+    
+    // Get the current date as individual values.
+    Interval date(get());
+    
+    // If it is before January 4th and this week did not contain a Thursday,
+    // then according to ISO it is last year.
+    if ((date.Month() == 1 && date.Day() < 4) && dowISO() - date.Day() >= ISO_DOW_THURSDAY) {
+      return date.Year() - 1;
+    }
+    
+    // If it is after December 28th and this week will not contain a Thursday,
+    // then according to ISO it is next year.
+    if ((date.Month() == 12 && date.Day() > 28) && date.Day() + ISO_DOW_THURSDAY - dowISO() > _daysInMonth(date.Year(), TimeVal(MON_DECEMBER))) {
+      return date.Year() + 1;
+    }
+    
+    // Otherwise, it's this year.
+    return date.Year();
     
   }
   
@@ -623,7 +878,7 @@ namespace DAC {
     }
     
     // Correct for no 0 year.
-    TimeVal y(year + ((year < 0) ? 1 : 0));
+    TimeVal y = year + ((year < 0) ? 1 : 0);
     
     // Choose the calendar type.
     switch (caltype) {

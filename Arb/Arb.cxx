@@ -107,7 +107,6 @@ namespace DAC {
     // These instructions cannot throw, so they come last.
     _maxradix = 10;
     _format   = FMT_RADIX;
-    _propcopy = true;
     _round    = ROUND_NORMAL;
     
     // We done.
@@ -130,7 +129,6 @@ namespace DAC {
     // Now do non-throwing operations.
     _maxradix = number._maxradix;
     _format   = number._format;
-    _propcopy = number._propcopy;
     _round    = number._round;
     _data     = new_data;
     
