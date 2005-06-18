@@ -12,9 +12,9 @@
   #include <string>
 
 // Compiler includes.
-  #if defined(PLAT_WIN32)
+  #if defined(CC_CL)
     #include <typeinfo.h>
-  #elif defined(PLAT_POSIX)
+  #elif defined(CC_GCC)
     #include <cxxabi.h>
   #endif
 
@@ -30,7 +30,7 @@ namespace DAC {
     // Return value.
     std::string retval;
   
-  #if defined(PLAT_WIN32)
+  #if defined(CC_CL)
     // Win32 version.
     
     // typeid operator throws an exception if there is a failure.
@@ -40,7 +40,7 @@ namespace DAC {
       retval = "Unable to demangle type name.";
     }
     
-  #elif defined(PLAT_POSIX)
+  #elif defined(CC_GCC)
     // Posix version.
     
     // Work area.
@@ -62,6 +62,11 @@ namespace DAC {
       free(demangled);
       demangled = 0;
     }
+    
+  #else
+    
+    retval = "Unable to determine compiler, cannot demangle.";
+    
   #endif
     
     // We done, return.

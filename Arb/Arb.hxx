@@ -98,17 +98,15 @@ namespace DAC {
       bool operator ! () const;
       
       // Casting operators.
-      operator bool                   () const;
-      operator signed   char          () const;
-      operator unsigned char          () const;
-      operator signed   short int     () const;
-      operator unsigned short int     () const;
-      operator signed   int           () const;
-      operator unsigned int           () const;
-      operator signed   long int      () const;
-      operator unsigned long int      () const;
-      operator signed   long long int () const;
-      operator unsigned long long int () const;
+      operator bool               () const;
+      operator signed   char      () const;
+      operator unsigned char      () const;
+      operator signed   short int () const;
+      operator unsigned short int () const;
+      operator signed   int       () const;
+      operator unsigned int       () const;
+      operator signed   long int  () const;
+      operator unsigned long int  () const;
       
       // Assignment operator.
                          Arb& operator = (Arb         const& number);
@@ -451,121 +449,103 @@ namespace DAC {
    *************************************************************************/
   
   // Set from a built-in type.
-  template <> inline Arb& Arb::set (bool                   const number);
-  template <> inline Arb& Arb::set (unsigned char          const number);
-  template <> inline Arb& Arb::set (signed   char          const number);
-  template <> inline Arb& Arb::set (unsigned short int     const number);
-  template <> inline Arb& Arb::set (signed   short int     const number);
-  template <> inline Arb& Arb::set (unsigned int           const number);
-  template <> inline Arb& Arb::set (signed   int           const number);
-  template <> inline Arb& Arb::set (unsigned long int      const number);
-  template <> inline Arb& Arb::set (signed   long int      const number);
-  template <> inline Arb& Arb::set (unsigned long long int const number);
-  template <> inline Arb& Arb::set (signed   long long int const number);
+  template <> inline Arb& Arb::set (bool               const number);
+  template <> inline Arb& Arb::set (unsigned char      const number);
+  template <> inline Arb& Arb::set (signed   char      const number);
+  template <> inline Arb& Arb::set (unsigned short int const number);
+  template <> inline Arb& Arb::set (signed   short int const number);
+  template <> inline Arb& Arb::set (unsigned int       const number);
+  template <> inline Arb& Arb::set (signed   int       const number);
+  template <> inline Arb& Arb::set (unsigned long int  const number);
+  template <> inline Arb& Arb::set (signed   long int  const number);
   
   // Multiply by a built-in type.
-  template <> inline Arb& Arb::op_mul (bool                   const number);
-  template <> inline Arb& Arb::op_mul (unsigned char          const number);
-  template <> inline Arb& Arb::op_mul (signed   char          const number);
-  template <> inline Arb& Arb::op_mul (unsigned short int     const number);
-  template <> inline Arb& Arb::op_mul (signed   short int     const number);
-  template <> inline Arb& Arb::op_mul (unsigned int           const number);
-  template <> inline Arb& Arb::op_mul (signed   int           const number);
-  template <> inline Arb& Arb::op_mul (unsigned long int      const number);
-  template <> inline Arb& Arb::op_mul (signed   long int      const number);
-  template <> inline Arb& Arb::op_mul (unsigned long long int const number);
-  template <> inline Arb& Arb::op_mul (signed   long long int const number);
+  template <> inline Arb& Arb::op_mul (bool               const number);
+  template <> inline Arb& Arb::op_mul (unsigned char      const number);
+  template <> inline Arb& Arb::op_mul (signed   char      const number);
+  template <> inline Arb& Arb::op_mul (unsigned short int const number);
+  template <> inline Arb& Arb::op_mul (signed   short int const number);
+  template <> inline Arb& Arb::op_mul (unsigned int       const number);
+  template <> inline Arb& Arb::op_mul (signed   int       const number);
+  template <> inline Arb& Arb::op_mul (unsigned long int  const number);
+  template <> inline Arb& Arb::op_mul (signed   long int  const number);
   
   // Divide by a built-in type.
-  template <> inline Arb& Arb::op_div (bool                   const number);
-  template <> inline Arb& Arb::op_div (unsigned char          const number);
-  template <> inline Arb& Arb::op_div (signed   char          const number);
-  template <> inline Arb& Arb::op_div (unsigned short int     const number);
-  template <> inline Arb& Arb::op_div (signed   short int     const number);
-  template <> inline Arb& Arb::op_div (unsigned int           const number);
-  template <> inline Arb& Arb::op_div (signed   int           const number);
-  template <> inline Arb& Arb::op_div (unsigned long int      const number);
-  template <> inline Arb& Arb::op_div (signed   long int      const number);
-  template <> inline Arb& Arb::op_div (unsigned long long int const number);
-  template <> inline Arb& Arb::op_div (signed   long long int const number);
+  template <> inline Arb& Arb::op_div (bool               const number);
+  template <> inline Arb& Arb::op_div (unsigned char      const number);
+  template <> inline Arb& Arb::op_div (signed   char      const number);
+  template <> inline Arb& Arb::op_div (unsigned short int const number);
+  template <> inline Arb& Arb::op_div (signed   short int const number);
+  template <> inline Arb& Arb::op_div (unsigned int       const number);
+  template <> inline Arb& Arb::op_div (signed   int       const number);
+  template <> inline Arb& Arb::op_div (unsigned long int  const number);
+  template <> inline Arb& Arb::op_div (signed   long int  const number);
   
   // Modulo divide by a built-in type.
-  template <> inline Arb& Arb::op_mod (bool                   const number);
-  template <> inline Arb& Arb::op_mod (unsigned char          const number);
-  template <> inline Arb& Arb::op_mod (signed   char          const number);
-  template <> inline Arb& Arb::op_mod (unsigned short int     const number);
-  template <> inline Arb& Arb::op_mod (signed   short int     const number);
-  template <> inline Arb& Arb::op_mod (unsigned int           const number);
-  template <> inline Arb& Arb::op_mod (signed   int           const number);
-  template <> inline Arb& Arb::op_mod (unsigned long int      const number);
-  template <> inline Arb& Arb::op_mod (signed   long int      const number);
-  template <> inline Arb& Arb::op_mod (unsigned long long int const number);
-  template <> inline Arb& Arb::op_mod (signed   long long int const number);
+  template <> inline Arb& Arb::op_mod (bool               const number);
+  template <> inline Arb& Arb::op_mod (unsigned char      const number);
+  template <> inline Arb& Arb::op_mod (signed   char      const number);
+  template <> inline Arb& Arb::op_mod (unsigned short int const number);
+  template <> inline Arb& Arb::op_mod (signed   short int const number);
+  template <> inline Arb& Arb::op_mod (unsigned int       const number);
+  template <> inline Arb& Arb::op_mod (signed   int       const number);
+  template <> inline Arb& Arb::op_mod (unsigned long int  const number);
+  template <> inline Arb& Arb::op_mod (signed   long int  const number);
   
   // Add a built-in type.
-  template <> inline Arb& Arb::op_add (bool                   const number);
-  template <> inline Arb& Arb::op_add (unsigned char          const number);
-  template <> inline Arb& Arb::op_add (signed   char          const number);
-  template <> inline Arb& Arb::op_add (unsigned short int     const number);
-  template <> inline Arb& Arb::op_add (signed   short int     const number);
-  template <> inline Arb& Arb::op_add (unsigned int           const number);
-  template <> inline Arb& Arb::op_add (signed   int           const number);
-  template <> inline Arb& Arb::op_add (unsigned long int      const number);
-  template <> inline Arb& Arb::op_add (signed   long int      const number);
-  template <> inline Arb& Arb::op_add (unsigned long long int const number);
-  template <> inline Arb& Arb::op_add (signed   long long int const number);
+  template <> inline Arb& Arb::op_add (bool               const number);
+  template <> inline Arb& Arb::op_add (unsigned char      const number);
+  template <> inline Arb& Arb::op_add (signed   char      const number);
+  template <> inline Arb& Arb::op_add (unsigned short int const number);
+  template <> inline Arb& Arb::op_add (signed   short int const number);
+  template <> inline Arb& Arb::op_add (unsigned int       const number);
+  template <> inline Arb& Arb::op_add (signed   int       const number);
+  template <> inline Arb& Arb::op_add (unsigned long int  const number);
+  template <> inline Arb& Arb::op_add (signed   long int  const number);
   
   // Subtract a built-in type.
-  template <> inline Arb& Arb::op_sub (bool                   const number);
-  template <> inline Arb& Arb::op_sub (unsigned char          const number);
-  template <> inline Arb& Arb::op_sub (signed   char          const number);
-  template <> inline Arb& Arb::op_sub (unsigned short int     const number);
-  template <> inline Arb& Arb::op_sub (signed   short int     const number);
-  template <> inline Arb& Arb::op_sub (unsigned int           const number);
-  template <> inline Arb& Arb::op_sub (signed   int           const number);
-  template <> inline Arb& Arb::op_sub (unsigned long int      const number);
-  template <> inline Arb& Arb::op_sub (signed   long int      const number);
-  template <> inline Arb& Arb::op_sub (unsigned long long int const number);
-  template <> inline Arb& Arb::op_sub (signed   long long int const number);
+  template <> inline Arb& Arb::op_sub (bool               const number);
+  template <> inline Arb& Arb::op_sub (unsigned char      const number);
+  template <> inline Arb& Arb::op_sub (signed   char      const number);
+  template <> inline Arb& Arb::op_sub (unsigned short int const number);
+  template <> inline Arb& Arb::op_sub (signed   short int const number);
+  template <> inline Arb& Arb::op_sub (unsigned int       const number);
+  template <> inline Arb& Arb::op_sub (signed   int       const number);
+  template <> inline Arb& Arb::op_sub (unsigned long int  const number);
+  template <> inline Arb& Arb::op_sub (signed   long int  const number);
   
   // Test if greater than a built-in type.
-  template <> inline bool Arb::op_gt (bool                   const number) const;
-  template <> inline bool Arb::op_gt (unsigned char          const number) const;
-  template <> inline bool Arb::op_gt (signed   char          const number) const;
-  template <> inline bool Arb::op_gt (unsigned short int     const number) const;
-  template <> inline bool Arb::op_gt (signed   short int     const number) const;
-  template <> inline bool Arb::op_gt (unsigned int           const number) const;
-  template <> inline bool Arb::op_gt (signed   int           const number) const;
-  template <> inline bool Arb::op_gt (unsigned long int      const number) const;
-  template <> inline bool Arb::op_gt (signed   long int      const number) const;
-  template <> inline bool Arb::op_gt (unsigned long long int const number) const;
-  template <> inline bool Arb::op_gt (signed   long long int const number) const;
+  template <> inline bool Arb::op_gt (bool               const number) const;
+  template <> inline bool Arb::op_gt (unsigned char      const number) const;
+  template <> inline bool Arb::op_gt (signed   char      const number) const;
+  template <> inline bool Arb::op_gt (unsigned short int const number) const;
+  template <> inline bool Arb::op_gt (signed   short int const number) const;
+  template <> inline bool Arb::op_gt (unsigned int       const number) const;
+  template <> inline bool Arb::op_gt (signed   int       const number) const;
+  template <> inline bool Arb::op_gt (unsigned long int  const number) const;
+  template <> inline bool Arb::op_gt (signed   long int  const number) const;
   
   // Test if less than a built-in type.
-  template <> inline bool Arb::op_lt (bool                   const number) const;
-  template <> inline bool Arb::op_lt (unsigned char          const number) const;
-  template <> inline bool Arb::op_lt (signed   char          const number) const;
-  template <> inline bool Arb::op_lt (unsigned short int     const number) const;
-  template <> inline bool Arb::op_lt (signed   short int     const number) const;
-  template <> inline bool Arb::op_lt (unsigned int           const number) const;
-  template <> inline bool Arb::op_lt (signed   int           const number) const;
-  template <> inline bool Arb::op_lt (unsigned long int      const number) const;
-  template <> inline bool Arb::op_lt (signed   long int      const number) const;
-  template <> inline bool Arb::op_lt (unsigned long long int const number) const;
-  template <> inline bool Arb::op_lt (signed   long long int const number) const;
+  template <> inline bool Arb::op_lt (bool               const number) const;
+  template <> inline bool Arb::op_lt (unsigned char      const number) const;
+  template <> inline bool Arb::op_lt (signed   char      const number) const;
+  template <> inline bool Arb::op_lt (unsigned short int const number) const;
+  template <> inline bool Arb::op_lt (signed   short int const number) const;
+  template <> inline bool Arb::op_lt (unsigned int       const number) const;
+  template <> inline bool Arb::op_lt (signed   int       const number) const;
+  template <> inline bool Arb::op_lt (unsigned long int  const number) const;
+  template <> inline bool Arb::op_lt (signed   long int  const number) const;
   
   // Test if equal to a built-in type.
-  template <> inline bool Arb::op_eq (bool                   const number) const;
-  template <> inline bool Arb::op_eq (unsigned char          const number) const;
-  template <> inline bool Arb::op_eq (signed   char          const number) const;
-  template <> inline bool Arb::op_eq (unsigned short int     const number) const;
-  template <> inline bool Arb::op_eq (signed   short int     const number) const;
-  template <> inline bool Arb::op_eq (unsigned int           const number) const;
-  template <> inline bool Arb::op_eq (signed   int           const number) const;
-  template <> inline bool Arb::op_eq (unsigned long int      const number) const;
-  template <> inline bool Arb::op_eq (signed   long int      const number) const;
-  template <> inline bool Arb::op_eq (unsigned long long int const number) const;
-  template <> inline bool Arb::op_eq (signed   long long int const number) const;
+  template <> inline bool Arb::op_eq (bool               const number) const;
+  template <> inline bool Arb::op_eq (unsigned char      const number) const;
+  template <> inline bool Arb::op_eq (signed   char      const number) const;
+  template <> inline bool Arb::op_eq (unsigned short int const number) const;
+  template <> inline bool Arb::op_eq (signed   short int const number) const;
+  template <> inline bool Arb::op_eq (unsigned int       const number) const;
+  template <> inline bool Arb::op_eq (signed   int       const number) const;
+  template <> inline bool Arb::op_eq (unsigned long int  const number) const;
+  template <> inline bool Arb::op_eq (signed   long int  const number) const;
   
 }
 
@@ -635,17 +615,15 @@ namespace DAC {
   inline bool Arb::operator ! () const { return !static_cast<bool>(*this); }
   
   // Casting operators.
-  inline Arb::operator bool                   () const { return !isZero();                       }
-  inline Arb::operator signed   char          () const { return Value<signed   char         >(); }
-  inline Arb::operator unsigned char          () const { return Value<unsigned char         >(); }
-  inline Arb::operator signed   short int     () const { return Value<signed   short int    >(); }
-  inline Arb::operator unsigned short int     () const { return Value<unsigned short int    >(); }
-  inline Arb::operator signed   int           () const { return Value<signed   int          >(); }
-  inline Arb::operator unsigned int           () const { return Value<unsigned int          >(); }
-  inline Arb::operator signed   long int      () const { return Value<signed   long int     >(); }
-  inline Arb::operator unsigned long int      () const { return Value<unsigned long int     >(); }
-  inline Arb::operator signed   long long int () const { return Value<signed   long long int>(); }
-  inline Arb::operator unsigned long long int () const { return Value<unsigned long long int>(); }
+  inline Arb::operator bool               () const { return !isZero();                   }
+  inline Arb::operator signed   char      () const { return Value<signed   char     >(); }
+  inline Arb::operator unsigned char      () const { return Value<unsigned char     >(); }
+  inline Arb::operator signed   short int () const { return Value<signed   short int>(); }
+  inline Arb::operator unsigned short int () const { return Value<unsigned short int>(); }
+  inline Arb::operator signed   int       () const { return Value<signed   int      >(); }
+  inline Arb::operator unsigned int       () const { return Value<unsigned int      >(); }
+  inline Arb::operator signed   long int  () const { return Value<signed   long int >(); }
+  inline Arb::operator unsigned long int  () const { return Value<unsigned long int >(); }
   
   // Assignment operator.
                      inline Arb& Arb::operator = (Arb         const& number) { return copy(number);              }
@@ -694,9 +672,7 @@ namespace DAC {
   template <>        inline Arb& Arb::set (unsigned int            const  number) { return _set_uint(number);   }
   template <>        inline Arb& Arb::set (signed   int            const  number) { return _set_sint(number);   }
   template <>        inline Arb& Arb::set (unsigned long int       const  number) { return _set_uint(number);   }
-  template <>        inline Arb& Arb::set (signed   long int       const  number) { return _set_sint(number);   }
-  template <>        inline Arb& Arb::set (unsigned long long int  const  number) { return _set_sint(number);   }
-  template <>        inline Arb& Arb::set (signed   long long int  const  number) { return _set_sint(number);   }
+  template <>        inline Arb& Arb::set (signed   long int   const  number) { return _set_sint(number);   }
   template <class T> inline Arb& Arb::set (T                       const  number) { return _set_othr(number);   }
   
   // Multiply by an integral type
@@ -768,18 +744,16 @@ namespace DAC {
     }
     
   }
-  template <>        inline Arb& Arb::op_mul (bool                   const number) { return op_mul(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   char          const number) { return op_mul(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned char          const number) { return op_mul(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   short int     const number) { return op_mul(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned short int     const number) { return op_mul(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   int           const number) { return op_mul(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned int           const number) { return op_mul(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   long int      const number) { return op_mul(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned long int      const number) { return op_mul(SafeInt<unsigned long int     >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   long long int const number) { return op_mul(SafeInt<signed   long long int>(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned long long int const number) { return op_mul(SafeInt<unsigned long long int>(number)); }
-  template <class T> inline Arb& Arb::op_mul (T                      const number) { return op_mul(Arb(number));                             }
+  template <>        inline Arb& Arb::op_mul (bool               const number) { return op_mul(SafeInt<bool                  >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   char      const number) { return op_mul(SafeInt<signed   char         >(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned char      const number) { return op_mul(SafeInt<unsigned char         >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   short int const number) { return op_mul(SafeInt<signed   short int    >(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned short int const number) { return op_mul(SafeInt<unsigned short int    >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   int       const number) { return op_mul(SafeInt<signed   int          >(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned int       const number) { return op_mul(SafeInt<unsigned int          >(number)); }
+  template <>        inline Arb& Arb::op_mul (signed   long int  const number) { return op_mul(SafeInt<signed   long int     >(number)); }
+  template <>        inline Arb& Arb::op_mul (unsigned long int  const number) { return op_mul(SafeInt<unsigned long int     >(number)); }
+  template <class T> inline Arb& Arb::op_mul (T                  const number) { return op_mul(Arb(number));                             }
   
   // Divide by an integral type.
   template <class T> Arb& Arb::op_div (SafeInt<T> const& number) {
@@ -839,18 +813,16 @@ namespace DAC {
     }
     
   }
-  template <>        inline Arb& Arb::op_div (bool                   const number) { return op_div(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   char          const number) { return op_div(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned char          const number) { return op_div(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   short int     const number) { return op_div(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned short int     const number) { return op_div(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   int           const number) { return op_div(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned int           const number) { return op_div(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   long int      const number) { return op_div(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned long int      const number) { return op_div(SafeInt<unsigned long int     >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   long long int const number) { return op_div(SafeInt<signed   long long int>(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned long long int const number) { return op_div(SafeInt<unsigned long long int>(number)); }
-  template <class T> inline Arb& Arb::op_div (T                      const number) { return op_div(Arb(number));                             }
+  template <>        inline Arb& Arb::op_div (bool               const number) { return op_div(SafeInt<bool                  >(number)); }
+  template <>        inline Arb& Arb::op_div (signed   char      const number) { return op_div(SafeInt<signed   char         >(number)); }
+  template <>        inline Arb& Arb::op_div (unsigned char      const number) { return op_div(SafeInt<unsigned char         >(number)); }
+  template <>        inline Arb& Arb::op_div (signed   short int const number) { return op_div(SafeInt<signed   short int    >(number)); }
+  template <>        inline Arb& Arb::op_div (unsigned short int const number) { return op_div(SafeInt<unsigned short int    >(number)); }
+  template <>        inline Arb& Arb::op_div (signed   int       const number) { return op_div(SafeInt<signed   int          >(number)); }
+  template <>        inline Arb& Arb::op_div (unsigned int       const number) { return op_div(SafeInt<unsigned int          >(number)); }
+  template <>        inline Arb& Arb::op_div (signed   long int  const number) { return op_div(SafeInt<signed   long int     >(number)); }
+  template <>        inline Arb& Arb::op_div (unsigned long int  const number) { return op_div(SafeInt<unsigned long int     >(number)); }
+  template <class T> inline Arb& Arb::op_div (T                  const number) { return op_div(Arb(number));                             }
   
   // Modulo division by an integral type.
   template <class T> Arb& Arb::op_mod (SafeInt<T> const& number) {
@@ -881,18 +853,16 @@ namespace DAC {
     return *this;
     
   }
-  template <>        inline Arb& Arb::op_mod (bool                   const number) { return op_mod(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   char          const number) { return op_mod(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned char          const number) { return op_mod(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   short int     const number) { return op_mod(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned short int     const number) { return op_mod(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   int           const number) { return op_mod(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned int           const number) { return op_mod(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   long int      const number) { return op_mod(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned long int      const number) { return op_mod(SafeInt<unsigned long int     >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   long long int const number) { return op_mod(SafeInt<signed   long long int>(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned long long int const number) { return op_mod(SafeInt<unsigned long long int>(number)); }
-  template <class T> inline Arb& Arb::op_mod (T                      const number) { return op_mod(Arb(number));                             }
+  template <>        inline Arb& Arb::op_mod (bool               const number) { return op_mod(SafeInt<bool                  >(number)); }
+  template <>        inline Arb& Arb::op_mod (signed   char      const number) { return op_mod(SafeInt<signed   char         >(number)); }
+  template <>        inline Arb& Arb::op_mod (unsigned char      const number) { return op_mod(SafeInt<unsigned char         >(number)); }
+  template <>        inline Arb& Arb::op_mod (signed   short int const number) { return op_mod(SafeInt<signed   short int    >(number)); }
+  template <>        inline Arb& Arb::op_mod (unsigned short int const number) { return op_mod(SafeInt<unsigned short int    >(number)); }
+  template <>        inline Arb& Arb::op_mod (signed   int       const number) { return op_mod(SafeInt<signed   int          >(number)); }
+  template <>        inline Arb& Arb::op_mod (unsigned int       const number) { return op_mod(SafeInt<unsigned int          >(number)); }
+  template <>        inline Arb& Arb::op_mod (signed   long int  const number) { return op_mod(SafeInt<signed   long int     >(number)); }
+  template <>        inline Arb& Arb::op_mod (unsigned long int  const number) { return op_mod(SafeInt<unsigned long int     >(number)); }
+  template <class T> inline Arb& Arb::op_mod (T                  const number) { return op_mod(Arb(number));                             }
   
   // Addition of an integral type.
   template <class T> Arb& Arb::op_add (SafeInt<T> const& number) {
@@ -938,18 +908,16 @@ namespace DAC {
     }
     
   }
-  template <>        inline Arb& Arb::op_add (bool                   const number) { return op_add(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   char          const number) { return op_add(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned char          const number) { return op_add(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   short int     const number) { return op_add(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned short int     const number) { return op_add(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   int           const number) { return op_add(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned int           const number) { return op_add(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   long int      const number) { return op_add(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned long int      const number) { return op_add(SafeInt<unsigned long int     >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   long long int const number) { return op_add(SafeInt<signed   long long int>(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned long long int const number) { return op_add(SafeInt<unsigned long long int>(number)); }
-  template <class T> inline Arb& Arb::op_add (T                      const number) { return op_add(Arb(number));                             }
+  template <>        inline Arb& Arb::op_add (bool               const number) { return op_add(SafeInt<bool                  >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   char      const number) { return op_add(SafeInt<signed   char         >(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned char      const number) { return op_add(SafeInt<unsigned char         >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   short int const number) { return op_add(SafeInt<signed   short int    >(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned short int const number) { return op_add(SafeInt<unsigned short int    >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   int       const number) { return op_add(SafeInt<signed   int          >(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned int       const number) { return op_add(SafeInt<unsigned int          >(number)); }
+  template <>        inline Arb& Arb::op_add (signed   long int  const number) { return op_add(SafeInt<signed   long int     >(number)); }
+  template <>        inline Arb& Arb::op_add (unsigned long int  const number) { return op_add(SafeInt<unsigned long int     >(number)); }
+  template <class T> inline Arb& Arb::op_add (T                  const number) { return op_add(Arb(number));                             }
   
   // Subtraction of an integral type.
   template <class T> Arb& Arb::op_sub (SafeInt<T> const& number) {
@@ -1013,18 +981,16 @@ namespace DAC {
     }
     
   }
-  template <>        inline Arb& Arb::op_sub (bool                   const number) { return op_sub(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   char          const number) { return op_sub(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned char          const number) { return op_sub(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   short int     const number) { return op_sub(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned short int     const number) { return op_sub(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   int           const number) { return op_sub(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned int           const number) { return op_sub(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   long int      const number) { return op_sub(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned long int      const number) { return op_sub(SafeInt<unsigned long int     >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   long long int const number) { return op_sub(SafeInt<signed   long long int>(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned long long int const number) { return op_sub(SafeInt<unsigned long long int>(number)); }
-  template <class T> inline Arb& Arb::op_sub (T                      const number) { return op_sub(Arb(number));                             }
+  template <>        inline Arb& Arb::op_sub (bool               const number) { return op_sub(SafeInt<bool                  >(number)); }
+  template <>        inline Arb& Arb::op_sub (signed   char      const number) { return op_sub(SafeInt<signed   char         >(number)); }
+  template <>        inline Arb& Arb::op_sub (unsigned char      const number) { return op_sub(SafeInt<unsigned char         >(number)); }
+  template <>        inline Arb& Arb::op_sub (signed   short int const number) { return op_sub(SafeInt<signed   short int    >(number)); }
+  template <>        inline Arb& Arb::op_sub (unsigned short int const number) { return op_sub(SafeInt<unsigned short int    >(number)); }
+  template <>        inline Arb& Arb::op_sub (signed   int       const number) { return op_sub(SafeInt<signed   int          >(number)); }
+  template <>        inline Arb& Arb::op_sub (unsigned int       const number) { return op_sub(SafeInt<unsigned int          >(number)); }
+  template <>        inline Arb& Arb::op_sub (signed   long int  const number) { return op_sub(SafeInt<signed   long int     >(number)); }
+  template <>        inline Arb& Arb::op_sub (unsigned long int  const number) { return op_sub(SafeInt<unsigned long int     >(number)); }
+  template <class T> inline Arb& Arb::op_sub (T                  const number) { return op_sub(Arb(number));                             }
   
   // Greater than an integral type.
   template <class T> bool Arb::op_gt (SafeInt<T> const& number) const {
@@ -1064,18 +1030,16 @@ namespace DAC {
     }
     
   }
-  template <>        inline bool Arb::op_gt (bool                   const number) const { return op_gt(SafeInt<bool                  >(number)); }
-  template <>        inline bool Arb::op_gt (signed   char          const number) const { return op_gt(SafeInt<signed   char         >(number)); }
-  template <>        inline bool Arb::op_gt (unsigned char          const number) const { return op_gt(SafeInt<unsigned char         >(number)); }
-  template <>        inline bool Arb::op_gt (signed   short int     const number) const { return op_gt(SafeInt<signed   short int    >(number)); }
-  template <>        inline bool Arb::op_gt (unsigned short int     const number) const { return op_gt(SafeInt<unsigned short int    >(number)); }
-  template <>        inline bool Arb::op_gt (signed   int           const number) const { return op_gt(SafeInt<signed   int          >(number)); }
-  template <>        inline bool Arb::op_gt (unsigned int           const number) const { return op_gt(SafeInt<unsigned int          >(number)); }
-  template <>        inline bool Arb::op_gt (signed   long int      const number) const { return op_gt(SafeInt<signed   long int     >(number)); }
-  template <>        inline bool Arb::op_gt (unsigned long int      const number) const { return op_gt(SafeInt<unsigned long int     >(number)); }
-  template <>        inline bool Arb::op_gt (signed   long long int const number) const { return op_gt(SafeInt<signed   long long int>(number)); }
-  template <>        inline bool Arb::op_gt (unsigned long long int const number) const { return op_gt(SafeInt<unsigned long long int>(number)); }
-  template <class T> inline bool Arb::op_gt (T                      const number) const { return op_gt(Arb(number));                             }
+  template <>        inline bool Arb::op_gt (bool               const number) const { return op_gt(SafeInt<bool                  >(number)); }
+  template <>        inline bool Arb::op_gt (signed   char      const number) const { return op_gt(SafeInt<signed   char         >(number)); }
+  template <>        inline bool Arb::op_gt (unsigned char      const number) const { return op_gt(SafeInt<unsigned char         >(number)); }
+  template <>        inline bool Arb::op_gt (signed   short int const number) const { return op_gt(SafeInt<signed   short int    >(number)); }
+  template <>        inline bool Arb::op_gt (unsigned short int const number) const { return op_gt(SafeInt<unsigned short int    >(number)); }
+  template <>        inline bool Arb::op_gt (signed   int       const number) const { return op_gt(SafeInt<signed   int          >(number)); }
+  template <>        inline bool Arb::op_gt (unsigned int       const number) const { return op_gt(SafeInt<unsigned int          >(number)); }
+  template <>        inline bool Arb::op_gt (signed   long int  const number) const { return op_gt(SafeInt<signed   long int     >(number)); }
+  template <>        inline bool Arb::op_gt (unsigned long int  const number) const { return op_gt(SafeInt<unsigned long int     >(number)); }
+  template <class T> inline bool Arb::op_gt (T                  const number) const { return op_gt(Arb(number));                             }
   
   // Less than an integral type.
   template <class T> bool Arb::op_lt (SafeInt<T> const& number) const {
@@ -1115,18 +1079,16 @@ namespace DAC {
     }
     
   }
-  template <>        inline bool Arb::op_lt (bool                   const number) const { return op_lt(SafeInt<bool                  >(number)); }
-  template <>        inline bool Arb::op_lt (signed   char          const number) const { return op_lt(SafeInt<signed   char         >(number)); }
-  template <>        inline bool Arb::op_lt (unsigned char          const number) const { return op_lt(SafeInt<unsigned char         >(number)); }
-  template <>        inline bool Arb::op_lt (signed   short int     const number) const { return op_lt(SafeInt<signed   short int    >(number)); }
-  template <>        inline bool Arb::op_lt (unsigned short int     const number) const { return op_lt(SafeInt<unsigned short int    >(number)); }
-  template <>        inline bool Arb::op_lt (signed   int           const number) const { return op_lt(SafeInt<signed   int          >(number)); }
-  template <>        inline bool Arb::op_lt (unsigned int           const number) const { return op_lt(SafeInt<unsigned int          >(number)); }
-  template <>        inline bool Arb::op_lt (signed   long int      const number) const { return op_lt(SafeInt<signed   long int     >(number)); }
-  template <>        inline bool Arb::op_lt (unsigned long int      const number) const { return op_lt(SafeInt<unsigned long int     >(number)); }
-  template <>        inline bool Arb::op_lt (signed   long long int const number) const { return op_lt(SafeInt<signed   long long int>(number)); }
-  template <>        inline bool Arb::op_lt (unsigned long long int const number) const { return op_lt(SafeInt<unsigned long long int>(number)); }
-  template <class T> inline bool Arb::op_lt (T                      const number) const { return op_lt(Arb(number));                             }
+  template <>        inline bool Arb::op_lt (bool               const number) const { return op_lt(SafeInt<bool                  >(number)); }
+  template <>        inline bool Arb::op_lt (signed   char      const number) const { return op_lt(SafeInt<signed   char         >(number)); }
+  template <>        inline bool Arb::op_lt (unsigned char      const number) const { return op_lt(SafeInt<unsigned char         >(number)); }
+  template <>        inline bool Arb::op_lt (signed   short int const number) const { return op_lt(SafeInt<signed   short int    >(number)); }
+  template <>        inline bool Arb::op_lt (unsigned short int const number) const { return op_lt(SafeInt<unsigned short int    >(number)); }
+  template <>        inline bool Arb::op_lt (signed   int       const number) const { return op_lt(SafeInt<signed   int          >(number)); }
+  template <>        inline bool Arb::op_lt (unsigned int       const number) const { return op_lt(SafeInt<unsigned int          >(number)); }
+  template <>        inline bool Arb::op_lt (signed   long int  const number) const { return op_lt(SafeInt<signed   long int     >(number)); }
+  template <>        inline bool Arb::op_lt (unsigned long int  const number) const { return op_lt(SafeInt<unsigned long int     >(number)); }
+  template <class T> inline bool Arb::op_lt (T                  const number) const { return op_lt(Arb(number));                             }
   
   // Equal to an integral type.
   template <class T> bool Arb::op_eq (SafeInt<T> const& number) const {
@@ -1151,18 +1113,16 @@ namespace DAC {
     }
     
   }
-  template <>        inline bool Arb::op_eq (bool                   const number) const { return op_eq(SafeInt<bool                  >(number)); }
-  template <>        inline bool Arb::op_eq (signed   char          const number) const { return op_eq(SafeInt<signed   char         >(number)); }
-  template <>        inline bool Arb::op_eq (unsigned char          const number) const { return op_eq(SafeInt<unsigned char         >(number)); }
-  template <>        inline bool Arb::op_eq (signed   short int     const number) const { return op_eq(SafeInt<signed   short int    >(number)); }
-  template <>        inline bool Arb::op_eq (unsigned short int     const number) const { return op_eq(SafeInt<unsigned short int    >(number)); }
-  template <>        inline bool Arb::op_eq (signed   int           const number) const { return op_eq(SafeInt<signed   int          >(number)); }
-  template <>        inline bool Arb::op_eq (unsigned int           const number) const { return op_eq(SafeInt<unsigned int          >(number)); }
-  template <>        inline bool Arb::op_eq (signed   long int      const number) const { return op_eq(SafeInt<signed   long int     >(number)); }
-  template <>        inline bool Arb::op_eq (unsigned long int      const number) const { return op_eq(SafeInt<unsigned long int     >(number)); }
-  template <>        inline bool Arb::op_eq (signed   long long int const number) const { return op_eq(SafeInt<signed   long long int>(number)); }
-  template <>        inline bool Arb::op_eq (unsigned long long int const number) const { return op_eq(SafeInt<unsigned long long int>(number)); }
-  template <class T> inline bool Arb::op_eq (T                      const number) const { return op_eq(Arb(number));                             }
+  template <>        inline bool Arb::op_eq (bool               const number) const { return op_eq(SafeInt<bool                  >(number)); }
+  template <>        inline bool Arb::op_eq (signed   char      const number) const { return op_eq(SafeInt<signed   char         >(number)); }
+  template <>        inline bool Arb::op_eq (unsigned char      const number) const { return op_eq(SafeInt<unsigned char         >(number)); }
+  template <>        inline bool Arb::op_eq (signed   short int const number) const { return op_eq(SafeInt<signed   short int    >(number)); }
+  template <>        inline bool Arb::op_eq (unsigned short int const number) const { return op_eq(SafeInt<unsigned short int    >(number)); }
+  template <>        inline bool Arb::op_eq (signed   int       const number) const { return op_eq(SafeInt<signed   int          >(number)); }
+  template <>        inline bool Arb::op_eq (unsigned int       const number) const { return op_eq(SafeInt<unsigned int          >(number)); }
+  template <>        inline bool Arb::op_eq (signed   long int  const number) const { return op_eq(SafeInt<signed   long int     >(number)); }
+  template <>        inline bool Arb::op_eq (unsigned long int  const number) const { return op_eq(SafeInt<unsigned long int     >(number)); }
+  template <class T> inline bool Arb::op_eq (T                  const number) const { return op_eq(Arb(number));                             }
   
   // Comparison operator backends.
                      inline bool Arb::op_ge (Arb        const& number) const { return !op_lt(number); }

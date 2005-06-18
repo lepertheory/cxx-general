@@ -1,26 +1,41 @@
 # Imports.
 import os
 
+# Create options.
+opts = Options('custom.py')
+opts.Add(BoolOption('RELEASE', 'Set for a release build.', default = 0))
+opts.Add(EnumOption('TOOLSET', 'Select the toolkit used to build.', allowed_values = ('mingw', 'gcc', 'msvc', 'default'), default = 'default'))
+
 # Create the environment.
 env = Environment(
+  options = opts,
   ENV     = os.environ,
   CPPPATH = ['.'],
-  tools   = ['mingw', 'gcc', 'msvc']
+  tools   = []
 )
 
-# Should we configure?
-doconfig = BUILD_TARGETS != []
+# Set the toolset to use.
+if env['TOOLSET'] == 'default' :
+  env.Tool('mingw')
+  env.Tool('gcc')
+# env.Tool('msvc') -- This just isn't ready yet.
+else :
+  env.Tool(env['TOOLSET'])
+
+# Generate help text.
+Help(opts.GenerateHelpText(env))
 
 # Set compiler options.
-if (env['CC'] == 'gcc') :
+if env['CC'] == 'gcc' :
   # -g enables debug mode.
   # -O0 disables optimization.
   # -ansi ensures this is strict ANSI code.
   # -pedantic-errors enables additional error checking.
   # -Wall enables all warnings.
   # -pipe communicates between CPP and compiler with a pipe instead of tmp.
-  env.Append(CCFLAGS = '-g -O0 -ansi -pedantic-errors -Wall -pipe')
-if (env['CC'] == 'cl') :
+  env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -pipe')
+  env.Append(CPPDEFINES = 'CC_GCC')
+if env['CC'] == 'cl' :
   # /GR enables RTTI.
   # /EHsc enables synchronous exceptions, assumes that extern C functions
   #   never throw.
@@ -29,7 +44,8 @@ if (env['CC'] == 'cl') :
   # /Za disables Microsoft extensions.
   # /Wall enables all warnings. -- turned off because Microsoft's own headers
   #   trigger tons of warnings.
-  env.Append(CCFLAGS = '/GR /EHsc /Od /Wp64 /Za')
+  env.Append(CCFLAGS    = '/GR /EHsc /Od /Wp64 /Za')
+  env.Append(CPPDEFINES = 'CC_CL')
 
 # Do not build everything by default, do clean everything.
 if not env.GetOption('clean') :

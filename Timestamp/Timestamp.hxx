@@ -238,17 +238,15 @@ namespace DAC {
       Timestamp  operator -- (int);
       
       // Casting operators.
-      operator bool                   () const;
-      operator signed   char          () const;
-      operator unsigned char          () const;
-      operator signed   short int     () const;
-      operator unsigned short int     () const;
-      operator signed   int           () const;
-      operator unsigned int           () const;
-      operator signed   long int      () const;
-      operator unsigned long int      () const;
-      operator signed   long long int () const;
-      operator unsigned long long int () const;
+      operator bool               () const;
+      operator signed   char      () const;
+      operator unsigned char      () const;
+      operator signed   short int () const;
+      operator unsigned short int () const;
+      operator signed   int       () const;
+      operator unsigned int       () const;
+      operator signed   long int  () const;
+      operator unsigned long int  () const;
       
       // Assignment operator.
       Timestamp& operator = (Timestamp const& ts);
@@ -481,17 +479,15 @@ namespace DAC {
   inline Timestamp  Timestamp::operator -- (int) { Timestamp retval(*this); op_sub(TimeVal(1), _incrementtype); return retval; }
   
   // Casting operators.
-  inline Timestamp::operator bool                   () const { return Julian(); }
-  inline Timestamp::operator signed   char          () const { return Julian(); }
-  inline Timestamp::operator unsigned char          () const { return Julian(); }
-  inline Timestamp::operator signed   short int     () const { return Julian(); }
-  inline Timestamp::operator unsigned short int     () const { return Julian(); }
-  inline Timestamp::operator signed   int           () const { return Julian(); }
-  inline Timestamp::operator unsigned int           () const { return Julian(); }
-  inline Timestamp::operator signed   long int      () const { return Julian(); }
-  inline Timestamp::operator unsigned long int      () const { return Julian(); }
-  inline Timestamp::operator signed   long long int () const { return Julian(); }
-  inline Timestamp::operator unsigned long long int () const { return Julian(); }
+  inline Timestamp::operator bool               () const { return Julian(); }
+  inline Timestamp::operator signed   char      () const { return Julian(); }
+  inline Timestamp::operator unsigned char      () const { return Julian(); }
+  inline Timestamp::operator signed   short int () const { return Julian(); }
+  inline Timestamp::operator unsigned short int () const { return Julian(); }
+  inline Timestamp::operator signed   int       () const { return Julian(); }
+  inline Timestamp::operator unsigned int       () const { return Julian(); }
+  inline Timestamp::operator signed   long int  () const { return Julian(); }
+  inline Timestamp::operator unsigned long int  () const { return Julian(); }
   
   // Assignment operator.
   inline Timestamp& Timestamp::operator = (Timestamp const& ts)   { return copy(ts);  }

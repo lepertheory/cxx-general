@@ -84,17 +84,15 @@ namespace DAC {
       ArbInt operator ~ () const;
       
       // Casting operators.
-      operator bool                   () const;
-      operator signed   char          () const;
-      operator unsigned char          () const;
-      operator signed   short int     () const;
-      operator unsigned short int     () const;
-      operator signed   int           () const;
-      operator unsigned int           () const;
-      operator signed   long int      () const;
-      operator unsigned long int      () const;
-      operator signed   long long int () const;
-      operator unsigned long long int () const;
+      operator bool               () const;
+      operator signed   char      () const;
+      operator unsigned char      () const;
+      operator signed   short int () const;
+      operator unsigned short int () const;
+      operator signed   int       () const;
+      operator unsigned int       () const;
+      operator signed   long int  () const;
+      operator unsigned long int  () const;
       
       // Assignment operator.
                          ArbInt& operator = (ArbInt      const& number);
@@ -514,17 +512,15 @@ namespace DAC {
   inline ArbInt ArbInt::operator ~ () const { return ArbInt(*this).op_bit_cpm(); }
   
   // Casting operators.
-  inline ArbInt::operator bool                   () const { return !isZero();                       }
-  inline ArbInt::operator signed   char          () const { return Value<signed   char         >(); }
-  inline ArbInt::operator unsigned char          () const { return Value<unsigned char         >(); }
-  inline ArbInt::operator signed   short int     () const { return Value<signed   short int    >(); }
-  inline ArbInt::operator unsigned short int     () const { return Value<unsigned short int    >(); }
-  inline ArbInt::operator signed   int           () const { return Value<signed   int          >(); }
-  inline ArbInt::operator unsigned int           () const { return Value<unsigned int          >(); }
-  inline ArbInt::operator signed   long int      () const { return Value<signed   long int     >(); }
-  inline ArbInt::operator unsigned long int      () const { return Value<unsigned long int     >(); }
-  inline ArbInt::operator signed   long long int () const { return Value<signed   long long int>(); }
-  inline ArbInt::operator unsigned long long int () const { return Value<unsigned long long int>(); }
+  inline ArbInt::operator bool               () const { return !isZero();                   }
+  inline ArbInt::operator signed   char      () const { return Value<signed   char     >(); }
+  inline ArbInt::operator unsigned char      () const { return Value<unsigned char     >(); }
+  inline ArbInt::operator signed   short int () const { return Value<signed   short int>(); }
+  inline ArbInt::operator unsigned short int () const { return Value<unsigned short int>(); }
+  inline ArbInt::operator signed   int       () const { return Value<signed   int      >(); }
+  inline ArbInt::operator unsigned int       () const { return Value<unsigned int      >(); }
+  inline ArbInt::operator signed   long int  () const { return Value<signed   long int >(); }
+  inline ArbInt::operator unsigned long int  () const { return Value<unsigned long int >(); }
   
   // Assignment operator.
                      inline ArbInt& ArbInt::operator = (ArbInt      const& number) { return set(number); }
