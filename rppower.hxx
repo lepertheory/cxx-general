@@ -9,20 +9,29 @@
 #if !defined(RPPOWER_gu2j9g8uuhu)
   #define RPPOWER_gu2j9g8uuhu
 
-// Internal includes.
-  #include "SafeInt.hxx"
-
 // Contain in namespace.
 namespace DAC {
   
+  /***************************************************************************/
+  // Functions.
+  
   // Raise a number to a power.
   template <class NumT, class ExpT> NumT          rppower (NumT          const  x, ExpT          const  y);
+  #if defined(SAFEINT_3k54kbuihub7hbh0)
   template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const& x, SafeInt<ExpT> const& y);
   template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const& x, ExpT          const  y);
   template <class NumT, class ExpT> SafeInt<NumT> rppower (NumT          const  x, SafeInt<ExpT> const& y);
+  #endif
   
-  /*************************************************************************/
-  // Raise a number to a power.
+}
+  
+/*****************************************************************************
+ * Inline and template definitions.
+ *****************************************************************************/
+
+namespace DAC {
+  
+  // Raise an integral type.
   template <class NumT, class ExpT> inline NumT rppower (NumT x, ExpT y) {
     
     // Powers start at 1.
@@ -58,7 +67,8 @@ namespace DAC {
   }
   /*************************************************************************/
   
-  // Other specializations of rppower.
+  // Raise a SafeInt.
+  #if defined(SAFEINT_3k54kbuihub7hbh0)
   template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const& x, SafeInt<ExpT> const& y) {
     SafeInt<ExpT> tmp_y(y);
     SafeInt<NumT> tmp_x(x);
@@ -140,6 +150,7 @@ namespace DAC {
     }
     return result;
   }
+  #endif
   
 }
 

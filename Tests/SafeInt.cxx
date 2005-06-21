@@ -40,7 +40,7 @@ enum Op {
 };
 
 // This is where it all happens.
-int main (int argc, char** argv, char** envp);
+int main ();
 
 // Run the gamut on a pair of types.
 template <class T1, class T2> void gamut (char const* const type1, char const* const type2);
@@ -58,7 +58,7 @@ template <class T, class U> void castr (char const* const t, T const& l, char co
 // Test all know operations.
 template <class T, class U> void testOp (T const& l, Op const op, U const& r);
 
-int main (int argc, char** argv, char** envp) {
+int main () {
   
   try {
     

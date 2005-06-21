@@ -45,7 +45,7 @@ enum Operation {
 bool testOp (ArbInt const& l, Operation const op, ArbInt const& r);
 
 // This is where it all happens.
-int main (int argc, char** argv, char** envp) {
+int main () {
   
   try {
     

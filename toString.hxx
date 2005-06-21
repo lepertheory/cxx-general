@@ -14,20 +14,22 @@
 // Contain in namespace.
 namespace DAC {
   
+  /***************************************************************************/
+  // Functions.
+  
   // Convert the number to a string.
-  #if defined(SAFEINT_3k54kbuihub7hbh0)
-  template <class T> std::string toString (SafeInt<T> const& from);
-  #endif
-  template <class T> std::string toString (T          const& from);
+  template <class T> std::string toString (T const& from);
   
   // Convert a character to a string.
   std::string toStringChr (char const from);
   
-  #if defined(SAFEINT_3k54kbuihub7hbh0)
-  template <class T> inline std::string toString (SafeInt<T> const& from) {
-    return toString(static_cast<T>(from));
-  }
-  #endif
+}
+  
+/*****************************************************************************
+ * Inline and template definitions.
+ *****************************************************************************/
+
+namespace DAC {
   
   template <> inline std::string toString<char> (char const& from) {
     std::ostringstream os;

@@ -8,23 +8,20 @@
 #if !defined(REFERENCEPOINTER_huhoeu89o8e)
   #define REFERENCEPOINTER_huhoeu89o8e
 
-// Internal includes.
-  #include "xorswap.hxx"
-
 // Namespace wrapper.
 namespace DAC {
   
-  /*************************************************************************
+  /***************************************************************************
    * ReferencePointer
-   *************************************************************************
+   ***************************************************************************
    * Smart pointer type that counts the number of times it is referenced and
    * only deletes itself when the reference count falls to 0.
-   *************************************************************************/
+   ***************************************************************************/
   template <class T> class ReferencePointer {
     
-    /***********************************************************************
+    /*
      * Public members.
-     ***********************************************************************/
+     */
     public:
       
       // Typedefs.
@@ -69,9 +66,9 @@ namespace DAC {
       // Reset to just-constructed by default constructor state.
       void clear () throw();
     
-    /***********************************************************************
+    /*
      * Private members.
-     ***********************************************************************/
+     */
     private:
       
       // Friend classes.
@@ -88,17 +85,17 @@ namespace DAC {
       
   };
   
-  /*************************************************************************
+  /***************************************************************************
    * ConstReferencePointer
-   *************************************************************************
+   ***************************************************************************
    * Smart pointer type that counts the number of times it is referenced and
    * only deletes itself when the reference count falls to 0.
-   *************************************************************************/
+   ***************************************************************************/
   template <class T> class ConstReferencePointer {
     
-    /***********************************************************************
+    /*
      * Public members.
-     ***********************************************************************/
+     */
     public:
       
       // Typedefs.
@@ -149,9 +146,9 @@ namespace DAC {
       // Reset to just-constructed by default constructor state.
       void clear () throw();
     
-    /***********************************************************************
+    /*
      * Private members.
-     ***********************************************************************/
+     */
     private:
       
       // The pointer.
@@ -165,9 +162,13 @@ namespace DAC {
       
   };
   
-  /*************************************************************************
-   * Inline and template definitions.
-   *************************************************************************/
+}
+  
+/*****************************************************************************
+ * Inline and template definitions.
+ *****************************************************************************/
+
+namespace DAC {
   
   // Copy constructor.
   template <class T> ReferencePointer<T>::ReferencePointer (ReferencePointer<T> const& p) throw() {

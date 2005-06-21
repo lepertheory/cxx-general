@@ -8,25 +8,343 @@
 #if !defined(SAFEINT_3k54kbuihub7hbh0)
   #define SAFEINT_3k54kbuihub7hbh0
 
-// Forward declarations
-namespace DAC {
-  template <class T> class SafeInt;
-}
-
 // STL includes.
   #include <string>
-  #include <cmath>
+  #include <iostream>
+  #include <sstream>
 
 // Internal includes.
   #include "toString.hxx"
   #include "Exception.hxx"
-  
+
 // Namespace wrapper.
 namespace DAC {
   
   /***************************************************************************
-   * SafeInt utilities.
+   * SafeInt
+   ***************************************************************************
+   * This is an overflow safe replacement for any integer type.
    ***************************************************************************/
+  template <class T> class SafeInt {
+    
+    /*
+     * Public members.
+     */
+    public:
+      
+      /***********************************************************************/
+      // Function members.
+      
+      // Default constructor.
+      explicit SafeInt (T const value = 0);
+      
+      // Copy constructor.
+      SafeInt (SafeInt<T> const& value);
+      
+      // Conversion constructor.
+      template <class U> explicit SafeInt (U          const  value = 0);
+      template <class U> explicit SafeInt (SafeInt<U> const& value);
+      
+      // Increment / decrement operators.
+      SafeInt& operator ++ ();
+      SafeInt  operator ++ (int);
+      SafeInt& operator -- ();
+      SafeInt  operator -- (int);
+      
+      // Sign operators.
+      SafeInt operator + () const;
+      SafeInt operator - () const;
+      
+      // Not operator.
+      bool operator ! () const;
+      
+      // Bitwise compliment.
+      SafeInt operator ~ () const;
+      
+      // Casting operators.
+      operator bool               () const;
+      operator signed   char      () const;
+      operator unsigned char      () const;
+      operator signed   short int () const;
+      operator unsigned short int () const;
+      operator signed   int       () const;
+      operator unsigned int       () const;
+      operator signed   long int  () const;
+      operator unsigned long int  () const;
+      
+      // Assignment operator.
+                         SafeInt& operator = (SafeInt<T> const& value);
+                         SafeInt& operator = (T          const  value);
+      template <class U> SafeInt& operator = (SafeInt<U> const& value);
+      template <class U> SafeInt& operator = (U          const  value);
+      
+      // Arithmetic assignment operators.
+      template <class U> SafeInt& operator *= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator *= (U          const  value);
+      template <class U> SafeInt& operator /= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator /= (U          const  value);
+      template <class U> SafeInt& operator %= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator %= (U          const  value);
+      template <class U> SafeInt& operator += (SafeInt<U> const& value);
+      template <class U> SafeInt& operator += (U          const  value);
+      template <class U> SafeInt& operator -= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator -= (U          const  value);
+      
+      // Bit shift assignment operators.
+      template <class U> SafeInt& operator <<= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator <<= (U          const  value);
+      template <class U> SafeInt& operator >>= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator >>= (U          const  value);
+      
+      // Bitwise assignment operators.
+      template <class U> SafeInt& operator &= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator &= (U          const  value);
+      template <class U> SafeInt& operator |= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator |= (U          const  value);
+      template <class U> SafeInt& operator ^= (SafeInt<U> const& value);
+      template <class U> SafeInt& operator ^= (U          const  value);
+      
+      // Accessors.
+      SafeInt& Value (T const value);
+      T        Value ()              const;
+      
+      // Arithmetic operator backends.
+      template <class U> SafeInt& op_mul (SafeInt<U> const& value);
+      template <class U> SafeInt& op_mul (U          const  value);
+      template <class U> SafeInt& op_div (SafeInt<U> const& value);
+      template <class U> SafeInt& op_div (U          const  value);
+      template <class U> SafeInt& op_mod (SafeInt<U> const& value);
+      template <class U> SafeInt& op_mod (U          const  value);
+      template <class U> SafeInt& op_add (SafeInt<U> const& value);
+      template <class U> SafeInt& op_add (U          const  value);
+      template <class U> SafeInt& op_sub (SafeInt<U> const& value);
+      template <class U> SafeInt& op_sub (U          const  value);
+      
+      // Bit shift operator backends.
+      template <class U> SafeInt& op_shl (SafeInt<U> const& value);
+      template <class U> SafeInt& op_shl (U          const  value);
+      template <class U> SafeInt& op_shr (SafeInt<U> const& value);
+      template <class U> SafeInt& op_shr (U          const  value);
+      
+      // Comparison operator backends.
+      template <class U> bool op_gt (SafeInt<U> const& value) const;
+      template <class U> bool op_gt (U          const  value) const;
+      template <class U> bool op_ge (SafeInt<U> const& value) const;
+      template <class U> bool op_ge (U          const  value) const;
+      template <class U> bool op_lt (SafeInt<U> const& value) const;
+      template <class U> bool op_lt (U          const  value) const;
+      template <class U> bool op_le (SafeInt<U> const& value) const;
+      template <class U> bool op_le (U          const  value) const;
+      template <class U> bool op_eq (SafeInt<U> const& value) const;
+      template <class U> bool op_eq (U          const  value) const;
+      template <class U> bool op_ne (SafeInt<U> const& value) const;
+      template <class U> bool op_ne (U          const  value) const;
+      
+      // Bitwise operator backends.
+      template <class U> SafeInt& op_bit_and (SafeInt<U> const& value);
+      template <class U> SafeInt& op_bit_and (U          const  value);
+      template <class U> SafeInt& op_bit_ior (SafeInt<U> const& value);
+      template <class U> SafeInt& op_bit_ior (U          const  value);
+      template <class U> SafeInt& op_bit_xor (SafeInt<U> const& value);
+      template <class U> SafeInt& op_bit_xor (U          const  value);
+                         SafeInt& op_bit_cpm ();
+      
+    /*
+     * Private members.
+     */
+    private:
+      
+      /***********************************************************************/
+      // Data members.
+      
+      // This is the number all this trouble is for.
+      T _value;
+      
+  };
+  
+  /***************************************************************************
+   * SafeInt Exceptions.
+   ***************************************************************************/
+  namespace SafeIntErrors {
+    
+    // All SafeInt errors are based off of this.
+    class Base : public Exception {
+      public:
+        virtual char const* what () const throw();
+        virtual ~Base () throw();
+    };
+    
+    // Overflow.
+    class Overflow : public Base {
+      public:
+        virtual char const* what () const throw();
+    };
+    
+    // Overflow resulting from a cast.
+    template <class T, class U> class CastOverflow : public Overflow {
+      public:
+        virtual char const* what () const throw();
+        CastOverflow& Number (T const number) throw();
+        CastOverflow& Limit  (U const limit)  throw();
+        T Number () const throw();
+        U Limit  () const throw();
+      private:
+        T _number;
+        T _limit;
+    };
+    
+    // Overflow in a binary operation.
+    template <class T, class U> class BinOpOverflow : public Overflow {
+      public:
+        virtual char const* what () const throw();
+        BinOpOverflow& Left     (T const           l)     throw();
+        BinOpOverflow& Operator (char const* const op)    throw();
+        BinOpOverflow& Right    (U const           r)     throw();
+        BinOpOverflow& Limit    (T const           limit) throw();
+        T           Left     () const throw();
+        char const* Operator () const throw();
+        U           Right    () const throw();
+        T           Limit    () const throw();
+      private:
+        T           _l;
+        char const* _op;
+        U           _r;
+        T           _limit;
+    };
+    
+    // Overflow in a bitwise operator.
+    template <class T, class U> class BitOverflow : public Overflow {
+      public:
+        virtual char const* what () const throw();
+        BitOverflow& Left     (T const           l)  throw();
+        BitOverflow& Operator (char const* const op) throw();
+        BitOverflow& Right    (U const           r)  throw();
+        T           Left     () const throw();
+        char const* Operator () const throw();
+        U           Right    () const throw();
+      private:
+        T           _l;
+        char const* _op;
+        U           _r;
+    };
+    
+    // Divide by zero.
+    template <class T, class U> class DivByZero : public Base {
+      public:
+        virtual char const* what () const throw();
+        DivByZero& Left     (T const           l)  throw();
+        DivByZero& Operator (char const* const op) throw();
+        DivByZero& Right    (U const           r)  throw();
+        T           Left     () const throw();
+        char const* Operator () const throw();
+        U           Right    () const throw();
+      private:
+        T           _l;
+        char const* _op;
+        U           _r;
+    };
+    
+    // Result of operation is undefined.
+    class Undefined : public Base {
+      public:
+        virtual char const* what () const throw();
+    };
+    
+    // Undefined binary operation.
+    template <class T, class U> class BinOpUndefined : public Undefined {
+      public:
+        virtual char const* what () const throw();
+        BinOpUndefined& Left     (T const l)            throw();
+        BinOpUndefined& Operator (char const* const op) throw();
+        BinOpUndefined& Right    (U const r)            throw();
+        T           Left ()     const throw();
+        char const* Operator () const throw();
+        U           Right ()    const throw();
+      private:
+        T           _l;
+        char const* _op;
+        U           _r;
+    };
+    
+  }
+  
+}
+
+/*****************************************************************************
+ * Global operators.
+ *****************************************************************************/
+
+// Stream I/O operators.
+template <class T> std::ostream&       operator << (std::ostream&       l, DAC::SafeInt<T> const& r);
+template <class T> std::ostringstream& operator << (std::ostringstream& l, DAC::SafeInt<T> const& r);
+template <class T> std::istream&       operator >> (std::istream&       l, DAC::SafeInt<T>&       r);
+
+// Arithmetic operators.
+template <class T, class U> DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator * (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator / (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator % (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator + (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator - (T               const  l, DAC::SafeInt<U> const& r);
+
+// Bit shift operators.
+template <class T, class U> DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator << (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator >> (T               const  l, DAC::SafeInt<U> const& r);
+
+// Comparison operators.
+template <class T, class U> bool operator >  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator >  (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> bool operator >  (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator >= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator >= (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> bool operator >= (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator <  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator <  (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> bool operator <  (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator <= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator <= (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> bool operator <= (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator == (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator == (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> bool operator == (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator != (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> bool operator != (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> bool operator != (T               const  l, DAC::SafeInt<U> const& r);
+
+// Bitwise operators.
+template <class T, class U> DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator & (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator | (T               const  l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
+template <class T, class U> DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, U               const  r);
+template <class T, class U> DAC::SafeInt<T> operator ^ (T               const  l, DAC::SafeInt<U> const& r);
+
+/*****************************************************************************
+ * SafeInt utilities.
+ *****************************************************************************
+ * If it weren't for some extremely tricky template stuff, this would all be
+ * inaccesable. As it is, you *could* use this, but I wouldn't recommend it. I
+ * will not make any attempt to keep the interface to this stable.
+ *****************************************************************************/
+
+namespace DAC {
+  
   namespace SafeIntUtil {
   
     /*************************************************************************/
@@ -321,370 +639,8 @@ namespace DAC {
     
   }
   
-  /***************************************************************************
-   * SafeInt
-   ***************************************************************************
-   * This is an overflow safe replacement for any integer type.
-   ***************************************************************************/
-  template <class T> class SafeInt {
-    
-    /*
-     * Public members.
-     */
-    public:
-      
-      /***********************************************************************/
-      // Function members.
-      
-      // Default constructor.
-      explicit SafeInt (T const value = 0);
-      
-      // Copy constructor.
-      SafeInt (SafeInt<T> const& value);
-      
-      // Conversion constructor.
-      template <class U> explicit SafeInt (U          const  value = 0);
-      template <class U> explicit SafeInt (SafeInt<U> const& value);
-      
-      // Increment / decrement operators.
-      SafeInt& operator ++ ();
-      SafeInt  operator ++ (int);
-      SafeInt& operator -- ();
-      SafeInt  operator -- (int);
-      
-      // Sign operators.
-      SafeInt operator + () const;
-      SafeInt operator - () const;
-      
-      // Not operator.
-      bool operator ! () const;
-      
-      // Bitwise compliment.
-      SafeInt operator ~ () const;
-      
-      // Casting operators.
-      operator bool               () const;
-      operator signed   char      () const;
-      operator unsigned char      () const;
-      operator signed   short int () const;
-      operator unsigned short int () const;
-      operator signed   int       () const;
-      operator unsigned int       () const;
-      operator signed   long int  () const;
-      operator unsigned long int  () const;
-      
-      // Assignment operator.
-                         SafeInt& operator = (SafeInt<T> const& value);
-                         SafeInt& operator = (T          const  value);
-      template <class U> SafeInt& operator = (SafeInt<U> const& value);
-      template <class U> SafeInt& operator = (U          const  value);
-      
-      // Arithmetic assignment operators.
-      template <class U> SafeInt& operator *= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator *= (U          const  value);
-      template <class U> SafeInt& operator /= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator /= (U          const  value);
-      template <class U> SafeInt& operator %= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator %= (U          const  value);
-      template <class U> SafeInt& operator += (SafeInt<U> const& value);
-      template <class U> SafeInt& operator += (U          const  value);
-      template <class U> SafeInt& operator -= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator -= (U          const  value);
-      
-      // Bit shift assignment operators.
-      template <class U> SafeInt& operator <<= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator <<= (U          const  value);
-      template <class U> SafeInt& operator >>= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator >>= (U          const  value);
-      
-      // Bitwise assignment operators.
-      template <class U> SafeInt& operator &= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator &= (U          const  value);
-      template <class U> SafeInt& operator |= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator |= (U          const  value);
-      template <class U> SafeInt& operator ^= (SafeInt<U> const& value);
-      template <class U> SafeInt& operator ^= (U          const  value);
-      
-      // Accessors.
-      SafeInt& Value (T const value);
-      T        Value ()              const;
-      
-      // Arithmetic operator backends.
-      template <class U> SafeInt& op_mul (SafeInt<U> const& value);
-      template <class U> SafeInt& op_mul (U          const  value);
-      template <class U> SafeInt& op_div (SafeInt<U> const& value);
-      template <class U> SafeInt& op_div (U          const  value);
-      template <class U> SafeInt& op_mod (SafeInt<U> const& value);
-      template <class U> SafeInt& op_mod (U          const  value);
-      template <class U> SafeInt& op_add (SafeInt<U> const& value);
-      template <class U> SafeInt& op_add (U          const  value);
-      template <class U> SafeInt& op_sub (SafeInt<U> const& value);
-      template <class U> SafeInt& op_sub (U          const  value);
-      
-      // Bit shift operator backends.
-      template <class U> SafeInt& op_shl (SafeInt<U> const& value);
-      template <class U> SafeInt& op_shl (U          const  value);
-      template <class U> SafeInt& op_shr (SafeInt<U> const& value);
-      template <class U> SafeInt& op_shr (U          const  value);
-      
-      // Comparison operator backends.
-      template <class U> bool op_gt (SafeInt<U> const& value) const;
-      template <class U> bool op_gt (U          const  value) const;
-      template <class U> bool op_ge (SafeInt<U> const& value) const;
-      template <class U> bool op_ge (U          const  value) const;
-      template <class U> bool op_lt (SafeInt<U> const& value) const;
-      template <class U> bool op_lt (U          const  value) const;
-      template <class U> bool op_le (SafeInt<U> const& value) const;
-      template <class U> bool op_le (U          const  value) const;
-      template <class U> bool op_eq (SafeInt<U> const& value) const;
-      template <class U> bool op_eq (U          const  value) const;
-      template <class U> bool op_ne (SafeInt<U> const& value) const;
-      template <class U> bool op_ne (U          const  value) const;
-      
-      // Bitwise operator backends.
-      template <class U> SafeInt& op_bit_and (SafeInt<U> const& value);
-      template <class U> SafeInt& op_bit_and (U          const  value);
-      template <class U> SafeInt& op_bit_ior (SafeInt<U> const& value);
-      template <class U> SafeInt& op_bit_ior (U          const  value);
-      template <class U> SafeInt& op_bit_xor (SafeInt<U> const& value);
-      template <class U> SafeInt& op_bit_xor (U          const  value);
-                         SafeInt& op_bit_cpm ();
-      
-    /*
-     * Private members.
-     */
-    private:
-      
-      /***********************************************************************/
-      // Data members.
-      
-      // This is the number all this trouble is for.
-      T _value;
-      
-  };
-  
-  /***************************************************************************
-   * SafeInt Exceptions.
-   ***************************************************************************/
-  namespace SafeIntErrors {
-    
-    // All SafeInt errors are based off of this.
-    class Base : public Exception {
-      public:
-        virtual ~Base () throw();
-    };
-    
-    // Overflow.
-    class Overflow : public Base {
-      public:
-        virtual char const* what () const throw();
-    };
-    
-    // Overflow resulting from a cast.
-    template <class T, class U> class CastOverflow : public Overflow {
-      public:
-        virtual char const* what () const throw();
-        CastOverflow& Number (T const number) throw();
-        CastOverflow& Limit  (U const limit)  throw();
-        T Number () const throw();
-        U Limit  () const throw();
-      private:
-        T _number;
-        T _limit;
-    };
-    
-    // Overflow in a binary operation.
-    template <class T, class U> class BinOpOverflow : public Overflow {
-      public:
-        virtual char const* what () const throw();
-        BinOpOverflow& Left     (T const           l)     throw();
-        BinOpOverflow& Operator (char const* const op)    throw();
-        BinOpOverflow& Right    (U const           r)     throw();
-        BinOpOverflow& Limit    (T const           limit) throw();
-        T           Left     () const throw();
-        char const* Operator () const throw();
-        U           Right    () const throw();
-        T           Limit    () const throw();
-      private:
-        T           _l;
-        char const* _op;
-        U           _r;
-        T           _limit;
-    };
-    
-    // Overflow in a bitwise operator.
-    template <class T, class U> class BitOverflow : public Overflow {
-      public:
-        virtual char const* what () const throw();
-        BitOverflow& Left     (T const           l)  throw();
-        BitOverflow& Operator (char const* const op) throw();
-        BitOverflow& Right    (U const           r)  throw();
-        T           Left     () const throw();
-        char const* Operator () const throw();
-        U           Right    () const throw();
-      private:
-        T           _l;
-        char const* _op;
-        U           _r;
-    };
-    
-    // Divide by zero.
-    template <class T, class U> class DivByZero : public Base {
-      public:
-        virtual char const* what () const throw();
-        DivByZero& Left     (T const           l)  throw();
-        DivByZero& Operator (char const* const op) throw();
-        DivByZero& Right    (U const           r)  throw();
-        T           Left     () const throw();
-        char const* Operator () const throw();
-        U           Right    () const throw();
-      private:
-        T           _l;
-        char const* _op;
-        U           _r;
-    };
-    
-    // Result of operation is undefined.
-    class Undefined : public Base {
-      public:
-        virtual char const* what () const throw();
-    };
-    
-    // Undefined binary operation.
-    template <class T, class U> class BinOpUndefined : public Undefined {
-      public:
-        virtual char const* what () const throw();
-        BinOpUndefined& Left     (T const l)            throw();
-        BinOpUndefined& Operator (char const* const op) throw();
-        BinOpUndefined& Right    (U const r)            throw();
-        T           Left ()     const throw();
-        char const* Operator () const throw();
-        U           Right ()    const throw();
-      private:
-        T           _l;
-        char const* _op;
-        U           _r;
-    };
-    
-    /*
-    // Overflow.
-    class Overflow : public Base {
-      public:
-        virtual char const* what () const throw();
-        virtual ~Overflow () throw();
-        std::string message;
-    };
-    
-    // Overflow resulting from a cast.
-    class CastOverflow : public Overflow {
-      public:
-        template <class T, class U> CastOverflow (T const num, U const limit) throw();
-    };
-    
-    // Overflow in a binary operation.
-    class BinOpOverflow : public Overflow {
-      public:
-        template <class T, class U> BinOpOverflow (T const l, char const* const op, U const r, T const limit) throw();
-    };
-    
-    // Overflow from bitwise operator.
-    class BitOverflow : public Overflow {
-      public:
-        template <class T, class U> BitOverflow (T const l, char const* const op, U const r) throw();
-    };
-    
-    // Divide by zero.
-    class DivByZero : public Base {
-      public:
-        template <class T, class U> DivByZero (T const l, char const* const op, U const r) throw();
-        virtual char const* what () const throw();
-        virtual ~DivByZero () throw();
-        std::string message;
-    };
-    
-    // Result of operation is undefined.
-    class Undefined : public Base {
-      public:
-        virtual char const* what () const throw();
-        virtual ~Undefined () throw();
-        std::string message;
-    };
-    
-    // Undefined binary operation.
-    class BinOpUndefined : public Undefined {
-      public:
-        template <class T, class U> BinOpUndefined (T const l, char const* const op, U const r) throw ();
-    };
-    */
-    
-  }
-  
 }
-
-/*****************************************************************************
- * Global operators.
- *****************************************************************************/
-
-// Stream I/O operators.
-template <class T> std::ostream& operator << (std::ostream& l, DAC::SafeInt<T> const& r);
-template <class T> std::istream& operator >> (std::istream& l, DAC::SafeInt<T>&       r);
-
-// Arithmetic operators.
-template <class T, class U> DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator * (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator / (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator % (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator + (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator - (T               const  l, DAC::SafeInt<U> const& r);
-
-// Bit shift operators.
-template <class T, class U> DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator << (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator >> (T               const  l, DAC::SafeInt<U> const& r);
-
-// Comparison operators.
-template <class T, class U> bool operator >  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator >  (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator >  (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator >= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator >= (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator >= (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator <  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator <  (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator <  (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator <= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator <= (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator <= (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator == (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator == (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator == (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator != (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator != (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator != (T               const  l, DAC::SafeInt<U> const& r);
-
-// Bitwise operators.
-template <class T, class U> DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator & (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator | (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator ^ (T               const  l, DAC::SafeInt<U> const& r);
-
+  
 /*****************************************************************************
  * Inline and template definitions.
  *****************************************************************************/
@@ -1531,7 +1487,15 @@ namespace DAC {
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
       }
-      return (l % static_cast<T>(std::abs(r)));
+      if (r > static_cast<U>(0)) {
+        return (l % static_cast<T>(r));
+      } else {
+        if (r == std::numeric_limits<U>::min()) {
+          return l % (static_cast<T>((r + static_cast<U>(1)) * static_cast<U>(-1)) + static_cast<T>(1));
+        } else {
+          return l % static_cast<T>(r * static_cast<U>(-1));
+        }
+      }
     }
     template <class T, class U> T SafeMod<T, U, UL_US>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
@@ -2643,6 +2607,9 @@ namespace DAC {
   
   namespace SafeIntErrors {
     
+    inline char const* Base::what () const throw() {
+      return "Unknown SafeInt error.";
+    }
     inline Base::~Base () throw() {}
     
     inline char const* Overflow::what () const throw() {
@@ -2723,86 +2690,6 @@ namespace DAC {
     template <class T, class U> inline char const* BinOpUndefined<T, U>::Operator () const throw() { return _op; }
     template <class T, class U> inline U           BinOpUndefined<T, U>::Right    () const throw() { return _r;  }
     
-    /*
-    inline char const* Overflow::what () const throw() {
-      try {
-        if (!message.empty()) {
-          return message.c_str();
-        } else {
-          return "Overflow.";
-        }
-      } catch (...) {
-        return "Error returning message string.";
-      }
-    }
-    inline Overflow::~Overflow () throw() {}
-    
-    template <class T, class U> CastOverflow::CastOverflow (T const num, U const limit) throw () {
-      try {
-        message = toString(num) + " overflows type limit of " + toString(limit) + " in attempted cast.";
-      } catch (...) {
-        message.clear();
-      }
-    }
-    
-    template <class T, class U> BinOpOverflow::BinOpOverflow (T const l, char const* const op, U const r, T const limit) throw() {
-      try {
-        message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + " overflows type limit of " + toString(limit) + ".";
-      } catch (...) {
-        message.clear();
-      }
-    }
-    
-    template <class T, class U> BitOverflow::BitOverflow (T const l, char const* const op, U const r) throw() {
-      try {
-        message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + " requires more than " + toString(std::numeric_limits<T>::digits + (std::numeric_limits<T>::is_signed ? 1 : 0)) + " bits of storage.";
-      } catch (...) {
-        message.clear();
-      }
-    }
-    
-    template <class T, class U> DivByZero::DivByZero (T const l, char const* const op, U const r) throw() {
-      try {
-        message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + ": Divide by zero.";
-      } catch (...) {
-        message.clear();
-      }
-    }
-    inline char const* DivByZero::what () const throw() {
-      try {
-        if (!message.empty()) {
-          return message.c_str();
-        } else {
-          return "Divide by zero.";
-        }
-      } catch (...) {
-        return "Error returning message string.";
-      }
-    }
-    inline DivByZero::~DivByZero () throw() {}
-    
-    inline char const* Undefined::what () const throw() {
-      try {
-        if (!message.empty()) {
-          return message.c_str();
-        } else {
-          return "Result of operation is undefined.";
-        }
-      } catch (...) {
-        return "Error returning message string.";
-      }
-    }
-    inline Undefined::~Undefined () throw() {}
-    
-    template <class T, class U> BinOpUndefined::BinOpUndefined (T const l, char const* const op, U const r) throw () {
-      try {
-        message = toString(l) + std::string(" ") + op + std::string(" ") + toString(r) + ": The result of this operation is undefined.";
-      } catch (...) {
-        message.clear();
-      }
-    }
-    */
-    
   }
   
 }
@@ -2812,8 +2699,9 @@ namespace DAC {
  *****************************************************************************/
 
 // Stream I/O operators.
-template <class T> inline std::ostream& operator << (std::ostream& l, DAC::SafeInt<T> const& r) { l << toString(static_cast<T>(r)); return l; }
-template <class T> inline std::istream& operator >> (std::istream& l, DAC::SafeInt<T>&       r) { T input; l >> input; r = input; return l;   }
+template <class T> inline std::ostream&       operator << (std::ostream&       l, DAC::SafeInt<T> const& r) { l << DAC::toString(static_cast<T>(r)); return l; }
+template <class T> inline std::ostringstream& operator << (std::ostringstream& l, DAC::SafeInt<T> const& r) { l << DAC::toString(static_cast<T>(r)); return l; }
+template <class T> inline std::istream&       operator >> (std::istream&       l, DAC::SafeInt<T>&       r) { T input; l >> input; r = input; return l;        }
 
 // Arithmetic operators.
 template <class T, class U> inline DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mul(r); }

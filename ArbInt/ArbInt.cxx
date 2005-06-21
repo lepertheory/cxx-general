@@ -273,7 +273,7 @@ namespace DAC {
     
     // If number is zero, throw error.
     if (number.isZero()) {
-      throw ArbIntErrors::DivByZero();
+      throw ArbIntErrors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("/").Right(number);
     }
     
     // Work area.
@@ -455,7 +455,7 @@ namespace DAC {
     
     // These are unsigned numbers, so if number > this, throw an error.
     if (number > retval) {
-      throw ArbIntErrors::Negative();
+      throw ArbIntErrors::NegativeBinary<ArbInt, ArbInt>().Left(*this).Operator("-").Right(number);
     }
     
     // Subtract like kindergarten.
@@ -688,7 +688,7 @@ namespace DAC {
   }
   
   // Find a root of this number.
-  ArbInt ArbInt::root (ArbInt const& root, ArbInt& divisor, ArbInt& remainder) {
+  ArbInt ArbInt::root (ArbInt const& find, ArbInt& divisor, ArbInt& remainder) {
     
     // Work area.
     ArbInt eroot;
@@ -696,11 +696,11 @@ namespace DAC {
     ArbInt erem;
     
     // 0 and 1 are special cases, always themselves, also root 1.
-    if (!_digits->empty() && !((_digits->size() == 1) && ((*_digits)[0] == 1)) && (root != ArbInt(1))) {
+    if (!_digits->empty() && !((_digits->size() == 1) && ((*_digits)[0] == 1)) && (find != ArbInt(1))) {
       
       // Root 0 is a different problem.
-      if (root.isZero()) {
-        throw ArbIntErrors::DivByZero();
+      if (find.isZero()) {
+        throw ArbIntErrors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("root").Right(find);
       }
       
       // FIXME: This should be picked.
@@ -709,9 +709,9 @@ namespace DAC {
       // Get the root in integral form.
       SafeInt<_DigsT::size_type> iroot;
       try {
-        iroot = root.Value<_DigsT::size_type>();
-      } catch (ArbIntErrors::ScalarOverflow()) {
-        throw ArbIntErrors::RootTooLarge();
+        iroot = find.Value<_DigsT::size_type>();
+      } catch (ArbIntErrors::ScalarOverflow) {
+        throw ArbIntErrors::RootTooLarge().Number(*this).Root(find);
       }
       
       // Get the number of aligned digit groups in the number before
@@ -748,11 +748,11 @@ namespace DAC {
         SafeInt<_DigT> min;
         SafeInt<_DigT> max(SafeInt<_DigT>(s_digitbase) - 1);
         ArbInt         arbguess;
-        ArbInt         abpr  = ArbInt(abase).pow(root);
+        ArbInt         abpr  = ArbInt(abase).pow(find);
         while (min <= max) {
           guess    = (min + max) / 2;
           arbguess = guess;
-          if ((abase * eroot + arbguess).pow(root) - abpr * ArbInt(eroot).pow(root) <= abpr * erem + diggroup) {
+          if ((abase * eroot + arbguess).pow(find) - abpr * ArbInt(eroot).pow(find) <= abpr * erem + diggroup) {
             min = guess + 1;
           } else {
             max = guess - 1;
@@ -764,7 +764,7 @@ namespace DAC {
         arbguess = guess;
         
         // Get the next iteration's values.
-        erem  = abpr * erem + diggroup - ((abase * eroot + arbguess).pow(root) - abpr * ArbInt(eroot).pow(root));
+        erem  = abpr * erem + diggroup - ((abase * eroot + arbguess).pow(find) - abpr * ArbInt(eroot).pow(find));
         eroot = abase * eroot + arbguess;
         /*
         ArbInt<T> new_eroot = abase * eroot + arbguess;
@@ -806,7 +806,7 @@ namespace DAC {
     
     // Ensure that the start is not beyond the end of the container.
     if (start >= _digits->size()) {
-      throw ArbIntErrors::Overrun();
+      throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Carry requested beyond end of container").Offset(start).Limit(_digits->size());
     }
     
     // Loop through the container looking for base overflow.
@@ -849,7 +849,7 @@ namespace DAC {
     
     // Ensure that the start is not beyond the end of the container.
     if (start >= _digits->size()) {
-      throw ArbIntErrors::Overrun();
+      throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Borrow requested beyond end of container").Offset(start).Limit(_digits->size());
     }
     
     // Loop through the container borrowing until we've met our borrow.
@@ -874,7 +874,7 @@ namespace DAC {
     }
     
     // If we get here, we have not paid for our borrow.
-    throw ArbIntErrors::Overrun();
+    throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Borrow requested ran out of digits").Offset(_digits->size()).Limit(_digits->size());
     
   }
   
@@ -902,7 +902,7 @@ namespace DAC {
         // you'll run out of RAM first, but this probably indicates a bug in
         // whatever is asking for a shift that big.
         if ((dir == _DIR_L) && (number > ((ArbInt(numeric_limits<_DigsT::size_type>::max()) * arbdigbits) - ((ArbInt(_digits->size()) * arbdigbits) - ArbInt(logBase(_digits->back(), 2)))))) {
-          throw ArbIntErrors::Overrun();
+          throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Shift will overrun maximum size of digit container").Offset(number / arbdigbits + ((number % arbdigbits) ? 1 : 0)).Limit(numeric_limits<_DigsT::size_type>::max());
         }
         
         // Shift with whole digits as much as possible. size_type should be
@@ -979,4 +979,68 @@ namespace DAC {
     
   }
   
+  /***************************************************************************
+   * ArbIntErrors::
+   ***************************************************************************/
+  namespace ArbIntErrors {
+    
+    char const* Base::what () const throw() {
+      return "Undefined error in ArbInt.";
+    }
+    Base::~Base () throw() {
+      // Da nada.
+    }
+    
+    char const* BadFormat::what () const throw() {
+      try {
+        return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".").c_str();
+      } catch (...) {
+        return "Bad format. Error creating message string.";
+      }
+    }
+    
+    char const* Negative::what () const throw() {
+      return "Attempt to set ArbInt to a negative number.";
+    }
+    
+    char const* NegativeUnary::what () const throw() {
+      try {
+        std::string retval;
+        if (_prefix) {
+          retval = std::string(_op) + _number.toString();
+        } else {
+          retval = _number.toString() + std::string(_op);
+        }
+        retval += ": Results in a negative number.";
+        return retval.c_str();
+      } catch (...) {
+        return "Unary operation results in a negative number. Error creating message string.";
+      }
+    }
+    
+    char const* Overrun::what () const throw() {
+      return "Instruction overruns end of container.";
+    }
+    
+    char const* DivByZero::what () const throw() {
+      return "Divide by zero.";
+    }
+    
+    char const* ScalarOverflow::what () const throw() {
+      return "ArbInt overflows requested scalar type.";
+    }
+    
+    char const* BaseOutOfRange::what () const throw() {
+      return "Requested base is out of range.";
+    }
+    
+    char const* RootTooLarge::what () const throw() {
+      try {
+        return (_root.toString() + " root of " + _number.toString() + ": Root is too large to calculate.").c_str();
+      } catch (...) {
+        return "Root is too large to calculate. Error creating message string.";
+      }
+    }
+    
+  }
 }
