@@ -44,7 +44,7 @@ namespace DAC {
     'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
     'U', 'V', 'W', 'X', 'Y', 'Z'
   };
-  ArbInt::_NumChrT         ArbInt::s_numidigits = 0;
+  ArbInt::_NumChrT         ArbInt::s_numidigits = 36;
   vector<ArbInt::_NumChrT> ArbInt::s_idigits;
   
   bool ArbInt::s_initialized = false;
@@ -135,10 +135,10 @@ namespace DAC {
     for (string::size_type i = 0; i != number.length(); ++i) {
       
       // Get the value of this digit.
-      _NumChrT digval = s_idigits[number[i]];
+      SafeInt<_NumChrT> digval(s_idigits[number[i]]);
       
       // Make sure this digit is within the number base.
-      if ((digval >= SafeInt<_DigT>(_base) || (digval == numeric_limits<_NumChrT>::max()))) {
+      if ((digval >= _base || (digval == numeric_limits<_NumChrT>::max()))) {
         throw ArbIntErrors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
       }
       
@@ -190,7 +190,7 @@ namespace DAC {
     string retval;
     
     // Easy case of 0.
-    if (_digits->empty()) {
+    if (isZero()) {
       
       retval = "0";
       
@@ -230,7 +230,7 @@ namespace DAC {
     ArbInt retval;
     
     // If either number is zero, no multiplying to be done.
-    if ((_digits->size() != 0) && (number._digits->size() != 0)) {
+    if (!isZero() && !number.isZero()) {
       
       // Create a digit product and make a reference its digits to reduce
       // typing.
@@ -248,7 +248,7 @@ namespace DAC {
           }
           
           // Multiply into the digit product and carry.
-          (*(digproduct._digits))[j] = SafeInt<_DigT>((*(digproduct._digits))[j]) + (SafeInt<_DigT>((*(number._digits))[i]) * SafeInt<_DigT>((*_digits)[j]));
+          (*(digproduct._digits))[j] = (*(digproduct._digits))[j] + (SafeInt<_DigT>((*(number._digits))[i]) * (*_digits)[j]);
           digproduct._carry(j);
           
         }
@@ -269,7 +269,7 @@ namespace DAC {
   }
   
   // Divide.
-  ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* remainder) {
+  ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* const remainder) {
     
     // If number is zero, throw error.
     if (number.isZero()) {
@@ -410,6 +410,12 @@ namespace DAC {
   // Modulo division.
   ArbInt& ArbInt::op_mod (ArbInt const& number) {
     
+    // Cannot divide by zero. check is redundant, but needed for exception to
+    // report proper operator.
+    if (number.isZero()) {
+      throw ArbIntErrors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("%").Right(number);
+    }
+    
     // Work area.
     ArbInt retval;
     ArbInt quotient(*this);
@@ -436,7 +442,7 @@ namespace DAC {
       }
       
       // Add this digit and carry.
-      (*(retval._digits))[i] = SafeInt<_DigT>((*(retval._digits))[i]) + SafeInt<_DigT>((*(number._digits))[i]);
+      (*(retval._digits))[i] = SafeInt<_DigT>((*(retval._digits))[i]) + (*(number._digits))[i];
       retval._carry(i);
       
     }
@@ -465,7 +471,7 @@ namespace DAC {
       if ((*(retval._digits))[i] < (*(number._digits))[i]) {
         retval._borrow(i);
       }
-      (*(retval._digits))[i] = SafeInt<_DigT>((*(retval._digits))[i]) - SafeInt<_DigT>((*(number._digits))[i]);
+      (*(retval._digits))[i] = SafeInt<_DigT>((*(retval._digits))[i]) - (*(number._digits))[i];
       
     }
     
@@ -481,14 +487,20 @@ namespace DAC {
   // Greater than.
   bool ArbInt::op_gt (ArbInt const& number) const {
     
-    // Check sizes of containers first.
+    // Check zeros.
+    if (isZero()) {
+      return false;
+    } else {
+      if (number.isZero()) {
+        return true;
+      }
+    }
+    
+    // Check sizes of containers.
     if (_digits->size() > number._digits->size()) {
       return true;
     }
     if (_digits->size() < number._digits->size()) {
-      return false;
-    }
-    if (_digits->empty() && number._digits->empty()) {
       return false;
     }
     
@@ -512,14 +524,20 @@ namespace DAC {
   // Less than.
   bool ArbInt::op_lt (ArbInt const& number) const {
     
-    // Check sizes of containers first.
+    // Check zeros.
+    if (number.isZero()) {
+      return false;
+    } else {
+      if (isZero()) {
+        return true;
+      }
+    }
+    
+    // Check sizes of containers.
     if (_digits->size() < number._digits->size()) {
       return true;
     }
     if (_digits->size() > number._digits->size()) {
-      return false;
-    }
-    if (_digits->empty() && number._digits->empty()) {
       return false;
     }
     
@@ -542,10 +560,16 @@ namespace DAC {
   
   bool ArbInt::op_eq (ArbInt const& number) const {
     
-    // Check sizes of containers first.
-    if (_digits->empty() && number._digits->empty()) {
-      return true;
+    // Check zeros.
+    if (isZero()) {
+      return number.isZero();
+    } else {
+      if (number.isZero()) {
+        return false;
+      }
     }
+    
+    // Check sizes of containers.
     if (_digits->size() != number._digits->size()) {
       return false;
     }
@@ -674,116 +698,16 @@ namespace DAC {
     ArbInt one(1);
     
     // Russian peasant power.
-    while (!tmp_expn._digits->empty()) {
-      if (tmp_expn._digits->front() & 1) {
+    while (!tmp_expn.isZero()) {
+      if (tmp_expn.isOdd()) {
         retval *= tmp_base;
       }
-      tmp_base  *= tmp_base;
+      tmp_base *= tmp_base;
       tmp_expn >>= one;
     }
     
     // Return the result.
     return retval;
-    
-  }
-  
-  // Find a root of this number.
-  ArbInt ArbInt::root (ArbInt const& find, ArbInt& divisor, ArbInt& remainder) {
-    
-    // Work area.
-    ArbInt eroot;
-    ArbInt edivor(1);
-    ArbInt erem;
-    
-    // 0 and 1 are special cases, always themselves, also root 1.
-    if (!_digits->empty() && !((_digits->size() == 1) && ((*_digits)[0] == 1)) && (find != ArbInt(1))) {
-      
-      // Root 0 is a different problem.
-      if (find.isZero()) {
-        throw ArbIntErrors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("root").Right(find);
-      }
-      
-      // FIXME: This should be picked.
-      SafeInt<_DigsT::size_type> maxextra(10);
-      
-      // Get the root in integral form.
-      SafeInt<_DigsT::size_type> iroot;
-      try {
-        iroot = find.Value<_DigsT::size_type>();
-      } catch (ArbIntErrors::ScalarOverflow) {
-        throw ArbIntErrors::RootTooLarge().Number(*this).Root(find);
-      }
-      
-      // Get the number of aligned digit groups in the number before
-      // expansion.
-      SafeInt<_DigsT::size_type> groups = (_digits->size() - 1) / iroot + 1;
-      
-      // Cache type conversions.
-      ArbInt abase(s_digitbase);
-      
-      // Iterate through the number, stop when desired precision is reached
-      // or a perfect root is found.
-      SafeInt<_DigsT::size_type> group;
-      SafeInt<_DigsT::size_type> extra;
-      do {
-        
-        // Get the next aligned block of digits from the radicand.
-        ArbInt diggroup;
-        if (group < groups) {
-          SafeInt<_DigsT::size_type> spos = (groups - 1 - group) * iroot;
-          SafeInt<_DigsT::size_type> epos = spos + iroot - 1;
-          if (epos >= _digits->size()) {
-            epos = _digits->size() - 1;
-          }
-          *(diggroup._digits) = _DigsT(_digits->begin() + spos.Value(), _digits->begin() + (epos + 1).Value());
-          ++group;
-        } else {
-          *(diggroup._digits) = _DigsT(iroot, 0);
-          edivor *= abase;
-          ++extra;
-        }
-        
-        // Find the next digit of the root with a binary search.
-        SafeInt<_DigT> guess;
-        SafeInt<_DigT> min;
-        SafeInt<_DigT> max(SafeInt<_DigT>(s_digitbase) - 1);
-        ArbInt         arbguess;
-        ArbInt         abpr  = ArbInt(abase).pow(find);
-        while (min <= max) {
-          guess    = (min + max) / 2;
-          arbguess = guess;
-          if ((abase * eroot + arbguess).pow(find) - abpr * ArbInt(eroot).pow(find) <= abpr * erem + diggroup) {
-            min = guess + 1;
-          } else {
-            max = guess - 1;
-          }
-        }
-        if (guess == min) {
-          guess -= 1;
-        }
-        arbguess = guess;
-        
-        // Get the next iteration's values.
-        erem  = abpr * erem + diggroup - ((abase * eroot + arbguess).pow(find) - abpr * ArbInt(eroot).pow(find));
-        eroot = abase * eroot + arbguess;
-        /*
-        ArbInt<T> new_eroot = abase * eroot + arbguess;
-        ArbInt<T> new_erem  = abpr * erem + diggroup - ((abase * eroot + arbguess).pow(root) - abpr * ArbInt<T>(eroot).pow(root));
-        eroot = new_eroot;
-        erem  = new_erem;
-        */
-        
-      } while ((group < groups) || ((extra < maxextra) && erem));
-      
-      _digits   = eroot._digits;
-      remainder = erem;
-      
-    }
-    
-    // We done. Move results into place and return.
-    remainder = erem;
-    divisor   = edivor;
-    return eroot;
     
   }
   
@@ -825,8 +749,8 @@ namespace DAC {
         // _DigsT, and we just added an element, we would have recieved an
         // error when we did that.
         SafeInt<_DigsT::value_type> overflow = SafeInt<_DigsT::value_type>((*_digits)[i]) / s_digitbase;
-        (*_digits)[i + 1]                    = SafeInt<_DigsT::value_type>((*_digits)[i + 1]) + overflow;
-        (*_digits)[i]                        = SafeInt<_DigsT::value_type>((*_digits)[i]) - (overflow * s_digitbase);
+        (*_digits)[i + 1]                    = (*_digits)[i + 1] + overflow;
+        (*_digits)[i]                        = (*_digits)[i] - (overflow * s_digitbase);
         
       // If there is no overflow now, there will be no more overflow.
       } else {
@@ -961,7 +885,7 @@ namespace DAC {
     s_digitbase = rppower(SafeInt<_DigT>(2), s_digitbits);
     s_bitmask   = SafeInt<_DigT>(s_digitbase) - 1;
     
-    // Get the input digits.
+    // Get the input digits. If this changes, you need to update s_numidigits!
     SafeInt<_NumChrT> j;
     for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {
       j = i;
@@ -972,7 +896,6 @@ namespace DAC {
       else                               { digit = numeric_limits<_NumChrT>::max(); }
       s_idigits.push_back(digit);
     }
-    s_numidigits = 36;
     
     // Class has successfully been initialized.
     s_initialized = true;
@@ -980,7 +903,7 @@ namespace DAC {
   }
   
   /***************************************************************************
-   * ArbIntErrors::
+   * Errors.
    ***************************************************************************/
   namespace ArbIntErrors {
     
@@ -1005,14 +928,7 @@ namespace DAC {
     
     char const* NegativeUnary::what () const throw() {
       try {
-        std::string retval;
-        if (_prefix) {
-          retval = std::string(_op) + _number.toString();
-        } else {
-          retval = _number.toString() + std::string(_op);
-        }
-        retval += ": Results in a negative number.";
-        return retval.c_str();
+        return (std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + _number.toString() + " results in a negative number.").c_str();
       } catch (...) {
         return "Unary operation results in a negative number. Error creating message string.";
       }
@@ -1043,4 +959,5 @@ namespace DAC {
     }
     
   }
+  
 }

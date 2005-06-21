@@ -163,7 +163,7 @@ namespace DAC {
   };
   
   /***************************************************************************
-   * SafeInt Exceptions.
+   * Errors.
    ***************************************************************************/
   namespace SafeIntErrors {
     
@@ -191,6 +191,25 @@ namespace DAC {
       private:
         T _number;
         T _limit;
+    };
+    
+    // Overflow in a unary operation.
+    template <class T> class UnOpOverflow : public Overflow {
+      public:
+        virtual char const* what () const throw();
+        UnOpOverflow& Number   (T           const number) throw();
+        UnOpOverflow& Operator (char const* const op)     throw();
+        UnOpOverflow& Prefix   (bool        const prefix) throw();
+        UnOpOverflow& Limit    (T           const limit)  throw();
+        T           Number   () const throw();
+        char const* Operator () const throw();
+        bool        Prefix   () const throw();
+        T           Limit    () const throw();
+      private:
+        T           _number;
+        char const* _op;
+        bool        _prefix;
+        T           _limit;
     };
     
     // Overflow in a binary operation.
@@ -269,7 +288,7 @@ namespace DAC {
   }
   
   /***************************************************************************
-   * Global operators.
+   * Operators.
    ***************************************************************************/
   
   // Stream I/O operators.
@@ -632,6 +651,11 @@ namespace DAC {
     template <class T> class SafeBitCpm<T, SE_SE> { public: static T op (T const value); };
     template <class T> class SafeBitCpm<T, UE_UE> { public: static T op (T const value); };
     
+    // Safely negate.
+    template <class T, RelType> class SafeNegate;
+    template <class T> class SafeNegate<T, SE_SE> { public: static T op (T const value); };
+    template <class T> class SafeNegate<T, UE_UE> { public: static T op (T const value); };
+    
   }
   
   /***************************************************************************
@@ -662,8 +686,8 @@ namespace DAC {
   template <class T> inline SafeInt<T>  SafeInt<T>::operator -- (int) { SafeInt<T> retval(*this); op_sub(1); return retval; }
   
   // Sign operators.
-  template <class T> inline SafeInt<T> SafeInt<T>::operator + () const { return *this;      }
-  template <class T> inline SafeInt<T> SafeInt<T>::operator - () const { return *this * -1; }
+  template <class T> inline SafeInt<T> SafeInt<T>::operator + () const { return *this;                                                                                      }
+  template <class T> inline SafeInt<T> SafeInt<T>::operator - () const { return SafeInt<T>(SafeIntUtil::SafeNegate<T, SafeIntUtil::Relationship<T, T>::value>::op(_value)); }
   
   // Not operator.
   template <class T> inline bool SafeInt<T>::operator ! () const { return !_value; }
@@ -763,10 +787,6 @@ namespace DAC {
    * SafeIntUtil.
    ***************************************************************************/
   namespace SafeIntUtil {
-    
-    /*************************************************************************
-     * Class SafeCaster.
-     *************************************************************************/
     
     // Cast.
     template <class T, class U> inline U SafeCast<T, U, SE_SE>::op (T const value) {
@@ -2530,6 +2550,20 @@ namespace DAC {
       return value ^ std::numeric_limits<T>::max();
     }
     
+    // Negate.
+    template <class T> inline T SafeNegate<T, SE_SE>::op (T const value) {
+      if (value == std::numeric_limits<T>::min()) {
+        throw SafeIntErrors::UnOpOverflow<T>().Number(value).Operator("-").Prefix(true).Limit(std::numeric_limits<T>::max());
+      }
+      return SafeBitCpm<T, Relationship<T, T>::value>::op(value) + static_cast<T>(1);
+    }
+    template <class T> inline T SafeNegate<T, UE_UE>::op (T const value) {
+      if (value == static_cast<T>(0)) {
+        return value;
+      }
+      throw SafeIntErrors::UnOpOverflow<T>().Number(value).Operator("-").Prefix(true).Limit(0);
+    }
+    
     /*************************************************************************
      * Class SafeInt::_Relationship.
      *************************************************************************/
@@ -2593,7 +2627,7 @@ namespace DAC {
   }
   
   /***************************************************************************
-   * SafeInt Errors.
+   * Errors.
    ***************************************************************************/
   
   namespace SafeIntErrors {
@@ -2607,7 +2641,7 @@ namespace DAC {
       return "Unknown overflow.";
     }
     
-    template <class T, class U> inline char const* CastOverflow<T, U>::what () const throw() {
+    template <class T, class U> char const* CastOverflow<T, U>::what () const throw() {
       try {
         return (toString(_number) + ": Cast overflows type limit of " + toString(_limit) + ".").c_str();
       } catch (...) {
@@ -2619,7 +2653,23 @@ namespace DAC {
     template <class T, class U> inline T CastOverflow<T, U>::Number () const throw() { return _number; }
     template <class T, class U> inline U CastOverflow<T, U>::Limit  () const throw() { return _limit;  }
     
-    template <class T, class U> inline char const* BinOpOverflow<T, U>::what () const throw() {
+    template <class T> char const* UnOpOverflow<T>::what () const throw() {
+      try {
+        return (std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + DAC::toString(_number) + " overflows type limit of " + DAC::toString(_limit)).c_str();
+      } catch (...) {
+        return "Unary operation overflow. Error returning message string.";
+      }
+    }
+    template <class T> inline UnOpOverflow<T>& UnOpOverflow<T>::Number   (T           const number) throw() { _number = number; return *this; }
+    template <class T> inline UnOpOverflow<T>& UnOpOverflow<T>::Operator (char const* const op)     throw() { _op     = op;     return *this; }
+    template <class T> inline UnOpOverflow<T>& UnOpOverflow<T>::Prefix   (bool        const prefix) throw() { _prefix = prefix; return *this; }
+    template <class T> inline UnOpOverflow<T>& UnOpOverflow<T>::Limit    (T           const limit)  throw() { _limit  = limit;  return *this; }
+    template <class T> inline T           UnOpOverflow<T>::Number   () const throw() { return _number; }
+    template <class T> inline char const* UnOpOverflow<T>::Operator () const throw() { return _op;     }
+    template <class T> inline bool        UnOpOverflow<T>::Prefix   () const throw() { return _prefix; }
+    template <class T> inline T           UnOpOverflow<T>::Limit    () const throw() { return _limit;  }
+        
+    template <class T, class U> char const* BinOpOverflow<T, U>::what () const throw() {
       try {
         return (toString(_l) + " " + _op + " " + toString(_r) + ": Operation overflows type limit of " + toString(_limit) + ".").c_str();
       } catch (...) {
@@ -2635,7 +2685,7 @@ namespace DAC {
     template <class T, class U> inline U           BinOpOverflow<T, U>::Right    () const throw() { return _r;     }
     template <class T, class U> inline T           BinOpOverflow<T, U>::Limit    () const throw() { return _limit; }
     
-    template <class T, class U> inline char const* BitOverflow<T, U>::what () const throw() {
+    template <class T, class U> char const* BitOverflow<T, U>::what () const throw() {
       try {
         return (toString(_l) + " " + _op + " " + toString(_r) + ": Operation requires more than " + toString(std::numeric_limits<T>::digits + (std::numeric_limits<T>::is_signed ? 1 : 0)) + " bits of storage.").c_str();
       } catch (...) {
@@ -2649,7 +2699,7 @@ namespace DAC {
     template <class T, class U> inline char const* BitOverflow<T, U>::Operator () const throw() { return _op; }
     template <class T, class U> inline U           BitOverflow<T, U>::Right    () const throw() { return _r;  }
     
-    template <class T, class U> inline char const* DivByZero<T, U>::what () const throw() {
+    template <class T, class U> char const* DivByZero<T, U>::what () const throw() {
       try {
         return (toString(_l) + " " + _op + " " + toString(_r) + ": Divide by zero.").c_str();
       } catch (...) {
@@ -2667,7 +2717,7 @@ namespace DAC {
       return "Result of operation is undefined.";
     }
     
-    template <class T, class U> inline char const* BinOpUndefined<T, U>::what () const throw() {
+    template <class T, class U> char const* BinOpUndefined<T, U>::what () const throw() {
       try {
         return (toString(_l) + " " + _op + " " + toString(_r) + ": Result of operation is undefined.").c_str();
       } catch (...) {
@@ -2684,7 +2734,7 @@ namespace DAC {
   }
   
   /***************************************************************************
-   * Global operators.
+   * Operators.
    ***************************************************************************/
   
   // Stream I/O operators.
