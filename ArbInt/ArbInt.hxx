@@ -497,7 +497,7 @@ namespace DAC {
     
   }
   
-}
+//}
 
 /***************************************************************************
  * Global operators.
@@ -599,7 +599,7 @@ template <class T> DAC::ArbInt operator ^ (T               const  l, DAC::ArbInt
 /***************************************************************************
  * Inline and template definitions.
  ***************************************************************************/
-namespace DAC {
+//namespace DAC {
   
   // Errors.
   namespace ArbIntErrors {
@@ -1499,7 +1499,7 @@ namespace DAC {
     
   }
   
-}
+//}
 
 /***************************************************************************
  * Inline and template definitions.
@@ -1597,5 +1597,5 @@ template <class T> inline DAC::ArbInt operator ^ (DAC::ArbInt     const& l, DAC:
 template <class T> inline DAC::ArbInt operator ^ (DAC::SafeInt<T> const  l, DAC::ArbInt     const& r) { return DAC::ArbInt(r).op_bit_xor(l); }
 template <class T> inline DAC::ArbInt operator ^ (DAC::ArbInt     const& l, T               const  r) { return DAC::ArbInt(l).op_bit_xor(r); }
 template <class T> inline DAC::ArbInt operator ^ (T               const  l, DAC::ArbInt     const& r) { return DAC::ArbInt(r).op_bit_xor(l); }
-
+}
 #endif

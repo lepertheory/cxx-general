@@ -268,83 +268,78 @@ namespace DAC {
     
   }
   
-}
-
-/*****************************************************************************
- * Global operators.
- *****************************************************************************/
-
-// Stream I/O operators.
-template <class T> std::ostream&       operator << (std::ostream&       l, DAC::SafeInt<T> const& r);
-template <class T> std::ostringstream& operator << (std::ostringstream& l, DAC::SafeInt<T> const& r);
-template <class T> std::istream&       operator >> (std::istream&       l, DAC::SafeInt<T>&       r);
-
-// Arithmetic operators.
-template <class T, class U> DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator * (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator / (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator % (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator + (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator - (T               const  l, DAC::SafeInt<U> const& r);
-
-// Bit shift operators.
-template <class T, class U> DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator << (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator >> (T               const  l, DAC::SafeInt<U> const& r);
-
-// Comparison operators.
-template <class T, class U> bool operator >  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator >  (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator >  (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator >= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator >= (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator >= (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator <  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator <  (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator <  (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator <= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator <= (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator <= (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator == (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator == (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator == (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator != (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> bool operator != (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> bool operator != (T               const  l, DAC::SafeInt<U> const& r);
-
-// Bitwise operators.
-template <class T, class U> DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator & (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator | (T               const  l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r);
-template <class T, class U> DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, U               const  r);
-template <class T, class U> DAC::SafeInt<T> operator ^ (T               const  l, DAC::SafeInt<U> const& r);
-
-/*****************************************************************************
- * SafeInt utilities.
- *****************************************************************************
- * If it weren't for some extremely tricky template stuff, this would all be
- * inaccesable. As it is, you *could* use this, but I wouldn't recommend it. I
- * will not make any attempt to keep the interface to this stable.
- *****************************************************************************/
-
-namespace DAC {
+  /***************************************************************************
+   * Global operators.
+   ***************************************************************************/
   
+  // Stream I/O operators.
+  template <class T> std::ostream&       operator << (std::ostream&       l, SafeInt<T> const& r);
+  template <class T> std::ostringstream& operator << (std::ostringstream& l, SafeInt<T> const& r);
+  template <class T> std::istream&       operator >> (std::istream&       l, SafeInt<T>&       r);
+  
+  // Arithmetic operators.
+  template <class T, class U> SafeInt<T> operator * (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator * (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator * (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator / (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator / (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator / (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator % (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator % (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator % (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator + (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator + (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator + (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator - (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator - (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator - (T          const  l, SafeInt<U> const& r);
+  
+  // Bit shift operators.
+  template <class T, class U> SafeInt<T> operator << (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator << (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator << (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator >> (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator >> (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator >> (T          const  l, SafeInt<U> const& r);
+  
+  // Comparison operators.
+  template <class T, class U> bool operator >  (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> bool operator >  (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> bool operator >  (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> bool operator >= (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> bool operator >= (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> bool operator >= (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> bool operator <  (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> bool operator <  (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> bool operator <  (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> bool operator <= (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> bool operator <= (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> bool operator <= (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> bool operator == (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> bool operator == (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> bool operator == (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> bool operator != (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> bool operator != (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> bool operator != (T          const  l, SafeInt<U> const& r);
+  
+  // Bitwise operators.
+  template <class T, class U> SafeInt<T> operator & (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator & (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator & (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator | (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator | (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator | (T          const  l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator ^ (SafeInt<T> const& l, SafeInt<U> const& r);
+  template <class T, class U> SafeInt<T> operator ^ (SafeInt<T> const& l, U          const  r);
+  template <class T, class U> SafeInt<T> operator ^ (T          const  l, SafeInt<U> const& r);
+  
+  /***************************************************************************
+   * SafeInt utilities.
+   ***************************************************************************
+   * If it weren't for some extremely tricky template stuff, this would all be
+   * inaccesable. As it is, you *could* use this, but I wouldn't recommend it.
+   * I will not make any attempt to keep the interface to this stable.
+   ***************************************************************************/
   namespace SafeIntUtil {
   
     /*************************************************************************/
@@ -639,13 +634,9 @@ namespace DAC {
     
   }
   
-}
-  
-/*****************************************************************************
- * Inline and template definitions.
- *****************************************************************************/
-
-namespace DAC {
+  /***************************************************************************
+   * Inline and template definitions.
+   ***************************************************************************/
   
   /***************************************************************************
    * Class SafeInt.
@@ -2692,71 +2683,71 @@ namespace DAC {
     
   }
   
+  /***************************************************************************
+   * Global operators.
+   ***************************************************************************/
+  
+  // Stream I/O operators.
+  template <class T> inline std::ostream&       operator << (std::ostream&       l, SafeInt<T> const& r) { l << DAC::toString(static_cast<T>(r)); return l; }
+  template <class T> inline std::ostringstream& operator << (std::ostringstream& l, SafeInt<T> const& r) { l << DAC::toString(static_cast<T>(r)); return l; }
+  template <class T> inline std::istream&       operator >> (std::istream&       l, SafeInt<T>&       r) { T input; l >> input; r = input; return l;        }
+  
+  // Arithmetic operators.
+  template <class T, class U> inline SafeInt<T> operator * (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_mul(r); }
+  template <class T, class U> inline SafeInt<T> operator * (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_mul(r); }
+  template <class T, class U> inline SafeInt<T> operator * (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_mul(r); }
+  template <class T, class U> inline SafeInt<T> operator / (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_div(r); }
+  template <class T, class U> inline SafeInt<T> operator / (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_div(r); }
+  template <class T, class U> inline SafeInt<T> operator / (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_div(r); }
+  template <class T, class U> inline SafeInt<T> operator % (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_mod(r); }
+  template <class T, class U> inline SafeInt<T> operator % (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_mod(r); }
+  template <class T, class U> inline SafeInt<T> operator % (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_mod(r); }
+  template <class T, class U> inline SafeInt<T> operator + (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_add(r); }
+  template <class T, class U> inline SafeInt<T> operator + (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_add(r); }
+  template <class T, class U> inline SafeInt<T> operator + (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_add(r); }
+  template <class T, class U> inline SafeInt<T> operator - (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_sub(r); }
+  template <class T, class U> inline SafeInt<T> operator - (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_sub(r); }
+  template <class T, class U> inline SafeInt<T> operator - (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_sub(r); }
+  
+  // Bit shift operators.
+  template <class T, class U> inline SafeInt<T> operator << (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_shl(r); }
+  template <class T, class U> inline SafeInt<T> operator << (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_shl(r); }
+  template <class T, class U> inline SafeInt<T> operator << (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_shl(r); }
+  template <class T, class U> inline SafeInt<T> operator >> (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_shr(r); }
+  template <class T, class U> inline SafeInt<T> operator >> (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_shr(r); }
+  template <class T, class U> inline SafeInt<T> operator >> (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_shr(r); }
+  
+  // Comparison operators.
+  template <class T, class U> inline bool operator >  (SafeInt<T> const& l, SafeInt<U> const& r) { return  l.op_gt(r); }
+  template <class T, class U> inline bool operator >  (SafeInt<T> const& l, U          const  r) { return  l.op_gt(r); }
+  template <class T, class U> inline bool operator >  (T          const  l, SafeInt<U> const& r) { return !r.op_ge(l); }
+  template <class T, class U> inline bool operator >= (SafeInt<T> const& l, SafeInt<U> const& r) { return  l.op_ge(r); }
+  template <class T, class U> inline bool operator >= (SafeInt<T> const& l, U          const  r) { return  l.op_ge(r); }
+  template <class T, class U> inline bool operator >= (T          const  l, SafeInt<U> const& r) { return !r.op_gt(l); }
+  template <class T, class U> inline bool operator <  (SafeInt<T> const& l, SafeInt<U> const& r) { return  l.op_lt(r); }
+  template <class T, class U> inline bool operator <  (SafeInt<T> const& l, U          const  r) { return  l.op_lt(r); }
+  template <class T, class U> inline bool operator <  (T          const  l, SafeInt<U> const& r) { return !r.op_le(l); }
+  template <class T, class U> inline bool operator <= (SafeInt<T> const& l, SafeInt<U> const& r) { return  l.op_le(r); }
+  template <class T, class U> inline bool operator <= (SafeInt<T> const& l, U          const  r) { return  l.op_le(r); }
+  template <class T, class U> inline bool operator <= (T          const  l, SafeInt<U> const& r) { return !r.op_lt(l); }
+  template <class T, class U> inline bool operator == (SafeInt<T> const& l, SafeInt<U> const& r) { return  l.op_eq(r); }
+  template <class T, class U> inline bool operator == (SafeInt<T> const& l, U          const  r) { return  l.op_eq(r); }
+  template <class T, class U> inline bool operator == (T          const  l, SafeInt<U> const& r) { return  r.op_eq(l); }
+  template <class T, class U> inline bool operator != (SafeInt<T> const& l, SafeInt<U> const& r) { return  l.op_ne(r); }
+  template <class T, class U> inline bool operator != (SafeInt<T> const& l, U          const  r) { return  l.op_ne(r); }
+  template <class T, class U> inline bool operator != (T          const  l, SafeInt<U> const& r) { return  r.op_ne(l); }
+  
+  // Bitwise operators.
+  template <class T, class U> inline SafeInt<T> operator & (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_bit_and(r); }
+  template <class T, class U> inline SafeInt<T> operator & (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_bit_and(r); }
+  template <class T, class U> inline SafeInt<T> operator & (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_bit_and(r); }
+  template <class T, class U> inline SafeInt<T> operator | (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_bit_ior(r); }
+  template <class T, class U> inline SafeInt<T> operator | (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_bit_ior(r); }
+  template <class T, class U> inline SafeInt<T> operator | (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_bit_ior(r); }
+  template <class T, class U> inline SafeInt<T> operator ^ (SafeInt<T> const& l, SafeInt<U> const& r) { return SafeInt<T>(l).op_bit_xor(r); }
+  template <class T, class U> inline SafeInt<T> operator ^ (SafeInt<T> const& l, U          const  r) { return SafeInt<T>(l).op_bit_xor(r); }
+  template <class T, class U> inline SafeInt<T> operator ^ (T          const  l, SafeInt<U> const& r) { return SafeInt<T>(l).op_bit_xor(r); }
+  
 }
-
-/*****************************************************************************
- * Global operators.
- *****************************************************************************/
-
-// Stream I/O operators.
-template <class T> inline std::ostream&       operator << (std::ostream&       l, DAC::SafeInt<T> const& r) { l << DAC::toString(static_cast<T>(r)); return l; }
-template <class T> inline std::ostringstream& operator << (std::ostringstream& l, DAC::SafeInt<T> const& r) { l << DAC::toString(static_cast<T>(r)); return l; }
-template <class T> inline std::istream&       operator >> (std::istream&       l, DAC::SafeInt<T>&       r) { T input; l >> input; r = input; return l;        }
-
-// Arithmetic operators.
-template <class T, class U> inline DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mul(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator * (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_mul(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator * (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mul(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_div(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator / (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_div(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator / (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_div(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mod(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator % (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_mod(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator % (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_mod(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_add(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator + (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_add(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator + (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_add(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_sub(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator - (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_sub(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator - (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_sub(r); }
-
-// Bit shift operators.
-template <class T, class U> inline DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shl(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator << (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_shl(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator << (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shl(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shr(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator >> (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_shr(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator >> (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_shr(r); }
-
-// Comparison operators.
-template <class T, class U> inline bool operator >  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_gt(r); }
-template <class T, class U> inline bool operator >  (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_gt(r); }
-template <class T, class U> inline bool operator >  (T               const  l, DAC::SafeInt<U> const& r) { return !r.op_ge(l); }
-template <class T, class U> inline bool operator >= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_ge(r); }
-template <class T, class U> inline bool operator >= (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_ge(r); }
-template <class T, class U> inline bool operator >= (T               const  l, DAC::SafeInt<U> const& r) { return !r.op_gt(l); }
-template <class T, class U> inline bool operator <  (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_lt(r); }
-template <class T, class U> inline bool operator <  (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_lt(r); }
-template <class T, class U> inline bool operator <  (T               const  l, DAC::SafeInt<U> const& r) { return !r.op_le(l); }
-template <class T, class U> inline bool operator <= (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_le(r); }
-template <class T, class U> inline bool operator <= (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_le(r); }
-template <class T, class U> inline bool operator <= (T               const  l, DAC::SafeInt<U> const& r) { return !r.op_lt(l); }
-template <class T, class U> inline bool operator == (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_eq(r); }
-template <class T, class U> inline bool operator == (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_eq(r); }
-template <class T, class U> inline bool operator == (T               const  l, DAC::SafeInt<U> const& r) { return  r.op_eq(l); }
-template <class T, class U> inline bool operator != (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return  l.op_ne(r); }
-template <class T, class U> inline bool operator != (DAC::SafeInt<T> const& l, U               const  r) { return  l.op_ne(r); }
-template <class T, class U> inline bool operator != (T               const  l, DAC::SafeInt<U> const& r) { return  r.op_ne(l); }
-
-// Bitwise operators.
-template <class T, class U> inline DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_and(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator & (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_bit_and(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator & (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_and(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_ior(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator | (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_bit_ior(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator | (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_ior(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_xor(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator ^ (DAC::SafeInt<T> const& l, U               const  r) { return DAC::SafeInt<T>(l).op_bit_xor(r); }
-template <class T, class U> inline DAC::SafeInt<T> operator ^ (T               const  l, DAC::SafeInt<U> const& r) { return DAC::SafeInt<T>(l).op_bit_xor(r); }
 
 #endif
