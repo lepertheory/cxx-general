@@ -101,6 +101,12 @@ int main () {
     }
     //*/
     
+    test1 = 5;
+    cout << "testing scalar types: " << endl;
+    cout << "uint: " << test1 << " * " << static_cast<unsigned>(5) << " = " << (test1 * static_cast<unsigned>(5)) << endl;
+    cout << "sint: " << test1 << " * " << 3                        << " = " << (test1 * 3)                        << endl;
+    cout << "flpt: " << test1 << " * " << -0.6                     << " = " << (test1 * -0.6)                     << endl;
+    
     return 0;
     
   } catch (Exception& e) {

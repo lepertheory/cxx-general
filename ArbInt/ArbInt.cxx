@@ -248,7 +248,7 @@ namespace DAC {
           }
           
           // Multiply into the digit product and carry.
-          (*(digproduct._digits))[j] = (*(digproduct._digits))[j] + (SafeInt<_DigT>((*(number._digits))[i]) * (*_digits)[j]);
+          (*(digproduct._digits))[j] += (SafeInt<_DigT>((*(number._digits))[i]) * (*_digits)[j]);
           digproduct._carry(j);
           
         }

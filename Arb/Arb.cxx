@@ -5,17 +5,16 @@
  *****************************************************************************/
 
 // STL includes.
-#include <string>
-#include <algorithm>
-#include <iostream> // FIXME: For debugging only.
+  #include <string>
+  #include <algorithm>
 
 // Internal includes.
-#include "rppower.hxx"
-#include "toString.hxx"
-#include "reduce.hxx"
+  #include "rppower.hxx"
+  #include "toString.hxx"
+  #include "reduce.hxx"
 
 // Class include.
-#include "Arb.hxx"
+  #include "Arb.hxx"
 
 // Namespaces used.
 using namespace std;
