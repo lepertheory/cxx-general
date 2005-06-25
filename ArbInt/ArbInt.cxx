@@ -33,9 +33,9 @@ namespace DAC {
   /***************************************************************************/
   // Data members.
   
-  int           ArbInt::s_digitbits = 0;
-  ArbInt::_DigT ArbInt::s_digitbase = 0;
-  ArbInt::_DigT ArbInt::s_bitmask   = 0;
+  int           ArbInt::s_digitbits = numeric_limits<_DigT>::digits >> 1;
+  ArbInt::_DigT ArbInt::s_digitbase = 1 << (numeric_limits<_DigT>::digits >> 1);
+  ArbInt::_DigT ArbInt::s_bitmask   = (1 << (numeric_limits<_DigT>::digits >> 1)) - 1;
   
   ArbInt::_NumChrT ArbInt::s_numodigits = 36;
   ArbInt::_StrChrT ArbInt::s_odigits[]  = {
@@ -802,7 +802,148 @@ namespace DAC {
     
   }
   
+  // Bitwise shift by ArbInt.
+  ArbInt& ArbInt::_shift (ArbInt const& bits, _Dir const dir) {
+    
+    // Only shift if it is needed.
+    if (*this && (digits || bits)) {
+      
+      // Convert bits to digits if the number of bits requested meets or
+      // exceeds the number of bits in a digit.
+      SafeInt<unsigned int>      tmp_bits;
+      SafeInt<_DigsT::size_type> tmp_digits;
+      if (bits >= s_digitbits) {
+        tmp_digits = bits / s_digitbits;
+        tmp_bits   = bits - tmp_digits * s_digitbits;
+      } else {
+        tmp_bits = bits;
+      }
+      
+      // Shift.
+      _shiftDigits(tmp_digits, dir);
+      _shiftBits  (tmp_bits,   dir);
+      
+    }
+    
+    // Return.
+    return *this;
+    
+  }
+  
   // Bitwise shift.
+  ArbInt& ArbInt::_shift (SafeInt<_DigsT::size_type> const digits, SafeInt<unsigned int> const bits, _Dir const dir) {
+    
+    // Only shift if it is needed.
+    if (*this && (digits || bits)) {
+      
+      // Convert bits to digits if the number of bits requested meets or
+      // exceeds the number of bits in a digit.
+      SafeInt<unsigned int>      tmp_bits;
+      SafeInt<_DigsT::size_type> tmp_digits;
+      if (bits >= s_digitbits) {
+        tmp_digits = bits / s_digitbits;
+        tmp_bits   = bits - tmp_digits * s_digitbits;
+      } else {
+        tmp_bits = bits;
+      }
+      
+      // Shift.
+      _shiftDigits(tmp_digits, dir);
+      _shiftBits  (tmp_bits,   dir);
+      
+    }
+    
+    // Return.
+    return *this;
+    
+  }
+  
+  // Bitwise shift entire digits.
+  ArbInt& ArbInt::_shiftDigits (SafeInt<_DigsT::size_type> const digits, _Dir const dir) {
+    
+    // Only shift if it is needed.
+    if (*this && digits) {
+      
+      // Shift whole digits.
+      if (dir == _DIR_L) {
+        
+        // Check if shift will overrun _DigsT::size_type.
+        if (digits > numeric_limits<_DigsT::size_type>::max() - _digits->size()) {
+          throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Shift requested will overrun maximum size of digit container").Offset(digits).Limit(numeric_limits<_DigsT::size_type>::max());
+        }
+        
+        // Insert 0s to shift left.
+        _digits->insert(_digits->begin(), digits, 0);
+        
+      } else {
+        
+        // Delete low-order digits to shift right. If the shift will leave no
+        // digits, just zero it out.
+        if (digits < _digits->size()) {
+          _digits->erase(_digits->begin(), _digits->begin() + digits);
+        } else {
+          _digits->clear();
+        }
+        
+      }
+      
+    }
+    
+    // Return
+    return *this;
+    
+  }
+  
+  // Bitwise shift by bits.
+  ArbInt& ArbInt::_shiftBits (SafeInt<unsigned int> const bits, _Dir const dir) {
+    
+    // Only shift if it is needed.
+    if (*this && bits) {
+      
+      // Pull out any whole digits and shift them.
+      SafeInt<_DigsT::size_type> tmp_digits = bits / s_digitbits;
+      SafeInt<unsigned int>      tmp_bits   = bits - tmp_digits;
+      if (tmp_digits) {
+        _shiftDigits(tmp_digits, dir);
+      }
+      
+      // Shift any remaining bits.
+      if (bits) {
+        
+        // Work area
+        _DigT carry    = 0;
+        _DigT oldcarry = 0;
+        _DigT bitmask  = rppower(SafeInt<_DigT>(2), tmp_bits) - 1;
+        int   bitdiff  = s_digitbits - tmp_bits;
+        
+        // Select shift direction.
+        if (dir == _DIR_L) {
+          _DigT bitmask <<= (s_digitbits - tmp_bits);
+          for (_DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
+            carry     = *i & bitmask;
+            *i       <<= tmp_bits;
+            *i        |= oldcarry;
+            oldcarry   = carry >> bitdiff;
+          }
+        } else {
+          for (_DigsT::reverse_iterator i = _digits->rbegin(); i != _digits->rend(); ++i) {
+            carry      = *i & bitmask;
+            *i       >>= bitshift;
+            *i        |= oldcarry;
+            oldcarry   = carry << bitdiff;
+          }
+        }
+        _trimZeros();
+      }
+      
+    }
+    
+    // Return.
+    return *this;
+    
+  }
+  
+  /*
   ArbInt& ArbInt::_shift (ArbInt const& number, _Dir const dir) {
     
     // Only shift if it is needed.
@@ -876,14 +1017,12 @@ namespace DAC {
     return *this;
     
   }
+  */
   
   // Class constructor.
   void ArbInt::s_classInit () {
     
     // Get the maximum number that can be held in a single digit.
-    s_digitbits = numeric_limits<_DigT>::digits >> 1;
-    s_digitbase = rppower(SafeInt<_DigT>(2), s_digitbits);
-    s_bitmask   = SafeInt<_DigT>(s_digitbase) - 1;
     
     // Get the input digits. If this changes, you need to update s_numidigits!
     SafeInt<_NumChrT> j;
