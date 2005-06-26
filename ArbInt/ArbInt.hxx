@@ -255,9 +255,9 @@ namespace DAC {
       
       // Divide.
       template <class T, _NumType> class _Div;
-      template <class T> class _Div<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> r, ArbInt* remainder = 0); static void op (ArbInt& l, T const r, ArbInt* const remainder = 0); };
-      template <class T> class _Div<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> r, ArbInt* remainder = 0); static void op (ArbInt& l, T const r, ArbInt* const remainder = 0); };
-      template <class T> class _Div<T, _NUM_FLPT> { public:                                                                  static void op (ArbInt& l, T const r, ArbInt* const remainder = 0); };
+      template <class T> class _Div<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const r, ArbInt* const remainder = 0); static void op (ArbInt& l, T const r, ArbInt* const remainder = 0); };
+      template <class T> class _Div<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const r, ArbInt* const remainder = 0); static void op (ArbInt& l, T const r, ArbInt* const remainder = 0); };
+      template <class T> class _Div<T, _NUM_FLPT> { public:                                                                              static void op (ArbInt& l, T const r, ArbInt* const remainder = 0); };
       
       // Modulo divide.
       template <class T, _NumType> class _Mod;
@@ -277,6 +277,12 @@ namespace DAC {
       template <class T> class _Sub<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
       template <class T> class _Sub<T, _NUM_FLPT> { public:                                                 static void op (ArbInt& l, T const r); };
       
+      // Shift.
+      template <class T, _NumType> class _Shift;
+      template <class T> class _Shift<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const r, _Dir const dir); static void op (ArbInt& l, T const r, _Dir const dir); };
+      template <class T> class _Shift<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const r, _Dir const dir); static void op (ArbInt& l, T const r, _Dir const dir); };
+      template <class T> class _Shift<T, _NUM_FLPT> { public:                                                                 static void op (ArbInt& l, T const r, _Dir const dir); };
+      
       // Shift left.
       template <class T, _NumType> class _ShL;
       template <class T> class _ShL<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
@@ -291,39 +297,39 @@ namespace DAC {
       
       // Greater than.
       template <class T, _NumType> class _GT;
-      template <class T> class _GT<T, _NUM_UINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _GT<T, _NUM_SINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _GT<T, _NUM_FLPT> { public:                                                 static void op (ArbInt const& l, T r); };
+      template <class T> class _GT<T, _NUM_UINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _GT<T, _NUM_SINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _GT<T, _NUM_FLPT> { public:                                                       static bool op (ArbInt const& l, T const r); };
       
       // Greater than or equal to.
       template <class T, _NumType> class _GE;
-      template <class T> class _GE<T, _NUM_UINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _GE<T, _NUM_SINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _GE<T, _NUM_FLPT> { public:                                                 static void op (ArbInt const& l, T r); };
+      template <class T> class _GE<T, _NUM_UINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _GE<T, _NUM_SINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _GE<T, _NUM_FLPT> { public:                                                       static bool op (ArbInt const& l, T const r); };
       
       // Less than.
       template <class T, _NumType> class _LT;
-      template <class T> class _LT<T, _NUM_UINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _LT<T, _NUM_SINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _LT<T, _NUM_FLPT> { public:                                                 static void op (ArbInt const& l, T r); };
+      template <class T> class _LT<T, _NUM_UINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _LT<T, _NUM_SINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _LT<T, _NUM_FLPT> { public:                                                       static bool op (ArbInt const& l, T const r); };
       
       // Less than or equal to.
       template <class T, _NumType> class _LE;
-      template <class T> class _LE<T, _NUM_UINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _LE<T, _NUM_SINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _LE<T, _NUM_FLPT> { public:                                                 static void op (ArbInt const& l, T r); };
+      template <class T> class _LE<T, _NUM_UINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _LE<T, _NUM_SINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _LE<T, _NUM_FLPT> { public:                                                       static bool op (ArbInt const& l, T const r); };
       
       // Equal to.
       template <class T, _NumType> class _EQ;
-      template <class T> class _EQ<T, _NUM_UINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _EQ<T, _NUM_SINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _EQ<T, _NUM_FLPT> { public:                                                 static void op (ArbInt const& l, T r); };
+      template <class T> class _EQ<T, _NUM_UINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _EQ<T, _NUM_SINT> { public: static void op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _EQ<T, _NUM_FLPT> { public:                                                       static bool op (ArbInt const& l, T const r); };
       
       // Not equal to.
       template <class T, _NumType> class _NE;
-      template <class T> class _NE<T, _NUM_UINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _NE<T, _NUM_SINT> { public: static void op (ArbInt const& l, SafeInt<T> r); static void op (ArbInt const& l, T r); };
-      template <class T> class _NE<T, _NUM_FLPT> { public:                                                 static void op (ArbInt const& l, T r); };
+      template <class T> class _NE<T, _NUM_UINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _NE<T, _NUM_SINT> { public: static bool op (ArbInt const& l, SafeInt<T> const r); static bool op (ArbInt const& l, T const r); };
+      template <class T> class _NE<T, _NUM_FLPT> { public:                                                       static bool op (ArbInt const& l, T const r); };
       
       // Bitwise AND.
       template <class T, _NumType> class _Bit_AND;
@@ -1539,14 +1545,14 @@ namespace DAC {
       
       // Catch any negative errors and convert the operator.
       try {
-        l.op_sub(ArbInt(r * -1.0));
+        l.op_sub(ArbInt(tmp * -1.0));
       } catch (ArbIntErrors::NegativeBinary<ArbInt, Arbint>) {
-        throw ArbIntErrors::NegativeBinary<ArbInt, T>().Left(l).Operator("+").Right(r);
+        throw ArbIntErrors::NegativeBinary<ArbInt, T>().Left(l).Operator("+").Right(tmp);
       }
       
     // Otherwise add normally.
     } else {
-      l.op_add(ArbInt(r));
+      l.op_add(ArbInt(tmp));
     }
     
   }
@@ -1623,12 +1629,12 @@ namespace DAC {
     // If subtracting a negative, add the opposite, otherwise subtract
     // normally.
     if (tmp < 0) {
-      l.op_add(ArbInt(r * -1.0));
+      l.op_add(ArbInt(tmp * -1.0));
     } else {
       
       // Catch and convert any errors thrown.
       try {
-        l.op_sub(ArbInt(r));
+        l.op_sub(ArbInt(tmp));
       } catch (ArbIntErrors::NegativeBinary<ArbInt, ArbInt>) {
         throw ArbIntErrors::NegativeBinary<ArbInt, T>().Left(l).Operator("+").Right(r);
       }
@@ -1637,8 +1643,8 @@ namespace DAC {
     
   }
   
-  // Shift left by an unsigned integer type.
-  template <class T> void ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
+  // Shift by an unsigned integer type.
+  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r, _Dir const dir) {
     
     // Only shift if it is needed.
     if (l && r) {
@@ -1655,74 +1661,193 @@ namespace DAC {
       }
       
       // Shift.
-      _shiftDigits(tmp_digits, ArbInt::_DIR_L);
-      _shiftBits  (tmp_digits, ArbInt::_DIR_R);
+      _shiftDigits(tmp_digits, dir);
+      _shiftBits  (tmp_digits, dir);
       
     }
     
   }
-  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r, _Dir const dir) { ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r), dir); }
   
-  // Shift left by a signed integer type.
-  template <class T> void ArbInt::_ShL<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
+  // Shift by a signed integer type.
+  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r, _Dir const dir) {
     
     // If shifting a negative, shift abs in the opposite direction.
     if (r < 0) {
       
+      // Opposite shift direction.
+      _Dir tmpdir = (dir == _DIR_L) ? _DIR_R : _DIR_L;
+      
       // Use the _Mod trick to convert to a positive number.
       try {
-        ArbInt::_ShR<T, ArbInt::_NUM_UINT>(l, -r);
+        ArbInt::_Shift<T, ArbInt::_NUM_UINT>(l, -r, tmpdir);
       } catch (SafeIntErrors::UnOpOverflow<T>) {
-        l.op_shr(ArbInt(~r) + 1);
+        l._shiftBits(ArbInt(~r) + 1, tmpdir);
       }
       
     // Otherwise shift nomally.
     } else {
-      ArbInt::_ShL<T, ArbInt::_NUM_UINT>(l, r);
+      ArbInt::_Shift<T, ArbInt::_NUM_UINT>(l, r, dir);
     }
     
   }
-  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r, _Dir const dir) { ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r), dir); }
   
-   template <class T> inline ArbInt& ArbInt::op_shl (T      const  number) { ArbInt retval(*this, true); retval._shift(number, _DIR_L); return copy(retval); }
-  template <class T> inline ArbInt& ArbInt::op_shr (T      const  number) { ArbInt retval(*this, true); retval._shift(number, _DIR_R); return copy(retval); }
+  // Shift by a floating-point type.
+  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r, _Dir const dir) {
+    
+    // Round to the nearest whole number.
+    T tmp = floor(r + 0.5);
+    
+    // If shifting by a negative, shift the opposite direction.
+    if (tmp < 0) {
+      l._shiftBits(ArbInt(tmp * -1.0), (dir == _DIR_L) ? _DIR_R : _DIR_L);
+    } else {
+      l._shiftBits(ArbInt(tmp), dir);
+    }
+    
+  }
+  
+  // Shift left.
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_FLPT>(l, r, _DIR_L); }
+  
+  // Shift right.
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_FLPT>(l, r, _DIR_R); }
+  
+  // Greater than an unsigned integer type.
+  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) {
+    
+    // If the number is too large to compare directly, resort to conversion to
+    // ArbInt then compare.
+    if (r >= ArbInt::s_digitbase) {
+      return l.op_gt(ArbInt(r));
+    }
+    
+    // If the container is empty, it cannot be greater than anything but a
+    // negative number.
+    if (l.isZero()) {
+      return false;
+    }
+    
+    // If the container is larger than 1, it must be greater.
+    if (l._digits->size() > 1) {
+      return true;
+    }
+    
+    // Compare.
+    return (*(l._digits))[0] > number;
+    
+  }
+  template <class T> inline bool ArbInt::_GT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T const r) { return ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  
+  // Greater than a signed integer type.
+  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) {
+    
+    // Always greater than negative numbers.
+    if (r < 0) {
+      return true;
+    }
+    
+    // Now compare as unsigned.
+    return ArbInt::_GT<T ArbInt::_NUM_UINT>::op(l, r);
+    
+  }
+  template <class T> inline bool ArbInt::_GT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T const r) { return ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  
+  // Greater than a floating-point type.
+  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, SafeInt<T> const r) {
+    
+    // Round to the nearest whole number.
+    T tmp = floor(r + 0.5);
+    
+    // Always greater than negative numbers.
+    if (tmp < 0) {
+      return true;
+    }
+    
+    // Convert to ArbInt and compare.
+    return l.op_gt(ArbInt(tmp));
+    
+  }
+  
+  // Greater than or equal to.
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T          const r) { return !ArbInt::_LT<T, ArbInt::_NUM_FLPT>::op(l, r); }
+  
+  // Less than an unsigned integer type.
+  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) {
+    
+    // If the number is too large to compare directly, resort to conversion to
+    // ArbInt then compare.
+    if (r >= ArbInt::s_digitbase) {
+      return l.op_lt(ArbInt(r));
+    }
+    
+    // If the container is empty, it is less than anything but 0.
+    if (l.isZero()) {
+      return !(r == 0);
+    }
+    
+    // If the container is larger than 1, it cannot be less.
+    if (l._digits->size() > 1) {
+      return false;
+    }
+    
+    // Compare.
+    return (*(l._digits))[0] < number;
+    
+  }
+  template <class T> inline bool ArbInt::_LT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T const r) { return ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  
+  // Less than a signed integer type.
+  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) {
+    
+    // Never less than negative numbers.
+    if (r < 0) {
+      return false;
+    }
+    
+    // Now compare as unsigned.
+    return ArbInt::_LT<T ArbInt::_NUM_UINT>::op(l, r);
+    
+  }
+  template <class T> inline bool ArbInt::_LT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T const r) { return ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  
+  // Less than a floating-point type.
+  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, SafeInt<T> const r) {
+    
+    // Round to the nearest whole number.
+    T tmp = floor(r + 0.5);
+    
+    // Never less than negative numbers.
+    if (tmp < 0) {
+      return false;
+    }
+    
+    // Convert to ArbInt and compare.
+    return l.op_lt(ArbInt(tmp));
+    
+  }
+  
+ // Less than or equal to.
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T          const r) { return !ArbInt::_GT<T, ArbInt::_NUM_FLPT>::op(l, r); }
+  
   /*
-      // Shift left.
-      template <class T, _NumType> class _ShL;
-      template <class T> class _ShL<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _ShL<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _ShL<T, _NUM_FLPT> { public:                                                  static void op (ArbInt& l, T const r); };
-      
-      // Shift right.
-      template <class T, _NumType> class _ShR;
-      template <class T> class _ShR<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _ShR<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _ShR<T, _NUM_FLPT> { public:                                                  static void op (ArbInt& l, T const r); };
-      
-      // Greater than.
-      template <class T, _NumType> class _GT;
-      template <class T> class _GT<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _GT<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _GT<T, _NUM_FLPT> { public:                                                  static void op (ArbInt& l, T const r); };
-      
-      // Greater than or equal to.
-      template <class T, _NumType> class _GE;
-      template <class T> class _GE<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _GE<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _GE<T, _NUM_FLPT> { public:                                                  static void op (ArbInt& l, T const r); };
-      
-      // Less than.
-      template <class T, _NumType> class _LT;
-      template <class T> class _LT<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _LT<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _LT<T, _NUM_FLPT> { public:                                                  static void op (ArbInt& l, T const r); };
-      
-      // Less than or equal to.
-      template <class T, _NumType> class _LE;
-      template <class T> class _LE<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _LE<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
-      template <class T> class _LE<T, _NUM_FLPT> { public:                                                  static void op (ArbInt& l, T const r); };
-      
       // Equal to.
       template <class T, _NumType> class _EQ;
       template <class T> class _EQ<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const& r); static void op (ArbInt& l, T const r); };
