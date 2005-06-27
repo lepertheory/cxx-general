@@ -33,9 +33,9 @@ namespace DAC {
   /***************************************************************************/
   // Data members.
   
-  int           ArbInt::s_digitbits = numeric_limits<_DigT>::digits >> 1;
-  ArbInt::_DigT ArbInt::s_digitbase = 1 << (numeric_limits<_DigT>::digits >> 1);
-  ArbInt::_DigT ArbInt::s_bitmask   = (1 << (numeric_limits<_DigT>::digits >> 1)) - 1;
+  int           const ArbInt::s_digitbits = numeric_limits<_DigT>::digits >> 1;
+  ArbInt::_DigT const ArbInt::s_digitbase = 1 << (numeric_limits<_DigT>::digits >> 1);
+  ArbInt::_DigT const ArbInt::s_bitmask   = (1 << (numeric_limits<_DigT>::digits >> 1)) - 1;
   
   ArbInt::_NumChrT ArbInt::s_numodigits = 36;
   ArbInt::_StrChrT ArbInt::s_odigits[]  = {
@@ -248,7 +248,11 @@ namespace DAC {
           }
           
           // Multiply into the digit product and carry.
-          (*(digproduct._digits))[j] += (SafeInt<_DigT>((*(number._digits))[i]) * (*_digits)[j]);
+          cout << "(*(digproduct._digits))[j]: " << (*(digproduct._digits))[j] << endl;
+          cout << "(*(number._digits))[i]:     " << (*(number._digits))[i]     << endl;
+          cout << "(*_digits)[j]:              " << (*_digits)[j]              << endl;
+          (*(digproduct._digits))[j] += SafeInt<_DigT>((*(number._digits))[i]) * (*_digits)[j];
+          cout << "(*(digproduct._digits))[j]: " << (*(digproduct._digits))[j] << endl;
           digproduct._carry(j);
           
         }
@@ -442,7 +446,7 @@ namespace DAC {
       }
       
       // Add this digit and carry.
-      (*(retval._digits))[i] = SafeInt<_DigT>((*(retval._digits))[i]) + (*(number._digits))[i];
+      (*(retval._digits))[i] += SafeInt<_DigT>((*(number._digits))[i]);
       retval._carry(i);
       
     }
@@ -806,7 +810,7 @@ namespace DAC {
   ArbInt& ArbInt::_shift (ArbInt const& bits, _Dir const dir) {
     
     // Only shift if it is needed.
-    if (*this && (digits || bits)) {
+    if (*this && bits) {
       
       // Convert bits to digits if the number of bits requested meets or
       // exceeds the number of bits in a digit.
@@ -880,7 +884,7 @@ namespace DAC {
         // Delete low-order digits to shift right. If the shift will leave no
         // digits, just zero it out.
         if (digits < _digits->size()) {
-          _digits->erase(_digits->begin(), _digits->begin() + digits);
+          _digits->erase(_digits->begin(), _digits->begin() + static_cast<_DigsT::size_type>(digits));
         } else {
           _digits->clear();
         }
@@ -918,7 +922,7 @@ namespace DAC {
         
         // Select shift direction.
         if (dir == _DIR_L) {
-          _DigT bitmask <<= (s_digitbits - tmp_bits);
+          bitmask <<= (s_digitbits - tmp_bits);
           for (_DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
             carry     = *i & bitmask;
             *i       <<= tmp_bits;
@@ -928,7 +932,7 @@ namespace DAC {
         } else {
           for (_DigsT::reverse_iterator i = _digits->rbegin(); i != _digits->rend(); ++i) {
             carry      = *i & bitmask;
-            *i       >>= bitshift;
+            *i       >>= tmp_bits;
             *i        |= oldcarry;
             oldcarry   = carry << bitdiff;
           }

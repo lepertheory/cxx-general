@@ -78,25 +78,13 @@ namespace DAC {
       template <class U> SafeInt& operator = (SafeInt<U> const value);
       template <class U> SafeInt& operator = (U          const value);
       
-      // Arithmetic assignment operators.
-      template <class U> SafeInt& operator *= (U const value);
-      template <class U> SafeInt& operator /= (U const value);
-      template <class U> SafeInt& operator %= (U const value);
-      template <class U> SafeInt& operator += (U const value);
-      template <class U> SafeInt& operator -= (U const value);
-      
-      // Bit shift assignment operators.
-      template <class U> SafeInt& operator <<= (U const value);
-      template <class U> SafeInt& operator >>= (U const value);
-      
-      // Bitwise assignment operators.
-      template <class U> SafeInt& operator &= (U const value);
-      template <class U> SafeInt& operator |= (U const value);
-      template <class U> SafeInt& operator ^= (U const value);
-      
       // Accessors.
       SafeInt& Value (T const value);
       T        Value ()              const;
+      
+      // Make an exact bitwise copy.
+      template <class U> SafeInt& setBitwise (SafeInt<U> const value);
+      template <class U> SafeInt& setBitwise (U          const value);
       
       // Arithmetic operator backends.
       template <class U> SafeInt& op_mul (SafeInt<U> const value);
@@ -343,20 +331,93 @@ namespace DAC {
   template <class T, class U> SafeInt<T> operator ^ (T          const l, SafeInt<U> const r);
   
   // Arithmetic assignment operators.
-  template <class T, class U> T operator *= (T const l, SafeInt<U> const r);
-  template <class T, class U> T operator /= (T const l, SafeInt<U> const r);
-  template <class T, class U> T operator %= (T const l, SafeInt<U> const r);
-  template <class T, class U> T operator += (T const l, SafeInt<U> const r);
-  template <class T, class U> T operator -= (T const l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator *= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator *= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator *= (T&          l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator /= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator /= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator /= (T&          l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator %= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator %= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator %= (T&          l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator += (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator += (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator += (T&          l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator -= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator -= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator -= (T&          l, SafeInt<U> const r);
   
   // Bit shift assignment operators.
-  template <class T, class U> T operator <<= (T const l, SafeInt<U> const r);
-  template <class T, class U> T operator >>= (T const l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator <<= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator <<= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator <<= (T&          l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator >>= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator >>= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator >>= (T&          l, SafeInt<U> const r);
   
   // Bitwise assignment operators.
-  template <class T, class U> T operator &= (T const l, SafeInt<U> const r);
-  template <class T, class U> T operator |= (T const l, SafeInt<U> const r);
-  template <class T, class U> T operator ^= (T const l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator &= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator &= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator &= (T&          l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator |= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator |= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator |= (T&          l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator ^= (SafeInt<T>& l, SafeInt<U> const r);
+  template <class T, class U> SafeInt<T>& operator ^= (SafeInt<T>& l, U          const r);
+  template <class T, class U> T&          operator ^= (T&          l, SafeInt<U> const r);
+  
+  /**************************************************************************
+   * Extensions to std::
+   **************************************************************************/
+}
+
+namespace std {
+  
+  template <> template <class T> struct numeric_limits< DAC::SafeInt<T> > {
+    
+    static const bool is_specialized = numeric_limits<T>::is_specialized;
+    
+    static T min () throw() { return numeric_limits<T>::min(); }
+    static T max () throw() { return numeric_limits<T>::max(); }
+    
+    static int  const digits     = numeric_limits<T>::digits;
+    static int  const digits10   = numeric_limits<T>::digits10;
+    static bool const is_signed  = numeric_limits<T>::is_signed;
+    static bool const is_integer = numeric_limits<T>::is_integer;
+    static bool const is_exact   = numeric_limits<T>::is_exact;
+    static int  const radix      = numeric_limits<T>::radix;
+    static T          epsilon     () { return numeric_limits<T>::epsilon();     }
+    static T          round_error () { return numeric_limits<T>::round_error(); }
+    
+    static int const min_exponent   = numeric_limits<T>::min_exponent;
+    static int const min_exponent10 = numeric_limits<T>::min_exponent10;
+    static int const max_exponent   = numeric_limits<T>::max_exponent;
+    static int const max_exponent10 = numeric_limits<T>::max_exponent10;
+    
+    static bool               const has_infinity      = numeric_limits<T>::has_infinity;
+    static bool               const has_quiet_NaN     = numeric_limits<T>::has_quiet_NaN;
+    static bool               const has_signaling_NaN = numeric_limits<T>::has_signaling_NaN;
+    static float_denorm_style const has_denorm        = numeric_limits<T>::has_denorm;
+    static bool               const has_denorm_loss   = numeric_limits<T>::has_denorm_loss;
+    
+    static T infinity      () throw() { return numeric_limits<T>::infinity();      }
+    static T quiet_NaN     () throw() { return numeric_limits<T>::quiet_NaN();     }
+    static T signaling_NaN () throw() { return numeric_limits<T>::signaling_NaN(); }
+    static T denorm_min    () throw() { return numeric_limits<T>::denorm_min();    }
+    
+    static bool const is_iec559  = numeric_limits<T>::is_iec559;
+    static bool const is_bounded = numeric_limits<T>::is_bounded;
+    static bool const is_modulo  = numeric_limits<T>::is_modulo;
+    
+    static bool              const traps           = numeric_limits<T>::traps;
+    static bool              const tinyness_before = numeric_limits<T>::tinyness_before;
+    static float_round_style const round_style     = numeric_limits<T>::round_style;
+    
+  };
+  
+}
+
+namespace DAC {
   
   /**************************************************************************
    * SafeInt utilities.
@@ -715,25 +776,13 @@ namespace DAC {
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator = (SafeInt<U> const value) { _value = static_cast<T>(value);                                                          return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator = (U          const value) { _value = SafeIntUtil::SafeCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(value); return *this; }
   
-  // Arithmetic assignment operators.
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator *= (U const value) { return op_mul(value); }
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator /= (U const value) { return op_div(value); }
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator %= (U const value) { return op_mod(value); }
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator += (U const value) { return op_add(value); }
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator -= (U const value) { return op_sub(value); }
-  
-  // Bit shift assignment operators.
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator <<= (U const value) { return op_shl(value); }
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator >>= (U const value) { return op_shr(value); }
-  
-  // Bitwise assignment operators.
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator &= (U const value) { return op_bit_and(value); }
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator |= (U const value) { return op_bit_ior(value); }
-  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator ^= (U const value) { return op_bit_xor(value); }
-  
   // Accessors.
   template <class T> inline SafeInt<T>& SafeInt<T>::Value (T const value)       { _value = value; return *this; }
   template <class T> inline T           SafeInt<T>::Value ()              const { return _value;                }
+  
+  // Make an exact bitwise copy.
+  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::setBitwise (SafeInt<U> const value) { _value = SafeIntUtil::RawCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(static_cast<U>(value)); return *this; }
+  template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::setBitwise (U          const value) { _value = SafeIntUtil::RawCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(value);                 return *this; }
   
   // Arithmetic operator backends.
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_mul (SafeInt<U> const value) { _value = SafeIntUtil::SafeMul<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
@@ -774,7 +823,7 @@ namespace DAC {
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_ior (U          const value) { _value = SafeIntUtil::SafeBitIOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_xor (SafeInt<U> const value) { _value = SafeIntUtil::SafeBitXOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_xor (U          const value) { _value = SafeIntUtil::SafeBitXOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
-  template <class T>                    inline SafeInt<T>& SafeInt<T>::op_bit_cpm ()                 { _value = SafeIntUtil::SafeBitCpm<T,    SafeIntUtil::Relationship<T, T>::value>::op(_value);                        return *this; }
+  template <class T>                    inline SafeInt<T>& SafeInt<T>::op_bit_cpm ()                       { _value = SafeIntUtil::SafeBitCpm<T,    SafeIntUtil::Relationship<T, T>::value>::op(_value);                        return *this; }
   
   /***************************************************************************
    * SafeIntUtil.
@@ -2792,20 +2841,40 @@ namespace DAC {
   template <class T, class U> inline SafeInt<T> operator ^ (T          const l, SafeInt<U> const r) { return SafeInt<T>(l).op_bit_xor(r); }
   
   // Arithmetic assignment operators.
-  template <class T, class U> inline T operator *= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_mul(r); }
-  template <class T, class U> inline T operator /= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_div(r); }
-  template <class T, class U> inline T operator %= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_mod(r); }
-  template <class T, class U> inline T operator += (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_add(r); }
-  template <class T, class U> inline T operator -= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_sub(r); }
+  template <class T, class U> inline SafeInt<T>& operator *= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_mul(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator *= (SafeInt<T>& l, U          const r) { return l.op_mul(r);                    }
+  template <class T, class U> inline T&          operator *= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_mul(r); return l; }
+  template <class T, class U> inline SafeInt<T>& operator /= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_div(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator /= (SafeInt<T>& l, U          const r) { return l.op_div(r);                    }
+  template <class T, class U> inline T&          operator /= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_div(r); return l; }
+  template <class T, class U> inline SafeInt<T>& operator %= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_mod(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator %= (SafeInt<T>& l, U          const r) { return l.op_mod(r);                    }
+  template <class T, class U> inline T&          operator %= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_mod(r); return l; }
+  template <class T, class U> inline SafeInt<T>& operator += (SafeInt<T>& l, SafeInt<U> const r) { return l.op_add(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator += (SafeInt<T>& l, U          const r) { return l.op_add(r);                    }
+  template <class T, class U> inline T&          operator += (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_add(r); return l; }
+  template <class T, class U> inline SafeInt<T>& operator -= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_sub(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator -= (SafeInt<T>& l, U          const r) { return l.op_sub(r);                    }
+  template <class T, class U> inline T&          operator -= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_sub(r); return l; }
   
   // Bit shift assignment operators.
-  template <class T, class U> inline T operator <<= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_shl(r); }
-  template <class T, class U> inline T operator >>= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_shr(r); }
+  template <class T, class U> inline SafeInt<T>& operator <<= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_shl(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator <<= (SafeInt<T>& l, U          const r) { return l.op_shl(r);                    }
+  template <class T, class U> inline T&          operator <<= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_shl(r); return l; }
+  template <class T, class U> inline SafeInt<T>& operator >>= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_shr(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator >>= (SafeInt<T>& l, U          const r) { return l.op_shr(r);                    }
+  template <class T, class U> inline T&          operator >>= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_shr(r); return l; }
   
   // Bitwise assignment operators.
-  template <class T, class U> inline T operator &= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_bit_and(r); }
-  template <class T, class U> inline T operator |= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_bit_ior(r); }
-  template <class T, class U> inline T operator ^= (T const l, SafeInt<U> const r) { return SafeInt<T>(l).op_bit_xor(r); }
+  template <class T, class U> inline SafeInt<T>& operator &= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_bit_and(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator &= (SafeInt<T>& l, U          const r) { return l.op_bit_and(r);                    }
+  template <class T, class U> inline T&          operator &= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_bit_and(r); return l; }
+  template <class T, class U> inline SafeInt<T>& operator |= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_bit_ior(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator |= (SafeInt<T>& l, U          const r) { return l.op_bit_ior(r);                    }
+  template <class T, class U> inline T&          operator |= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_bit_ior(r); return l; }
+  template <class T, class U> inline SafeInt<T>& operator ^= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_bit_xor(r);                    }
+  template <class T, class U> inline SafeInt<T>& operator ^= (SafeInt<T>& l, U          const r) { return l.op_bit_xor(r);                    }
+  template <class T, class U> inline T&          operator ^= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_bit_xor(r); return l; }
   
 }
 
