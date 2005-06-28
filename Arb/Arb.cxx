@@ -58,6 +58,15 @@ namespace DAC {
     set(number);
     
   }
+  Arb::Arb (ArbInt const& number) {
+    
+    // Call common init.
+    _init();
+    
+    // Set the number.
+    set(number);
+    
+  }
   
   // Accessors.
   Arb& Arb::Base (BaseT const base) {

@@ -367,59 +367,6 @@ namespace DAC {
   template <class T, class U> T&          operator ^= (T&          l, SafeInt<U> const r);
   
   /**************************************************************************
-   * Extensions to std::
-   **************************************************************************/
-}
-
-namespace std {
-  
-  template <> template <class T> struct numeric_limits< DAC::SafeInt<T> > {
-    
-    static const bool is_specialized = numeric_limits<T>::is_specialized;
-    
-    static T min () throw() { return numeric_limits<T>::min(); }
-    static T max () throw() { return numeric_limits<T>::max(); }
-    
-    static int  const digits     = numeric_limits<T>::digits;
-    static int  const digits10   = numeric_limits<T>::digits10;
-    static bool const is_signed  = numeric_limits<T>::is_signed;
-    static bool const is_integer = numeric_limits<T>::is_integer;
-    static bool const is_exact   = numeric_limits<T>::is_exact;
-    static int  const radix      = numeric_limits<T>::radix;
-    static T          epsilon     () { return numeric_limits<T>::epsilon();     }
-    static T          round_error () { return numeric_limits<T>::round_error(); }
-    
-    static int const min_exponent   = numeric_limits<T>::min_exponent;
-    static int const min_exponent10 = numeric_limits<T>::min_exponent10;
-    static int const max_exponent   = numeric_limits<T>::max_exponent;
-    static int const max_exponent10 = numeric_limits<T>::max_exponent10;
-    
-    static bool               const has_infinity      = numeric_limits<T>::has_infinity;
-    static bool               const has_quiet_NaN     = numeric_limits<T>::has_quiet_NaN;
-    static bool               const has_signaling_NaN = numeric_limits<T>::has_signaling_NaN;
-    static float_denorm_style const has_denorm        = numeric_limits<T>::has_denorm;
-    static bool               const has_denorm_loss   = numeric_limits<T>::has_denorm_loss;
-    
-    static T infinity      () throw() { return numeric_limits<T>::infinity();      }
-    static T quiet_NaN     () throw() { return numeric_limits<T>::quiet_NaN();     }
-    static T signaling_NaN () throw() { return numeric_limits<T>::signaling_NaN(); }
-    static T denorm_min    () throw() { return numeric_limits<T>::denorm_min();    }
-    
-    static bool const is_iec559  = numeric_limits<T>::is_iec559;
-    static bool const is_bounded = numeric_limits<T>::is_bounded;
-    static bool const is_modulo  = numeric_limits<T>::is_modulo;
-    
-    static bool              const traps           = numeric_limits<T>::traps;
-    static bool              const tinyness_before = numeric_limits<T>::tinyness_before;
-    static float_round_style const round_style     = numeric_limits<T>::round_style;
-    
-  };
-  
-}
-
-namespace DAC {
-  
-  /**************************************************************************
    * SafeInt utilities.
    ***************************************************************************
    * If it weren't for some extremely tricky template stuff, this would all be

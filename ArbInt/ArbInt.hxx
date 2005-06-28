@@ -429,9 +429,9 @@ namespace DAC {
         BadFormat& Problem  (char const*                        const  problem)  throw();
         BadFormat& Position (std::string::size_type             const  position) throw();
         BadFormat& Number   (ConstReferencePointer<std::string> const& number)   throw();
-        char const* Problem                       () const throw();
-        std::string::size_type Position           () const throw();
-        ConstReferencePointer<std::string> Number () const throw();
+        char const*                        Problem  () const throw();
+        std::string::size_type             Position () const throw();
+        ConstReferencePointer<std::string> Number   () const throw();
       private:
         char const*                        _problem;
         std::string::size_type             _position;
@@ -588,129 +588,149 @@ namespace DAC {
   std::istream&       operator >> (std::istream&       l, ArbInt&       r);
   
   // Arithmetic operators.
-                     ArbInt operator * (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator * (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator * (T      const  l, ArbInt const& r);
-                     ArbInt operator / (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator / (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator / (T      const  l, ArbInt const& r);
-                     ArbInt operator % (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator % (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator % (T      const  l, ArbInt const& r);
-                     ArbInt operator + (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator + (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator + (T      const  l, ArbInt const& r);
-                     ArbInt operator - (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator - (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator - (T      const  l, ArbInt const& r);
+                     ArbInt operator * (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator * (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator * (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator * (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator * (T          const  l, ArbInt     const& r);
+                     ArbInt operator / (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator / (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator / (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator / (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator / (T          const  l, ArbInt     const& r);
+                     ArbInt operator % (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator % (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator % (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator % (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator % (T          const  l, ArbInt     const& r);
+                     ArbInt operator + (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator + (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator + (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator + (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator + (T          const  l, ArbInt     const& r);
+                     ArbInt operator - (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator - (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator - (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator - (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator - (T          const  l, ArbInt     const& r);
   
   // Bit shift operators.
-                     ArbInt operator << (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator << (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator << (T      const  l, ArbInt const& r);
-                     ArbInt operator >> (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator >> (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator >> (T      const  l, ArbInt const& r);
+                     ArbInt operator << (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator << (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator << (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator << (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator << (T          const  l, ArbInt     const& r);
+                     ArbInt operator >> (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator >> (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator >> (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator >> (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator >> (T          const  l, ArbInt     const& r);
   
   // Comparsion operators.
-                     bool operator >  (ArbInt const& l, ArbInt const& r);
-  template <class T> bool operator >  (ArbInt const& l, T      const  r);
-  template <class T> bool operator >  (T      const  l, ArbInt const& r);
-                     bool operator >= (ArbInt const& l, ArbInt const& r);
-  template <class T> bool operator >= (ArbInt const& l, T      const  r);
-  template <class T> bool operator >= (T      const  l, ArbInt const& r);
-                     bool operator <  (ArbInt const& l, ArbInt const& r);
-  template <class T> bool operator <  (ArbInt const& l, T      const  r);
-  template <class T> bool operator <  (T      const  l, ArbInt const& r);
-                     bool operator <= (ArbInt const& l, ArbInt const& r);
-  template <class T> bool operator <= (ArbInt const& l, T      const  r);
-  template <class T> bool operator <= (T      const  l, ArbInt const& r);
-                     bool operator == (ArbInt const& l, ArbInt const& r);
-  template <class T> bool operator == (ArbInt const& l, T      const  r);
-  template <class T> bool operator == (T      const  l, ArbInt const& r);
-                     bool operator != (ArbInt const& l, ArbInt const& r);
-  template <class T> bool operator != (ArbInt const& l, T      const  r);
-  template <class T> bool operator != (T      const  l, ArbInt const& r);
+                     bool operator >  (ArbInt     const& l, ArbInt     const& r);
+  template <class T> bool operator >  (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> bool operator >  (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> bool operator >  (ArbInt     const& l, T          const  r);
+  template <class T> bool operator >  (T          const  l, ArbInt     const& r);
+                     bool operator >= (ArbInt     const& l, ArbInt     const& r);
+  template <class T> bool operator >= (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> bool operator >= (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> bool operator >= (ArbInt     const& l, T          const  r);
+  template <class T> bool operator >= (T          const  l, ArbInt     const& r);
+                     bool operator <  (ArbInt     const& l, ArbInt     const& r);
+  template <class T> bool operator <  (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> bool operator <  (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> bool operator <  (ArbInt     const& l, T          const  r);
+  template <class T> bool operator <  (T          const  l, ArbInt     const& r);
+                     bool operator <= (ArbInt     const& l, ArbInt     const& r);
+  template <class T> bool operator <= (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> bool operator <= (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> bool operator <= (ArbInt     const& l, T          const  r);
+  template <class T> bool operator <= (T          const  l, ArbInt     const& r);
+                     bool operator == (ArbInt     const& l, ArbInt     const& r);
+  template <class T> bool operator == (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> bool operator == (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> bool operator == (ArbInt     const& l, T          const  r);
+  template <class T> bool operator == (T          const  l, ArbInt     const& r);
+                     bool operator != (ArbInt     const& l, ArbInt     const& r);
+  template <class T> bool operator != (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> bool operator != (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> bool operator != (ArbInt     const& l, T          const  r);
+  template <class T> bool operator != (T          const  l, ArbInt     const& r);
   
   // Bitwise operators.
-                     ArbInt operator & (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator & (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator & (T      const  l, ArbInt const& r);
-                     ArbInt operator | (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator | (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator | (T      const  l, ArbInt const& r);
-                     ArbInt operator ^ (ArbInt const& l, ArbInt const& r);
-  template <class T> ArbInt operator ^ (ArbInt const& l, T      const  r);
-  template <class T> ArbInt operator ^ (T      const  l, ArbInt const& r);
+                     ArbInt operator & (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator & (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator & (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator & (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator & (T          const  l, ArbInt     const& r);
+                     ArbInt operator | (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator | (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator | (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator | (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator | (T          const  l, ArbInt     const& r);
+                     ArbInt operator ^ (ArbInt     const& l, ArbInt     const& r);
+  template <class T> ArbInt operator ^ (ArbInt     const& l, SafeInt<T> const  r);
+  template <class T> ArbInt operator ^ (SafeInt<T> const  l, ArbInt     const& r);
+  template <class T> ArbInt operator ^ (ArbInt     const& l, T          const  r);
+  template <class T> ArbInt operator ^ (T          const  l, ArbInt     const& r);
   
   // Arithmetic assignment operators.
-                     ArbInt& operator *= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator *= (ArbInt& l, T      const  r);
-  template <class T> T&      operator *= (T&      l, ArbInt const& r);
-                     ArbInt& operator /= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator /= (ArbInt& l, T      const  r);
-  template <class T> T&      operator /= (T&      l, ArbInt const& r);
-                     ArbInt& operator %= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator %= (ArbInt& l, T      const  r);
-  template <class T> T&      operator %= (T&      l, ArbInt const& r);
-                     ArbInt& operator += (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator += (ArbInt& l, T      const  r);
-  template <class T> T&      operator += (T&      l, ArbInt const& r);
-                     ArbInt& operator -= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator -= (ArbInt& l, T      const  r);
-  template <class T> T&      operator -= (T&      l, ArbInt const& r);
+                     ArbInt&     operator *= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator *= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator *= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator *= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator *= (T&          l, ArbInt     const& r);
+                     ArbInt&     operator /= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator /= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator /= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator /= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator /= (T&          l, ArbInt     const& r);
+                     ArbInt&     operator %= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator %= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator %= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator %= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator %= (T&          l, ArbInt     const& r);
+                     ArbInt&     operator += (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator += (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator += (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator += (ArbInt&     l, T          const  r);
+  template <class T> T&          operator += (T&          l, ArbInt     const& r);
+                     ArbInt&     operator -= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator -= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator -= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator -= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator -= (T&          l, ArbInt     const& r);
   
   // Bit shift assignment operators.
-                     ArbInt& operator <<= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator <<= (ArbInt& l, T      const  r);
-  template <class T> T&      operator <<= (T&      l, ArbInt const& r);
-                     ArbInt& operator >>= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator >>= (ArbInt& l, T      const  r);
-  template <class T> T&      operator <<= (T&      l, ArbInt const& r);
+                     ArbInt&     operator <<= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator <<= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator <<= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator <<= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator <<= (T&          l, ArbInt     const& r);
+                     ArbInt&     operator >>= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator >>= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator >>= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator >>= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator <<= (T&          l, ArbInt     const& r);
   
   // Bitwise assignment operators.
-                     ArbInt& operator &= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator &= (ArbInt& l, T      const  r);
-  template <class T> T&      operator &= (T&      l, ArbInt const& r);
-                     ArbInt& operator |= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator |= (ArbInt& l, T      const  r);
-  template <class T> T&      operator |= (T&      l, ArbInt const& r);
-                     ArbInt& operator ^= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator ^= (ArbInt& l, T      const  r);
-  template <class T> T&      operator ^= (T&      l, ArbInt const& r);
+                     ArbInt&     operator &= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator &= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator &= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator &= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator &= (T&          l, ArbInt     const& r);
+                     ArbInt&     operator |= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator |= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator |= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator |= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator |= (T&          l, ArbInt     const& r);
+                     ArbInt&     operator ^= (ArbInt&     l, ArbInt     const& r);
+  template <class T> ArbInt&     operator ^= (ArbInt&     l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator ^= (SafeInt<T>& l, ArbInt     const& r);
+  template <class T> ArbInt&     operator ^= (ArbInt&     l, T          const  r);
+  template <class T> T&          operator ^= (T&          l, ArbInt     const& r);
   
-  /***************************************************************************
-   * Extensions to std::
-   ***************************************************************************/
-}
-
-/***************************************************************************/
-// numeric_limits
-namespace std {
-  template<> struct numeric_limits<DAC::ArbInt> {
-    
-    static const bool is_specialized = true;
-    
-    static const int digits   = -1;
-    static const int digits10 = -1;
-    
-    static const bool is_signed  = false;
-    static const bool is_integer = true;
-    static const bool is_exact   = true;
-    
-    static const int radix = 2;
-    
-    static const bool is_bounded = false;
-    static const bool is_modulo  = false;
-    
-    static const bool traps = false;
-    
-    static const float_round_style round_style = round_toward_zero;
-    
-  };
-}
-
-namespace DAC {
   /***************************************************************************
    * Inline and template definitions.
    ***************************************************************************/
@@ -771,32 +791,6 @@ namespace DAC {
                      inline ArbInt& ArbInt::operator = (ArbInt      const& number) { return set(number); }
                      inline ArbInt& ArbInt::operator = (std::string const& number) { return set(number); }
   template <class T> inline ArbInt& ArbInt::operator = (T           const  number) { return set(number); }
-  
-  // Arithmetic assignment operators.
-                     inline ArbInt& ArbInt::operator *= (ArbInt const& number) { return op_mul(number); }
-  template <class T> inline ArbInt& ArbInt::operator *= (T      const  number) { return op_mul(number); }
-                     inline ArbInt& ArbInt::operator /= (ArbInt const& number) { return op_div(number); }
-  template <class T> inline ArbInt& ArbInt::operator /= (T      const  number) { return op_div(number); }
-                     inline ArbInt& ArbInt::operator %= (ArbInt const& number) { return op_mod(number); }
-  template <class T> inline ArbInt& ArbInt::operator %= (T      const  number) { return op_mod(number); }
-                     inline ArbInt& ArbInt::operator += (ArbInt const& number) { return op_add(number); }
-  template <class T> inline ArbInt& ArbInt::operator += (T      const  number) { return op_add(number); }
-                     inline ArbInt& ArbInt::operator -= (ArbInt const& number) { return op_sub(number); }
-  template <class T> inline ArbInt& ArbInt::operator -= (T      const  number) { return op_sub(number); }
-  
-  // Bit shift assignment operators.
-                     inline ArbInt& ArbInt::operator <<= (ArbInt const& number) { return op_shl(number); }
-  template <class T> inline ArbInt& ArbInt::operator <<= (T      const  number) { return op_shl(number); }
-                     inline ArbInt& ArbInt::operator >>= (ArbInt const& number) { return op_shr(number); }
-  template <class T> inline ArbInt& ArbInt::operator >>= (T      const  number) { return op_shr(number); }
-  
-  // Bitwise assignment operators.
-                     inline ArbInt& ArbInt::operator &= (ArbInt const& number) { return op_bit_and(number); }
-  template <class T> inline ArbInt& ArbInt::operator &= (T      const  number) { return op_bit_and(number); }
-                     inline ArbInt& ArbInt::operator |= (ArbInt const& number) { return op_bit_ior(number); }
-  template <class T> inline ArbInt& ArbInt::operator |= (T      const  number) { return op_bit_ior(number); }
-                     inline ArbInt& ArbInt::operator ^= (ArbInt const& number) { return op_bit_xor(number); }
-  template <class T> inline ArbInt& ArbInt::operator ^= (T      const  number) { return op_bit_xor(number); }
   
   // Get the base of this number.
   inline ArbInt::value_type ArbInt::Base () const { return _base; }
@@ -2032,95 +2026,147 @@ namespace DAC {
   
   // Arithmetic operators.
                      inline ArbInt operator * (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_mul(r); }
+  template <class T> inline ArbInt operator * (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_mul(r); }
+  template <class T> inline ArbInt operator * (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_mul(l); }
   template <class T> inline ArbInt operator * (ArbInt     const& l, T          const  r) { return ArbInt(l).op_mul(r); }
   template <class T> inline ArbInt operator * (T          const  l, ArbInt     const& r) { return ArbInt(r).op_mul(l); }
                      inline ArbInt operator / (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_div(r); }
+  template <class T> inline ArbInt operator / (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_div(r); }
+  template <class T> inline ArbInt operator / (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_div(r); }
   template <class T> inline ArbInt operator / (ArbInt     const& l, T          const  r) { return ArbInt(l).op_div(r); }
   template <class T> inline ArbInt operator / (T          const  l, ArbInt     const& r) { return ArbInt(l).op_div(r); }
                      inline ArbInt operator % (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_mod(r); }
+  template <class T> inline ArbInt operator % (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_mod(r); }
+  template <class T> inline ArbInt operator % (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_mod(r); }
   template <class T> inline ArbInt operator % (ArbInt     const& l, T          const  r) { return ArbInt(l).op_mod(r); }
   template <class T> inline ArbInt operator % (T          const  l, ArbInt     const& r) { return ArbInt(l).op_mod(r); }
                      inline ArbInt operator + (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_add(r); }
+  template <class T> inline ArbInt operator + (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_add(r); }
+  template <class T> inline ArbInt operator + (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_add(l); }
   template <class T> inline ArbInt operator + (ArbInt     const& l, T          const  r) { return ArbInt(l).op_add(r); }
   template <class T> inline ArbInt operator + (T          const  l, ArbInt     const& r) { return ArbInt(r).op_add(l); }
                      inline ArbInt operator - (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_sub(r); }
+  template <class T> inline ArbInt operator - (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_sub(r); }
+  template <class T> inline ArbInt operator - (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_sub(r); }
   template <class T> inline ArbInt operator - (ArbInt     const& l, T          const  r) { return ArbInt(l).op_sub(r); }
   template <class T> inline ArbInt operator - (T          const  l, ArbInt     const& r) { return ArbInt(l).op_sub(r); }
   
   // Bit shift operators.
                      inline ArbInt operator << (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_shl(r); }
+  template <class T> inline ArbInt operator << (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_shl(r); }
+  template <class T> inline ArbInt operator << (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_shl(r); }
   template <class T> inline ArbInt operator << (ArbInt     const& l, T          const  r) { return ArbInt(l).op_shl(r); }
   template <class T> inline ArbInt operator << (T          const  l, ArbInt     const& r) { return ArbInt(l).op_shl(r); }
                      inline ArbInt operator >> (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_shr(r); }
+  template <class T> inline ArbInt operator >> (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_shr(r); }
+  template <class T> inline ArbInt operator >> (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_shr(r); }
   template <class T> inline ArbInt operator >> (ArbInt     const& l, T          const  r) { return ArbInt(l).op_shr(r); }
   template <class T> inline ArbInt operator >> (T          const  l, ArbInt     const& r) { return ArbInt(l).op_shr(r); }
   
   // Comparsion operators.
                      inline bool operator >  (ArbInt     const& l, ArbInt     const& r) { return  l.op_gt(r); }
+  template <class T> inline bool operator >  (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_gt(r); }
+  template <class T> inline bool operator >  (SafeInt<T> const  l, ArbInt     const& r) { return !r.op_ge(l); }
   template <class T> inline bool operator >  (ArbInt     const& l, T          const  r) { return  l.op_gt(r); }
   template <class T> inline bool operator >  (T          const  l, ArbInt     const& r) { return !r.op_ge(l); }
                      inline bool operator >= (ArbInt     const& l, ArbInt     const& r) { return  l.op_ge(r); }
+  template <class T> inline bool operator >= (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_ge(r); }
+  template <class T> inline bool operator >= (SafeInt<T> const  l, ArbInt     const& r) { return !r.op_gt(l); }
   template <class T> inline bool operator >= (ArbInt     const& l, T          const  r) { return  l.op_ge(r); }
   template <class T> inline bool operator >= (T          const  l, ArbInt     const& r) { return !r.op_gt(l); }
                      inline bool operator <  (ArbInt     const& l, ArbInt     const& r) { return  l.op_lt(r); }
+  template <class T> inline bool operator <  (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_lt(r); }
+  template <class T> inline bool operator <  (SafeInt<T> const  l, ArbInt     const& r) { return !r.op_le(l); }
   template <class T> inline bool operator <  (ArbInt     const& l, T          const  r) { return  l.op_lt(r); }
   template <class T> inline bool operator <  (T          const  l, ArbInt     const& r) { return !r.op_le(l); }
                      inline bool operator <= (ArbInt     const& l, ArbInt     const& r) { return  l.op_le(r); }
+  template <class T> inline bool operator <= (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_le(r); }
+  template <class T> inline bool operator <= (SafeInt<T> const  l, ArbInt     const& r) { return !r.op_lt(l); }
   template <class T> inline bool operator <= (ArbInt     const& l, T          const  r) { return  l.op_le(r); }
   template <class T> inline bool operator <= (T          const  l, ArbInt     const& r) { return !r.op_lt(l); }
                      inline bool operator == (ArbInt     const& l, ArbInt     const& r) { return  l.op_eq(r); }
+  template <class T> inline bool operator == (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_eq(r); }
+  template <class T> inline bool operator == (SafeInt<T> const  l, ArbInt     const& r) { return  r.op_eq(l); }
   template <class T> inline bool operator == (ArbInt     const& l, T          const  r) { return  l.op_eq(r); }
   template <class T> inline bool operator == (T          const  l, ArbInt     const& r) { return  r.op_eq(l); }
                      inline bool operator != (ArbInt     const& l, ArbInt     const& r) { return  l.op_ne(r); }
+  template <class T> inline bool operator != (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_ne(r); }
+  template <class T> inline bool operator != (SafeInt<T> const  l, ArbInt     const& r) { return  r.op_ne(l); }
   template <class T> inline bool operator != (ArbInt     const& l, T          const  r) { return  l.op_ne(r); }
   template <class T> inline bool operator != (T          const  l, ArbInt     const& r) { return  r.op_ne(l); }
   
   // Bitwise operators.
                      inline ArbInt operator & (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_bit_and(r); }
+  template <class T> inline ArbInt operator & (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_bit_and(r); }
+  template <class T> inline ArbInt operator & (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_bit_and(l); }
   template <class T> inline ArbInt operator & (ArbInt     const& l, T          const  r) { return ArbInt(l).op_bit_and(r); }
   template <class T> inline ArbInt operator & (T          const  l, ArbInt     const& r) { return ArbInt(r).op_bit_and(l); }
                      inline ArbInt operator | (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_bit_ior(r); }
+  template <class T> inline ArbInt operator | (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_bit_ior(r); }
+  template <class T> inline ArbInt operator | (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_bit_ior(l); }
   template <class T> inline ArbInt operator | (ArbInt     const& l, T          const  r) { return ArbInt(l).op_bit_ior(r); }
   template <class T> inline ArbInt operator | (T          const  l, ArbInt     const& r) { return ArbInt(r).op_bit_ior(l); }
-                     inline ArbInt operator ^ (ArbInt const& l, ArbInt     const& r) { return ArbInt(l).op_bit_xor(r); }
-  template <class T> inline ArbInt operator ^ (ArbInt const& l, T          const  r) { return ArbInt(l).op_bit_xor(r); }
-  template <class T> inline ArbInt operator ^ (T      const  l, ArbInt     const& r) { return ArbInt(r).op_bit_xor(l); }
+                     inline ArbInt operator ^ (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_bit_xor(r); }
+  template <class T> inline ArbInt operator ^ (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_bit_xor(r); }
+  template <class T> inline ArbInt operator ^ (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_bit_xor(l); }
+  template <class T> inline ArbInt operator ^ (ArbInt     const& l, T          const  r) { return ArbInt(l).op_bit_xor(r); }
+  template <class T> inline ArbInt operator ^ (T          const  l, ArbInt     const& r) { return ArbInt(r).op_bit_xor(l); }
   
   // Arithmetic assignment operators.
-                     ArbInt& operator *= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator *= (ArbInt& l, T      const  r);
-  template <class T> T&      operator *= (T&      l, ArbInt const& r);
-                     ArbInt& operator /= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator /= (ArbInt& l, T      const  r);
-  template <class T> T&      operator /= (T&      l, ArbInt const& r);
-                     ArbInt& operator %= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator %= (ArbInt& l, T      const  r);
-  template <class T> T&      operator %= (T&      l, ArbInt const& r);
-                     ArbInt& operator += (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator += (ArbInt& l, T      const  r);
-  template <class T> T&      operator += (T&      l, ArbInt const& r);
-                     ArbInt& operator -= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator -= (ArbInt& l, T      const  r);
-  template <class T> T&      operator -= (T&      l, ArbInt const& r);
+                     inline ArbInt&     operator *= (ArbInt&     l, ArbInt     const& r) { return l.op_mul(r);                }
+  template <class T> inline ArbInt&     operator *= (ArbInt&     l, SafeInt<T> const  r) { return l.op_mul(r);                }
+  template <class T> inline SafeInt<T>& operator *= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_mul(r); return l; }
+  template <class T> inline ArbInt&     operator *= (ArbInt&     l, T          const  r) { return l.op_mul(r);                }
+  template <class T> inline T&          operator *= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_mul(r); return l; }
+                     inline ArbInt&     operator /= (ArbInt&     l, ArbInt     const& r) { return l.op_div(r);                }
+  template <class T> inline ArbInt&     operator /= (ArbInt&     l, SafeInt<T> const  r) { return l.op_div(r);                }
+  template <class T> inline SafeInt<T>& operator /= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_div(r); return l; }
+  template <class T> inline ArbInt&     operator /= (ArbInt&     l, T          const  r) { return l.op_div(r);                }
+  template <class T> inline T&          operator /= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_div(r); return l; }
+                     inline ArbInt&     operator %= (ArbInt&     l, ArbInt     const& r) { return l.op_mod(r);                }
+  template <class T> inline ArbInt&     operator %= (ArbInt&     l, SafeInt<T> const  r) { return l.op_mod(r);                }
+  template <class T> inline SafeInt<T>& operator %= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_mod(r); return l; }
+  template <class T> inline ArbInt&     operator %= (ArbInt&     l, T          const  r) { return l.op_mod(r);                }
+  template <class T> inline T&          operator %= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_mod(r); return l; }
+                     inline ArbInt&     operator += (ArbInt&     l, ArbInt     const& r) { return l.op_add(r);                }
+  template <class T> inline ArbInt&     operator += (ArbInt&     l, SafeInt<T> const  r) { return l.op_add(r);                }
+  template <class T> inline SafeInt<T>& operator += (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_add(r); return l; }
+  template <class T> inline ArbInt&     operator += (ArbInt&     l, T          const  r) { return l.op_add(r);                }
+  template <class T> inline T&          operator += (T&          l, ArbInt     const& r) { l = ArbInt(l).op_add(r); return l; }
+                     inline ArbInt&     operator -= (ArbInt&     l, ArbInt     const& r) { return l.op_sub(r);                }
+  template <class T> inline ArbInt&     operator -= (ArbInt&     l, SafeInt<T> const  r) { return l.op_sub(r);                }
+  template <class T> inline SafeInt<T>& operator -= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_sub(r); return l; }
+  template <class T> inline ArbInt&     operator -= (ArbInt&     l, T          const  r) { return l.op_sub(r);                }
+  template <class T> inline T&          operator -= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_sub(r); return l; }
   
   // Bit shift assignment operators.
-                     ArbInt& operator <<= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator <<= (ArbInt& l, T      const  r);
-  template <class T> T&      operator <<= (T&      l, ArbInt const& r);
-                     ArbInt& operator >>= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator >>= (ArbInt& l, T      const  r);
-  template <class T> T&      operator <<= (T&      l, ArbInt const& r);
+                     inline ArbInt&     operator <<= (ArbInt&     l, ArbInt     const& r) { return l.op_shl(r);                }
+  template <class T> inline ArbInt&     operator <<= (ArbInt&     l, SafeInt<T> const  r) { return l.op_shl(r);                }
+  template <class T> inline SafeInt<T>& operator <<= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_shl(r); return l; }
+  template <class T> inline ArbInt&     operator <<= (ArbInt&     l, T          const  r) { return l.op_shl(r);                }
+  template <class T> inline T&          operator <<= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_shl(r); return l; }
+                     inline ArbInt&     operator >>= (ArbInt&     l, ArbInt     const& r) { return l.op_shr(r);                }
+  template <class T> inline ArbInt&     operator >>= (ArbInt&     l, SafeInt<T> const  r) { return l.op_shr(r);                }
+  template <class T> inline SafeInt<T>& operator >>= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_shr(r); return l; }
+  template <class T> inline ArbInt&     operator >>= (ArbInt&     l, T          const  r) { return l.op_shr(r);                }
+  template <class T> inline T&          operator >>= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_shr(r); return l; }
   
   // Bitwise assignment operators.
-                     ArbInt& operator &= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator &= (ArbInt& l, T      const  r);
-  template <class T> T&      operator &= (T&      l, ArbInt const& r);
-                     ArbInt& operator |= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator |= (ArbInt& l, T      const  r);
-  template <class T> T&      operator |= (T&      l, ArbInt const& r);
-                     ArbInt& operator ^= (ArbInt& l, ArbInt const& r);
-  template <class T> ArbInt& operator ^= (ArbInt& l, T      const  r);
-  template <class T> T&      operator ^= (T&      l, ArbInt const& r);
+                     inline ArbInt&     operator &= (ArbInt&     l, ArbInt     const& r) { return l.op_bit_and(r);                }
+  template <class T> inline ArbInt&     operator &= (ArbInt&     l, SafeInt<T> const  r) { return l.op_bit_and(r);                }
+  template <class T> inline SafeInt<T>& operator &= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_bit_and(r); return l; }
+  template <class T> inline ArbInt&     operator &= (ArbInt&     l, T          const  r) { return l.op_bit_and(r);                }
+  template <class T> inline T&          operator &= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_bit_and(r); return l; }
+                     inline ArbInt&     operator |= (ArbInt&     l, ArbInt     const& r) { return l.op_bit_ior(r);                }
+  template <class T> inline ArbInt&     operator |= (ArbInt&     l, SafeInt<T> const  r) { return l.op_bit_ior(r);                }
+  template <class T> inline SafeInt<T>& operator |= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_bit_ior(r); return l; }
+  template <class T> inline ArbInt&     operator |= (ArbInt&     l, T          const  r) { return l.op_bit_ior(r);                }
+  template <class T> inline T&          operator |= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_bit_ior(r); return l; }
+                     inline ArbInt&     operator ^= (ArbInt&     l, ArbInt     const& r) { return l.op_bit_xor(r);                }
+  template <class T> inline ArbInt&     operator ^= (ArbInt&     l, SafeInt<T> const  r) { return l.op_bit_xor(r);                }
+  template <class T> inline SafeInt<T>& operator ^= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_bit_xor(r); return l; }
+  template <class T> inline ArbInt&     operator ^= (ArbInt&     l, T          const  r) { return l.op_bit_xor(r);                }
+  template <class T> inline T&          operator ^= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_bit_xor(r); return l; }
   
 }
 

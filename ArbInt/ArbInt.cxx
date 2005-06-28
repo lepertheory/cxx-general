@@ -817,10 +817,10 @@ namespace DAC {
       SafeInt<unsigned int>      tmp_bits;
       SafeInt<_DigsT::size_type> tmp_digits;
       if (bits >= s_digitbits) {
-        tmp_digits = bits / s_digitbits;
-        tmp_bits   = bits - tmp_digits * s_digitbits;
+        tmp_digits = static_cast<_DigsT::size_type>(bits / s_digitbits);
+        tmp_bits   = static_cast<unsigned int>(bits - tmp_digits * s_digitbits);
       } else {
-        tmp_bits = bits;
+        tmp_bits = static_cast<unsigned int>(bits);
       }
       
       // Shift.
