@@ -15,7 +15,7 @@
   #include <vector>
   #include <limits>
   #include <cmath>
-
+  
 // Internal includes.
   #include "SafeInt.hxx"
   #include "ReferencePointer.hxx"
@@ -78,9 +78,6 @@ namespace DAC {
       ArbInt operator + () const;
       ArbInt operator - () const;
       
-      // Not operator.
-      bool operator ! () const;
-      
       // Bitwise compliment.
       ArbInt operator ~ () const;
       
@@ -127,7 +124,7 @@ namespace DAC {
       template <class T> ArbInt& push_back (SafeInt<T>  const  number);
       template <class T> ArbInt& push_back (T           const  number);
       
-      // Return a string of this number.
+      // Convert to string.
       std::string toString () const;
       
       // Arithmetic operator backends.
@@ -788,9 +785,9 @@ namespace DAC {
   inline ArbInt::operator unsigned long int  () const { return Value<unsigned long int >(); }
   
   // Assignment operator.
-                     inline ArbInt& ArbInt::operator = (ArbInt      const& number) { return set(number); }
-                     inline ArbInt& ArbInt::operator = (std::string const& number) { return set(number); }
-  template <class T> inline ArbInt& ArbInt::operator = (T           const  number) { return set(number); }
+                     inline ArbInt& ArbInt::operator = (ArbInt      const& number) { return copy(number); }
+                     inline ArbInt& ArbInt::operator = (std::string const& number) { return set(number);  }
+  template <class T> inline ArbInt& ArbInt::operator = (T           const  number) { return set(number);  }
   
   // Get the base of this number.
   inline ArbInt::value_type ArbInt::Base () const { return _base; }
