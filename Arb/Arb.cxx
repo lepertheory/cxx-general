@@ -1127,4 +1127,46 @@ namespace DAC {
 
   }
   
+  /***************************************************************************
+   * Errors.
+   ***************************************************************************/
+  namespace ArbErrors {
+    
+    char const* Base::what () const throw() {
+      return "Undefined error in Arb.";
+    }
+    Base::~Base () throw() {
+      // Nothing.
+    }
+    
+    char const* BadFormat::what () const throw() {
+      try {
+        return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".").c_str();
+      } catch (...) {
+        return "Bad format. Error creating message string.";
+      }
+    }
+    
+    char const* DivByZero::what () const throw() {
+      return "Divide by zero.";
+    }
+    
+    char const* Complex::what () const throw() {
+      return "Even roots of negative numbers can only be complex numbers.";
+    }
+    
+    char const* ComplexRoot::what () const throw() {
+      try {
+        return (std::string("Attempting to take the even root ") + DAC::toString(_root) + " of negative number " + DAC::toString(_number) + " results in a complex number.").c_str();
+      } catch (...) {
+        return "Even roots of negative numbers can only be complex numbers. Error creating message string.";
+      }
+    }
+    
+    char const* NonInteger::what () const throw() {
+      return "An integer operation was attempted on a non-integer number.";
+    }
+    
+  }
+  
 }
