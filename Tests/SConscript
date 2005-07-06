@@ -20,9 +20,11 @@ o_SafeInt   = env          .Object(target = 'SafeInt',   source = ['SafeInt.cxx'
 o_ArbInt    = env_ArbInt   .Object(target = 'ArbInt',    source = ['ArbInt.cxx']   )
 o_Arb       = env_Arb      .Object(target = 'Arb',       source = ['Arb.cxx']      )
 o_Timestamp = env_Timestamp.Object(target = 'Timestamp', source = ['Timestamp.cxx'])
+o_float     = env          .Object(target = 'float',     source = ['float.cxx']    )
 
 # Programs.
 env          .Program(target = 'SafeInt',   source = [o_SafeInt]                            )
 env_ArbInt   .Program(target = 'ArbInt',    source = list(cArbInt['obj'])    + [o_ArbInt]   )
 env_Arb      .Program(target = 'Arb',       source = list(cArb['obj'])       + [o_Arb]      )
 env_Timestamp.Program(target = 'Timestamp', source = list(cTimestamp['obj']) + [o_Timestamp])
+env          .Program(target = 'float',     source = [o_float]                              )

@@ -797,9 +797,7 @@ namespace DAC {
     SafeInt<T> retval;
     for (typename _DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
       try {
-        SafeInt<_DigT> poop = *i * rppower(SafeInt<_DigT>(s_digitbase), (i - _digits->begin()));
-        retval += poop;
-        //retval += *i * rppower(SafeInt<_DigT>(s_digitbase), (i - _digits->begin()));
+        retval += *i * rppower(SafeInt<_DigT>(s_digitbase), (i - _digits->begin()));
       } catch (SafeIntErrors::Overflow) {
         throw ArbIntErrors::ScalarOverflowSpecialized<T>().Number(*this).Limit(std::numeric_limits<T>::max());
       }

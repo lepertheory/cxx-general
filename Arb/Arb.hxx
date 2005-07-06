@@ -191,6 +191,7 @@ namespace DAC {
       // Return information about this number.
       bool isInteger  () const;
       bool isPositive () const;
+      bool isNegative () const;
       bool isZero     () const;
       bool isEven     () const;
       bool isOdd      () const;
@@ -392,13 +393,6 @@ namespace DAC {
       // Common initialization tasks.
       void _init ();
       
-      // Set the number.
-      template <class T> Arb& _set_uint (SafeInt<T> const& number);
-      template <class T> Arb& _set_uint (T          const  number);
-      template <class T> Arb& _set_sint (SafeInt<T> const& number);
-      template <class T> Arb& _set_sint (T          const  number);
-      template <class T> Arb& _set_othr (T          const  number);
-      
       // Reduce the number to its most compact representation.
       Arb& _reduce      ();
       Arb& _forcereduce (_DigsT const& q);
@@ -493,6 +487,23 @@ namespace DAC {
       T           _l;
       char const* _op;
       U           _r;
+  };
+  
+  // Attempt to stuff Arb into a type that will not fit.
+  class ScalarOverflow : public Base {
+    public:
+      virtual char const* what () const throw();
+  };
+  template <class T> class ScalarOverflowSpecialized : public ScalarOverflow {
+    public:
+      virtual char const* what () const throw();
+      ScalarOverflowSpecialized& Number (Arb const& number) throw();
+      ScalarOverflowSpecialized& Limit  (T   const  limit)  throw();
+      Arb Number () const throw();
+      T   Limit  () const throw();
+    private:
+      Arb _number;
+      T   _limit;
   };
   
   /*************************************************************************
@@ -1172,7 +1183,8 @@ namespace DAC {
   inline bool Arb::isInteger () const { return (_data->q == 1); }
   
   // Return whether this number is positive.
-  inline bool Arb::isPositive () const { return _data->positive; }
+  inline bool Arb::isPositive () const { return _data->positive || _data->p == 0; }
+  inline bool Arb::isNegative () const { return !isPositive();                    }
   
   // Return whether this number is equal to zero.
   inline bool Arb::isZero () const { return _data->p.isZero(); }
@@ -1193,44 +1205,22 @@ namespace DAC {
   // Return the absolute value of this number.
   inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }
   
-  // Set from an integer type.
-  template <class T> Arb& Arb::_set_sint (SafeInt<T> const& number) {
+  // Check if this number is a whole number (x/1).
+  inline bool Arb::_isWhole () const { return _data->q == 1; }
+  
+  // Set from an unsigned integer type.
+  template <class T> void Arb::_Set<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
     
     // Work area.
     Arb new_num;
     
-    // Carry over old fixed-point properties.
-    new_num._data->fix      = _data->fix;
-    new_num._data->pointpos = _data->pointpos;
-    new_num._data->base     = _data->base;
-    new_num._data->fixq     = _data->fixq;
+    // Carry over the old fixed-point porperties.
+    new_num._data->fix      = l._data->fix;
+    new_num._data->pointpos = l._data->pointpos;
+    new_num._data->base     = l._data->base;
+    new_num._data->fixq     = l._data->fixq;
     
-    // This number is 1s.
-    new_num._data->p        = (number >= 0) ? number : (number * -1);
-    new_num._data->q        = 1;
-    new_num._data->positive = (number >= 0);
-    
-    // Reduce the fraction.
-    new_num._reduce();
-    
-    // Move the new data into place and return.
-    _data = new_num._data;
-    return *this;
-    
-  }
-  template <class T> inline Arb& Arb::_set_sint (T const number) { return _set_sint(SafeInt<T>(number)); }
-  template <class T> Arb& Arb::_set_uint (SafeInt<T> const& number) {
-    
-    // Work area.
-    Arb new_num;
-    
-    // Carry over old fixed-point properties.
-    new_num._data->fix      = _data->fix;
-    new_num._data->pointpos = _data->pointpos;
-    new_num._data->base     = _data->base;
-    new_num._data->fixq     = _data->fixq;
-    
-    // This number is 1s.
+    // This number is a whole number.
     new_num._data->p        = number;
     new_num._data->q        = 1;
     new_num._data->positive = true;
@@ -1239,17 +1229,90 @@ namespace DAC {
     new_num._reduce();
     
     // Move the new data into place and return.
-    _data = new_num._data;
-    return *this;
+    l._data = new_num._data;
     
   }
-  template <class T> inline Arb& Arb::_set_uint (T const number) { return _set_uint(SafeInt<T>(number)); }
+  template <class T> inline void Arb::_Set<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Set<T, Arb::_NUM_UINT>(l, SafeInt<T>(r)); }
   
-  // Set from a non-integer type.
-  template <class T> inline Arb& Arb::_set_othr (T const number) { return set(DAC::toString(number)); }
+  // Set from a signed integer type.
+  template <class T> void Arb::_Set<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
+    
+    // Work area.
+    Arb new_num;
+    
+    // Carry over the old fixed-point properties.
+    new_num._data->fix      = l._data->fix;
+    new_num._data->pointpos = l._data->pointpos;
+    new_num._data->base     = l._data->base;
+    new_num._data->fixq     = l._data->fixq;
+    
+    // This number is a whole number.
+    new_num._data->p        = std::abs(number);
+    neW_num._data->q        = 1;
+    new_num._data->positive = (number >= 0);
+    
+    // Reduce the fraction.
+    new_num._reduce();
+    
+    // Move the new data into place and return.
+    l._data = new_num._data;
+    
+  }
+  template <class T> inline void Arb::_Set<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Set<T, Arb::_NUM_SINT>(l, SafeInt<T>(r)); }
   
-  // Check if this number is a whole number (x/1).
-  inline bool Arb::_isWhole () const { return _data->q == 1; }
+  // Set from a floating-point type.
+  template <class T> inline void Arb::_Set<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
+    
+    // Set from a string. Not very heroic, but for now, it works.
+    l.set(DAC::toString(r));
+    
+  }
+  
+  // Get as an unsigned integer.
+  template <class T> void Arb::_Get<T, Arb::_NUM_UINT>::op (SafeInt<T>& l, Arb const& r) {
+    
+    // If l is negative, error.
+    if (l.isNegative()) {
+      throw ArbErrors::ScalarOverflowSpecialized<T>().Number(r).Limit(0);
+    }
+    
+    // Get the value the same way as a signed integer.
+    Arb::_Get<T, Arb::_NUM_SINT>::op(l, r);
+    
+  }
+  template <class T> inline void Arb::_Get<T, Arb::_NUM_UINT>::op (T& l, Arb const& r) { SafeInt<T> tmp; Arb::_Get<T, Arb::_NUM_UINT>(tmp, r); l = tmp; }
+  
+  // Get as a signed integer.
+  template <class T> void Arb::_Get<T, Arb::_NUM_SINT>::op (SafeInt<T>& l, Arb const& r) {
+    
+    // Make a temporary copy of r reduced to an integer.
+    Arb tmp = r.toInt();
+    
+    // Catch and convert any errors.
+    try {
+      
+      // If the number is positive, convert normally. If it is negative,
+      // reduce the abs by 1 to avoid errors at ::min() then convert.
+      if (r.isPositive()) {
+        l = static_cast<T>(tmp._data->p);
+      } else {
+        l = -SafeInt<T>(static_cast<T>(tmp_data->p - 1)) - 1;
+      }
+      
+    // Only error that should occur.
+    } catch (ArbIntErrors::ScalarOverflowSpecialized<T>& e) {
+      throw ArbErrors::ScalarOverflowSpecialized<T>().Number(r).Limit(e.Limit());
+    }
+    
+  }
+  template <class T> inline void Arb::_Get<T, Arb::_NUM_SINT>::op (T& l, Arb const& r) { SafeInt<T> tmp; Arb::_Get<T, Arb::_NUM_SINT>(tmp, r); l = tmp; }
+  
+  // Get as a floating-point type.
+  template <class T> void Arb::_Get<T, Arb::_NUM_FLPT>::op (T& l, Arb const& r) {
+    
+    
+    
+  }
   
   /***************************************************************************
    * Errors.
@@ -1295,6 +1358,18 @@ namespace DAC {
     template <class T, class U> T           NonIntegerBinary::Left     () const throw() { return _l;  }
     template <class T, class U> char const* NonIntegerBinary::Operator () const throw() { return _op; }
     template <class T, class U> U           NonIntegerBinary::Right    () const throw() { return _r;  }
+    
+    template <class T> char const* ScalarOverflowSpecialized::what () const throw() {
+      try {
+        return (_number.toString() + ": Overflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
+      } catch (...) {
+        return "Arb overflows requested scalar type. Error creating message string.";
+      }
+    }
+    template <class T> inline ScalarOverflowSpecialized<T>& ScalarOverflowSpecialized<T>::Number (Arb const& number) throw() { _number = number; return *this; }
+    template <class T> inline ScalarOverflowSpecialized<T>& ScalarOverflowSpecialized<T>::Limit  (T   const  limit)  throw() { _limit  = limit;  return *this; }
+    template <class T> inline Arb ScalarOverflowSpecialized<T>::Number () const throw() { return _number; }
+    template <class T> inline T   ScalarOverflowSpecialized<T>::Limit  () const throw() { return _limit;  }
     
   }
   

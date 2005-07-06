@@ -1167,6 +1167,10 @@ namespace DAC {
       return "An integer operation was attempted on a non-integer number.";
     }
     
+    char const* ScalarOverflow::what () const throw(); {
+      return "Arb overflows requested scalar type.";
+    }
+    
   }
   
 }
