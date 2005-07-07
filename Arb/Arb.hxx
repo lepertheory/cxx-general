@@ -1260,11 +1260,35 @@ namespace DAC {
   }
   template <class T> inline void Arb::_Set<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Set<T, Arb::_NUM_SINT>(l, SafeInt<T>(r)); }
   
-  // Set from a floating-point type.
-  template <class T> inline void Arb::_Set<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
+  // Set from a float.
+  template <> inline void Arb::_Set<float, Arb::_NUM_FLPT>::op (Arb& l, float const r) {
     
-    // Set from a string. Not very heroic, but for now, it works.
-    l.set(DAC::toString(r));
+    // Bitwise structure of a float.
+    struct FloatBits {
+      unsigned int mantissa : 23;
+      unsigned int exponent :  8;
+      unsigned int sign     :  1;
+    };
+    
+    // Union to convert from float to bitfield.
+    union FloatParts {
+      float     number;
+      FloatBits bits;
+    };
+    
+    // Positive infinity not supported.
+    if (
+    
+    // Work area.
+    Arb new_num;
+    
+    // Carry over the old fixed-point properties.
+    new_num._data->fix      = l._data->fix;
+    new_num._data->pointpos = l._data->pointpos;
+    new_num._data->base     = l._data->base;
+    new_num._data->fixq     = l._data->fixq;
+    
+    
     
   }
   
