@@ -1261,7 +1261,7 @@ namespace DAC {
   template <class T> inline void Arb::_Set<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Set<T, Arb::_NUM_SINT>(l, SafeInt<T>(r)); }
   
   // Set from a float.
-  template <> inline void Arb::_Set<float, Arb::_NUM_FLPT>::op (Arb& l, float const r) {
+  template <> void Arb::_Set<float, Arb::_NUM_FLPT>::op (Arb& l, float const r) {
     
     // Bitwise structure of a float.
     struct FloatBits {
@@ -1288,8 +1288,14 @@ namespace DAC {
     new_num._data->base     = l._data->base;
     new_num._data->fixq     = l._data->fixq;
     
-    
-    
+  }
+  
+  // Set from a double.
+  template <> void Arb::_Set<double, Arb::_NUM_FLPT>::op (Arb& l, double const r) {
+  }
+  
+  // Set from a long double.
+  template <> void Arb::_Set<long double, Arb::_NUM_FLPT>::op (Arb& l, long double const r) {
   }
   
   // Get as an unsigned integer.
@@ -1331,12 +1337,92 @@ namespace DAC {
   }
   template <class T> inline void Arb::_Get<T, Arb::_NUM_SINT>::op (T& l, Arb const& r) { SafeInt<T> tmp; Arb::_Get<T, Arb::_NUM_SINT>(tmp, r); l = tmp; }
   
-  // Get as a floating-point type.
-  template <class T> void Arb::_Get<T, Arb::_NUM_FLPT>::op (T& l, Arb const& r) {
-    
-    
-    
+  // Get as a float.
+  template <> void Arb::_Get<float, Arb::_NUM_FLPT>::op (float& l, Arb const& r) {
   }
+  
+  // Get as a double.
+  template <> void Arb::_Get<double, Arb::_NUM_FLPT>::op (double& l, Arb const& r) {
+  }
+  
+  // Get as a long double.
+  template <> void Arb::_Get<long double, Arb::_NUM_FLPT>::op (long double& l, Arb const& r) {
+  }
+  
+  // Multiply by an unsigned integer type.
+  template <class T> void Arb::_Mul<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Mul<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Mul<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  
+  // Multiply by a signed integer type.
+  template <class T> void Arb::_Mul<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Mul<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Mul<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  
+  // Multiply by a floating-point type.
+  template <class T> void Arb::_Mul<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
+  }
+  
+  // Divide by an unsigned integer type.
+  template <class T> void Arb::_Div<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Div<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Div<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  
+  // Divide by a signed integer type.
+  template <class T> void Arb::_Div<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Div<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Div<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  
+  // Divide by a floating-point type.
+  template <class T> void Arb::_Div<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
+  }
+  
+  // Modulo divide by an unsigned integer type.
+  template <class T> void Arb::_Mod<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Mod<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Mod<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  
+  // Modulo divide by a signed integer type.
+  template <class T> void Arb::_Mod<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Mod<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Mod<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  
+  // Modulo divide by a floating-point type.
+  template <class T> void Arb::_Mod<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
+  }
+  
+  // Add an unsigned integer type.
+  template <class T> void Arb::_Add<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Add<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Add<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  
+  // Add a signed integer type.
+  template <class T> void Arb::_Add<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Add<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Add<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  
+  // Add by a floating-point type.
+  template <class T> void Arb::_Add<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
+  }
+  
+  // Subtract an unsigned integer type.
+  template <class T> void Arb::_Sub<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Sub<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Sub<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  
+  // Subtract a signed integer type.
+  template <class T> void Arb::_Sub<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
+  }
+  template <class T> inline void Arb::_Sub<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Sub<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  
+  // Subtract a floating-point type.
+  template <class T> void Arb::_Sub<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
+  }
+  
+  // Greater than an unsigned integer type.
+  template <class T> bool Arb::_GT<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
+  }
+  template <class T> inline bool Arb::_GT<T, Arb::_NUM_UINT>::op (Arb const& l, T const r) { return Arb::
   
   /***************************************************************************
    * Errors.
