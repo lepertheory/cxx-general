@@ -492,18 +492,38 @@ namespace DAC {
   Arb& Arb::set (Arb const& number) {
     
     // Work area.
-    Arb retval(*this, true);
+    Arb new_num(*this, true);
     
     // Set the new number.
-    retval._data->p        = number._data->p;
-    retval._data->q        = number._data->q;
-    retval._data->positive = number._data->positive;
+    new_num._data->p        = number._data->p;
+    new_num._data->q        = number._data->q;
+    new_num._data->positive = number._data->positive;
     
     // Reduce the fraction.
-    retval._reduce();
+    new_num._reduce();
     
     // Move the result into place and return.
-    _data = retval._data;
+    _data = new_num._data;
+    return *this;
+    
+  }
+  
+  // Set from an ArbInt.
+  Arb& Arb::set (ArbInt const& number) {
+    
+    // Work area.
+    Arb new_num(*this, true);
+    
+    // Set the number.
+    new_num._data->p        = number;
+    new_num._data->q        = 1;
+    new_num._data->positive = true;
+    
+    // Reduce the fraction.
+    new_num._reduce();
+    
+    // Move the result into place and return.
+    _data = new_num._data;
     return *this;
     
   }
@@ -680,6 +700,14 @@ namespace DAC {
     
   }
   
+  // Greater-than an ArbInt.
+  bool Arb::op_gt (ArbInt const& number) const {
+    // FIXME: Dummy.
+    if (number > 0) {}
+    // FIXME: Dummy.
+    return false;
+  }
+  
   // Less-than operator backend.
   bool Arb::op_lt (Arb const& number) const {
     
@@ -718,6 +746,14 @@ namespace DAC {
     
   }
   
+  // Less-than an ArbInt.
+  bool Arb::op_lt (ArbInt const& number) const {
+    // FIXME: Dummy.
+    if (number > 0) {}
+    // FIXME: Dummy.
+    return false;
+  }
+  
   // Equal-to operator backend.
   bool Arb::op_eq (Arb const& number) const {
     
@@ -737,6 +773,14 @@ namespace DAC {
     // they're not equal.
     return ((_data->q == number._data->q) && (_data->p == number._data->p));
     
+  }
+  
+  // Equal-to an ArbInt.
+  bool Arb::op_eq (ArbInt const& number) const {
+    // FIXME: Dummy.
+    if (number > 0) {}
+    // FIXME: Dummy.
+    return false;
   }
   
   // Get the ceiling of this fractional number.
@@ -1044,6 +1088,75 @@ namespace DAC {
     
   }
   
+  // Set from a float.
+  template <> void Arb::_Set<float, Arb::_NUM_FLPT>::op (Arb& l, float const r) {
+    
+    // Bitwise structure of a float.
+    struct FloatBits {
+      unsigned int mantissa : 23;
+      unsigned int exponent :  8;
+      unsigned int sign     :  1;
+    };
+    
+    // Union to convert from float to bitfield.
+    union FloatParts {
+      float     number;
+      FloatBits bits;
+    };
+    
+    // Positive infinity not supported.
+    
+    
+    // Work area.
+    Arb new_num;
+    
+    // Carry over the old fixed-point properties.
+    new_num._data->fix      = l._data->fix;
+    new_num._data->pointpos = l._data->pointpos;
+    new_num._data->base     = l._data->base;
+    new_num._data->fixq     = l._data->fixq;
+    
+    // FIXME: Dummy.
+    if (l > 0) {};
+    if (r > 0) {};
+    
+  }
+  
+  // Set from a double.
+  template <> void Arb::_Set<double, Arb::_NUM_FLPT>::op (Arb& l, double const r) {
+    // FIXME: Dummy.
+    if (l > 0) {};
+    if (r > 0) {};
+  }
+  
+  // Set from a long double.
+  template <> void Arb::_Set<long double, Arb::_NUM_FLPT>::op (Arb& l, long double const r) {
+    // FIXME: Dummy.
+    if (l > 0) {};
+    if (r > 0) {};
+  }
+  
+  // Get as a float.
+  template <> void Arb::_Get<float, Arb::_NUM_FLPT>::op (float& l, Arb const& r) {
+    // FIXME: Dummy.
+    if (l > 0) {};
+    if (r > 0) {};
+  }
+  
+  // Get as a double.
+  template <> void Arb::_Get<double, Arb::_NUM_FLPT>::op (double& l, Arb const& r) {
+    // FIXME: Dummy.
+    if (l > 0) {};
+    if (r > 0) {};
+  }
+  
+  // Get as a long double.
+  template <> void Arb::_Get<long double, Arb::_NUM_FLPT>::op (long double& l, Arb const& r) {
+    // FIXME: Dummy.
+    if (l > 0) {};
+    if (r > 0) {};
+  }
+  
   /***************************************************************************
    * Class Arb::_Data.
    ***************************************************************************/
@@ -1167,7 +1280,7 @@ namespace DAC {
       return "An integer operation was attempted on a non-integer number.";
     }
     
-    char const* ScalarOverflow::what () const throw(); {
+    char const* ScalarOverflow::what () const throw() {
       return "Arb overflows requested scalar type.";
     }
     

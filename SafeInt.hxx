@@ -127,6 +127,9 @@ namespace DAC {
       template <class U> SafeInt& op_bit_xor (U          const value);
                          SafeInt& op_bit_cpm ();
       
+      // Get the absolute value.
+      SafeInt abs () const;
+      
     /*
      * Private members.
      */
@@ -667,6 +670,11 @@ namespace DAC {
     template <class T> class SafeNegate<T, SE_SE> { public: static T op (T const value); };
     template <class T> class SafeNegate<T, UE_UE> { public: static T op (T const value); };
     
+    // Safely get the absolute value.
+    template <class T, RelType> class SafeAbs;
+    template <class T> class SafeAbs<T, SE_SE> { public: static T op (T const value); };
+    template <class T> class SafeAbs<T, UE_UE> { public: static T op (T const value); };
+    
   }
   
   /***************************************************************************
@@ -771,6 +779,9 @@ namespace DAC {
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_xor (SafeInt<U> const value) { _value = SafeIntUtil::SafeBitXOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_xor (U          const value) { _value = SafeIntUtil::SafeBitXOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   template <class T>                    inline SafeInt<T>& SafeInt<T>::op_bit_cpm ()                       { _value = SafeIntUtil::SafeBitCpm<T,    SafeIntUtil::Relationship<T, T>::value>::op(_value);                        return *this; }
+  
+  // Get the absolute value.
+  template <class T> inline SafeInt<T> SafeInt<T>::abs () const { return SafeInt<T>(SafeIntUtil::SafeAbs<T, SafeIntUtil::Relationship<T, T>::value>::op(_value)); }
   
   /***************************************************************************
    * SafeIntUtil.
@@ -2552,6 +2563,10 @@ namespace DAC {
       }
       throw SafeIntErrors::UnOpOverflow<T>().Number(value).Operator("-").Prefix(true).Limit(0);
     }
+    
+    // Absolute value.
+    template <class T> inline T SafeAbs<T, SE_SE>::op (T const value) { return (value < 0) ? SafeNegate<T, Relationship<T, T>::value>::op(value) : value; }
+    template <class T> inline T SafeAbs<T, UE_UE>::op (T const value) { return value;                                                                     }
     
     /*************************************************************************
      * Class SafeInt::_Relationship.
