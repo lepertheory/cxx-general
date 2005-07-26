@@ -142,49 +142,38 @@ namespace DAC {
       
       // Arithmetic operator backends.
                          Arb& op_mul (Arb        const& number);
-                         Arb& op_mul (ArbInt     const& number);
       template <class T> Arb& op_mul (SafeInt<T> const  number);
       template <class T> Arb& op_mul (T          const  number);
                          Arb& op_div (Arb        const& number);
-                         Arb& op_div (ArbInt     const& number);
       template <class T> Arb& op_div (SafeInt<T> const  number);
       template <class T> Arb& op_div (T          const  number);
                          Arb& op_mod (Arb        const& number);
-                         Arb& op_mod (ArbInt     const& number);
       template <class T> Arb& op_mod (SafeInt<T> const  number);
       template <class T> Arb& op_mod (T          const  number);
                          Arb& op_add (Arb        const& number);
-                         Arb& op_add (ArbInt     const& number);
       template <class T> Arb& op_add (SafeInt<T> const  number);
       template <class T> Arb& op_add (T          const  number);
                          Arb& op_sub (Arb        const& number);
-                         Arb& op_sub (ArbInt     const& number);
       template <class T> Arb& op_sub (SafeInt<T> const  number);
       template <class T> Arb& op_sub (T          const  number);
       
       // Comparison operator backends.
                          bool op_gt (Arb        const& number) const;
-                         bool op_gt (ArbInt     const& number) const;
       template <class T> bool op_gt (SafeInt<T> const  number) const;
       template <class T> bool op_gt (T          const  number) const;
                          bool op_ge (Arb        const& number) const;
-                         bool op_ge (ArbInt     const& number) const;
       template <class T> bool op_ge (SafeInt<T> const  number) const;
       template <class T> bool op_ge (T          const  number) const;
                          bool op_lt (Arb        const& number) const;
-                         bool op_lt (ArbInt     const& number) const;
       template <class T> bool op_lt (SafeInt<T> const  number) const;
       template <class T> bool op_lt (T          const  number) const;
                          bool op_le (Arb        const& number) const;
-                         bool op_le (ArbInt     const& number) const;
       template <class T> bool op_le (SafeInt<T> const  number) const;
       template <class T> bool op_le (T          const  number) const;
                          bool op_eq (Arb        const& number) const;
-                         bool op_eq (ArbInt     const& number) const;
       template <class T> bool op_eq (SafeInt<T> const  number) const;
       template <class T> bool op_eq (T          const  number) const;
                          bool op_ne (Arb        const& number) const;
-                         bool op_ne (ArbInt     const& number) const;
       template <class T> bool op_ne (SafeInt<T> const  number) const;
       template <class T> bool op_ne (T          const  number) const;
       
@@ -508,6 +497,36 @@ namespace DAC {
         T   _limit;
     };
     
+    // Attempt to set Arb with an invalid floating-point number.
+    class InvalidFloat : public Base {
+      public:
+        virtual char const* what () const throw();
+    };
+    template <class T> class InvalidFloatSpecialized : public InvalidFloat {
+      public:
+        virtual char const* what () const throw();
+        InvalidFloatSpecialized& Number (T const number) throw();
+        T Number () const throw();
+      private:
+        T _number;
+    };
+    template <class T> class Infinity : public InvalidFloatSpecialized<T> {
+      public:
+        virtual char const* what () const throw();
+    };
+    template <class T> class PositiveInfinity : public Infinity<T> {
+      public:
+        virtual char const* what () const throw();
+    };
+    template <class T> class NegativeInfinity : public Infinity<T> {
+      public:
+        virtual char const* what () const throw();
+    };
+    template <class T> class NaN : public InvalidFloatSpecialized<T> {
+      public:
+        virtual char const* what () const throw();
+    };
+    
   }
   /*************************************************************************
    * Operators.
@@ -733,343 +752,20 @@ namespace DAC {
   template <class T> inline bool Arb::op_gt (SafeInt<T> const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_gt (T          const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
                      inline bool Arb::op_ge (Arb        const& number) const { return !op_lt(number);                                   }
-                     inline bool Arb::op_ge (ArbInt     const& number) const { return !op_lt(number);                                   }
   template <class T> inline bool Arb::op_ge (SafeInt<T> const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_ge (T          const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_lt (SafeInt<T> const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_lt (T          const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
                      inline bool Arb::op_le (Arb        const& number) const { return !op_le(number);                                   }
-                     inline bool Arb::op_le (ArbInt     const& number) const { return !op_le(number);                                   }
   template <class T> inline bool Arb::op_le (SafeInt<T> const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_le (T          const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_eq (SafeInt<T> const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_eq (T          const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
                      inline bool Arb::op_ne (Arb        const& number) const { return !op_ne(number);                                   }
-                     inline bool Arb::op_ne (ArbInt     const& number) const { return !op_ne(number);                                   }
   template <class T> inline bool Arb::op_ne (SafeInt<T> const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_ne (T          const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   
   /*
-  // Multiply by an integral type
-  template <class T> Arb& Arb::op_mul (SafeInt<T> const& number) {
-    
-    // Multiplying 0 is easy.
-    if (isZero()) {
-      return *this;
-    }
-    
-    // Multiplying by 0 is also easy.
-    if (number == 0) {
-      
-      // Work area.
-      Arb retval(*this, true);
-      
-      // Set to zero.
-      retval._data->p = 0;
-      retval._data->q = 1;
-      
-      // Copy in result and return.
-      _data = retval._data;
-      return *this;
-      
-    }
-    
-    // Multiplying by 1.
-    if (number == 1) {
-      return *this;
-    }
-    
-    // Multiplying by -1.
-    if (number == -1) {
-      
-      // Work area.
-      Arb retval(*this, true);
-      
-      // Reverse the sign.
-      retval._data->positive = !_data->positive;
-      
-      // Copy in result and return.
-      _data = retval._data;
-      return *this;
-      
-    }
-    
-    // Multiply the easy way if this is an integer.
-    if (std::numeric_limits<T>::is_integer) {
-      
-      // Work area.
-      Arb retval(*this, true);
-      
-      // Multiply.
-      retval._data->p *= DAC::abs(number.Value());
-      
-      // Set the sign.
-      retval._data->positive = (_data->positive == (number > 0));
-      
-      // Reduce.
-      retval._reduce();
-      
-      // Move in the result and return.
-      _data = retval._data;
-      return *this;
-      
-    // Otherwise do it the hard way.
-    } else {
-      // FIXME!!!
-      //return op_mul(Arb(number));
-    }
-    
-  }
-  template <>        inline Arb& Arb::op_mul (bool               const number) { return op_mul(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   char      const number) { return op_mul(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned char      const number) { return op_mul(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   short int const number) { return op_mul(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned short int const number) { return op_mul(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   int       const number) { return op_mul(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned int       const number) { return op_mul(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_mul (signed   long int  const number) { return op_mul(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_mul (unsigned long int  const number) { return op_mul(SafeInt<unsigned long int     >(number)); }
-  template <class T> inline Arb& Arb::op_mul (T                  const number) { return op_mul(Arb(number));                             }
-  
-  // Divide by an integral type.
-  template <class T> Arb& Arb::op_div (SafeInt<T> const& number) {
-    
-    // Dividing 0 is easy.
-    if (isZero()) {
-      return *this;
-    }
-    
-    // Dividing by 0 is verboten.
-    if (number == 0) {
-      throw ArbErrors::DivByZero();
-    }
-    
-    // Dividing by 1.
-    if (number == 1) {
-      return *this;
-    }
-    
-    // Dividing by -1.
-    if (number == -1) {
-      
-      // Work area.
-      Arb retval(*this, true);
-      
-      // Flip the sign.
-      retval._data->positive = !_data->positive;
-      
-      // Move in the result and return.
-      _data = retval._data;
-      return *this;
-      
-    }
-    
-    // Divide the easy way if this is an integer.
-    if (std::numeric_limits<T>::is_integer) {
-      
-      // Work area.
-      Arb retval(*this, true);
-      
-      // Divide.
-      retval._data->q *= DAC::abs(number.Value());
-      
-      // Set the sign.
-      retval._data->positive = (_data->positive == (number > 0));
-      
-      // Reduce.
-      retval._reduce();
-      
-      // Move the result in and return.
-      _data = retval._data;
-      return *this;
-      
-    // Otherwise do it the hard way.
-    } else {
-      return op_div(Arb(number));
-    }
-    
-  }
-  template <>        inline Arb& Arb::op_div (bool               const number) { return op_div(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   char      const number) { return op_div(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned char      const number) { return op_div(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   short int const number) { return op_div(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned short int const number) { return op_div(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   int       const number) { return op_div(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned int       const number) { return op_div(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_div (signed   long int  const number) { return op_div(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_div (unsigned long int  const number) { return op_div(SafeInt<unsigned long int     >(number)); }
-  template <class T> inline Arb& Arb::op_div (T                  const number) { return op_div(Arb(number));                             }
-  
-  // Modulo division by an integral type.
-  template <class T> Arb& Arb::op_mod (SafeInt<T> const& number) {
-    
-    // Dividing 0 is easy.
-    if (isZero()) {
-      return *this;
-    }
-    
-    // Dividing by 0 is verboten.
-    if (number == 0) {
-      throw ArbErrors::DivByZero();
-    }
-    
-    // Throw an error if both numbers are not integer.
-    if (!std::numeric_limits<T>::is_integer || !isInteger()) {
-      throw ArbErrors::NonInteger();
-    }
-    
-    // Work area.
-    Arb retval(*this, true);
-    
-    // Modulo divide p.
-    retval._data->p %= number;
-    
-    // We done.
-    _data = retval._data;
-    return *this;
-    
-  }
-  template <>        inline Arb& Arb::op_mod (bool               const number) { return op_mod(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   char      const number) { return op_mod(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned char      const number) { return op_mod(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   short int const number) { return op_mod(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned short int const number) { return op_mod(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   int       const number) { return op_mod(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned int       const number) { return op_mod(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_mod (signed   long int  const number) { return op_mod(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_mod (unsigned long int  const number) { return op_mod(SafeInt<unsigned long int     >(number)); }
-  template <class T> inline Arb& Arb::op_mod (T                  const number) { return op_mod(Arb(number));                             }
-  
-  // Addition of an integral type.
-  template <class T> Arb& Arb::op_add (SafeInt<T> const& number) {
-    
-    // Adding to 0 is easy.
-    if (isZero()) {
-      return set(number);
-    }
-    
-    // Adding 0 is easy.
-    if (number == 0) {
-      return *this;
-    }
-    
-    // If adding an opposite sign, subtract the opposite.
-    if (_data->positive != (number > 0)) {
-      return op_sub(-number);
-    }
-    
-    // Add the easy way if this is an integer.
-    if (std::numeric_limits<T>::is_integer) {
-      
-      // Work area.
-      Arb retval(*this, true);
-      
-      // Add the very easy way if this is an integer, otherwise scale.
-      if (retval.isInteger()) {
-        retval._data->p += SafeInt<T>(DAC::abs(number.Value()));
-      } else {
-        retval._data->p += SafeInt<T>(DAC::abs(number.Value())) * retval._data->q;
-      }
-      
-      // Reduce.
-      retval._reduce();
-      
-      // Move the result in and return.
-      _data = retval._data;
-      return *this;
-      
-    // Otherwise add the hard way.
-    } else {
-      //FIXME!!!
-      //return op_add(Arb(number));
-    }
-    
-  }
-  template <>        inline Arb& Arb::op_add (bool               const number) { return op_add(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   char      const number) { return op_add(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned char      const number) { return op_add(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   short int const number) { return op_add(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned short int const number) { return op_add(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   int       const number) { return op_add(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned int       const number) { return op_add(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_add (signed   long int  const number) { return op_add(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_add (unsigned long int  const number) { return op_add(SafeInt<unsigned long int     >(number)); }
-  template <class T> inline Arb& Arb::op_add (T                  const number) { return op_add(Arb(number));                             }
-  
-  // Subtraction of an integral type.
-  template <class T> Arb& Arb::op_sub (SafeInt<T> const& number) {
-    
-    // Subtracting from 0 is easy.
-    if (isZero()) {
-      Arb retval(*this);
-      retval.set(number);
-      retval._data->positive = !retval._data->positive;
-      _data = retval._data;
-      return *this;
-    }
-    
-    // Subtracting 0 is easy.
-    if (number == 0) {
-      return *this;
-    }
-    
-    // If subtracting an opposite sign, add the opposite.
-    if (_data->positive != (number > 0)) {
-      return op_add(-number);
-    }
-    
-    // Subtract the easy way if this is an integer.
-    if (std::numeric_limits<T>::is_integer) {
-      
-      // Work area.
-      Arb retval(*this, true);
-      
-      // Subtract the very easy way if this is an integer.
-      SafeInt<T> anum = SafeInt<T>(DAC::abs(number.Value()));
-      if (retval.isInteger()) {
-        if (anum > retval._data->p) {
-          retval._data->positive = !retval._data->positive;
-          retval._data->p        = anum - retval._data->p;
-        } else {
-          retval._data->p -= anum;
-        }
-        
-      // Otherwise do it the slightly harder way.
-      } else {
-        ArbInt ainum(anum * retval._data->q);
-        if (ainum > retval._data->p) {
-          retval._data->positive = !retval._data->positive;
-          retval._data->p        = ainum - retval._data->p;
-        } else {
-          retval._data->p -= ainum;
-        }
-      }
-      
-      // Reduce.
-      retval._reduce();
-      
-      // Move the result in and return.
-      _data = retval._data;
-      return *this;
-      
-    // Subtract the hard way.
-    } else {
-      //FIXME!!!
-      //return op_sub(Arb(number));
-    }
-    
-  }
-  template <>        inline Arb& Arb::op_sub (bool               const number) { return op_sub(SafeInt<bool                  >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   char      const number) { return op_sub(SafeInt<signed   char         >(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned char      const number) { return op_sub(SafeInt<unsigned char         >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   short int const number) { return op_sub(SafeInt<signed   short int    >(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned short int const number) { return op_sub(SafeInt<unsigned short int    >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   int       const number) { return op_sub(SafeInt<signed   int          >(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned int       const number) { return op_sub(SafeInt<unsigned int          >(number)); }
-  template <>        inline Arb& Arb::op_sub (signed   long int  const number) { return op_sub(SafeInt<signed   long int     >(number)); }
-  template <>        inline Arb& Arb::op_sub (unsigned long int  const number) { return op_sub(SafeInt<unsigned long int     >(number)); }
-  template <class T> inline Arb& Arb::op_sub (T                  const number) { return op_sub(Arb(number));                             }
-  
   // Greater than an integral type.
   template <class T> bool Arb::op_gt (SafeInt<T> const& number) const {
     
@@ -1108,16 +804,6 @@ namespace DAC {
     }
     
   }
-  template <>        inline bool Arb::op_gt (bool               const number) const { return op_gt(SafeInt<bool                  >(number)); }
-  template <>        inline bool Arb::op_gt (signed   char      const number) const { return op_gt(SafeInt<signed   char         >(number)); }
-  template <>        inline bool Arb::op_gt (unsigned char      const number) const { return op_gt(SafeInt<unsigned char         >(number)); }
-  template <>        inline bool Arb::op_gt (signed   short int const number) const { return op_gt(SafeInt<signed   short int    >(number)); }
-  template <>        inline bool Arb::op_gt (unsigned short int const number) const { return op_gt(SafeInt<unsigned short int    >(number)); }
-  template <>        inline bool Arb::op_gt (signed   int       const number) const { return op_gt(SafeInt<signed   int          >(number)); }
-  template <>        inline bool Arb::op_gt (unsigned int       const number) const { return op_gt(SafeInt<unsigned int          >(number)); }
-  template <>        inline bool Arb::op_gt (signed   long int  const number) const { return op_gt(SafeInt<signed   long int     >(number)); }
-  template <>        inline bool Arb::op_gt (unsigned long int  const number) const { return op_gt(SafeInt<unsigned long int     >(number)); }
-  template <class T> inline bool Arb::op_gt (T                  const number) const { return op_gt(Arb(number));                             }
   
   // Less than an integral type.
   template <class T> bool Arb::op_lt (SafeInt<T> const& number) const {
@@ -1157,16 +843,6 @@ namespace DAC {
     }
     
   }
-  template <>        inline bool Arb::op_lt (bool               const number) const { return op_lt(SafeInt<bool                  >(number)); }
-  template <>        inline bool Arb::op_lt (signed   char      const number) const { return op_lt(SafeInt<signed   char         >(number)); }
-  template <>        inline bool Arb::op_lt (unsigned char      const number) const { return op_lt(SafeInt<unsigned char         >(number)); }
-  template <>        inline bool Arb::op_lt (signed   short int const number) const { return op_lt(SafeInt<signed   short int    >(number)); }
-  template <>        inline bool Arb::op_lt (unsigned short int const number) const { return op_lt(SafeInt<unsigned short int    >(number)); }
-  template <>        inline bool Arb::op_lt (signed   int       const number) const { return op_lt(SafeInt<signed   int          >(number)); }
-  template <>        inline bool Arb::op_lt (unsigned int       const number) const { return op_lt(SafeInt<unsigned int          >(number)); }
-  template <>        inline bool Arb::op_lt (signed   long int  const number) const { return op_lt(SafeInt<signed   long int     >(number)); }
-  template <>        inline bool Arb::op_lt (unsigned long int  const number) const { return op_lt(SafeInt<unsigned long int     >(number)); }
-  template <class T> inline bool Arb::op_lt (T                  const number) const { return op_lt(Arb(number));                             }
   
   // Equal to an integral type.
   template <class T> bool Arb::op_eq (SafeInt<T> const& number) const {
@@ -1191,27 +867,6 @@ namespace DAC {
     }
     
   }
-  template <>        inline bool Arb::op_eq (bool               const number) const { return op_eq(SafeInt<bool                  >(number)); }
-  template <>        inline bool Arb::op_eq (signed   char      const number) const { return op_eq(SafeInt<signed   char         >(number)); }
-  template <>        inline bool Arb::op_eq (unsigned char      const number) const { return op_eq(SafeInt<unsigned char         >(number)); }
-  template <>        inline bool Arb::op_eq (signed   short int const number) const { return op_eq(SafeInt<signed   short int    >(number)); }
-  template <>        inline bool Arb::op_eq (unsigned short int const number) const { return op_eq(SafeInt<unsigned short int    >(number)); }
-  template <>        inline bool Arb::op_eq (signed   int       const number) const { return op_eq(SafeInt<signed   int          >(number)); }
-  template <>        inline bool Arb::op_eq (unsigned int       const number) const { return op_eq(SafeInt<unsigned int          >(number)); }
-  template <>        inline bool Arb::op_eq (signed   long int  const number) const { return op_eq(SafeInt<signed   long int     >(number)); }
-  template <>        inline bool Arb::op_eq (unsigned long int  const number) const { return op_eq(SafeInt<unsigned long int     >(number)); }
-  template <class T> inline bool Arb::op_eq (T                  const number) const { return op_eq(Arb(number));                             }
-  
-  // Comparison operator backends.
-                     inline bool Arb::op_ge (Arb        const& number) const { return !op_lt(number); }
-  template <class T> inline bool Arb::op_ge (SafeInt<T> const& number) const { return !op_lt(number); }
-  template <class T> inline bool Arb::op_ge (T          const  number) const { return !op_lt(number); }
-                     inline bool Arb::op_le (Arb        const& number) const { return !op_gt(number); }
-  template <class T> inline bool Arb::op_le (SafeInt<T> const& number) const { return !op_gt(number); }
-  template <class T> inline bool Arb::op_le (T          const  number) const { return !op_gt(number); }
-                     inline bool Arb::op_ne (Arb        const& number) const { return !op_eq(number); }
-  template <class T> inline bool Arb::op_ne (SafeInt<T> const& number) const { return !op_eq(number); }
-  template <class T> inline bool Arb::op_ne (T          const  number) const { return !op_eq(number); }
   */
   
   // Return whether this number is an integer.
@@ -1349,101 +1004,276 @@ namespace DAC {
   
   // Multiply by an unsigned integer type.
   template <class T> void Arb::_Mul<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Multiplying 0 is easy.
+    if (l == 0) {
+      return;
+    }
+    
+    // Multiplying by 1 is also easy.
+    if (r == 1) {
+      return;
+    }
+    
+    // Work area.
+    Arb retval(l, true);
+    
+    // Multiply.
+    retval._data->p *= r;
+    
+    // Reduce.
+    retval._reduce();
+    
+    // Move the result in and return.
+    l._data = retval._data;
+    
   }
   template <class T> inline void Arb::_Mul<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Mul<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Multiply by a signed integer type.
   template <class T> void Arb::_Mul<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Work area.
+    Arb retval(l, true);
+    
+    // Multiply by the abs.
+    try {
+      Arb::_Mul<T, _NUM_UINT>::op(retval, r.abs());
+    } catch (SafeIntErrors::UnOpOverflow<T>) {
+      retval.op_mul(ArbInt(~r) + 1);
+    }
+    
+    // Set the sign.
+    retval._data->positive = (retval._data->positive == (r > 0));
+    
+    // Move result in and return.
+    l._data = retval._data;
+    
   }
   template <class T> inline void Arb::_Mul<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Mul<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Multiply by a floating-point type.
-  template <class T> void Arb::_Mul<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-  }
+  template <class T> inline void Arb::_Mul<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) { l.op_mul(Arb(r)); }
   
   // Divide by an unsigned integer type.
   template <class T> void Arb::_Div<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Dividing 0 is easy.
+    if (l == 0) {
+      return;
+    }
+    
+    // Dividing by 0 is verboten.
+    if (r == 0) {
+      throw ArbErrors::DivByZeroBinary<Arb, T>().Left(l).Operator("/").Right(r);
+    }
+    
+    // Dividing by 1 is also easy.
+    if (l == 1) {
+      return;
+    }
+    
+    // Work area.
+    Arb retval(l, true);
+    
+    // Divide.
+    retval._data->q *= r;
+    
+    // Reduce.
+    retval._reduce();
+    
+    // Move the result into place and return.
+    l._data = retval._data;
+  
   }
   template <class T> inline void Arb::_Div<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Div<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Divide by a signed integer type.
   template <class T> void Arb::_Div<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Work area.
+    Arb retval(l, true);
+    
+    // Divide by the abs.
+    try {
+      Arb::_Div<T, _NUM_UINT>::op(retval, r.abs());
+    } catch (SafeIntErrors::UnOpOverflow<T>) {
+      retval.op_div(ArbInt(~r) + 1);
+    }
+    
+    // Set the sign.
+    retval._data->positive = (retval._data->positive == (r > 0));
+    
+    // Move result in and return.
+    l._data = retval._data;
+    
   }
   template <class T> inline void Arb::_Div<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Div<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Divide by a floating-point type.
-  template <class T> void Arb::_Div<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-  }
+  template <class T> inline void Arb::_Div<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) { l.op_div(Arb(r)); }
   
   // Modulo divide by an unsigned integer type.
   template <class T> void Arb::_Mod<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Dividing 0 is easy.
+    if (l == 0) {
+      return;
+    }
+    
+    // Dividing by 0 is verboten.
+    if (r == 0) {
+      throw ArbErrors::DivByZeroBinary<Arb, T>().Left(l).Operator("%").Right(r);
+    }
+    
+    // Throw an error if both numbers are not integer.
+    if (!l.isInteger()) {
+      throw ArbErrors::NonIntegerBinary<Arb, T>().Left(l).Operator("%").Right(r);
+    }
+    
+    // Work area.
+    Arb retval(l, true);
+    
+    // Modulo divide p.
+    retval._data->p %= r;
+    
+    // Done.
+    l._data = retval._data;
+    
   }
   template <class T> inline void Arb::_Mod<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Mod<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Modulo divide by a signed integer type.
-  template <class T> void Arb::_Mod<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-  }
+  template <class T> inline void Arb::_Mod<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) { Arb::_Mod<T, Arb::_NUM_UINT>::op(l, r); }
   template <class T> inline void Arb::_Mod<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Mod<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Modulo divide by a floating-point type.
-  template <class T> void Arb::_Mod<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-  }
+  template <class T> inline void Arb::_Mod<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) { l.op_mod(Arb(r)); }
   
   // Add an unsigned integer type.
   template <class T> void Arb::_Add<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Adding to 0 is easy.
+    if (l == 0) {
+      l = r;
+      return;
+    }
+    
+    // Adding 0 is also easy.
+    if (r == 0) {
+      return;
+    }
+    
+    // Work area.
+    Arb retval(l, true);
+    
+    // Add the easy way if l is an integer, otherwise scale.
+    if (retval.isInteger()) {
+      retval._data->p += r;
+    } else {
+      retval._data->p += r * retval._data->q;
+    }
+    
+    // Reduce.
+    retval._reduce();
+    
+    // Move the data in and return.
+    l._data = retval._data;
+    
   }
   template <class T> inline void Arb::_Add<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Add<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Add a signed integer type.
   template <class T> void Arb::_Add<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Add normally unless the signs don't match.
+    if (l._data->positive == (r > 0)) {
+      Arb::_Add<T, Arb::_NUM_UINT>::op(l, r);
+    } else {
+      try {
+        Arb::_Sub<T, Arb::_NUM_UINT>::op(l, -r);
+      } catch (SafeIntErrors::UnaryOverflow<T>) {
+        l.op_sub(Arb(~r) + 1);
+      }
+    }
+    
   }
   template <class T> inline void Arb::_Add<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Add<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Add by a floating-point type.
-  template <class T> void Arb::_Add<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-  }
+  template <class T> inline void Arb::_Add<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) { l.op_add(r); }
   
   // Subtract an unsigned integer type.
   template <class T> void Arb::_Sub<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+  /*
+  // Subtraction of an integral type.
+  template <class T> Arb& Arb::op_sub (SafeInt<T> const& number) {
+    
+    // If subtracting an opposite sign, add the opposite.
+    if (_data->positive != (number > 0)) {
+      return op_add(-number);
+    }
+    
+      // Work area.
+      Arb retval(*this, true);
+      
+      // Subtract the very easy way if this is an integer.
+      SafeInt<T> anum = SafeInt<T>(DAC::abs(number.Value()));
+      if (retval.isInteger()) {
+        if (anum > retval._data->p) {
+          retval._data->positive = !retval._data->positive;
+          retval._data->p        = anum - retval._data->p;
+        } else {
+          retval._data->p -= anum;
+        }
+        
+      // Otherwise do it the slightly harder way.
+      } else {
+        ArbInt ainum(anum * retval._data->q);
+        if (ainum > retval._data->p) {
+          retval._data->positive = !retval._data->positive;
+          retval._data->p        = ainum - retval._data->p;
+        } else {
+          retval._data->p -= ainum;
+        }
+      }
+      
+      // Reduce.
+      retval._reduce();
+      
+      // Move the result in and return.
+      _data = retval._data;
+      return *this;
+      
+    // Subtract the hard way.
+    } else {
+      //FIXME!!!
+      //return op_sub(Arb(number));
+    }
+    
+  }
+  */
+    
+    // Subtracting 0 is easy.
+    if (r == 0) {
+      return;
+    }
+    
+    // Subtracting from 0 is also easy.
+    if (l == 0) {
+      Arb retval(r);
+      retval._data->positive = !retval._data->positive;
+      l._data = retval._data;
+      return;
+    }
+    
+    // Work area.
+    Arb retval(l, true);
+    
+    // Subtract.
+    if (retval.isInteger()) {
+      
+    
   }
   template <class T> inline void Arb::_Sub<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Sub<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
@@ -1692,6 +1522,48 @@ namespace DAC {
     template <class T> inline ScalarOverflowSpecialized<T>& ScalarOverflowSpecialized<T>::Limit  (T   const  limit)  throw() { _limit  = limit;  return *this; }
     template <class T> inline Arb ScalarOverflowSpecialized<T>::Number () const throw() { return _number; }
     template <class T> inline T   ScalarOverflowSpecialized<T>::Limit  () const throw() { return _limit;  }
+    
+    template <class T> char const* InvalidFloatSpecialized<T>::what () const throw() {
+      try {
+        return ("Attempt to set Arb from an invalid floating-point number: " + DAC::toString(_number)).c_str();
+      } catch (...) {
+        return "Attempt to set Arb from an invalid floating-point number. Error creating message string.";
+      }
+    }
+    template <class T> inline InvalidFloatSpecialized<T>& InvalidFloatSpecialized<T>::Number (T const number) throw() { _number = number; return *this; }
+    template <class T> inline T InvalidFloatSpecialized<T>::Number () const throw() { return _number; }
+    
+    template <class T> char const* Infinity<T>::what () const throw() {
+      try {
+        return ("Attempt to set Arb to infinity: " + DAC::toString(this->Number())).c_str();
+      } catch (...) {
+        return "Attempt to set Arb to infinity. Error creating message string.";
+      }
+    }
+    
+    template <class T> char const* PositiveInfinity<T>::what () const throw() {
+      try {
+        return ("Attempt to set Arb to positive infinity: " + DAC::toString(this->Number())).c_str();
+      } catch (...) {
+        return "Attempt to set Arb to positive infinity. Error creating message string.";
+      }
+    }
+    
+    template <class T> char const* NegativeInfinity<T>::what () const throw() {
+      try {
+        return ("Attempt to set Arb to negative infinity: " + DAC::toString(this->Number())).c_str();
+      } catch (...) {
+        return "Attempt to set Arb to negative infinity. Error creating message string.";
+      }
+    }
+    
+    template <class T> char const* NaN<T>::what () const throw() {
+      try {
+        return ("Attempt to set Arb to Not-a-Number: " + DAC::toString(this->Number())).c_str();
+      } catch (...) {
+        return "Attempt to set Arb to Not-a-Number. Error creating message string.";
+      }
+    }
     
   }
   

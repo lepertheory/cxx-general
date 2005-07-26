@@ -700,14 +700,6 @@ namespace DAC {
     
   }
   
-  // Greater-than an ArbInt.
-  bool Arb::op_gt (ArbInt const& number) const {
-    // FIXME: Dummy.
-    if (number > 0) {}
-    // FIXME: Dummy.
-    return false;
-  }
-  
   // Less-than operator backend.
   bool Arb::op_lt (Arb const& number) const {
     
@@ -746,14 +738,6 @@ namespace DAC {
     
   }
   
-  // Less-than an ArbInt.
-  bool Arb::op_lt (ArbInt const& number) const {
-    // FIXME: Dummy.
-    if (number > 0) {}
-    // FIXME: Dummy.
-    return false;
-  }
-  
   // Equal-to operator backend.
   bool Arb::op_eq (Arb const& number) const {
     
@@ -773,14 +757,6 @@ namespace DAC {
     // they're not equal.
     return ((_data->q == number._data->q) && (_data->p == number._data->p));
     
-  }
-  
-  // Equal-to an ArbInt.
-  bool Arb::op_eq (ArbInt const& number) const {
-    // FIXME: Dummy.
-    if (number > 0) {}
-    // FIXME: Dummy.
-    return false;
   }
   
   // Get the ceiling of this fractional number.
@@ -1104,9 +1080,6 @@ namespace DAC {
       FloatBits bits;
     };
     
-    // Positive infinity not supported.
-    
-    
     // Work area.
     Arb new_num;
     
@@ -1116,9 +1089,66 @@ namespace DAC {
     new_num._data->base     = l._data->base;
     new_num._data->fixq     = l._data->fixq;
     
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    // Easy common cases.
+    if (r == 0.0) {
+      return;
+    }
+    if (r == 1.0) {
+      new_num._data->p = 1;
+      return;
+    }
+    if (r == -1.0) {
+      new_num._data->p        = 1;
+      new_num._data->positive = false;
+      return;
+    }
+    
+    // Load the union.
+    FloatParts converter = { r };
+    
+    // Only actual numbers are supported.
+    if (converter.bits.exponent == 255) {
+      
+      // Infinity.
+      if (converter.bits.mantissa == 0) {
+        if (converter.bits.sign == 0) {
+          throw ArbErrors::PositiveInfinity<float>().Number(r);
+        } else {
+          throw ArbErrors::NegativeInfinity<float>().Number(r);
+        }
+      }
+      
+      // NaN.
+      throw ArbErrors::NaN<float>().Number(r);
+      
+    }
+    
+    // Fraction is always x/2^23.
+    new_num._data->q = 8388608;
+    
+    // Denormalized numbers.
+    if (converter.bits.exponent == 0) {
+      
+      // Load the mantissa as a fraction. Denormalized numbers do not have a
+      // hidden bit.
+      new_num._data->p = converter.bits.mantissa;
+      
+      // Correct the exponent.
+      converter.bits.exponent = 1;
+      
+    // Normalized numbers.
+    } else {
+      
+      // Load the mantissa as a fraction. Add in the hidden bit.
+      new_num._data->p = SafeInt<unsigned int>(8388608) + converter.bits.mantissa;
+      
+    }
+    
+    // Multiply by the exponent to get the actual number. Exponent has a bias
+    // of 127.
+    new_num *= ArbInt(2).pow(SafeInt<int>(converter.bits.exponent) - 127);
+    
+    cout << "new_num: " << new_num << endl;
     
   }
   
@@ -1282,6 +1312,10 @@ namespace DAC {
     
     char const* ScalarOverflow::what () const throw() {
       return "Arb overflows requested scalar type.";
+    }
+    
+    char const* InvalidFloat::what () const throw() {
+      return "Attempt to set Arb from an invalid floating-point number.";
     }
     
   }

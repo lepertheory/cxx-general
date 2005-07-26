@@ -33,7 +33,6 @@ if env['CC'] == 'gcc' :
   # -pedantic-errors enables additional error checking.
   # -Wall enables all warnings.
   # -Wextra enables even more warnings.
-  # -Wfloat-equal warns if the == operator is used on a float.
   # -Wshadow warns when something is shadowed.
   # -Wpointer-arith warns when using size of a function or void.
   # -Wcast-qual warns when const is cast away.
@@ -45,7 +44,7 @@ if env['CC'] == 'gcc' :
   # -Winline warns if a function declared inline cannot be inlined.
   # -Werror turns all warnings into errors.
   # -pipe communicates between CPP and compiler with a pipe instead of tmp.
-  env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wfloat-equal -Wshadow -Wpointer-arith -Wredundant-decls -Wunreachable-code -Winline -Werror -pipe')
+  env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wshadow -Wpointer-arith -Wredundant-decls -Wunreachable-code -Winline -Werror -pipe')
   env.Append(CPPDEFINES = 'CC_GCC')
 if env['CC'] == 'cl' :
   # /GR enables RTTI.

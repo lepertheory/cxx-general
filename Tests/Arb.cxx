@@ -40,6 +40,11 @@ int main () {
   
   try {
     
+    Arb test3;
+    cout << "1.23443: ";
+    test3 = static_cast<float>(1.23443);
+    cout << test3 << endl;
+    
     Arb test1;
     Arb test2;
     
@@ -70,10 +75,10 @@ int main () {
     cout << "  final: " << test1 << endl;
     cout << "original: " << test1;
     cout << "  --" << --test1;
-    cout << "  final: " << test1<< endl;
+    cout << "  final: " << test1 << endl;
     cout << "original: " << test1;
     cout << "  " << test1-- << "--";
-    cout << "  final: " << test1<< endl;
+    cout << "  final: " << test1 << endl;
     
     cout << "pow:  " << test1.pow(test2) << endl;
     cout << "root: " << test1.root(test2) << endl;

@@ -248,11 +248,7 @@ namespace DAC {
           }
           
           // Multiply into the digit product and carry.
-          cout << "(*(digproduct._digits))[j]: " << (*(digproduct._digits))[j] << endl;
-          cout << "(*(number._digits))[i]:     " << (*(number._digits))[i]     << endl;
-          cout << "(*_digits)[j]:              " << (*_digits)[j]              << endl;
           (*(digproduct._digits))[j] += SafeInt<_DigT>((*(number._digits))[i]) * (*_digits)[j];
-          cout << "(*(digproduct._digits))[j]: " << (*(digproduct._digits))[j] << endl;
           digproduct._carry(j);
           
         }
