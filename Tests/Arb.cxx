@@ -41,9 +41,18 @@ int main () {
   try {
     
     Arb test3;
-    cout << "1.23443: ";
-    test3 = static_cast<float>(1.23443);
-    cout << test3 << endl;
+    float       blah1;
+    double      blah2;
+    long double blah3;
+    cout << "float: "; cin >> blah1;
+    test3 = blah1;
+    cout << blah1 << " == " << test3 << endl;
+    cout << "double: "; cin >> blah2;
+    test3 = blah2;
+    cout << blah2 << " == " << test3 << endl;
+    cout << "long double: "; cin >> blah3;
+    test3 = blah3;
+    cout << blah3 << " == " << test3 << endl;
     
     Arb test1;
     Arb test2;

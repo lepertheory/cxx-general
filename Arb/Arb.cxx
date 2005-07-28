@@ -1091,15 +1091,18 @@ namespace DAC {
     
     // Easy common cases.
     if (r == 0.0) {
+      l._data = new_num._data;
       return;
     }
     if (r == 1.0) {
       new_num._data->p = 1;
+      l._data = new_num._data;
       return;
     }
     if (r == -1.0) {
       new_num._data->p        = 1;
       new_num._data->positive = false;
+      l._data = new_num._data;
       return;
     }
     
@@ -1140,30 +1143,215 @@ namespace DAC {
     } else {
       
       // Load the mantissa as a fraction. Add in the hidden bit.
-      new_num._data->p = SafeInt<unsigned int>(8388608) + converter.bits.mantissa;
+      new_num._data->p = new_num._data->q + converter.bits.mantissa;
       
     }
     
     // Multiply by the exponent to get the actual number. Exponent has a bias
     // of 127.
-    new_num *= ArbInt(2).pow(SafeInt<int>(converter.bits.exponent) - 127);
+    new_num *= Arb(2).pow(SafeInt<int>(converter.bits.exponent) - 127);
     
-    cout << "new_num: " << new_num << endl;
+    // Set the sign.
+    new_num._data->positive = !converter.bits.sign;
+    
+    // Move in the result and return.
+    l._data = new_num._data;
     
   }
   
   // Set from a double.
   template <> void Arb::_Set<double, Arb::_NUM_FLPT>::op (Arb& l, double const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Bitwise structure of a double.
+    struct DoubleBits {
+      unsigned int mantissal;
+      unsigned int mantissah : 20;
+      unsigned int exponent  : 11;
+      unsigned int sign      :  1;
+    };
+    
+    // Union to convert from float to bitfield.
+    union DoubleParts {
+      double     number;
+      DoubleBits bits;
+    };
+    
+    // Work area.
+    Arb new_num;
+    
+    // Carry over the old fixed-point properties.
+    new_num._data->fix      = l._data->fix;
+    new_num._data->pointpos = l._data->pointpos;
+    new_num._data->base     = l._data->base;
+    new_num._data->fixq     = l._data->fixq;
+    
+    // Easy common cases.
+    if (r == 0.0) {
+      l._data = new_num._data;
+      return;
+    }
+    if (r == 1.0) {
+      new_num._data->p = 1;
+      l._data = new_num._data;
+      return;
+    }
+    if (r == -1.0) {
+      new_num._data->p        = 1;
+      new_num._data->positive = false;
+      l._data = new_num._data;
+      return;
+    }
+    
+    // Load the union.
+    DoubleParts converter = { r };
+    
+    // Only actual numbers are supported.
+    if (converter.bits.exponent == 2047) {
+      
+      // Infinity.
+      if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
+        if (converter.bits.sign == 0) {
+          throw ArbErrors::PositiveInfinity<double>().Number(r);
+        } else {
+          throw ArbErrors::NegativeInfinity<double>().Number(r);
+        }
+      }
+      
+      // NaN.
+      throw ArbErrors::NaN<double>().Number(r);
+      
+    }
+    
+    // Fraction is always x/2^52.
+    new_num._data->q = ArbInt(1) << 52;
+    
+    // Denormalized numbers.
+    cout << "exp: " << converter.bits.exponent << endl;
+    if (converter.bits.exponent == 0) {
+      
+      // Load the mantissa as a fraction. Denormalized numbers do not have a
+      // hidden bit.
+      new_num._data->p = converter.bits.mantissal + converter.bits.mantissah * ArbInt(2).pow(32);
+      
+      // Correct the exponent.
+      converter.bits.exponent = 1;
+      
+    // Normalized numbers.
+    } else {
+      
+      // Load the mantissa as a fraction. Add in the hidden bit.
+      new_num._data->p = new_num._data->q + converter.bits.mantissal + converter.bits.mantissah * ArbInt(2).pow(32);
+      
+    }
+    
+    // Multiply by the exponent to get the actual number. Exponent has a bias
+    // of 1023.
+    new_num *= Arb(1) << (SafeInt<int>(converter.bits.exponent) - 1023);
+    
+    // Set the sign.
+    new_num._data->positive = !converter.bits.sign;
+    
+    // Move in the result and return.
+    l._data = new_num._data;
+    
   }
   
   // Set from a long double.
   template <> void Arb::_Set<long double, Arb::_NUM_FLPT>::op (Arb& l, long double const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Bitwise structure of a long double.
+    struct LongDoubleBits {
+      unsigned int mantissal;
+      unsigned int mantissah : 31;
+      unsigned int j         :  1;
+      unsigned int exponent  : 15;
+      unsigned int sign      :  1;
+    };
+    
+    // Union to convert from float to bitfield.
+    union LongDoubleParts {
+      long double    number;
+      LongDoubleBits bits;
+    };
+    
+    // Work area.
+    Arb new_num;
+    
+    // Carry over the old fixed-point properties.
+    new_num._data->fix      = l._data->fix;
+    new_num._data->pointpos = l._data->pointpos;
+    new_num._data->base     = l._data->base;
+    new_num._data->fixq     = l._data->fixq;
+    
+    // Easy common cases.
+    if (r == 0.0) {
+      l._data = new_num._data;
+      return;
+    }
+    if (r == 1.0) {
+      new_num._data->p = 1;
+      l._data = new_num._data;
+      return;
+    }
+    if (r == -1.0) {
+      new_num._data->p        = 1;
+      new_num._data->positive = false;
+      l._data = new_num._data;
+      return;
+    }
+    
+    // Load the union.
+    LongDoubleParts converter = { r };
+    
+    // Only actual numbers are supported.
+    if (converter.bits.exponent == 32767) {
+      
+      // Infinity.
+      if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
+        if (converter.bits.sign == 0) {
+          throw ArbErrors::PositiveInfinity<long double>().Number(r);
+        } else {
+          throw ArbErrors::NegativeInfinity<long double>().Number(r);
+        }
+      }
+      
+      // NaN.
+      throw ArbErrors::NaN<long double>().Number(r);
+      
+    }
+    
+    // Fraction is always x/2^63.
+    new_num._data->q = ArbInt(1) << 63;
+    
+    // Denormalized numbers.
+    cout << "exp: " << converter.bits.exponent << endl;
+    if (converter.bits.exponent == 0) {
+      
+      // Load the mantissa as a fraction. Denormalized use the hidden bit.
+      new_num._data->p = converter.bits.mantissal + converter.bits.mantissah * ArbInt(2).pow(32) + converter.bits.j * ArbInt(2).pow(64);
+      
+      // Correct the exponent.
+      converter.bits.exponent = 1;
+      
+    // Normalized numbers.
+    } else {
+      
+      // Load the mantissa as a fraction. Add in the hidden bit.
+      new_num._data->p = new_num._data->q + converter.bits.mantissal + converter.bits.mantissah * ArbInt(2).pow(32);
+      
+    }
+    
+    // Multiply by the exponent to get the actual number. Exponent has a bias
+    // of 16383.
+    
+    new_num *= Arb(1) << (SafeInt<int>(converter.bits.exponent) - 16383);
+    
+    // Set the sign.
+    new_num._data->positive = !converter.bits.sign;
+    
+    // Move in the result and return.
+    l._data = new_num._data;
+    
   }
   
   // Get as a float.

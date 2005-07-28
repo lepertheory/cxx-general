@@ -2544,10 +2544,10 @@ namespace DAC {
     
     // Bitwise compliment.
     template <class T> inline T SafeBitCpm<T, SE_SE>::op (T const value) {
-      return value ^ std::numeric_limits<T>::min();
+      return ~value;
     }
     template <class T> inline T SafeBitCpm<T, UE_UE>::op (T const value) {
-      return value ^ std::numeric_limits<T>::max();
+      return ~value;
     }
     
     // Negate.

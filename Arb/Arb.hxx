@@ -157,6 +157,14 @@ namespace DAC {
       template <class T> Arb& op_sub (SafeInt<T> const  number);
       template <class T> Arb& op_sub (T          const  number);
       
+      // Bit shift operator backends.
+                         Arb& op_shl (Arb        const& number);
+      template <class T> Arb& op_shl (SafeInt<T> const  number);
+      template <class T> Arb& op_shl (T          const  number);
+                         Arb& op_shr (Arb        const& number);
+      template <class T> Arb& op_shr (SafeInt<T> const  number);
+      template <class T> Arb& op_shr (T          const  number);
+      
       // Comparison operator backends.
                          bool op_gt (Arb        const& number) const;
       template <class T> bool op_gt (SafeInt<T> const  number) const;
@@ -221,6 +229,9 @@ namespace DAC {
       /*********************************************************************/
       // Data types.
       
+      // Directions.
+      enum _Dir { _DIR_L, _DIR_R };
+      
       // Number types.
       enum _NumType { _NUM_UINT, _NUM_SINT, _NUM_FLPT };
       
@@ -273,6 +284,24 @@ namespace DAC {
       template <class T> class _Sub<T, _NUM_UINT> { public: static void op (Arb& l, SafeInt<T> const r); static void op (Arb& l, T const r); };
       template <class T> class _Sub<T, _NUM_SINT> { public: static void op (Arb& l, SafeInt<T> const r); static void op (Arb& l, T const r); };
       template <class T> class _Sub<T, _NUM_FLPT> { public:                                              static void op (Arb& l, T const r); };
+      
+      // Shift.
+      template <class T, _NumType> class _Shift;
+      template <class T> class _Shift<T, _NUM_UINT> { public: static void op (Arb& l, SafeInt<T> const r); static void op (Arb& l, T const r); };
+      template <class T> class _Shift<T, _NUM_SINT> { public: static void op (Arb& l, SafeInt<T> const r); static void op (Arb& l, T const r); };
+      template <class T> class _Shift<T, _NUM_FLPT> { public:                                              static void op (Arb& l, T const r); };
+      
+      // Shift left.
+      template <class T, _NumType> class _Shl;
+      template <class T> class _Shl<T, _NUM_UINT> { public: static void op (Arb& l, SafeInt<T> const r); static void op (Arb& l, T const r); };
+      template <class T> class _Shl<T, _NUM_SINT> { public: static void op (Arb& l, SafeInt<T> const r); static void op (Arb& l, T const r); };
+      template <class T> class _Shl<T, _NUM_FLPT> { public:                                              static void op (Arb& l, T const r); };
+      
+      // Shift right.
+      template <class T, _NumType> class _Shr;
+      template <class T> class _Shr<T, _NUM_UINT> { public: static void op (Arb& l, SafeInt<T> const r); static void op (Arb& l, T const r); };
+      template <class T> class _Shr<T, _NUM_SINT> { public: static void op (Arb& l, SafeInt<T> const r); static void op (Arb& l, T const r); };
+      template <class T> class _Shr<T, _NUM_FLPT> { public:                                              static void op (Arb& l, T const r); };
       
       // Greater than.
       template <class T, _NumType> class _GT;
@@ -382,6 +411,10 @@ namespace DAC {
       
       // Common initialization tasks.
       void _init ();
+      
+      // Bit shift this number.
+      Arb& _shift (Arb const& bits, _Dir const dir);
+      Arb& _shift (
       
       // Reduce the number to its most compact representation.
       Arb& _reduce      ();
@@ -533,90 +566,106 @@ namespace DAC {
    *************************************************************************/
   
   // Stream I/O operators.
-  std::ostream&       operator << (std::ostream&       l, DAC::Arb  const& r);
-  std::ostringstream& operator << (std::ostringstream& l, DAC::Arb  const& r);
-  std::istream&       operator >> (std::istream&       l, DAC::Arb&        r);
+  std::ostream&       operator << (std::ostream&       l, Arb  const& r);
+  std::ostringstream& operator << (std::ostringstream& l, Arb  const& r);
+  std::istream&       operator >> (std::istream&       l, Arb&        r);
   
   // Arithmetic operators.
-                     DAC::Arb operator * (DAC::Arb        const& l, DAC::Arb        const& r);
-                     DAC::Arb operator * (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     DAC::Arb operator * (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator * (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> DAC::Arb operator * (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator * (DAC::Arb        const& l, T               const  r);
-  template <class T> DAC::Arb operator * (T               const  l, DAC::Arb        const& r);
-                     DAC::Arb operator / (DAC::Arb        const& l, DAC::Arb        const& r);
-                     DAC::Arb operator / (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     DAC::Arb operator / (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator / (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> DAC::Arb operator / (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator / (DAC::Arb        const& l, T               const  r);
-  template <class T> DAC::Arb operator / (T               const  l, DAC::Arb        const& r);
-                     DAC::Arb operator % (DAC::Arb        const& l, DAC::Arb        const& r);
-                     DAC::Arb operator % (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     DAC::Arb operator % (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator % (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> DAC::Arb operator % (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator % (DAC::Arb        const& l, T               const  r);
-  template <class T> DAC::Arb operator % (T               const  l, DAC::Arb        const& r);
-                     DAC::Arb operator + (DAC::Arb        const& l, DAC::Arb        const& r);
-                     DAC::Arb operator + (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     DAC::Arb operator + (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator + (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> DAC::Arb operator + (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator + (DAC::Arb        const& l, T               const  r);
-  template <class T> DAC::Arb operator + (T               const  l, DAC::Arb        const& r);
-                     DAC::Arb operator - (DAC::Arb        const& l, DAC::Arb        const& r);
-                     DAC::Arb operator - (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     DAC::Arb operator - (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator - (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> DAC::Arb operator - (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> DAC::Arb operator - (DAC::Arb        const& l, T               const  r);
-  template <class T> DAC::Arb operator - (T               const  l, DAC::Arb        const& r);
+                     Arb operator * (Arb        const& l, Arb        const& r);
+                     Arb operator * (Arb        const& l, ArbInt     const& r);
+                     Arb operator * (ArbInt     const& l, Arb        const& r);
+  template <class T> Arb operator * (Arb        const& l, SafeInt<T> const  r);
+  template <class T> Arb operator * (SafeInt<T> const  l, Arb        const& r);
+  template <class T> Arb operator * (Arb        const& l, T          const  r);
+  template <class T> Arb operator * (T          const  l, Arb        const& r);
+                     Arb operator / (Arb        const& l, Arb        const& r);
+                     Arb operator / (Arb        const& l, ArbInt     const& r);
+                     Arb operator / (ArbInt     const& l, Arb        const& r);
+  template <class T> Arb operator / (Arb        const& l, SafeInt<T> const  r);
+  template <class T> Arb operator / (SafeInt<T> const  l, Arb        const& r);
+  template <class T> Arb operator / (Arb        const& l, T          const  r);
+  template <class T> Arb operator / (T          const  l, Arb        const& r);
+                     Arb operator % (Arb        const& l, Arb        const& r);
+                     Arb operator % (Arb        const& l, ArbInt     const& r);
+                     Arb operator % (ArbInt     const& l, Arb        const& r);
+  template <class T> Arb operator % (Arb        const& l, SafeInt<T> const  r);
+  template <class T> Arb operator % (SafeInt<T> const  l, Arb        const& r);
+  template <class T> Arb operator % (Arb        const& l, T          const  r);
+  template <class T> Arb operator % (T          const  l, Arb        const& r);
+                     Arb operator + (Arb        const& l, Arb        const& r);
+                     Arb operator + (Arb        const& l, ArbInt     const& r);
+                     Arb operator + (ArbInt     const& l, Arb        const& r);
+  template <class T> Arb operator + (Arb        const& l, SafeInt<T> const  r);
+  template <class T> Arb operator + (SafeInt<T> const  l, Arb        const& r);
+  template <class T> Arb operator + (Arb        const& l, T          const  r);
+  template <class T> Arb operator + (T          const  l, Arb        const& r);
+                     Arb operator - (Arb        const& l, Arb        const& r);
+                     Arb operator - (Arb        const& l, ArbInt     const& r);
+                     Arb operator - (ArbInt     const& l, Arb        const& r);
+  template <class T> Arb operator - (Arb        const& l, SafeInt<T> const  r);
+  template <class T> Arb operator - (SafeInt<T> const  l, Arb        const& r);
+  template <class T> Arb operator - (Arb        const& l, T          const  r);
+  template <class T> Arb operator - (T          const  l, Arb        const& r);
+  
+  // Bit shift operators.
+                     Arb operator << (Arb        const& l, Arb        const& r);
+                     Arb operator << (Arb        const& l, ArbInt     const& r);
+                     Arb operator << (ArbInt     const& l, Arb        const& r);
+  template <class T> Arb operator << (Arb        const& l, SafeInt<T> const  r);
+  template <class T> Arb operator << (SafeInt<T> const  l, Arb        const& r);
+  template <class T> Arb operator << (Arb        const& l, T          const  r);
+  template <class T> Arb operator << (T          const  l, Arb        const& r);
+                     Arb operator >> (Arb        const& l, Arb        const& r);
+                     Arb operator >> (Arb        const& l, ArbInt     const& r);
+                     Arb operator >> (ArbInt     const& l, Arb        const& r);
+  template <class T> Arb operator >> (Arb        const& l, SafeInt<T> const  r);
+  template <class T> Arb operator >> (SafeInt<T> const  l, Arb        const& r);
+  template <class T> Arb operator >> (Arb        const& l, T          const  r);
+  template <class T> Arb operator >> (T          const  l, Arb        const& r);
   
   // Comparison operators.
-                     bool operator >  (DAC::Arb        const& l, DAC::Arb        const& r);
-                     bool operator >  (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     bool operator >  (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> bool operator >  (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> bool operator >  (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> bool operator >  (DAC::Arb        const& l, T               const  r);
-  template <class T> bool operator >  (T               const  l, DAC::Arb        const& r);
-                     bool operator >= (DAC::Arb        const& l, DAC::Arb        const& r);
-                     bool operator >= (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     bool operator >= (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> bool operator >= (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> bool operator >= (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> bool operator >= (DAC::Arb        const& l, T               const  r);
-  template <class T> bool operator >= (T               const  l, DAC::Arb        const& r);
-                     bool operator <  (DAC::Arb        const& l, DAC::Arb        const& r);
-                     bool operator <  (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     bool operator <  (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> bool operator <  (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> bool operator <  (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> bool operator <  (DAC::Arb        const& l, T               const  r);
-  template <class T> bool operator <  (T               const  l, DAC::Arb        const& r);
-                     bool operator <= (DAC::Arb        const& l, DAC::Arb        const& r);
-                     bool operator <= (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     bool operator <= (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> bool operator <= (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> bool operator <= (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> bool operator <= (DAC::Arb        const& l, T               const  r);
-  template <class T> bool operator <= (T               const  l, DAC::Arb        const& r);
-                     bool operator == (DAC::Arb        const& l, DAC::Arb        const& r);
-                     bool operator == (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     bool operator == (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> bool operator == (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> bool operator == (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> bool operator == (DAC::Arb        const& l, T               const  r);
-  template <class T> bool operator == (T               const  l, DAC::Arb        const& r);
-                     bool operator != (DAC::Arb        const& l, DAC::Arb        const& r);
-                     bool operator != (DAC::Arb        const& l, DAC::ArbInt     const& r);
-                     bool operator != (DAC::ArbInt     const& l, DAC::Arb        const& r);
-  template <class T> bool operator != (DAC::Arb        const& l, DAC::SafeInt<T> const  r);
-  template <class T> bool operator != (DAC::SafeInt<T> const  l, DAC::Arb        const& r);
-  template <class T> bool operator != (DAC::Arb        const& l, T               const  r);
-  template <class T> bool operator != (T               const  l, DAC::Arb        const& r);
+                     bool operator >  (Arb        const& l, Arb        const& r);
+                     bool operator >  (Arb        const& l, ArbInt     const& r);
+                     bool operator >  (ArbInt     const& l, Arb        const& r);
+  template <class T> bool operator >  (Arb        const& l, SafeInt<T> const  r);
+  template <class T> bool operator >  (SafeInt<T> const  l, Arb        const& r);
+  template <class T> bool operator >  (Arb        const& l, T          const  r);
+  template <class T> bool operator >  (T          const  l, Arb        const& r);
+                     bool operator >= (Arb        const& l, Arb        const& r);
+                     bool operator >= (Arb        const& l, ArbInt     const& r);
+                     bool operator >= (ArbInt     const& l, Arb        const& r);
+  template <class T> bool operator >= (Arb        const& l, SafeInt<T> const  r);
+  template <class T> bool operator >= (SafeInt<T> const  l, Arb        const& r);
+  template <class T> bool operator >= (Arb        const& l, T          const  r);
+  template <class T> bool operator >= (T          const  l, Arb        const& r);
+                     bool operator <  (Arb        const& l, Arb        const& r);
+                     bool operator <  (Arb        const& l, ArbInt     const& r);
+                     bool operator <  (ArbInt     const& l, Arb        const& r);
+  template <class T> bool operator <  (Arb        const& l, SafeInt<T> const  r);
+  template <class T> bool operator <  (SafeInt<T> const  l, Arb        const& r);
+  template <class T> bool operator <  (Arb        const& l, T          const  r);
+  template <class T> bool operator <  (T          const  l, Arb        const& r);
+                     bool operator <= (Arb        const& l, Arb        const& r);
+                     bool operator <= (Arb        const& l, ArbInt     const& r);
+                     bool operator <= (ArbInt     const& l, Arb        const& r);
+  template <class T> bool operator <= (Arb        const& l, SafeInt<T> const  r);
+  template <class T> bool operator <= (SafeInt<T> const  l, Arb        const& r);
+  template <class T> bool operator <= (Arb        const& l, T          const  r);
+  template <class T> bool operator <= (T          const  l, Arb        const& r);
+                     bool operator == (Arb        const& l, Arb        const& r);
+                     bool operator == (Arb        const& l, ArbInt     const& r);
+                     bool operator == (ArbInt     const& l, Arb        const& r);
+  template <class T> bool operator == (Arb        const& l, SafeInt<T> const  r);
+  template <class T> bool operator == (SafeInt<T> const  l, Arb        const& r);
+  template <class T> bool operator == (Arb        const& l, T          const  r);
+  template <class T> bool operator == (T          const  l, Arb        const& r);
+                     bool operator != (Arb        const& l, Arb        const& r);
+                     bool operator != (Arb        const& l, ArbInt     const& r);
+                     bool operator != (ArbInt     const& l, Arb        const& r);
+  template <class T> bool operator != (Arb        const& l, SafeInt<T> const  r);
+  template <class T> bool operator != (SafeInt<T> const  l, Arb        const& r);
+  template <class T> bool operator != (Arb        const& l, T          const  r);
+  template <class T> bool operator != (T          const  l, Arb        const& r);
   
   // Arithmetic assignment operators.
                      Arb&        operator *= (Arb&        l, Arb        const& r);
@@ -654,6 +703,22 @@ namespace DAC {
   template <class T> SafeInt<T>& operator -= (SafeInt<T>& l, Arb        const& r);
   template <class T> Arb&        operator -= (Arb&        l, T          const  r);
   template <class T> T&          operator -= (T&          l, Arb        const& r);
+  
+  // Bit shift assignment operators.
+                     Arb&        operator <<= (Arb&        l, Arb        const& r);
+                     Arb&        operator <<= (Arb&        l, ArbInt     const& r);
+                     Arb&        operator <<= (ArbInt&     l, Arb        const& r);
+  template <class T> Arb&        operator <<= (Arb&        l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator <<= (SafeInt<T>& l, Arb        const& r);
+  template <class T> Arb&        operator <<= (Arb&        l, T          const  r);
+  template <class T> T&          operator <<= (T&          l, Arb        const& r);
+                     Arb&        operator >>= (Arb&        l, Arb        const& r);
+                     Arb&        operator >>= (Arb&        l, ArbInt     const& r);
+                     Arb&        operator >>= (ArbInt&     l, Arb        const& r);
+  template <class T> Arb&        operator >>= (Arb&        l, SafeInt<T> const  r);
+  template <class T> SafeInt<T>& operator >>= (SafeInt<T>& l, Arb        const& r);
+  template <class T> Arb&        operator >>= (Arb&        l, T          const  r);
+  template <class T> T&          operator >>= (T&          l, Arb        const& r);
   
   /***************************************************************************
    * Inline and template definitions.
@@ -748,6 +813,14 @@ namespace DAC {
   template <class T> inline Arb& Arb::op_sub (SafeInt<T> const number) { _Sub<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   template <class T> inline Arb& Arb::op_sub (T          const number) { _Sub<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
+  // Shift left, shift right.
+                     inline Arb& Arb::op_shl (Arb        const& number) { Arb retval(*this, true); retval._shift(number, _DIR_L);                      return copy(retval); }
+  template <class T> inline Arb& Arb::op_shl (SafeInt<T> const  number) { Arb retval(*this, true); _ShL<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
+  template <class T> inline Arb& Arb::op_shl (T          const  number) { Arb retval(*this, true); _ShL<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
+                     inline Arb& Arb::op_shr (Arb        const& number) { Arb retval(*this, true); retval._shift(number, _DIR_R);                      return copy(retval); }
+  template <class T> inline Arb& Arb::op_shr (SafeInt<T> const  number) { Arb retval(*this, true); _ShR<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
+  template <class T> inline Arb& Arb::op_shr (T          const  number) { Arb retval(*this, true); _ShR<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
+  
   // Comparison operator backends.
   template <class T> inline bool Arb::op_gt (SafeInt<T> const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_gt (T          const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
@@ -756,12 +829,12 @@ namespace DAC {
   template <class T> inline bool Arb::op_ge (T          const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_lt (SafeInt<T> const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_lt (T          const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
-                     inline bool Arb::op_le (Arb        const& number) const { return !op_le(number);                                   }
+                     inline bool Arb::op_le (Arb        const& number) const { return !op_gt(number);                                   }
   template <class T> inline bool Arb::op_le (SafeInt<T> const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_le (T          const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_eq (SafeInt<T> const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_eq (T          const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
-                     inline bool Arb::op_ne (Arb        const& number) const { return !op_ne(number);                                   }
+                     inline bool Arb::op_ne (Arb        const& number) const { return !op_eq(number);                                   }
   template <class T> inline bool Arb::op_ne (SafeInt<T> const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_ne (T          const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   
@@ -1379,87 +1452,67 @@ namespace DAC {
   
   // Equal to an unsigned integer type.
   template <class T> bool Arb::_EQ<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
-  /*
-  // Equal to an integral type.
-  template <class T> bool Arb::op_eq (SafeInt<T> const& number) const {
-    
-    // Check for zeros.
-    if (_data->p.isZero()) {
-      return (number == 0);
-    } else if (number == 0) {
-      return false;
-    }
-    
-    // Neither number is zero, check signs.
-    if (_data->positive != (number > 0)) {
-      return false;
-    }
-    
-    // Check numbers.
-    if (isInteger()) {
-      return (_data->p == number);
-    } else {
-      return (_data->p == (number * _data->q));
-    }
-    
-  }
-  */
     
     // Check for zeros.
     if (l._data->p == 0) {
       return (r == 0);
+    } else if (r == 0) {
+      return false;
+    }
     
+    // Neither number is zero, check signs.
+    if (!l._data->positive) {
+      return false;
+    }
+    
+    // Check numbers.
+    if (l.isInteger()) {
+      return (l._data->p == r);
+    } else {
+      return (l._data->p == r * l._data->q);
+    }
     
   }
   template <class T> inline bool Arb::_EQ<T, Arb::_NUM_UINT>::op (Arb const& l, T const r) { return Arb::_EQ<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Equal to a signed integer type.
   template <class T> bool Arb::_EQ<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
+    
+    // Check for zeros.
+    if (l._data->p == 0) {
+      return (r == 0);
+    } else if (r == 0) {
+      return false;
+    }
+    
+    // Neither number is zero, check signs.
+    if (l._data->positive != (r > 0)) {
+      return false;
+    }
+    
+    // Check numbers.
+    if (l.isInteger()) {
+      return (l._data->p == r);
+    } else {
+      return (l._data->p == r * l._data->q);
+    }
+    
   }
   template <class T> inline bool Arb::_EQ<T, Arb::_NUM_SINT>::op (Arb const& l, T const r) { return Arb::_EQ<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Equal to a floating-point type.
-  template <class T> bool Arb::_EQ<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_EQ<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) { return l.op_eq(Arb(r)); }
   
   // Not equal to an unsigned integer type.
-  template <class T> bool Arb::_NE<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_NE<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) { return !Arb::_EQ<T, Arb::_NUM_UINT>::op(l, r); }
   template <class T> inline bool Arb::_NE<T, Arb::_NUM_UINT>::op (Arb const& l, T const r) { return Arb::_NE<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Not equal to a signed integer type.
-  template <class T> bool Arb::_NE<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_NE<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) { return !Arb::_EQ<T, Arb::_NUM_SINT>::op(l, r); }
   template <class T> inline bool Arb::_NE<T, Arb::_NUM_SINT>::op (Arb const& l, T const r) { return Arb::_NE<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Not equal to a floating-point type.
-  template <class T> bool Arb::_NE<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_NE<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) { return l.op_ne(Arb(r)); }
   
   /***************************************************************************
    * Errors.
