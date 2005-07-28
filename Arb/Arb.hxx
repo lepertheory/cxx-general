@@ -765,110 +765,6 @@ namespace DAC {
   template <class T> inline bool Arb::op_ne (SafeInt<T> const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_ne (T          const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   
-  /*
-  // Greater than an integral type.
-  template <class T> bool Arb::op_gt (SafeInt<T> const& number) const {
-    
-    // Check for zeros.
-    if (_data->p.isZero()) {
-      if (number == 0) {
-        return false;
-      } else {
-        return (number < 0);
-      }
-    } else if (number == 0) {
-      return _data->positive;
-    }
-    
-    // Check signs.
-    if (_data->positive && (number < 0)) {
-      return true;
-    } else if (!_data->positive && (number > 0)) {
-      return false;
-    }
-    
-    // Compare the number.
-    if (isInteger()) {
-      if (_data->positive) {
-        return (_data->p > number);
-      } else {
-        return (_data->p < number);
-      }
-    } else {
-      ArbInt atmp(number * _data->q);
-      if (_data->positive) {
-        return (_data->p > atmp);
-      } else {
-        return (_data->p < atmp);
-      }
-    }
-    
-  }
-  
-  // Less than an integral type.
-  template <class T> bool Arb::op_lt (SafeInt<T> const& number) const {
-    
-    // Check for zeros.
-    if (_data->p.isZero()) {
-      if (number == 0) {
-        return false;
-      } else {
-        return (number > 0);
-      }
-    } else if (number == 0) {
-      return !_data->positive;
-    }
-    
-    // Check signs.
-    if (_data->positive && (number < 0)) {
-      return false;
-    } else if (!_data->positive && (number > 0)) {
-      return true;
-    }
-    
-    // Compare the number.
-    if (isInteger()) {
-      if (_data->positive) {
-        return (_data->p < number);
-      } else {
-        return (_data->p > number);
-      }
-    } else {
-      ArbInt atmp(number * _data->q);
-      if (_data->positive) {
-        return (_data->p < atmp);
-      } else {
-        return (_data->p > atmp);
-      }
-    }
-    
-  }
-  
-  // Equal to an integral type.
-  template <class T> bool Arb::op_eq (SafeInt<T> const& number) const {
-    
-    // Check for zeros.
-    if (_data->p.isZero()) {
-      return (number == 0);
-    } else if (number == 0) {
-      return false;
-    }
-    
-    // Neither number is zero, check signs.
-    if (_data->positive != (number > 0)) {
-      return false;
-    }
-    
-    // Check numbers.
-    if (isInteger()) {
-      return (_data->p == number);
-    } else {
-      return (_data->p == (number * _data->q));
-    }
-    
-  }
-  */
-  
   // Return whether this number is an integer.
   inline bool Arb::isInteger () const { return (_data->q == 1); }
   
@@ -1167,15 +1063,28 @@ namespace DAC {
     // Work area.
     Arb retval(l, true);
     
-    // Add the easy way if l is an integer, otherwise scale.
-    if (retval.isInteger()) {
-      retval._data->p += r;
+    // If l is negative, subtract.
+    if (retval < 0) {
+      
+      // Flip the sign during the subtract.
+      retval._data->positive = true;
+      Arb::_Sub<T, Arb::_NUM_UINT>::op(retval, r);
+      retval._data->positive = !retval._data->positive;
+      
+    // Otherwise, add.
     } else {
-      retval._data->p += r * retval._data->q;
+      
+      // Add the easy way if l is an integer, otherwise scale.
+      if (retval.isInteger()) {
+        retval._data->p += r;
+      } else {
+        retval._data->p += r * retval._data->q;
+      }
+      
+      // Reduce.
+      retval._reduce();
+      
     }
-    
-    // Reduce.
-    retval._reduce();
     
     // Move the data in and return.
     l._data = retval._data;
@@ -1188,11 +1097,22 @@ namespace DAC {
     
     // Add normally unless the signs don't match.
     if (l._data->positive == (r > 0)) {
-      Arb::_Add<T, Arb::_NUM_UINT>::op(l, r);
+      try {
+        Arb::_Add<T, Arb::_NUM_UINT>::op(l, r.abs());
+      } catch (SafeIntErrors::UnOpOverflow<T>) {
+        // We should only ever get here in the very rare case of hitting the
+        // minimum of the particular data type. If we are here for any other
+        // reason, rethrow the error.
+        if (r < 0) {
+          l.op_add(Arb(~r) + 1);
+        } else {
+          throw;
+        }
+      }
     } else {
       try {
         Arb::_Sub<T, Arb::_NUM_UINT>::op(l, -r);
-      } catch (SafeIntErrors::UnaryOverflow<T>) {
+      } catch (SafeIntErrors::UnOpOverflow<T>) {
         l.op_sub(Arb(~r) + 1);
       }
     }
@@ -1200,59 +1120,11 @@ namespace DAC {
   }
   template <class T> inline void Arb::_Add<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Add<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
-  // Add by a floating-point type.
-  template <class T> inline void Arb::_Add<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) { l.op_add(r); }
+  // Add a floating-point type.
+  template <class T> inline void Arb::_Add<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) { l.op_add(Arb(r)); }
   
   // Subtract an unsigned integer type.
   template <class T> void Arb::_Sub<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
-  /*
-  // Subtraction of an integral type.
-  template <class T> Arb& Arb::op_sub (SafeInt<T> const& number) {
-    
-    // If subtracting an opposite sign, add the opposite.
-    if (_data->positive != (number > 0)) {
-      return op_add(-number);
-    }
-    
-      // Work area.
-      Arb retval(*this, true);
-      
-      // Subtract the very easy way if this is an integer.
-      SafeInt<T> anum = SafeInt<T>(DAC::abs(number.Value()));
-      if (retval.isInteger()) {
-        if (anum > retval._data->p) {
-          retval._data->positive = !retval._data->positive;
-          retval._data->p        = anum - retval._data->p;
-        } else {
-          retval._data->p -= anum;
-        }
-        
-      // Otherwise do it the slightly harder way.
-      } else {
-        ArbInt ainum(anum * retval._data->q);
-        if (ainum > retval._data->p) {
-          retval._data->positive = !retval._data->positive;
-          retval._data->p        = ainum - retval._data->p;
-        } else {
-          retval._data->p -= ainum;
-        }
-      }
-      
-      // Reduce.
-      retval._reduce();
-      
-      // Move the result in and return.
-      _data = retval._data;
-      return *this;
-      
-    // Subtract the hard way.
-    } else {
-      //FIXME!!!
-      //return op_sub(Arb(number));
-    }
-    
-  }
-  */
     
     // Subtracting 0 is easy.
     if (r == 0) {
@@ -1270,151 +1142,274 @@ namespace DAC {
     // Work area.
     Arb retval(l, true);
     
-    // Subtract.
-    if (retval.isInteger()) {
+    // If l is negative, add.
+    if (retval < 0) {
       
+      // Flip the sign during the add.
+      retval._data->positive = true;
+      Arb::_Add<T, Arb::_NUM_UINT>::op(retval, r);
+      retval._data->positive = false;
+      
+    // Otherwise, subtract.
+    } else {
+      
+      // Subtract.
+      if (retval.isInteger()) {
+        if (r > retval._data->p) {
+          retval._data->positive = !retval._data->positive;
+          retval._data->p        = r - retval._data->p;
+        } else {
+          retval._data->p -= r;
+        }
+      } else {
+        ArbInt tmp(r * retval._data->p);
+        if (tmp > retval._data->p) {
+          retval._data->positive = !retval._data->positive;
+          retval._data->p        = tmp - retval._data->p;
+        } else {
+          retval._data->p -= tmp;
+        }
+      }
+      
+      // Reduce.
+      retval._reduce();
+      
+    }
+    
+    // Move the result in and return.
+    l._data = retval._data;
     
   }
   template <class T> inline void Arb::_Sub<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Sub<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Subtract a signed integer type.
   template <class T> void Arb::_Sub<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Subtract normally unless the signs don't match.
+    if (l._data->positive == (r > 0)) {
+      try {
+        Arb::_Sub<T, Arb::_NUM_UINT>::op(l, r.abs());
+      } catch (SafeIntErrors::UnOpOverflow<T>) {
+        // We should only ever get here in the very rare case of hitting the
+        // minimum of the particular data type. If we are here for any other
+        // reason, rethrow the error.
+        if (r < 0) {
+          l.op_sub(Arb(~r) + 1);
+        } else {
+          throw;
+        }
+      }
+    } else {
+      try {
+        Arb::_Add<T, Arb::_NUM_UINT>::op(l, -r);
+      } catch (SafeIntErrors::UnOpOverflow<T>) {
+        l.op_add(Arb(~r) + 1);
+      }
+    }
+    
   }
   template <class T> inline void Arb::_Sub<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Sub<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Subtract a floating-point type.
-  template <class T> void Arb::_Sub<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-  }
+  template <class T> inline void Arb::_Sub<T, Arb::_NUM_FLPT>::op (Arb& l, T const r) { l.op_sub(Arb(r)); }
   
   // Greater than an unsigned integer type.
   template <class T> bool Arb::_GT<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
+    
+    // Check for zeros.
+    if (l._data->p == 0) {
+      return false;
+    } else if (r == 0) {
+      return l._data->positive;
+    }
+    
+    // Check signs.
+    if (!l._data->positive) {
+      return false;
+    }
+    
+    // Compare the number.
+    if (l.isInteger()) {
+      return (l._data->p > r);
+    } else {
+      return (l._data->p > r * l._data->q);
+    }
+    
   }
   template <class T> inline bool Arb::_GT<T, Arb::_NUM_UINT>::op (Arb const& l, T const r) { return Arb::_GT<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Greater than a signed integer type.
   template <class T> bool Arb::_GT<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
+    
+    // Check for zeros.
+    if (l._data->p == 0) {
+      if (r == 0) {
+        return false;
+      } else {
+        return (r < 0);
+      }
+    } else if (r == 0) {
+      return l._data->positive;
+    }
+    
+    // Check signs.
+    if (l._data->positive) {
+      if (r < 0) {
+        return true;
+      }
+    } else {
+      if (r > 0) {
+        return false;
+      }
+    }
+    
+    // Compare the number.
+    if (l.isInteger()) {
+      if (l._data->positive) {
+        return (l._data->p > r);
+      } else {
+        return (l._data->p < r);
+      }
+    } else {
+      if (l._data->positive) {
+        return (l._data->p > r * l._data->q);
+      } else {
+        return (l._data->p < r * l._data->q);
+      }
+    }
+    
   }
   template <class T> inline bool Arb::_GT<T, Arb::_NUM_SINT>::op (Arb const& l, T const r) { return Arb::_GT<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Greater than a floating-point type.
-  template <class T> bool Arb::_GT<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_GT<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) { return l.op_gt(Arb(r)); }
   
   // Greater than or equal to an unsigned integer type.
-  template <class T> bool Arb::_GE<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_GE<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) { return !Arb::_LT<T, Arb::_NUM_UINT>::op(l, r); }
   template <class T> inline bool Arb::_GE<T, Arb::_NUM_UINT>::op (Arb const& l, T const r) { return Arb::_GE<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Greater than or equal to a signed integer type.
-  template <class T> bool Arb::_GE<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_GE<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) { return !Arb::_LT<T, Arb::_NUM_SINT>::op(l, r); }
   template <class T> inline bool Arb::_GE<T, Arb::_NUM_SINT>::op (Arb const& l, T const r) { return Arb::_GE<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Greater than or equal to a floating-point type.
-  template <class T> bool Arb::_GE<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_GE<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) { return l.op_ge(Arb(r)); }
   
   // Less than an unsigned integer type.
   template <class T> bool Arb::_LT<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
+    
+    // Check for zeros.
+    if (l._data->p == 0) {
+      return (r > 0);
+    } else if (r == 0) {
+      return !l._data->positive;
+    }
+    
+    // Check signs.
+    if (!l._data->positive) {
+      return true;
+    }
+    
+    // Compare the number.
+    if (l.isInteger()) {
+      return (l._data->p < r);
+    } else {
+      return (l._data->p < r * l._data->q);
+    }
+    
   }
   template <class T> inline bool Arb::_LT<T, Arb::_NUM_UINT>::op (Arb const& l, T const r) { return Arb::_LT<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Less than a signed integer type.
   template <class T> bool Arb::_LT<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
+    
+    // Check for zeros.
+    if (l._data->p == 0) {
+      if (r == 0) {
+        return false;
+      } else {
+        return (r > 0);
+      }
+    } else if (r == 0) {
+      return !l._data->positive;
+    }
+    
+    // Check signs.
+    if (l._data->positive) {
+      if (r < 0) {
+        return false;
+      }
+    } else {
+      if (r > 0) {
+        return true;
+      }
+    }
+    
+    // Compare the number.
+    if (l.isInteger()) {
+      if (l._data->positive) {
+        return (l._data->p < r);
+      } else {
+        return (l._data->p > r);
+      }
+    } else {
+      if (l._data->positive) {
+        return (l._data->p < r * l._data->q);
+      } else {
+        return (l._data->p > r * l._data->q);
+      }
+    }
+    
   }
   template <class T> inline bool Arb::_LT<T, Arb::_NUM_SINT>::op (Arb const& l, T const r) { return Arb::_LT<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Greater than a floating-point type.
-  template <class T> bool Arb::_LT<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_LT<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) { return l.op_lt(Arb(r)); }
   
   // Less than or equal to an unsigned integer type.
-  template <class T> bool Arb::_LE<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_LE<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) { return !Arb::_GT<T, Arb::_NUM_UINT>::op(l, r); }
   template <class T> inline bool Arb::_LE<T, Arb::_NUM_UINT>::op (Arb const& l, T const r) { return Arb::_LE<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   // Less than or equal to a signed integer type.
-  template <class T> bool Arb::_LE<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_LE<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) { return !Arb::_GT<T, Arb::_NUM_SINT>::op(l, r); }
   template <class T> inline bool Arb::_LE<T, Arb::_NUM_SINT>::op (Arb const& l, T const r) { return Arb::_LE<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   // Less than or equal to a floating-point type.
-  template <class T> bool Arb::_LE<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
-  }
+  template <class T> inline bool Arb::_LE<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) { return l.op_le(Arb(r)); }
   
   // Equal to an unsigned integer type.
   template <class T> bool Arb::_EQ<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
-    // FIXME: Dummy.
-    return false;
+  /*
+  // Equal to an integral type.
+  template <class T> bool Arb::op_eq (SafeInt<T> const& number) const {
+    
+    // Check for zeros.
+    if (_data->p.isZero()) {
+      return (number == 0);
+    } else if (number == 0) {
+      return false;
+    }
+    
+    // Neither number is zero, check signs.
+    if (_data->positive != (number > 0)) {
+      return false;
+    }
+    
+    // Check numbers.
+    if (isInteger()) {
+      return (_data->p == number);
+    } else {
+      return (_data->p == (number * _data->q));
+    }
+    
+  }
+  */
+    
+    // Check for zeros.
+    if (l._data->p == 0) {
+      return (r == 0);
+    
+    
   }
   template <class T> inline bool Arb::_EQ<T, Arb::_NUM_UINT>::op (Arb const& l, T const r) { return Arb::_EQ<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
