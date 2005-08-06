@@ -185,9 +185,10 @@ namespace DAC {
                          ArbInt& op_bit_cpm ();
       
       // Return information about this number.
-      bool isEven () const;
-      bool isZero () const;
-      bool isOdd  () const;
+      bool   isEven       () const;
+      bool   isZero       () const;
+      bool   isOdd        () const;
+      ArbInt bitsInNumber () const;
       
       // Raise this number to a power.
                          ArbInt pow (ArbInt const& exp);
@@ -356,9 +357,9 @@ namespace DAC {
       
       static bool s_initialized;
       
-      static int   const s_digitbits; // Number of bits in a digit.
-      static _DigT const s_digitbase; // Base of native digits.
-      static _DigT const s_bitmask;   // Bitmask of digits.
+      static unsigned int const s_digitbits; // Number of bits in a digit.
+      static _DigT        const s_digitbase; // Base of native digits.
+      static _DigT        const s_bitmask;   // Bitmask of digits.
       
       static _NumChrT s_numodigits; // Number of output digits.
       static _StrChrT s_odigits[];  // Output digits.
@@ -404,6 +405,9 @@ namespace DAC {
       
       // Validate a base.
       static void s_validateBase (value_type base);
+      
+      // Find the number of bits needed to express a number.
+      template <class T> static unsigned int s_bitsNeeded (T number);
     
   };
   
@@ -887,6 +891,9 @@ namespace DAC {
   inline bool ArbInt::isOdd  () const { return !isZero() && (_digits->front() & 1); }
   inline bool ArbInt::isEven () const { return !isOdd();                            }
   
+  // Get the number of bits in this number.
+  inline ArbInt ArbInt::bitsInNumber () const { return (_digits->empty() ? 0 : _digits->size() - (s_digitbits - s_bitsNeeded(_digits[_digits->size() - 1]))); }
+  
   // Placeholder for automatic pow conversion.
   template <class T> inline ArbInt ArbInt::pow (T const exp) { return pow(ArbInt(exp)); }
   
@@ -1015,6 +1022,26 @@ namespace DAC {
     
   }
   
+  // Find the number of bits needed to express a given number. Only code that
+  // should inline is the loop.
+  template <class T> inline static unsigned int s_bitsNeeded (T number) {
+    
+    // Make a bitmask of the highest order digit. Using a SafeInt for its
+    // proper handling of bitwise ops.
+    static SafeInt<T> bitmask = SafeInt<T>(1) << (std::numeric_limits<T>::digits - 1);
+    
+    // Simply step through each bit, stop when we hit a 1.
+    for (unsigned int i = std::numeric_limits<T>::digits; i != 0; --i) {
+      if (number & bitmask) {
+        break;
+      }
+    }
+    
+    // i is now the highest-order digit.
+    return i;
+    
+  }
+  
   // Determine number type.
   template <class T> ArbInt::_NumType const ArbInt::_GetNumType<T>::value =
     std::numeric_limits<T>::is_integer ? (
@@ -1112,7 +1139,7 @@ namespace DAC {
     }
     
     // Remember there's one more bit in T than ::digits returns, the sign.
-    for (int bitpos = 0; bitpos <= s_digitbits; bitpos += s_digitbits) {
+    for (unsigned int bitpos = 0; bitpos <= s_digitbits; bitpos += s_digitbits) {
       new_digits->push_back(SafeInt<_DigT>().setBitwise(r >> bitpos));
     }
     
@@ -1528,7 +1555,7 @@ namespace DAC {
     }
     
   }
-  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r, _Dir const dir) { ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r), dir); }
+  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r, _Dir const dir) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r), dir); }
   
   // Shift by a signed integer type.
   template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r, _Dir const dir) {
@@ -1539,20 +1566,16 @@ namespace DAC {
       // Opposite shift direction.
       _Dir tmpdir = (dir == _DIR_L) ? _DIR_R : _DIR_L;
       
-      // Use the _Mod trick to convert to a positive number.
-      try {
-        ArbInt::_Shift<T, ArbInt::_NUM_UINT>(l, -r, tmpdir);
-      } catch (SafeIntErrors::UnOpOverflow<T>) {
-        l._shiftBits(ArbInt(~r) + 1, tmpdir);
-      }
+      // Convert to a positive number.
+      ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, -r, tmpdir);
       
     // Otherwise shift nomally.
     } else {
-      ArbInt::_Shift<T, ArbInt::_NUM_UINT>(l, r, dir);
+      ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, dir);
     }
     
   }
-  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r, _Dir const dir) { ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r), dir); }
+  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r, _Dir const dir) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r), dir); }
   
   // Shift by a floating-point type.
   template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r, _Dir const dir) {

@@ -33,7 +33,7 @@ namespace DAC {
   /***************************************************************************/
   // Data members.
   
-  int           const ArbInt::s_digitbits = numeric_limits<_DigT>::digits >> 1;
+  unsigned int  const ArbInt::s_digitbits = numeric_limits<_DigT>::digits >> 1;
   ArbInt::_DigT const ArbInt::s_digitbase = 1 << (numeric_limits<_DigT>::digits >> 1);
   ArbInt::_DigT const ArbInt::s_bitmask   = (1 << (numeric_limits<_DigT>::digits >> 1)) - 1;
   
@@ -911,10 +911,10 @@ namespace DAC {
       if (bits) {
         
         // Work area
-        _DigT carry    = 0;
-        _DigT oldcarry = 0;
-        _DigT bitmask  = rppower(SafeInt<_DigT>(2), tmp_bits) - 1;
-        int   bitdiff  = s_digitbits - tmp_bits;
+        _DigT        carry    = 0;
+        _DigT        oldcarry = 0;
+        _DigT        bitmask  = rppower(SafeInt<_DigT>(2), tmp_bits) - 1;
+        unsigned int bitdiff  = s_digitbits - tmp_bits;
         
         // Select shift direction.
         if (dir == _DIR_L) {
@@ -945,8 +945,6 @@ namespace DAC {
   
   // Class constructor.
   void ArbInt::s_classInit () {
-    
-    // Get the maximum number that can be held in a single digit.
     
     // Get the input digits. If this changes, you need to update s_numidigits!
     SafeInt<_NumChrT> j;

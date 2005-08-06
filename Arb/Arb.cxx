@@ -994,6 +994,39 @@ namespace DAC {
     
   }
   
+  // Bitwise shift this number.
+  Arb& Arb::_shift (Arb const& bits, _Dir const dir) {
+    
+    // Only work if necessary.
+    if (!*this || !bits) {
+      return *this;
+    }
+    
+    // Number of bits to shift must be integer.
+    if (!bits.isInteger()) {
+      if (dir == _DIR_L) {
+        throw ArbErrors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator("<<").Right(bits);
+      } else {
+        throw ArbErrors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator(">>").Right(bits);
+      }
+    }
+    
+    // Shift left by left-shifting p. Shift right by left-shifting q. Shift
+    // in the opposite direction if bits is negative.
+    if ((dir == _DIR_L && bits > 0) || (dir == _DIR_R && bits < 0)) {
+      _data->p << bits._data->p;
+    } else {
+      _data->q << bits._data->p;
+    }
+    
+    // Reduce the fraction.
+    _reduce();
+    
+    // We done.
+    return *this;
+    
+  }
+  
   // Reduce the number to a specific q.
   Arb& Arb::_forcereduce (_DigsT const& q) {
     
@@ -1226,7 +1259,6 @@ namespace DAC {
     new_num._data->q = ArbInt(1) << 52;
     
     // Denormalized numbers.
-    cout << "exp: " << converter.bits.exponent << endl;
     if (converter.bits.exponent == 0) {
       
       // Load the mantissa as a fraction. Denormalized numbers do not have a
@@ -1324,7 +1356,6 @@ namespace DAC {
     new_num._data->q = ArbInt(1) << 63;
     
     // Denormalized numbers.
-    cout << "exp: " << converter.bits.exponent << endl;
     if (converter.bits.exponent == 0) {
       
       // Load the mantissa as a fraction. Denormalized use the hidden bit.
@@ -1343,7 +1374,6 @@ namespace DAC {
     
     // Multiply by the exponent to get the actual number. Exponent has a bias
     // of 16383.
-    
     new_num *= Arb(1) << (SafeInt<int>(converter.bits.exponent) - 16383);
     
     // Set the sign.
@@ -1356,9 +1386,56 @@ namespace DAC {
   
   // Get as a float.
   template <> void Arb::_Get<float, Arb::_NUM_FLPT>::op (float& l, Arb const& r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Work area.
+    Arb    tmpnum   (l, true);
+    ArbInt exponent;
+    
+    // Convert tmpnum to the range of 1 <= tmpnum < 2. If p is smaller, this
+    // is easy, shift p up by the difference in bits between p and q and
+    // subtract the shift from the exponent. If q is smaller, shift that up
+    // until the two have an equal number of bits, then shift back down one
+    // bit if they end up equal.
+    ArbInt bits_p = tmpnum._data->p.bitsInNumber();
+    ArbInt bits_q = tmpnum._data->q.bitsInNumber();
+    if (bits_p < bits_q) {
+      
+      // Get the difference in bits.
+      ArbInt bitdiff = bits_q - bits_p;
+      
+      // If the difference in bits is greater than 126, try to fit this into
+      // a denormalized number.
+      if (bitdiff > 126) {
+        if (bitdiff > 
+      }
+      
+      // Exponent has a bias of 127, doing it here lets us avoid negative
+      // numbers and the need for Arb instead of ArbInt.
+      exponent = 127 - bitdiff;
+      
+      // Shift p up by bitdiff.
+      tmpnum._data->p <<= bitdiff;
+      
+    } else {
+      
+      // Get the difference in bits.
+      ArbInt bitdiff = bits_p - bits_q;
+      
+      // Exponent has a bias of 127, doing it here lets us avoid negative
+      // numbers and the need for Arb instead of ArbInt.
+      exponent = 127 + bitdiff;
+      
+      // Shift q up by bitdiff.
+      tmpnum._data->q <<= bitdiff;
+      
+      // Make sure p != q, if it is drop q and the exponent down one.
+      if (p == q) {
+        tmpnum._data->q >>= 1;
+        exponent         -= 1;
+      }
+      
+    }
+    
   }
   
   // Get as a double.
