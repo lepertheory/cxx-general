@@ -407,7 +407,7 @@ namespace DAC {
       static void s_validateBase (value_type base);
       
       // Find the number of bits needed to express a number.
-      template <class T> static unsigned int s_bitsNeeded (T number);
+      template <class T> static unsigned int s_bitsNeeded (T const number);
     
   };
   
@@ -863,9 +863,9 @@ namespace DAC {
   template <class T> inline bool ArbInt::op_gt (SafeInt<T> const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool ArbInt::op_gt (T          const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
                      inline bool ArbInt::op_ge (ArbInt     const& number) const { return !op_lt(number);                                   }
-  template <class T> inline bool ArbInt::op_ge (SafeInt<T> const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_ge (SafeInt<T> const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool ArbInt::op_ge (T          const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_lt (SafeInt<T> const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_lt (SafeInt<T> const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool ArbInt::op_lt (T          const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
                      inline bool ArbInt::op_le (ArbInt     const& number) const { return !op_gt(number);                                   }
   template <class T> inline bool ArbInt::op_le (SafeInt<T> const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
@@ -892,7 +892,7 @@ namespace DAC {
   inline bool ArbInt::isEven () const { return !isOdd();                            }
   
   // Get the number of bits in this number.
-  inline ArbInt ArbInt::bitsInNumber () const { return (_digits->empty() ? 0 : _digits->size() - (s_digitbits - s_bitsNeeded(_digits[_digits->size() - 1]))); }
+  inline ArbInt ArbInt::bitsInNumber () const { return (_digits->empty() ? ArbInt(0) : ArbInt(_digits->size()) * s_digitbits - (s_digitbits - s_bitsNeeded(_digits->back()))); }
   
   // Placeholder for automatic pow conversion.
   template <class T> inline ArbInt ArbInt::pow (T const exp) { return pow(ArbInt(exp)); }
@@ -1024,21 +1024,19 @@ namespace DAC {
   
   // Find the number of bits needed to express a given number. Only code that
   // should inline is the loop.
-  template <class T> inline static unsigned int s_bitsNeeded (T number) {
+  template <class T> inline unsigned int ArbInt::s_bitsNeeded (T const number) {
     
     // Make a bitmask of the highest order digit. Using a SafeInt for its
     // proper handling of bitwise ops.
     static SafeInt<T> bitmask = SafeInt<T>(1) << (std::numeric_limits<T>::digits - 1);
     
     // Simply step through each bit, stop when we hit a 1.
-    for (unsigned int i = std::numeric_limits<T>::digits; i != 0; --i) {
-      if (number & bitmask) {
-        break;
-      }
-    }
+    unsigned int firstbit;
+    T            tmpnum = number;
+    for (firstbit = std::numeric_limits<T>::digits; firstbit != 0 && !(tmpnum & bitmask); --firstbit, tmpnum <<= 1) {}
     
-    // i is now the highest-order digit.
-    return i;
+    // firstbit is now the highest-order digit.
+    return firstbit;
     
   }
   
@@ -1151,6 +1149,8 @@ namespace DAC {
   
   // Multiply by an unsigned integer type.
   template <class T> void ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
+    
+    std::cout << "l: " << l << "  r: " << r << std::endl;
     
     // If the number is too large to do in one step, resort to conversion to
     // ArbInt then multiply.
@@ -1466,6 +1466,7 @@ namespace DAC {
     
     // If subtraction will result in a negative, error.
     if (r > l) {
+      std::cout << "l: " << l << "  r: " << r << std::endl;
       throw ArbIntErrors::NegativeBinary<ArbInt, T>().Left(l).Operator("-").Right(r);
     }
     

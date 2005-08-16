@@ -101,6 +101,9 @@ namespace DAC {
       operator unsigned int       () const;
       operator signed   long int  () const;
       operator unsigned long int  () const;
+      operator float              () const;
+      operator double             () const;
+      operator long double        () const;
       
       // Assignment operator.
                          Arb& operator = (Arb         const& number);
@@ -228,6 +231,45 @@ namespace DAC {
       
       /*********************************************************************/
       // Data types.
+      
+      // Floating-point bitfields.
+      struct _FloatBits {
+        unsigned int mantissa : 23;
+        unsigned int exponent :  8;
+        unsigned int sign     :  1;
+      };
+      struct _DoubleBits {
+        unsigned int mantissal;
+        unsigned int mantissah : 20;
+        unsigned int exponent  : 11;
+        unsigned int sign      :  1;
+      };
+      struct _LongDoubleBits {
+        unsigned int mantissal;
+        unsigned int mantissah : 31;
+        unsigned int j         :  1;
+        unsigned int exponent  : 15;
+        unsigned int sign      :  1;
+      };
+      union _FloatParts {
+        float      number;
+        _FloatBits bits;
+      };
+      union _DoubleParts {
+        double      number;
+        _DoubleBits bits;
+      };
+      union _LongDoubleParts {
+        long double     number;
+        _LongDoubleBits bits;
+      };
+      
+      // Floating-point info.
+      struct _FloatInfo {
+        unsigned int mantissabits;
+        unsigned int exponentbits;
+        unsigned int bias;
+      };
       
       // Directions.
       enum _Dir { _DIR_L, _DIR_R };
@@ -405,6 +447,13 @@ namespace DAC {
       std::string::size_type _maxradix; // Radix digits to output.
       OutputFormat           _format;   // Format to output this number.
       RoundMethod            _round;    // Rounding method.
+      
+      /*********************************************************************/
+      // Static data members.
+      
+      static _FloatInfo const s_floatinfo;
+      static _FloatInfo const s_doubleinfo;
+      static _FloatInfo const s_longdoubleinfo;
       
       /*********************************************************************/
       // Function members.
@@ -756,6 +805,9 @@ namespace DAC {
   inline Arb::operator unsigned int       () const { return Value<unsigned int      >(); }
   inline Arb::operator signed   long int  () const { return Value<signed   long int >(); }
   inline Arb::operator unsigned long int  () const { return Value<unsigned long int >(); }
+  inline Arb::operator float              () const { return Value<float             >(); }
+  inline Arb::operator double             () const { return Value<double            >(); }
+  inline Arb::operator long double        () const { return Value<long double       >(); }
   
   // Assignment operator.
                      inline Arb& Arb::operator = (Arb         const& number) { return copy(number); }
