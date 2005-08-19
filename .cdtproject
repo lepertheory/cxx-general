@@ -9,6 +9,7 @@
 <pathentry kind="con" path="org.eclipse.cdt.make.core.DISCOVERED_SCANNER_INFO"/>
 <pathentry kind="src" path=""/>
 <pathentry kind="out" path=""/>
+<pathentry base-path="cxx-general" include="" kind="inc" path="" system="true"/>
 <pathentry include="C:/Program Files/MinGW/include" kind="inc" path="" system="true"/>
 <pathentry include="C:/Program Files/MinGW/include/c++/3.4.2" kind="inc" path="" system="true"/>
 </item>

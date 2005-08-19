@@ -271,6 +271,9 @@ namespace DAC {
   // Divide.
   ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* const remainder) {
     
+    std::cout << "div: l: " << *this << std::endl;
+    this->printdigits();
+    
     // If number is zero, throw error.
     if (number.isZero()) {
       throw ArbIntErrors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("/").Right(number);
@@ -386,7 +389,11 @@ namespace DAC {
         // from the digit group, shift the digit group up one digit, and add
         // the next digit of the divisor.
         retval._digits->insert(retval._digits->begin(), guess);
+        std::cout << "diggroup1: " << diggroup << std::endl;
+        diggroup.printdigits();
         diggroup -= test;
+        std::cout << "diggroup2: " << diggroup << std::endl;
+        diggroup.printdigits();
         if (i != (_digits->rend() - 1)) {
           diggroup._digits->insert(diggroup._digits->begin(), *(i + 1));
         }

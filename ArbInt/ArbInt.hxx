@@ -203,6 +203,8 @@ namespace DAC {
       // Return the maximum string input base.
       static value_type max_input_base ();
       
+      void printdigits () const;
+      
     /*
      * Private members.
      */
@@ -735,7 +737,13 @@ namespace DAC {
   /***************************************************************************
    * Inline and template definitions.
    ***************************************************************************/
-
+  
+  inline void ArbInt::printdigits () const {
+    for (_DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
+      std::cout << "# digit: " << *i << std::endl;
+    }
+  }
+  
   /***************************************************************************/
   // Function members.
   
@@ -1150,8 +1158,6 @@ namespace DAC {
   // Multiply by an unsigned integer type.
   template <class T> void ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
-    std::cout << "l: " << l << "  r: " << r << std::endl;
-    
     // If the number is too large to do in one step, resort to conversion to
     // ArbInt then multiply.
     if (r >= s_digitbase) {
@@ -1173,6 +1179,8 @@ namespace DAC {
     // Work area;
     ArbInt retval;
     
+    std::cout << "l: " << l << "  r: " << r << std::endl;
+    
     // Multiply like 3rd grade.
     for (ArbInt::_DigsT::size_type i = 0; i != l._digits->size(); ++i) {
       
@@ -1182,6 +1190,7 @@ namespace DAC {
       }
       
       // Multiply the digit and carry.
+      std::cout << "(*(retval._digits))[" << i << "]: " << (*(retval._digits))[i] << "  (*(l._digits))[" << i << "]: " << (*(l._digits))[i] << "  r: " << r << std::endl;
       (*(retval._digits))[i] += (*(l._digits))[i] * r;
       retval._carry(i);
       
@@ -1466,7 +1475,6 @@ namespace DAC {
     
     // If subtraction will result in a negative, error.
     if (r > l) {
-      std::cout << "l: " << l << "  r: " << r << std::endl;
       throw ArbIntErrors::NegativeBinary<ArbInt, T>().Left(l).Operator("-").Right(r);
     }
     

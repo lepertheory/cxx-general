@@ -187,7 +187,12 @@ namespace DAC {
         std::string::size_type radixpos = 0;
         
         // Create the radix part.
+        cout << "!p: " << endl;
+        _data->p.printdigits();
+        cout << "!q: " << endl;
+        _data->q.printdigits();
         _DigsT remainder = _data->p % _data->q;
+        remainder.printdigits();
         if (((_data->fixq != 0) && (_data->pointpos > 0)) || ((_data->fixq == 0) && (remainder != 0))) {
           
           // Get the radix digits, one by one. Output digits until the entire
@@ -198,7 +203,9 @@ namespace DAC {
           _DigsT                 digit;
           digit.Base(_data->base);
           while ((sigdigs < _maxradix) && (remainder != 0)) {
+            cout << "poo1" << endl;
             remainder *= _data->base;
+            cout << "poo2" << endl;
             digit      = remainder / _data->q;
             numeric.push_back(digit);
             ++radixpos;
@@ -1429,7 +1436,10 @@ namespace DAC {
     l = 0;
     
     cout << "r: " << r << endl;
-    // 1e-38 makes this fail.
+    // 1e-38 makes this fail. Tmpnum p has a huge number in there for some reason.
+    cout << "TMPNUM!!!!" << endl;
+    tmpnum._data->p.printdigits();
+    cout << "p: " << tmpnum._data->p << "  q: " << tmpnum._data->q << endl;
     cout << "tmpnum: " << tmpnum << "  exponent: " << exponent << endl;
     
   }
