@@ -29,9 +29,16 @@ namespace DAC {
   /***************************************************************************/
   // Constants.
   
-  Arb::_FloatInfo const Arb::s_floatinfo      = { 24,  8,   127 };
-  Arb::_FloatInfo const Arb::s_doubleinfo     = { 53, 11,  1023 };
-  Arb::_FloatInfo const Arb::s_longdoubleinfo = { 64, 15, 16383 };
+  // Float info.
+  template <> unsigned int const Arb::_FloatInfo<float      >::mantissabits =    24;
+  template <> unsigned int const Arb::_FloatInfo<float      >::exponentbits =     8;
+  template <> unsigned int const Arb::_FloatInfo<float      >::bias         =   127;
+  template <> unsigned int const Arb::_FloatInfo<double     >::mantissabits =    53;
+  template <> unsigned int const Arb::_FloatInfo<double     >::exponentbits =    11;
+  template <> unsigned int const Arb::_FloatInfo<double     >::bias         =  1023;
+  template <> unsigned int const Arb::_FloatInfo<long double>::mantissabits =    64;
+  template <> unsigned int const Arb::_FloatInfo<long double>::exponentbits =    15;
+  template <> unsigned int const Arb::_FloatInfo<long double>::bias         = 16383;
   
   /***************************************************************************/
   // Function members.
@@ -187,12 +194,7 @@ namespace DAC {
         std::string::size_type radixpos = 0;
         
         // Create the radix part.
-        cout << "!p: " << endl;
-        _data->p.printdigits();
-        cout << "!q: " << endl;
-        _data->q.printdigits();
         _DigsT remainder = _data->p % _data->q;
-        remainder.printdigits();
         if (((_data->fixq != 0) && (_data->pointpos > 0)) || ((_data->fixq == 0) && (remainder != 0))) {
           
           // Get the radix digits, one by one. Output digits until the entire
@@ -203,9 +205,7 @@ namespace DAC {
           _DigsT                 digit;
           digit.Base(_data->base);
           while ((sigdigs < _maxradix) && (remainder != 0)) {
-            cout << "poo1" << endl;
             remainder *= _data->base;
-            cout << "poo2" << endl;
             digit      = remainder / _data->q;
             numeric.push_back(digit);
             ++radixpos;
@@ -1144,7 +1144,7 @@ namespace DAC {
     _FloatParts converter = { r };
     
     // Only actual numbers are supported.
-    if (converter.bits.exponent == (static_cast<unsigned int>(1) << s_floatinfo.exponentbits) - 1) {
+    if (converter.bits.exponent == (static_cast<unsigned int>(1) << _FloatInfo<float>::exponentbits) - 1) {
       
       // Infinity.
       if (converter.bits.mantissa == 0) {
@@ -1161,7 +1161,7 @@ namespace DAC {
     }
     
     // Fraction is always x over 2^one bit less than mantissa.
-    new_num._data->q = 1 << s_floatinfo.mantissabits - 1;
+    new_num._data->q = 1 << _FloatInfo<float>::mantissabits - 1;
     
     // Denormalized numbers.
     if (converter.bits.exponent == 0) {
@@ -1183,7 +1183,7 @@ namespace DAC {
     
     // Multiply by the exponent to get the actual number. Exponent has a bias
     // of 127.
-    new_num *= Arb(1) << SafeInt<int>(converter.bits.exponent) - s_floatinfo.bias;
+    new_num *= Arb(1) << SafeInt<int>(converter.bits.exponent) - _FloatInfo<float>::bias;
     
     // Set the sign.
     new_num._data->positive = !converter.bits.sign;
@@ -1226,7 +1226,7 @@ namespace DAC {
     _DoubleParts converter = { r };
     
     // Only actual numbers are supported.
-    if (converter.bits.exponent == (static_cast<unsigned int>(1) << s_doubleinfo.exponentbits) - 1) {
+    if (converter.bits.exponent == (static_cast<unsigned int>(1) << _FloatInfo<double>::exponentbits) - 1) {
       
       // Infinity.
       if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
@@ -1243,7 +1243,7 @@ namespace DAC {
     }
     
     // Fraction is always x over 2^one bit less than mantissa.
-    new_num._data->q = 1 << s_doubleinfo.mantissabits - 1;
+    new_num._data->q = ArbInt(1) << _FloatInfo<double>::mantissabits - 1;
     
     // Denormalized numbers.
     if (converter.bits.exponent == 0) {
@@ -1265,7 +1265,7 @@ namespace DAC {
     
     // Multiply by the exponent to get the actual number. Exponent has a bias
     // of 1023.
-    new_num *= Arb(1) << SafeInt<int>(converter.bits.exponent) - s_doubleinfo.bias;
+    new_num *= Arb(1) << SafeInt<int>(converter.bits.exponent) - _FloatInfo<double>::bias;
     
     // Set the sign.
     new_num._data->positive = !converter.bits.sign;
@@ -1308,7 +1308,7 @@ namespace DAC {
     _LongDoubleParts converter = { r };
     
     // Only actual numbers are supported.
-    if (converter.bits.exponent == (static_cast<unsigned int>(1) << s_longdoubleinfo.exponentbits) - 1) {
+    if (converter.bits.exponent == (static_cast<unsigned int>(1) << _FloatInfo<long double>::exponentbits) - 1) {
       
       // Infinity.
       if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
@@ -1325,7 +1325,7 @@ namespace DAC {
     }
     
     // Fraction is always x/2^one bit less than mantissa.
-    new_num._data->q = ArbInt(1) << s_longdoubleinfo.mantissabits - 1;
+    new_num._data->q = ArbInt(1) << _FloatInfo<long double>::mantissabits - 1;
     
     // Denormalized numbers.
     if (converter.bits.exponent == 0) {
@@ -1346,7 +1346,7 @@ namespace DAC {
     
     // Multiply by the exponent to get the actual number. Exponent has a bias
     // of 16383.
-    new_num *= Arb(1) << (SafeInt<int>(converter.bits.exponent) - s_longdoubleinfo.bias);
+    new_num *= Arb(1) << (SafeInt<int>(converter.bits.exponent) - _FloatInfo<long double>::bias);
     
     // Set the sign.
     new_num._data->positive = !converter.bits.sign;
@@ -1372,26 +1372,22 @@ namespace DAC {
     ArbInt bits_p = tmpnum._data->p.bitsInNumber();
     ArbInt bits_q = tmpnum._data->q.bitsInNumber();
     bool   denorm = false;
-    cout << "p: " << tmpnum._data->p << "  bits_p: " << bits_p << endl;
-    cout << "q: " << tmpnum._data->q << "  bits_q: " << bits_q << endl;
     if (bits_p < bits_q) {
       
       // Get the difference in bits.
       ArbInt bitdiff = bits_q - bits_p;
       
       // If bitdiff >= bias, try to store this number as a denormalized number.
-      if (bitdiff >= s_floatinfo.bias) {
+      if (bitdiff >= _FloatInfo<float>::bias) {
         
         // See if we can keep the exponent within range and still have bits of
         // result left. If not, do the IEEE 754 thing and quietly underflow.
-        if (bitdiff >= s_floatinfo.bias + (s_floatinfo.mantissabits - 1)) {
+        if (bitdiff >= _FloatInfo<float>::bias + (_FloatInfo<float>::mantissabits - 1)) {
           l = 0;
           return;
         }
         
-        // We will have room, so reduce the bitdiff and flag this as
-        // denormalized.
-        bitdiff = s_floatinfo.bias - 1;
+        // We will have room, so flag this as denormalized.
         denorm  = true;
         
       }
@@ -1399,14 +1395,19 @@ namespace DAC {
       // Shift p up until it has the same number of bits as q, then make sure
       // that 1 <= tmpnum < 2, unless this is a denormalized number. Set
       // exponent acconding to the number of bits shifted.
-      tmpnum._data->p <<= bitdiff;
-      exponent          = s_floatinfo.bias - bitdiff;
-      if (!denorm && tmpnum._data->q > tmpnum._data->p) {
-        if (exponent == 1) {
-          denorm = true;
-        } else {
-          tmpnum._data->p <<= 1;
-          exponent         -= 1;
+      if (denorm) {
+        tmpnum._data->p <<= _FloatInfo<float>::bias - 1;
+        exponent          = 0;
+      } else {
+        tmpnum._data->p <<= bitdiff;
+        exponent          = _FloatInfo<float>::bias - bitdiff;
+        if (tmpnum._data->q > tmpnum._data->p) {
+          if (exponent = 1) {
+            --exponent;
+          } else {
+            tmpnum._data->p <<= 1;
+            --exponent;
+          }
         }
       }
       
@@ -1417,45 +1418,238 @@ namespace DAC {
       
       // If bitdiff > bias, we won't be able to store this number, it will
       // overflow the exponent.
-      if (bitdiff > s_floatinfo.bias) {
+      if (bitdiff > _FloatInfo<float>::bias) {
         throw ArbErrors::ScalarOverflowSpecialized<float>().Number(r).Limit(numeric_limits<float>::max());
       }
       
       // Shift q up until it has the same number of bits as p, then make sure
       // that 1 <= tmpnum < 2. Set exponent according to the number of bits
-      // shifted.
+      // shifted. If q is still > p, shift p up instead of q back down to
+      // prevent the rare case of p & q having equal number of bits to begin
+      // with and then losing precision by shifting it down. Should be very
+      // rare occurance.
       tmpnum._data->q <<= bitdiff;
-      exponent          = s_floatinfo.bias + bitdiff;
+      exponent          = _FloatInfo<float>::bias + bitdiff;
       if (tmpnum._data->q > tmpnum._data->p) {
-        tmpnum._data->q >>= 1;
+        tmpnum._data->p <<= 1;
         exponent         -= 1;
       }
       
     }
     
-    l = 0;
+    // Convert tmpnum to x/bits in mantissa.
+    tmpnum._forcereduce(ArbInt(1) << _FloatInfo<float>::mantissabits - 1);
     
-    cout << "r: " << r << endl;
-    // 1e-38 makes this fail. Tmpnum p has a huge number in there for some reason.
-    cout << "TMPNUM!!!!" << endl;
-    tmpnum._data->p.printdigits();
-    cout << "p: " << tmpnum._data->p << "  q: " << tmpnum._data->q << endl;
-    cout << "tmpnum: " << tmpnum << "  exponent: " << exponent << endl;
+    // If this is a normalized number, truncate the MSB.
+    if (!denorm) {
+      tmpnum._data->p &= (ArbInt(1) << (_FloatInfo<float>::mantissabits - 1)) - 1;
+    }
+    
+    // Set the number.
+    _FloatParts converter;
+    converter.bits.sign     = !tmpnum._data->positive;
+    converter.bits.exponent = exponent;
+    converter.bits.mantissa = tmpnum._data->p;
+    l = converter.number;
     
   }
   
   // Get as a double.
   template <> void Arb::_Get<double, Arb::_NUM_FLPT>::op (double& l, Arb const& r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Work area.
+    Arb    tmpnum;
+    ArbInt exponent;
+    
+    // Set tmpnum to r here to avoid carrying over rounding or fixed-point
+    // properties, all we are interested in is the value.
+    tmpnum.set(r);
+    
+    // Convert tmpnum to the range of 1 <= tmpnum < 2, save changes in
+    // exponent so that tmpnum * 2^exponent == r.
+    ArbInt bits_p = tmpnum._data->p.bitsInNumber();
+    ArbInt bits_q = tmpnum._data->q.bitsInNumber();
+    bool   denorm = false;
+    if (bits_p < bits_q) {
+      
+      // Get the difference in bits.
+      ArbInt bitdiff = bits_q - bits_p;
+      
+      // If bitdiff >= bias, try to store this number as a denormalized number.
+      if (bitdiff >= _FloatInfo<double>::bias) {
+        
+        // See if we can keep the exponent within range and still have bits of
+        // result left. If not, do the IEEE 754 thing and quietly underflow.
+        if (bitdiff >= _FloatInfo<double>::bias + (_FloatInfo<double>::mantissabits - 1)) {
+          l = 0;
+          return;
+        }
+        
+        // We will have room, so flag this as denormalized.
+        denorm  = true;
+        
+      }
+      
+      // Shift p up until it has the same number of bits as q, then make sure
+      // that 1 <= tmpnum < 2, unless this is a denormalized number. Set
+      // exponent acconding to the number of bits shifted.
+      if (denorm) {
+        tmpnum._data->p <<= _FloatInfo<double>::bias - 1;
+        exponent          = 0;
+      } else {
+        tmpnum._data->p <<= bitdiff;
+        exponent          = _FloatInfo<double>::bias - bitdiff;
+        if (tmpnum._data->q > tmpnum._data->p) {
+          if (exponent = 1) {
+            --exponent;
+          } else {
+            tmpnum._data->p <<= 1;
+            --exponent;
+          }
+        }
+      }
+      
+    } else {
+      
+      // Get the difference in bits.
+      ArbInt bitdiff = bits_p - bits_q;
+      
+      // If bitdiff > bias, we won't be able to store this number, it will
+      // overflow the exponent.
+      if (bitdiff > _FloatInfo<double>::bias) {
+        throw ArbErrors::ScalarOverflowSpecialized<double>().Number(r).Limit(numeric_limits<double>::max());
+      }
+      
+      // Shift q up until it has the same number of bits as p, then make sure
+      // that 1 <= tmpnum < 2. Set exponent according to the number of bits
+      // shifted. If q is still > p, shift p up instead of q back down to
+      // prevent the rare case of p & q having equal number of bits to begin
+      // with and then losing precision by shifting it down. Should be very
+      // rare occurance.
+      tmpnum._data->q <<= bitdiff;
+      exponent          = _FloatInfo<double>::bias + bitdiff;
+      if (tmpnum._data->q > tmpnum._data->p) {
+        tmpnum._data->p <<= 1;
+        exponent         -= 1;
+      }
+      
+    }
+    
+    // Convert tmpnum to x/bits in mantissa.
+    tmpnum._forcereduce(ArbInt(1) << _FloatInfo<double>::mantissabits - 1);
+    
+    // If this is a normalized number, truncate the MSB.
+    if (!denorm) {
+      tmpnum._data->p &= (ArbInt(1) << (_FloatInfo<double>::mantissabits - 1)) - 1;
+    }
+    
+    // Set the number.
+    _DoubleParts converter;
+    converter.bits.sign      = !tmpnum._data->positive;
+    converter.bits.exponent  = exponent;
+    converter.bits.mantissah = tmpnum._data->p >> std::numeric_limits<unsigned int>::digits;
+    converter.bits.mantissal = tmpnum._data->p  & std::numeric_limits<unsigned int>::max();
+    l = converter.number;
+    
   }
   
   // Get as a long double.
   template <> void Arb::_Get<long double, Arb::_NUM_FLPT>::op (long double& l, Arb const& r) {
-    // FIXME: Dummy.
-    if (l > 0) {};
-    if (r > 0) {};
+    
+    // Work area.
+    Arb    tmpnum;
+    ArbInt exponent;
+    
+    // Set tmpnum to r here to avoid carrying over rounding or fixed-point
+    // properties, all we are interested in is the value.
+    tmpnum.set(r);
+    
+    // Convert tmpnum to the range of 1 <= tmpnum < 2, save changes in
+    // exponent so that tmpnum * 2^exponent == r.
+    ArbInt bits_p = tmpnum._data->p.bitsInNumber();
+    ArbInt bits_q = tmpnum._data->q.bitsInNumber();
+    bool   denorm = false;
+    if (bits_p < bits_q) {
+      
+      // Get the difference in bits.
+      ArbInt bitdiff = bits_q - bits_p;
+      
+      // If bitdiff >= bias, try to store this number as a denormalized number.
+      if (bitdiff >= _FloatInfo<long double>::bias) {
+        
+        // See if we can keep the exponent within range and still have bits of
+        // result left. If not, do the IEEE 754 thing and quietly underflow.
+        if (bitdiff >= _FloatInfo<long double>::bias + (_FloatInfo<long double>::mantissabits - 1)) {
+          l = 0;
+          return;
+        }
+        
+        // We will have room, so flag this as denormalized.
+        denorm  = true;
+        
+      }
+      
+      // Shift p up until it has the same number of bits as q, then make sure
+      // that 1 <= tmpnum < 2, unless this is a denormalized number. Set
+      // exponent acconding to the number of bits shifted.
+      if (denorm) {
+        tmpnum._data->p <<= _FloatInfo<long double>::bias - 1;
+        exponent          = 0;
+      } else {
+        tmpnum._data->p <<= bitdiff;
+        exponent          = _FloatInfo<long double>::bias - bitdiff;
+        if (tmpnum._data->q > tmpnum._data->p) {
+          if (exponent = 1) {
+            --exponent;
+          } else {
+            tmpnum._data->p <<= 1;
+            --exponent;
+          }
+        }
+      }
+      
+    } else {
+      
+      // Get the difference in bits.
+      ArbInt bitdiff = bits_p - bits_q;
+      
+      // If bitdiff > bias, we won't be able to store this number, it will
+      // overflow the exponent.
+      if (bitdiff > _FloatInfo<long double>::bias) {
+        throw ArbErrors::ScalarOverflowSpecialized<long double>().Number(r).Limit(numeric_limits<long double>::max());
+      }
+      
+      // Shift q up until it has the same number of bits as p, then make sure
+      // that 1 <= tmpnum < 2. Set exponent according to the number of bits
+      // shifted. If q is still > p, shift p up instead of q back down to
+      // prevent the rare case of p & q having equal number of bits to begin
+      // with and then losing precision by shifting it down. Should be very
+      // rare occurance.
+      tmpnum._data->q <<= bitdiff;
+      exponent          = _FloatInfo<long double>::bias + bitdiff;
+      if (tmpnum._data->q > tmpnum._data->p) {
+        tmpnum._data->p <<= 1;
+        exponent         -= 1;
+      }
+      
+    }
+    
+    // Convert tmpnum to x/bits in mantissa.
+    tmpnum._forcereduce(ArbInt(1) << _FloatInfo<long double>::mantissabits - 1);
+    
+    // If this is a normalized number, truncate the MSB.
+    if (!denorm) {
+      tmpnum._data->p &= (ArbInt(1) << (_FloatInfo<long double>::mantissabits - 1)) - 1;
+    }
+    
+    // Set the number.
+    _LongDoubleParts converter;
+    converter.bits.sign      = !tmpnum._data->positive;
+    converter.bits.exponent  = exponent;
+    converter.bits.mantissah = tmpnum._data->p >> std::numeric_limits<unsigned int>::digits;
+    converter.bits.mantissal = tmpnum._data->p  & std::numeric_limits<unsigned int>::max();
+    l = converter.number;
+    
   }
   
   /***************************************************************************

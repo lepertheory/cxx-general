@@ -265,10 +265,11 @@ namespace DAC {
       };
       
       // Floating-point info.
-      struct _FloatInfo {
-        unsigned int mantissabits;
-        unsigned int exponentbits;
-        unsigned int bias;
+      template <class T> class _FloatInfo {
+        public:
+          static unsigned int const mantissabits;
+          static unsigned int const exponentbits;
+          static unsigned int const bias;
       };
       
       // Directions.
@@ -447,13 +448,6 @@ namespace DAC {
       std::string::size_type _maxradix; // Radix digits to output.
       OutputFormat           _format;   // Format to output this number.
       RoundMethod            _round;    // Rounding method.
-      
-      /*********************************************************************/
-      // Static data members.
-      
-      static _FloatInfo const s_floatinfo;
-      static _FloatInfo const s_doubleinfo;
-      static _FloatInfo const s_longdoubleinfo;
       
       /*********************************************************************/
       // Function members.
@@ -770,7 +764,7 @@ namespace DAC {
   /***************************************************************************
    * Inline and template definitions.
    ***************************************************************************/
-   
+  
   /***************************************************************************/
   // Function members.
   

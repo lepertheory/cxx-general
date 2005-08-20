@@ -1179,8 +1179,6 @@ namespace DAC {
     // Work area;
     ArbInt retval;
     
-    std::cout << "l: " << l << "  r: " << r << std::endl;
-    
     // Multiply like 3rd grade.
     for (ArbInt::_DigsT::size_type i = 0; i != l._digits->size(); ++i) {
       
@@ -1190,7 +1188,6 @@ namespace DAC {
       }
       
       // Multiply the digit and carry.
-      std::cout << "(*(retval._digits))[" << i << "]: " << (*(retval._digits))[i] << "  (*(l._digits))[" << i << "]: " << (*(l._digits))[i] << "  r: " << r << std::endl;
       (*(retval._digits))[i] += (*(l._digits))[i] * r;
       retval._carry(i);
       
@@ -1808,7 +1805,7 @@ namespace DAC {
     // If the number is too large to AND directly, resort to conversion to
     // ArbInt then AND.
     if (r >= s_digitbase) {
-      l.op_bit_and(Arbint(r));
+      l.op_bit_and(ArbInt(r));
       return;
     }
     
