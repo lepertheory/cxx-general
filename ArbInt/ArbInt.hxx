@@ -203,8 +203,6 @@ namespace DAC {
       // Return the maximum string input base.
       static value_type max_input_base ();
       
-      void printdigits () const;
-      
     /*
      * Private members.
      */
@@ -737,12 +735,6 @@ namespace DAC {
   /***************************************************************************
    * Inline and template definitions.
    ***************************************************************************/
-  
-  inline void ArbInt::printdigits () const {
-    for (_DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
-      std::cout << "# digit: " << *i << std::endl;
-    }
-  }
   
   /***************************************************************************/
   // Function members.

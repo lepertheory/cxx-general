@@ -246,8 +246,7 @@ namespace DAC {
       };
       struct _LongDoubleBits {
         unsigned int mantissal;
-        unsigned int mantissah : 31;
-        unsigned int j         :  1;
+        unsigned int mantissah;
         unsigned int exponent  : 15;
         unsigned int sign      :  1;
       };
@@ -467,6 +466,13 @@ namespace DAC {
       // Normalize this number to another number.
       Arb& _normalize (Arb& number);
       
+      // Convert this number to the range of a floating-point number type,
+      // return the exponent of 2 that will convert this number back to the
+      // original. I'm not happy with the syntax of this, so that combined
+      // with the limited usefulness of this outside converting to a float,
+      // which we already provide, it's staying private because it's bad.
+      template <class T> ArbInt _toFloat (unsigned int& exponent) const;
+      
   };
   
   /***************************************************************************
@@ -564,6 +570,23 @@ namespace DAC {
         virtual char const* what () const throw();
         ScalarOverflowSpecialized& Number (Arb const& number) throw();
         ScalarOverflowSpecialized& Limit  (T   const  limit)  throw();
+        Arb Number () const throw();
+        T   Limit  () const throw();
+      private:
+        Arb _number;
+        T   _limit;
+    };
+    
+    // Attempt to move Arb into a number that won't see it.
+    class ScalarUnderflow : public Base {
+      public:
+        virtual char const* what () const throw();
+    };
+    template <class T> class ScalarUnderflowSpecialized : public ScalarUnderflow {
+      public:
+        virtual char const* what () const throw();
+        ScalarUnderflowSpecialized& Number (Arb const& number) throw();
+        ScalarUnderflowSpecialized& Limit  (T   const  limit)  throw();
         Arb Number () const throw();
         T   Limit  () const throw();
       private:
@@ -911,6 +934,98 @@ namespace DAC {
   // Bit shift this number.
   template <class T> inline Arb& Arb::_shift (SafeInt<T> const bits, _Dir const dir) { _Shift<T, _GetNumType<T>::value>::op(*this, bits, dir); return *this; }
   template <class T> inline Arb& Arb::_shift (T          const bits, _Dir const dir) { _Shift<T, _GetNumType<T>::value>::op(*this, bits, dir); return *this; }
+  
+  // Convert number to floating-point range and return exponent.
+  template <class T> ArbInt Arb::_toFloat (unsigned int& exponent) const {
+    
+    // Work area.
+    Arb                   tmpnum;
+    SafeInt<unsigned int> tmpexp;
+    
+    // Set tmpnum to *this here to avoid carrying over rounding or fixed-point
+    // properties, all we are interested in here is the value.
+    tmpnum.set(*this);
+    
+    // Convert tmpnum to the range of 1 <= tmpnum < 2, save changes in
+    // exponent so that tmpnum * 2^exponent == *this.
+    ArbInt bits_p = tmpnum._data->p.bitsInNumber();
+    ArbInt bits_q = tmpnum._data->q.bitsInNumber();
+    bool   denorm = false;
+    if (bits_p < bits_q) {
+      
+      // Get the difference in bits.
+      ArbInt bitdiff = bits_q - bits_p;
+      
+      // If bitdiff >= bias, try to store this number as a denormalized
+      // number.
+      if (bitdiff >= _FloatInfo<T>::bias) {
+        
+        // See if we can keep the exponent within range and still have bits of
+        // result left. If not, throw an exception, caller should deal with
+        // underflow.
+        if (bitdiff >= _FloatInfo<T>::bias + (_FloatInfo<T>::mantissabits - 1)) {
+          throw ArbErrors::ScalarUnderflowSpecialized<T>().Number(*this).Limit(std::numeric_limits<T>::denorm_min());
+        }
+        
+        // We will have room, flag as denormalized.
+        denorm = true;
+        
+      }
+      
+      // Shift p up until it has the same number of bits as q, then make sure
+      // that 1 <= tmpnum < 2, unless this is a denormalized number. Set
+      // exponent according to the number of bits shifted. If this is a
+      // denormalized number, shift it the max we can with our max exponent.
+      if (denorm) {
+        tmpnum._data->p <<= _FloatInfo<T>::bias - 1;
+        tmpexp            = 0;
+      } else {
+        tmpnum._data->p <<= bitdiff;
+        tmpexp            = static_cast<unsigned int>(_FloatInfo<T>::bias - bitdiff);
+        if (tmpnum._data->q > tmpnum._data->p) {
+          if (tmpexp = 1) {
+            --tmpexp;
+          } else {
+            tmpnum._data->p <<= 1;
+            --tmpexp;
+          }
+        }
+      }
+      
+    } else {
+      
+      // Get the difference in bits.
+      ArbInt bitdiff = bits_p - bits_q;
+      
+      // If bitdiff > bias, we won't be able to store this number, it will
+      // overflow the exponent.
+      if (bitdiff > _FloatInfo<T>::bias) {
+        throw ArbErrors::ScalarOverflowSpecialized<T>().Number(*this).Limit(std::numeric_limits<T>::max());
+      }
+      
+      // Shift q up until it has the same number of bits as p, then make sure
+      // that 1 <= tmpnum < 2. Set exponent according to the number of bits
+      // shifted. If q is still > p, shift p up instead of q back down to
+      // prevent the rare case of p & q have an equal number of bits to begin
+      // with and then losing precision by shifting it down. Should be a very
+      // rare occurance.
+      tmpnum._data->q <<= bitdiff;
+      tmpexp            = static_cast<unsigned int>(_FloatInfo<T>::bias + bitdiff);
+      if (tmpnum._data->q > tmpnum._data->p) {
+        tmpnum._data->p <<= 1;
+        --tmpexp;
+      }
+      
+    }
+    
+    // Convert tmpnum to x/bits in mantissa.
+    tmpnum._forcereduce(ArbInt(1) << _FloatInfo<T>::mantissabits - 1);
+    
+    // We done. Set the exponent and return the fraction.
+    exponent = tmpexp;
+    return tmpnum._data->p;
+    
+  }
   
   // Determine number type.
   template <class T> Arb::_NumType const Arb::_GetNumType<T>::value =
@@ -1670,6 +1785,18 @@ namespace DAC {
     template <class T> inline ScalarOverflowSpecialized<T>& ScalarOverflowSpecialized<T>::Limit  (T   const  limit)  throw() { _limit  = limit;  return *this; }
     template <class T> inline Arb ScalarOverflowSpecialized<T>::Number () const throw() { return _number; }
     template <class T> inline T   ScalarOverflowSpecialized<T>::Limit  () const throw() { return _limit;  }
+    
+    template <class T> char const* ScalarUnderflowSpecialized<T>::what () const throw() {
+      try {
+        return (_number.toString() + ": Underflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
+      } catch (...) {
+        return "Arb underflows requested scalar type. Error creating message string.";
+      }
+    }
+    template <class T> inline ScalarUnderflowSpecialized<T>& ScalarUnderflowSpecialized<T>::Number (Arb const& number) throw() { _number = number; return *this; }
+    template <class T> inline ScalarUnderflowSpecialized<T>& ScalarUnderflowSpecialized<T>::Limit  (T   const  limit)  throw() { _limit  = limit;  return *this; }
+    template <class T> inline Arb ScalarUnderflowSpecialized<T>::Number () const throw() { return _number; }
+    template <class T> inline T   ScalarUnderflowSpecialized<T>::Limit  () const throw() { return _limit;  }
     
     template <class T> char const* InvalidFloatSpecialized<T>::what () const throw() {
       try {
