@@ -62,12 +62,6 @@ if env['CC'] == 'cl' :
 if not env.GetOption('clean') :
   env.Default(None)
 
-# Determine the platform.
-if (env['PLATFORM'] == 'win32') :
-  env.Append(CPPDEFINES = [ 'PLAT_WIN32' ])
-elif (env['PLATFORM'] == 'posix') :
-  env.Append(CPPDEFINES = [ 'PLAT_POSIX' ])
-
 # Make a backup of env so SConscript files do not modify it.
 tmpenv = env.Copy()
 
@@ -75,4 +69,4 @@ cArbInt    = SConscript(['ArbInt/SConscript'],    exports = 'env')         ; env
 cArb       = SConscript(['Arb/SConscript'],       exports = 'env cArbInt') ; env = tmpenv.Copy()
 cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb')    ; env = tmpenv.Copy()
 
-SConscript(['Tests/SConscript'],     exports = 'env cArbInt cArb cTimestamp') ; env = tmpenv.Copy()
+SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp') ; env = tmpenv.Copy()
