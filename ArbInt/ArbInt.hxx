@@ -1329,12 +1329,12 @@ namespace DAC {
     // making this function aware of type sizes.
     if (r < 0) {
       try {
-        ArbInt::_Mod<T, ArbInt::_NUM_UINT>(l, -r);
+        ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op(l, -r);
       } catch (SafeIntErrors::UnOpOverflow<T>) {
         l.op_mod(ArbInt(~r) + 1);
       }
     } else {
-      ArbInt::_Mod<T, ArbInt::_NUM_UINT>(l, r);
+      ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op(l, r);
     }
     
   }
@@ -1394,7 +1394,7 @@ namespace DAC {
   
   // Add a signed integer type.
   template <class T> void ArbInt::_Add<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
-        
+    
     // If adding a negative, subtract the opposite. Use the same trick as in
     // _Mod to convert to a positive number.
     if (r < 0) {

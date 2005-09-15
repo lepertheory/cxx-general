@@ -439,7 +439,6 @@ namespace DAC {
         std::string::size_type             _position;
         ConstReferencePointer<std::string> _format;
     };
-    class UnknownPlatform   : public Base        { public: virtual char const* what () const throw(); };
     class InvalidTime       : public Base        { public: virtual char const* what () const throw(); };
     class NoYearZero        : public InvalidTime { public: virtual char const* what () const throw(); };
     class SysCallError      : public Base        { public: virtual char const* what () const throw(); };
@@ -461,7 +460,6 @@ namespace DAC {
     inline BadFormat&  BadFormat::Problem      (char const*                   const problem)  throw() { _problem  = problem;  return *this; }
     inline BadFormat&  BadFormat::Position     (std::string::size_type        const position) throw() { _position = position; return *this; }
     inline BadFormat&  BadFormat::Format       (ConstReferencePointer<std::string>& format)   throw() { _format   = format;   return *this; }
-    inline char const* UnknownPlatform::what   () const throw() { return "Cannot perform function on unknown platform, requires platform-specific calls.";                                                                       }
     inline char const* InvalidTime::what       () const throw() { return "The specified time is invalid.";                                                                                                                       }
     inline char const* NoYearZero::what        () const throw() { return "There is no year 0.";                                                                                                                                  }
     inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                                                                                              }

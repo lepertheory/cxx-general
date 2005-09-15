@@ -4,20 +4,6 @@
  * Implementation for class Timestamp.
  *****************************************************************************/
 
-// System includes.
-#if defined(PLAT_WIN32)
-  #if defined(HAS_WINDOWS_H)
-    #include <windows.h>
-  #endif
-#elif defined(PLAT_POSIX)
-  #if defined(HAS_SYS_TIME_H)
-    #include <sys/time.h>
-  #endif
-  #if defined(HAS_TIME_H)
-    #include <time.h>
-  #endif
-#endif
-
 // Class include.
 #include "Timestamp.hxx"
 
@@ -210,6 +196,11 @@ namespace DAC {
     }
     
     b = a + 1524;
+    cout << b << " - 2439870: " << (b - 2439870) << endl;
+    cout << (b - 2439870) << " - 122.1: " << ((b - 2439870) - 122.1) << endl;
+    cout << ((b - 2439870) - 122.1) << " / 365.25: " << (((b - 2439870) - 122.1) / 365.25) << endl;
+    cout << "floor(" << (((b - 2439870) - 122.1) / 365.25) << "): " << floor(((b - 2439870) - 122.1) / 365.25) << endl;
+    cout << "6880 + " << floor(((b - 2439870) - 122.1) / 365.25) << ": " << (6880 + floor(((b - 2439870) - 122.1) / 365.25)) << endl;
     c = 6680 + floor((b - 2439870 - 122.1) / 365.25);
     d = 365 * c + floor(0.25 * c);
     e = floor((b - d) / 30.6001);
@@ -250,86 +241,26 @@ namespace DAC {
   // Get the current system time.
   Timestamp& Timestamp::getSystemTime () {
     
-    // Verify that we are on a supported platform.
-  #if !defined(PLAT_WIN32) && \
-      !defined(PLAT_POSIX)
-    throw TimestampErrors::UnknownPlatform();
-  #endif
-    
-    // Verify that we have the necessary system support to get the system
-    // time.
-  #if defined(PLAT_WIN32)
-    #if !defined(HAS__SYSTEMTIME)
-    throw TimestampErrors::MissingSysSupport();
-    #endif
-  #elif defined(PLAT_POSIX)
-    #if (!defined(HAS_GMTIME_R) && !defined(HAS_GMTIME)) || \
-        !defined(HAS_TIME_T) || !defined(HAS_TM)
-    throw TimestampErrors::MissingSysSupport();
-    #endif
-    #if !defined(HAS_GETTIMEOFDAY) || !defined(HAS_TIMEVAL) || !defined(HAS_TIMEZONE)
-      #define USE_TIME
-      #if !defined(HAS_TIME)
-    throw TimestampErrors::MissingSysSupport();
-      #endif
-    #endif
-  #endif
-    
     // Work area.
-    Timestamp       newtime(*this);
-    Interval        interval;
-  #if defined(PLAT_WIN32)
-    _SYSTEMTIME     systime = { 0, 0, 0, 0, 0, 0, 0, 0 };
-  #elif defined(PLAT_POSIX)
-    #if !defined(USE_TIME)
-    struct timezone tz      = { 0, 0 };
-    struct timeval  tv      = { 0, 0 };
-    #endif
-    time_t          t       = 0;
-    struct tm       systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    struct tm*      stp     = &systime;
-  #endif
+    Timestamp  newtime(*this);
+    Interval   interval;
+    time_t     t       = 0;
+    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct tm* stp     = &systime;
     
     // Set the interval.
-  #if defined(PLAT_WIN32)
-    GetSystemTime(&systime);
-    interval.Millisecond(TimeVal(systime.wMilliseconds))
-            .Second(TimeVal(systime.wSecond))
-            .Minute(TimeVal(systime.wMinute))
-            .Hour(TimeVal(systime.wHour))
-            .Day(TimeVal(systime.wDay))
-            .Month(TimeVal(systime.wMonth))
-            .Year(TimeVal(systime.wYear));
-  #elif defined(PLAT_POSIX)
-    TimeVal ms;
-    #if defined(USE_TIME)
     if (!time(&t)) {
       throw TimestampErrors::SysCallError();
     }
-    #else
-    if (gettimeofday(&tv, &tz)) {
+    if (!(stp = gmtime(&t))) {
       throw TimestampErrors::SysCallError();
     }
-    t  = tv.tv_sec;
-    ms = tv.tv_usec / 1000;
-    #endif
-    #if defined(HAS_GMTIME_R)
-    if ((!gmtime_r(&t, &systime)) && (!(stp = gmtime(&t)))) {
-      throw TimestampErrors::SysCallError();
-    }
-    #else
-    if ((!stp = gmtime(&t))) {
-      throw TimestampErrors::SysCallError();
-    }
-    #endif
-    interval.Millisecond(TimeVal(ms))
-            .Second(TimeVal(stp->tm_sec))
+    interval.Second(TimeVal(stp->tm_sec))
             .Minute(TimeVal(stp->tm_min))
             .Hour(TimeVal(stp->tm_hour))
             .Day(TimeVal(stp->tm_mday))
             .Month(TimeVal(1) + stp->tm_mon)
             .Year(TimeVal(1900) + stp->tm_year);
-  #endif
     
     // Set the new time.
     newtime.set(interval);
@@ -645,11 +576,13 @@ namespace DAC {
           // (+hhmm or -hhmm), or by nothing if no timezone is determinable.
           // FIXME: implement timezone support.
           case 'z': {
+            retval += "+0000";
           } break;
           
           // Timezone name or abbreviation, or nothing if no timezone.
           // FIXME: implement timezone support.
           case 'Z': {
+            retval += "";
           } break;
           
           // Unknown option.
@@ -755,9 +688,9 @@ namespace DAC {
   Timestamp::TimeVal Timestamp::dow () const {
     
     // Day of week is simply the JD modulo 7 rot 1.
-    TimeVal dow;
-    dow.set((_jd + 0.5).floor() % 7 + 1);
-    return (dow > DOW_SATURDAY) ? dow - 7 : dow;
+    TimeVal daynum;
+    daynum.set((_jd + 0.5).floor() % 7 + 1);
+    return (daynum > static_cast<unsigned int>(DOW_SATURDAY)) ? daynum - 7 : daynum;
     
   }
   
@@ -788,13 +721,13 @@ namespace DAC {
   Timestamp::TimeVal Timestamp::woy (DayOfWeek const base) const {
     
     // Get the first day of this year.
-    Timestamp dayone(Interval().Year(get().Year()).Month(TimeVal(MON_JANUARY)).Day(TimeVal(1)));
+    Timestamp dayone(Interval().Year(get().Year()).Month(TimeVal(static_cast<unsigned int>(MON_JANUARY))).Day(TimeVal(1)));
     
     // Find the next base day.
-    if (dayone.dow() > base) {
+    if (dayone.dow() > static_cast<unsigned int>(base)) {
       dayone += 7 - dayone.dow();
     }
-    dayone += base - dayone.dow();
+    dayone += static_cast<unsigned int>(base) - dayone.dow();
     
     // Get the difference between today and the first day of the first week of
     // the year.
@@ -815,8 +748,8 @@ namespace DAC {
     // contains a Thursday, or more easily, the first that contains January
     // 4th. Get the Monday of the week containing January 4th.
     Timestamp isodayone;
-    isodayone.set(Interval().Year(year).Month(TimeVal(MON_JANUARY)).Day(TimeVal(4)));
-    isodayone -= isodayone.dowISO() - ISO_DOW_MONDAY;
+    isodayone.set(Interval().Year(year).Month(TimeVal(static_cast<unsigned int>(MON_JANUARY))).Day(TimeVal(4)));
+    isodayone -= isodayone.dowISO() - static_cast<unsigned int>(ISO_DOW_MONDAY);
     
     // Get the difference between this date and the 1st ISO day.
     TimeVal isoday = this->jdday() - (isodayone.jdday() - 1);
@@ -834,13 +767,13 @@ namespace DAC {
     
     // If it is before January 4th and this week did not contain a Thursday,
     // then according to ISO it is last year.
-    if ((date.Month() == 1 && date.Day() < 4) && dowISO() - date.Day() >= ISO_DOW_THURSDAY) {
+    if ((date.Month() == 1 && date.Day() < 4) && dowISO() - date.Day() >= static_cast<unsigned int>(ISO_DOW_THURSDAY)) {
       return date.Year() - 1;
     }
     
     // If it is after December 28th and this week will not contain a Thursday,
     // then according to ISO it is next year.
-    if ((date.Month() == 12 && date.Day() > 28) && date.Day() + ISO_DOW_THURSDAY - dowISO() > _daysInMonth(date.Year(), TimeVal(MON_DECEMBER))) {
+    if ((date.Month() == 12 && date.Day() > 28) && date.Day() + static_cast<unsigned int>(ISO_DOW_THURSDAY) - dowISO() > _daysInMonth(date.Year(), TimeVal(static_cast<unsigned int>(MON_DECEMBER)))) {
       return date.Year() + 1;
     }
     
@@ -865,6 +798,9 @@ namespace DAC {
   // Get whether a given year is a leap year.
   bool Timestamp::_isLeapYear (TimeVal const& year) const {
     
+    // Work area.
+    bool retval = false;
+    
     // Determine the calendar type. The calendar that matters is the one that
     // was in effect during the (potential) leap day. Since we do not know if
     // 2/29 occured this year, setting the date to 3/0 will amount to the same
@@ -885,17 +821,17 @@ namespace DAC {
       
       case CT_DEFAULT:
       case CT_GREGORIAN:
-        return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
+        retval = y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
       break;
       
       case CT_JULIAN:
-        return y % 4 == 0;
+        retval = y % 4 == 0;
       break;
       
     }
     
-    // Dummy instruction to avoid warning.
-    return false;
+    // We done, return result.
+    return retval;
     
   }
   

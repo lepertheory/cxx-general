@@ -19,7 +19,7 @@ using namespace std;
 using namespace DAC;
 
 // This is where it all happens.
-int main (int argc, char** argv, char** envp) {
+int main () {
   
   try {
     
