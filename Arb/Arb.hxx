@@ -1327,6 +1327,7 @@ namespace DAC {
         } else {
           retval._data->p -= tmp;
         }
+        retval._reduce();
       }
       
     // Otherwise, add.
@@ -1337,12 +1338,10 @@ namespace DAC {
         retval._data->p += r;
       } else {
         retval._data->p += r * retval._data->q;
+        retval._reduce();
       }
       
     }
-    
-    // Reduce.
-    retval._reduce();
     
     // Move the data in and return.
     l._data = retval._data;
@@ -1401,6 +1400,7 @@ namespace DAC {
         } else {
           retval._data->p -= tmp;
         }
+        retval._reduce();
       }
       
     // Otherwise, add normally.
@@ -1411,12 +1411,10 @@ namespace DAC {
         retval._data->p += rabs;
       } else {
         retval._data->p += rabs * retval._data->q;
+        retval._reduce();
       }
       
     }
-    
-    // Reduce.
-    retval._reduce();
     
     // Move the data in and return.
     l._data = retval._data;
@@ -1437,7 +1435,8 @@ namespace DAC {
     
     // Subtracting from 0 is also easy.
     if (l == 0) {
-      Arb retval(r);
+      Arb retval(l, true);
+      retval = r;
       retval._data->positive = !retval._data->positive;
       l._data = retval._data;
       return;
@@ -1454,31 +1453,30 @@ namespace DAC {
         retval._data->p += r;
       } else {
         retval._data->p += r * retval._data->q;
+        retval._reduce();
       }
-    } right about here duplicating for _NUM_UINT
+    
     // Otherwise, subtract.
     } else {
       
       // Subtract.
       if (retval.isInteger()) {
         if (r > retval._data->p) {
-          retval._data->positive = !retval._data->positive;
           retval._data->p        = r - retval._data->p;
+          retval._data->positive = !retval._data->positive;
         } else {
           retval._data->p -= r;
         }
       } else {
         ArbInt tmp(r * retval._data->p);
         if (tmp > retval._data->p) {
-          retval._data->positive = !retval._data->positive;
           retval._data->p        = tmp - retval._data->p;
+          retval._data->positive = !retval._data->positive;
         } else {
           retval._data->p -= tmp;
         }
+        retval._reduce();
       }
-      
-      // Reduce.
-      retval._reduce();
       
     }
     
@@ -1491,32 +1489,74 @@ namespace DAC {
   // Subtract a signed integer type.
   template <class T> void Arb::_Sub<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
     
-    // Subtract normally unless the signs don't match.
-    if (l._data->positive == (r >= 0)) {
-      try {
-        // Make both numbers positive for subtraction, figure sign afterward.
-        Arb retval(l, true);
-        retval._data->positive = true;
-        Arb::_Sub<T, Arb::_NUM_UINT>::op(l, r.abs());
-        retval._data->positive = !retval._data->positive;
-        l = retval;
-      } catch (SafeIntErrors::UnOpOverflow<T>) {
-        // We should only ever get here in the very rare case of hitting the
-        // minimum of the particular data type. If we are here for any other
-        // reason, rethrow the error.
-        if (r < 0) {
-          l.op_sub(Arb(~r) + 1);
-        } else {
-          throw;
-        }
-      }
-    } else {
-      try {
-        Arb::_Add<T, Arb::_NUM_UINT>::op(l, -r);
-      } catch (SafeIntErrors::UnOpOverflow<T>) {
-        l.op_add(Arb(~r) + 1);
-      }
+    // Subtracting 0 is easy.
+    if (r == 0) {
+      return;
     }
+    
+    // Subtracting from 0 is also easy.
+    if (l == 0) {
+      Arb retval(l, true);
+      retval = r;
+      retval._data->positive = !retval._data->positive;
+      l._data = retval._data;
+      return;
+    }
+    
+    // Work area.
+    Arb retval(l, true);
+    
+    // Get the abs of r to do arithmetic with. In very rare instances, r will
+    // be the min of a particular type, and experience overflow when negating.
+    // Catch this error and resort to Abs subtraction.
+    SafeInt<T> rabs;
+    try {
+      rabs = r.abs();
+    } catch (SafeIntErrors::UnOpOverflow<T>) {
+      // Rethrow the error if we're not here for the reason this hack is
+      // intended for.
+      if (r != std::numeric_limits<T>::min()) {
+        throw;
+      }
+      retval.op_sub(Arb(r));
+    }
+    
+    // If signs do not match, add.
+    if ((retval < 0) != (r < 0)) {
+      
+      // Scale if necessary and add.
+      if (retval.isInteger()) {
+        retval._data->p += rabs;
+      } else {
+        retval._data->p += rabs * retval._data->q;
+        retval._reduce();
+      }
+      
+    } else {
+      
+      // Subtract.
+      if (retval.isInteger()) {
+        if (rabs > retval._data->p) {
+          retval._data->p        = rabs - retval._data->p;
+          retval._data->positive = !retval._data->positive;
+        } else {
+          retval._data->p -= rabs;
+        }
+      } else {
+        ArbInt tmp(rabs * retval._data->p);
+        if (tmp > retval._data->p) {
+          retval._data->p        = tmp - retval._data->p;
+          retval._data->positive = !retval._data->positive;
+        } else {
+          retval._data->p -= tmp;
+        }
+        retval._reduce();
+      }
+      
+    }
+    
+    // Move the result in and return.
+    l._data = retval._data;
     
   }
   template <class T> inline void Arb::_Sub<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Sub<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }

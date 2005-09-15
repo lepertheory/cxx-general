@@ -328,11 +328,14 @@ namespace DAC {
       /***********************************************************************/
       // Data members.
       
+      // This is the time, in Julian Date format, GMT.
+      TimeVal _jd;
+      
+      // Offset, in minutes, from GMT.
+      int _offset;
+      
       // List of leap seconds, must always be sorted.
       LSLptr _leapseconds;
-      
-      // This is the time.
-      TimeVal _jd;
       
       // Last julian date.
       YMD     _lastjulianymd;

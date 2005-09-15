@@ -196,11 +196,6 @@ namespace DAC {
     }
     
     b = a + 1524;
-    cout << b << " - 2439870: " << (b - 2439870) << endl;
-    cout << (b - 2439870) << " - 122.1: " << ((b - 2439870) - 122.1) << endl;
-    cout << ((b - 2439870) - 122.1) << " / 365.25: " << (((b - 2439870) - 122.1) / 365.25) << endl;
-    cout << "floor(" << (((b - 2439870) - 122.1) / 365.25) << "): " << floor(((b - 2439870) - 122.1) / 365.25) << endl;
-    cout << "6880 + " << floor(((b - 2439870) - 122.1) / 365.25) << ": " << (6880 + floor(((b - 2439870) - 122.1) / 365.25)) << endl;
     c = 6680 + floor((b - 2439870 - 122.1) / 365.25);
     d = 365 * c + floor(0.25 * c);
     e = floor((b - d) / 30.6001);
@@ -245,7 +240,7 @@ namespace DAC {
     Timestamp  newtime(*this);
     Interval   interval;
     time_t     t       = 0;
-    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     struct tm* stp     = &systime;
     
     // Set the interval.
@@ -284,6 +279,9 @@ namespace DAC {
     _lastjulianymd = new_lastjulianymd;
     _lastjulianjd  = new_lastjulianjd;
     
+    // Set the GMT offset.
+    _offset = 0;
+    
     // Set the leap second list to the default.
     _leapseconds = s_defaultleapseconds;
     
@@ -319,6 +317,9 @@ namespace DAC {
     
     // Set the jd.
     _jd = ts._jd;
+    
+    // Set the GMT offset.
+    _offset = ts._offset;
     
     // We done.
     return *this;
@@ -492,7 +493,7 @@ namespace DAC {
             retval += (get().Hour() < 12) ? "am" : "pm";
           } break;
           
-          // Time in am/pm notation. In POSIX local this is equivalent to
+          // Time in am/pm notation. In POSIX locale this is equivalent to
           // "%I:%M:%S %p".
           case 'r': {
             retval += toString("%I:%M:%S %p");
@@ -576,7 +577,7 @@ namespace DAC {
           // (+hhmm or -hhmm), or by nothing if no timezone is determinable.
           // FIXME: implement timezone support.
           case 'z': {
-            retval += "+0000";
+            retval += "";
           } break;
           
           // Timezone name or abbreviation, or nothing if no timezone.
