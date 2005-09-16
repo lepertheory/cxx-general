@@ -116,7 +116,8 @@ namespace DAC {
       template <class T> ArbInt& set (T           const  number);
       
       // Set this number with an exact bitwise copy.
-      template <class T> ArbInt& setBitwise (T const number);
+      template <class T> ArbInt& setBitwise (SafeInt<T> const number);
+      template <class T> ArbInt& setBitwise (T          const number);
       
       // Push digits into this number.
                          ArbInt& push_back (ArbInt      const& number);
@@ -228,7 +229,7 @@ namespace DAC {
       enum _Dir { _DIR_L, _DIR_R };
       
       // Number types.
-      enum _NumType { _NUM_UINT, _NUM_SINT, _NUM_FLPT };
+      enum _NumType { _NUM_UINT, _NUM_SINT, _NUM_FLPT, _NUM_UNKNOWN };
       
       // Determine number type.
       template <class T> class _GetNumType { public: static _NumType const value; };
@@ -406,9 +407,6 @@ namespace DAC {
       // Validate a base.
       static void s_validateBase (value_type base);
       
-      // Find the number of bits needed to express a number.
-      template <class T> static unsigned int s_bitsNeeded (T const number);
-    
   };
   
   /***************************************************************************
@@ -832,7 +830,8 @@ namespace DAC {
   template <class T> inline ArbInt& ArbInt::set (T          const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   // Make this number an exact bitwise copy.
-  template <class T> ArbInt& ArbInt::setBitwise (T const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> ArbInt& ArbInt::setBitwise (SafeInt<T> const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> ArbInt& ArbInt::setBitwise (T          const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   // Push a string onto the back of this number.
                      inline ArbInt& ArbInt::push_back (ArbInt     const& number) { return push_back(ArbInt(number).Base(_base).toString()); }
@@ -892,7 +891,7 @@ namespace DAC {
   inline bool ArbInt::isEven () const { return !isOdd();                            }
   
   // Get the number of bits in this number.
-  inline ArbInt ArbInt::bitsInNumber () const { return (_digits->empty() ? ArbInt(0) : ArbInt(_digits->size()) * s_digitbits - (s_digitbits - s_bitsNeeded(_digits->back()))); }
+  inline ArbInt ArbInt::bitsInNumber () const { return (_digits->empty() ? ArbInt(0) : ArbInt(_digits->size()) * s_digitbits - (s_digitbits - SafeInt<_DigT>(_digits->back()).bitsInNumber())); }
   
   // Placeholder for automatic pow conversion.
   template <class T> inline ArbInt ArbInt::pow (T const exp) { return pow(ArbInt(exp)); }
@@ -1022,34 +1021,20 @@ namespace DAC {
     
   }
   
-  // Find the number of bits needed to express a given number. Only code that
-  // should inline is the loop.
-  template <class T> inline unsigned int ArbInt::s_bitsNeeded (T const number) {
-    
-    // Make a bitmask of the highest order digit. Using a SafeInt for its
-    // proper handling of bitwise ops.
-    static SafeInt<T> bitmask = SafeInt<T>(1) << (std::numeric_limits<T>::digits - 1);
-    
-    // Simply step through each bit, stop when we hit a 1.
-    unsigned int firstbit;
-    T            tmpnum = number;
-    for (firstbit = std::numeric_limits<T>::digits; firstbit != 0 && !(tmpnum & bitmask); --firstbit, tmpnum <<= 1) {}
-    
-    // firstbit is now the highest-order digit.
-    return firstbit;
-    
-  }
-  
   // Determine number type.
   template <class T> ArbInt::_NumType const ArbInt::_GetNumType<T>::value =
-    std::numeric_limits<T>::is_integer ? (
-      std::numeric_limits<T>::is_signed ? (
-        _NUM_SINT
+    std::numeric_limits<T>::is_specialized ? (
+      std::numeric_limits<T>::is_integer ? (
+        std::numeric_limits<T>::is_signed ? (
+          _NUM_SINT
+        ) : (
+          _NUM_UINT
+        )
       ) : (
-        _NUM_UINT
+        _NUM_FLPT
       )
     ) : (
-      _NUM_FLPT
+      _NUM_UNKNOWN
     )
   ;
   
@@ -1132,13 +1117,20 @@ namespace DAC {
     // Work area.
     ArbInt::_DataPT new_digits(new ArbInt::_DigsT);
     
-    if (std::numeric_limits<T>::digits < s_digitbits) {
+    // Move bits into place. If we have more bits than can be held in a digit,
+    // iterate through, otherwise do it the easy way.
+    if (r.bitsInNumber() < s_digitbits) {
       new_digits->push_back(SafeInt<_DigT>().setBitwise(r));
-    }
-    
-    // Remember there's one more bit in T than ::digits returns, the sign.
-    for (unsigned int bitpos = 0; bitpos <= s_digitbits; bitpos += s_digitbits) {
-      new_digits->push_back(SafeInt<_DigT>().setBitwise(r >> bitpos));
+    } else {
+      // <= is used here because the sign is not counted in ::digits.
+      // Why is ::digits signed? When is the number of digits in a number
+      // ever going to be less than zero? Is there a number type out there
+      // that makes you forget what you put in it? Jesus. Anyway, that's why
+      // this cast is here. If somebody has one of these forgetful numbers I'm
+      // pretty sure the universe will implode anyway, so it should be OK.
+      for (unsigned int bitpos = 0; bitpos <= static_cast<unsigned int>(std::numeric_limits<T>::digits); bitpos += s_digitbits) {
+        new_digits->push_back(SafeInt<_DigT>().setBitwise(r >> bitpos));
+      }
     }
     
     // Swap in the new digits and return.

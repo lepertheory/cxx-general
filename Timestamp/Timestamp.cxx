@@ -183,9 +183,35 @@ namespace DAC {
     TimeVal ti;
     
     // Create a "corrected" julian date, minus the time. Use set() to insulate
-    // from picking up _jd's fixed-pointedness.
+    // from picking up _jd's fixed-pointedness. Also create a time only.
     TimeVal cjd;
+    TimeVal time;
     cjd.set((_jd + 0.5).floor());
+    time.set(_jd + 0.5 - cjd);
+    
+    // Calculate time first so that any corrections needed can be pushed up
+    // to the jd and accounted for properly. In practice, this is never, ever
+    // going to happen, but _just_in_case_...
+    time *= 24;   th = time.toInt(); time -= th; if (time < 0) { --th; ++time; }
+    time *= 60;   tn = time.toInt(); time -= tn; if (time < 0) { --tn; ++time; }
+    time *= 60;   ts = time.toInt(); time -= ts; if (time < 0) { --ts; ++time; }
+    time *= 1000; ti = time.toInt();
+    if (ti > 999) {
+      ti = 0;
+      ++ts;
+      if (ts > 59) {
+        ts = 0;
+        ++tn;
+        if (tn > 59) {
+          tn = 0;
+          ++th;
+          if (th > 24) {
+            th = 0;
+            ++cjd;
+          }
+        }
+      }
+    }
     
     // Correct for Julian / Gregorian calendars.
     if (cjd > _lastjulianjd) {
@@ -213,14 +239,6 @@ namespace DAC {
       --ty;
     }
     
-    // Get the time. Once again, insulate from _jd.
-    TimeVal time;
-    time.set(_jd + 0.5 - cjd);
-    time *= 24;   th = time.toInt(); time -= th; if (time < 0) { --th; ++time; }
-    time *= 60;   tn = time.toInt(); time -= tn; if (time < 0) { --tn; ++time; }
-    time *= 60;   ts = time.toInt(); time -= ts; if (time < 0) { --ts; ++time; }
-    time *= 1000; ti = time.toInt();
-    
     // Return.
     retval.Millisecond(ti)
           .Second     (ts)
@@ -240,7 +258,7 @@ namespace DAC {
     Timestamp  newtime(*this);
     Interval   interval;
     time_t     t       = 0;
-    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     struct tm* stp     = &systime;
     
     // Set the interval.
@@ -664,17 +682,17 @@ namespace DAC {
       
       // Minutes.
       case VT_MINUTE: {
-        newtime._jd += tv / 24 / 60;
+        newtime._jd += tv / 1440;
       }
       
       // Seconds.
       case VT_SECOND: {
-        newtime._jd += tv / 24 / 60 / 60;
+        newtime._jd += tv / 86400;
       }
       
       // Milliseconds.
       case VT_MILLISECOND: {
-        newtime._jd += tv / 24 / 60 / 60 / 1000;
+        newtime._jd += tv / 86400000;
       }
       
     }
@@ -923,6 +941,7 @@ namespace DAC {
     s_defaultleapseconds->push_back(LeapSecondDay(YMD(1995, 12, 31), 1));
     s_defaultleapseconds->push_back(LeapSecondDay(YMD(1997,  6, 30), 1));
     s_defaultleapseconds->push_back(LeapSecondDay(YMD(1998, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(2005, 12, 31), 1));
     
     // Set the default format.
     s_defaultformat = new Format("%c");

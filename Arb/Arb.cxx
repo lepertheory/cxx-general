@@ -129,7 +129,7 @@ namespace DAC {
     // These instructions cannot throw, so they come last.
     _maxradix = 10;
     _format   = FMT_RADIX;
-    _round    = ROUND_NORMAL;
+    _round    = ROUND_EVEN;
     
     // We done.
     return *this;
@@ -218,6 +218,7 @@ namespace DAC {
           
           // Round.
           if (remainder != 0) {
+            remainder *= 2;
             switch (_round) {
               case ROUND_UP: {
                 if (_data->positive) {
@@ -234,9 +235,14 @@ namespace DAC {
               case ROUND_FROM_ZERO: {
                 ++numeric;
               } break;
-              case ROUND_DEFAULT:
               case ROUND_NORMAL: {
-                if (remainder * 2 >= _data->q) {
+                if (remainder >= _data->q) {
+                  ++numeric;
+                }
+              } break;
+              case ROUND_DEFAULT:
+              case ROUND_EVEN: {
+                if (remainder > _data->q || (remainder == _data->q && remainder & 1)) {
                   ++numeric;
                 }
               } break;
@@ -1054,6 +1060,7 @@ namespace DAC {
       _data->p         = _data->p * q / _data->q;
       
       // Round.
+      remainder *= 2;
       if (remainder != 0) {
         switch (_round) {
           case ROUND_UP: {
@@ -1071,9 +1078,16 @@ namespace DAC {
           case ROUND_FROM_ZERO: {
             ++_data->p;
           } break;
-          case ROUND_DEFAULT:
           case ROUND_NORMAL: {
-            if (remainder * _DigsT(2) >= _data->q) {
+            if (remainder >= _data->q) {
+              ++_data->p;
+            }
+          } break;
+          case ROUND_DEFAULT:
+          case ROUND_EVEN: {
+            // If odd, round, otherwise drop remainder. This will implement
+            // round-to-even.
+            if (remainder > _data->q || (remainder == _data->q && _data->p & 1)) {
               ++_data->p;
             }
           } break;

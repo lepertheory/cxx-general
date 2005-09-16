@@ -60,11 +60,20 @@ int main () {
     
     /**/
     Timestamp test1;
+    Timestamp::Interval ti;
     
     test1.getSystemTime();
+    ti = test1.get();
     
     cout << "Current:" << endl
-         << "  Julian: " << test1.Julian() << endl;
+         << "  Julian:      " << test1.Julian()   << endl
+         << "  Year:        " << ti.Year()        << endl
+         << "  Month:       " << ti.Month()       << endl
+         << "  Day:         " << ti.Day()         << endl
+         << "  Hour:        " << ti.Hour()        << endl
+         << "  Minute:      " << ti.Minute()      << endl
+         << "  Second:      " << ti.Second()      << endl
+         << "  Millisecond: " << ti.Millisecond() << endl;
     
     Timestamp test2;
     
@@ -83,8 +92,6 @@ int main () {
     test2.set(Timestamp::Interval().Year(y).Month(m).Day(d).Hour(h).Minute(n).Second(s).Millisecond(ms));
     
     cout << "Julian: " << test2.Julian() << endl;
-    
-    Timestamp::Interval ti;
     
     ti = test2.get();
     

@@ -130,6 +130,9 @@ namespace DAC {
       // Get the absolute value.
       SafeInt abs () const;
       
+      // Get the number of bits in this number.
+      unsigned int bitsInNumber () const;
+      
     /*
      * Private members.
      */
@@ -782,6 +785,23 @@ namespace DAC {
   
   // Get the absolute value.
   template <class T> inline SafeInt<T> SafeInt<T>::abs () const { return SafeInt<T>(SafeIntUtil::SafeAbs<T, SafeIntUtil::Relationship<T, T>::value>::op(_value)); }
+  
+  // Get the number of bits in this number.
+  template <class T> inline unsigned int SafeInt<T>::bitsInNumber () const {
+    
+    // Make a bitmask of the highest order digit. Using a SafeInt for its
+    // proper handling of bitwise ops.
+    static SafeInt<T> bitmask = SafeInt<T>(1) << (std::numeric_limits<T>::digits - 1);
+    
+    // Simply step through each bit, stop when we hit a 1.
+    unsigned int firstbit;
+    T            tmpnum = _value;
+    for (firstbit = std::numeric_limits<T>::digits; firstbit != 0 && !(tmpnum & bitmask); --firstbit, tmpnum <<= 1) {}
+    
+    // firstbit is now the highest-order digit.
+    return firstbit;
+    
+  }
   
   /***************************************************************************
    * SafeIntUtil.

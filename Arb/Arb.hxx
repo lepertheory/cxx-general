@@ -60,6 +60,7 @@ namespace DAC {
       // Rounding method.
       enum RoundMethod {
         ROUND_NORMAL,
+        ROUND_EVEN,
         ROUND_UP,
         ROUND_DOWN,
         ROUND_TOWARD_ZERO,
@@ -275,7 +276,7 @@ namespace DAC {
       enum _Dir { _DIR_L, _DIR_R };
       
       // Number types.
-      enum _NumType { _NUM_UINT, _NUM_SINT, _NUM_FLPT };
+      enum _NumType { _NUM_UINT, _NUM_SINT, _NUM_FLPT, _NUM_UNKNOWN };
       
       // Determine number type.
       template <class T> class _GetNumType { public: static _NumType const value; };
@@ -1041,14 +1042,18 @@ namespace DAC {
   
   // Determine number type.
   template <class T> Arb::_NumType const Arb::_GetNumType<T>::value =
-    std::numeric_limits<T>::is_integer ? (
-      std::numeric_limits<T>::is_signed ? (
-        _NUM_SINT
+    std::numeric_limits<T>::is_specialized ? (
+      std::numeric_limits<T>::is_integer ? (
+        std::numeric_limits<T>::is_signed ? (
+          _NUM_SINT
+        ) : (
+          _NUM_UINT
+        )
       ) : (
-        _NUM_UINT
+        _NUM_FLPT
       )
     ) : (
-      _NUM_FLPT
+      _NUM_UNKNOWN
     )
   ;
   
