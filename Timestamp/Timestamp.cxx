@@ -101,157 +101,9 @@ namespace DAC {
     
   }
   
-  // Set this timestamp.
-  Timestamp& Timestamp::set (Interval const& time) {
-    
-    // Work area.
-    Timestamp newtime(*this);
-    Interval  settime(time);
-    
-    // Set default values.
-    if (!settime.isSet_Year()       ) { settime.Year       (TimeVal( 1)); }
-    if (!settime.isSet_Month()      ) { settime.Month      (TimeVal( 1)); }
-    if (!settime.isSet_Day()        ) { settime.Day        (TimeVal( 1)); }
-    if (!settime.isSet_Hour()       ) { settime.Hour       (TimeVal(12)); }
-    if (!settime.isSet_Minute()     ) { settime.Minute     (TimeVal( 0)); }
-    if (!settime.isSet_Second()     ) { settime.Second     (TimeVal( 0)); }
-    if (!settime.isSet_Millisecond()) { settime.Millisecond(TimeVal( 0)); }
-    
-    // Determine the calendar type.
-    CalendarType caltype = _getCalendarType(settime.Year(), settime.Month(), settime.Day());
-    
-    // Verify that the new time is a valid time.
-    if (!settime.Year().isInteger()        || (settime.Year() == 0)       ||
-        !settime.Month().isInteger()       || (settime.Month()       < 1) || (settime.Month()       > 12)                                                                                                                        ||
-        !settime.Day().isInteger()         || (settime.Day()         < 1) || (settime.Day()         > _daysInMonth(settime.Year(), settime.Month()))                                                                    ||
-        !settime.Hour().isInteger()        || (settime.Hour()        < 0) || (settime.Hour()        > 23)                                                                                                                        ||
-        !settime.Minute().isInteger()      || (settime.Minute()      < 0) || (settime.Minute()      > 59)                                                                                                                        ||
-        !settime.Second().isInteger()      || (settime.Second()      < 0) || (settime.Second()      > 59 + ((settime.Hour() == 23 && settime.Minute() == 59) ? _leapSecond(settime.Year(), settime.Month(), settime.Day()) : 0)) ||
-        !settime.Millisecond().isInteger() || (settime.Millisecond() < 0) || (settime.Millisecond() > 999)
-    ) {
-      throw TimestampErrors::InvalidTime();
-    }
-    
-    // Adjust BCE years.
-    TimeVal y = settime.Year() + ((settime.Year() < 0) ? 1 : 0);
-    
-    // Set the julian date.
-    TimeVal n;
-    TimeVal r;
-    if (settime.Month() < 3) {
-      n = y - 1;
-      r = 13;
-    } else {
-      n = y;
-      r = 1;
-    }
-    newtime._jd.set(1720995 + floor(n * 365.25) + (30.6001 * (settime.Month() + r)).truncate() + settime.Day());
-    if (caltype == CT_GREGORIAN) {
-      TimeVal m = (n / 100).truncate();
-      TimeVal q = 2 + 2 * (n / 400).truncate();
-      newtime._jd += q - m - (m / 4).truncate();
-    }
-    
-    // Add the time.
-    newtime._jd += ((settime.Hour() - 12) + (settime.Minute() + (settime.Second() + settime.Millisecond() / 1000) / 60) / 60) / 24;
-    
-    // We done, return.
-    _jd = newtime._jd;
-    return *this;
-    
-  }
-  
-  // Get the individual values of this timestamp.
-  Timestamp::Interval Timestamp::get () const {
-    
-    // Return value.
-    Interval retval;
-    
-    // Work area.
-    TimeVal alpha;
-    TimeVal a;
-    TimeVal b;
-    TimeVal c;
-    TimeVal d;
-    TimeVal e;
-    TimeVal ty;
-    TimeVal tm;
-    TimeVal td;
-    TimeVal th;
-    TimeVal tn;
-    TimeVal ts;
-    TimeVal ti;
-    
-    // Create a "corrected" julian date, minus the time. Use set() to insulate
-    // from picking up _jd's fixed-pointedness. Also create a time only.
-    TimeVal cjd;
-    TimeVal time;
-    cjd.set((_jd + 0.5).floor());
-    time.set(_jd + 0.5 - cjd);
-    
-    // Calculate time first so that any corrections needed can be pushed up
-    // to the jd and accounted for properly. In practice, this is never, ever
-    // going to happen, but _just_in_case_...
-    time *= 24;   th = time.toInt(); time -= th; if (time < 0) { --th; ++time; }
-    time *= 60;   tn = time.toInt(); time -= tn; if (time < 0) { --tn; ++time; }
-    time *= 60;   ts = time.toInt(); time -= ts; if (time < 0) { --ts; ++time; }
-    time *= 1000; ti = time.toInt();
-    if (ti > 999) {
-      ti = 0;
-      ++ts;
-      if (ts > 59) {
-        ts = 0;
-        ++tn;
-        if (tn > 59) {
-          tn = 0;
-          ++th;
-          if (th > 24) {
-            th = 0;
-            ++cjd;
-          }
-        }
-      }
-    }
-    
-    // Correct for Julian / Gregorian calendars.
-    if (cjd > _lastjulianjd) {
-      alpha = floor((cjd - 1867216 - 0.25) / 36524.25);
-      a     = cjd + 1 + alpha - floor(alpha * 0.25);
-    } else {
-      a     = cjd;
-    }
-    
-    b = a + 1524;
-    c = 6680 + floor((b - 2439870 - 122.1) / 365.25);
-    d = 365 * c + floor(0.25 * c);
-    e = floor((b - d) / 30.6001);
-    
-    td = b - d - floor(30.6001 * e);
-    tm = e - 1;
-    if (tm > 12) {
-      tm -= 12;
-    }
-    ty = c - 4715;
-    if (tm > 2) {
-      --ty;
-    }
-    if (ty <= 0) {
-      --ty;
-    }
-    
-    // Return.
-    retval.Millisecond(ti)
-          .Second     (ts)
-          .Minute     (tn)
-          .Hour       (th)
-          .Day        (td)
-          .Month      (tm)
-          .Year       (ty);
-    return retval;
-    
-  }
-  
   // Get the current system time.
+  // FIXME: This needs to use thread-safe functions and if it can't, mark
+  // itself as unsafe. Use gmtime_r on linux, or the Windows API on Win.
   Timestamp& Timestamp::getSystemTime () {
     
     // Work area.
@@ -268,15 +120,15 @@ namespace DAC {
     if (!(stp = gmtime(&t))) {
       throw TimestampErrors::SysCallError();
     }
-    interval.Second(TimeVal(stp->tm_sec))
-            .Minute(TimeVal(stp->tm_min))
-            .Hour(TimeVal(stp->tm_hour))
-            .Day(TimeVal(stp->tm_mday))
-            .Month(TimeVal(1) + stp->tm_mon)
-            .Year(TimeVal(1900) + stp->tm_year);
+    interval.Second(TimeVal(stp->tm_sec )       )
+            .Minute(TimeVal(stp->tm_min )       )
+            .Hour  (TimeVal(stp->tm_hour)       )
+            .Day   (TimeVal(stp->tm_mday)       )
+            .Month (TimeVal(stp->tm_mon ) +    1)
+            .Year  (TimeVal(stp->tm_year) + 1900);
     
     // Set the new time.
-    newtime.set(interval);
+    newtime.setGMT(interval);
     
     // We done, return.
     _jd = newtime._jd;
@@ -299,6 +151,9 @@ namespace DAC {
     
     // Set the GMT offset.
     _offset = 0;
+    
+    // Set the timezone name.
+    _tzname = "GMT";
     
     // Set the leap second list to the default.
     _leapseconds = s_defaultleapseconds;
@@ -338,6 +193,9 @@ namespace DAC {
     
     // Set the GMT offset.
     _offset = ts._offset;
+    
+    // Set the timezone name.
+    _tzname = ts._tzname;
     
     // We done.
     return *this;
@@ -593,15 +451,17 @@ namespace DAC {
           
           // Offset from UTC in the ISO 8601:2000 standard format
           // (+hhmm or -hhmm), or by nothing if no timezone is determinable.
-          // FIXME: implement timezone support.
           case 'z': {
-            retval += "";
+            string offset   = (_offset.abs() * 1440).toString();
+            bool   positive = _offset >= 0;
+            offset.insert(0, 4 - offset.length(), '0');
+            offset.insert(0, 1, positive ? '+' : '-');
+            retval += offset;
           } break;
           
           // Timezone name or abbreviation, or nothing if no timezone.
-          // FIXME: implement timezone support.
           case 'Z': {
-            retval += "";
+            retval += _tzname;
           } break;
           
           // Unknown option.
@@ -638,68 +498,6 @@ namespace DAC {
     
     // We done, return the string.
     return retval;
-    
-  }
-  
-  // Add.
-  Timestamp& Timestamp::op_add (TimeVal const& tv, ValueType const vt) {
-    
-    // Work area.
-    Timestamp newtime(*this);
-    
-    // Add differently for the different value types.
-    switch (vt) {
-      
-      // Years.
-      case VT_YEAR: {
-        Interval oldtime(newtime.get());
-        TimeVal  wholeyears = tv.truncate();
-        newtime.set(oldtime.Year(oldtime.Year() + wholeyears));
-        newtime._jd += (tv - wholeyears) * ((_getCalendarType(newtime._jd) == CT_GREGORIAN) ? 365.2425 : 365.25);
-      } break;
-      
-      // Months.
-      case VT_MONTH: {
-        Interval oldtime(newtime.get());
-        TimeVal wholemonths = tv.truncate();
-        TimeVal tmpmonths   = wholemonths + oldtime.Month();
-        TimeVal years       = floor(tmpmonths / 12);
-        oldtime.Year(oldtime.Year() + years);
-        tmpmonths -= years * 12;
-        newtime.set(oldtime.Month(tmpmonths));
-        newtime._jd += (tv - wholemonths) * ((_getCalendarType(newtime._jd) == CT_GREGORIAN) ? 365.2425 : 365.25) / 12;
-      } break;
-      
-      // Days.
-      case VT_DAY: {
-        newtime._jd += tv;
-      } break;
-      
-      // Hours.
-      case VT_HOUR: {
-        newtime._jd += tv / 24;
-      }
-      
-      // Minutes.
-      case VT_MINUTE: {
-        newtime._jd += tv / 1440;
-      }
-      
-      // Seconds.
-      case VT_SECOND: {
-        newtime._jd += tv / 86400;
-      }
-      
-      // Milliseconds.
-      case VT_MILLISECOND: {
-        newtime._jd += tv / 86400000;
-      }
-      
-    }
-    
-    // Move the new time into place and return.
-    _jd = newtime._jd;
-    return *this;
     
   }
   
@@ -811,6 +609,171 @@ namespace DAC {
     
     // Construct this object fully.
     clear();
+    
+  }
+  
+  // Set this timestamp.
+  Timestamp& Timestamp::_set (Interval const& time) {
+    
+    // Work area.
+    Interval settime(time);
+    
+    // Set default values.
+    if (!settime.isSet_Year       ()) { settime.Year       (TimeVal( 1)); }
+    if (!settime.isSet_Month      ()) { settime.Month      (TimeVal( 1)); }
+    if (!settime.isSet_Day        ()) { settime.Day        (TimeVal( 1)); }
+    if (!settime.isSet_Hour       ()) { settime.Hour       (TimeVal(12)); }
+    if (!settime.isSet_Minute     ()) { settime.Minute     (TimeVal( 0)); }
+    if (!settime.isSet_Second     ()) { settime.Second     (TimeVal( 0)); }
+    if (!settime.isSet_Millisecond()) { settime.Millisecond(TimeVal( 0)); }
+    
+    // Determine the calendar type.
+    CalendarType caltype = _getCalendarType(settime.Year(), settime.Month(), settime.Day());
+    
+    // Verify that the new time is a valid time.
+    if (!settime.Year       ().isInteger() || (settime.Year       () == 0) ||
+        !settime.Month      ().isInteger() || (settime.Month      () <  1) || (settime.Month      () > 12                                                                                                                       ) ||
+        !settime.Day        ().isInteger() || (settime.Day        () <  1) || (settime.Day        () > _daysInMonth(settime.Year(), settime.Month())                                                                            ) ||
+        !settime.Hour       ().isInteger() || (settime.Hour       () <  0) || (settime.Hour       () > 23                                                                                                                       ) ||
+        !settime.Minute     ().isInteger() || (settime.Minute     () <  0) || (settime.Minute     () > 59                                                                                                                       ) ||
+        !settime.Second     ().isInteger() || (settime.Second     () <  0) || (settime.Second     () > 59 + ((settime.Hour() == 23 && settime.Minute() == 59) ? _leapSecond(settime.Year(), settime.Month(), settime.Day()) : 0)) ||
+        !settime.Millisecond().isInteger() || (settime.Millisecond() <  0) || (settime.Millisecond() > 999                                                                                                                      )
+    ) {
+      throw TimestampErrors::InvalidTime();
+    }
+    
+    // Adjust BCE years.
+    TimeVal y = settime.Year() + ((settime.Year() < 0) ? 1 : 0);
+    
+    // Set the julian date.
+    TimeVal n;
+    TimeVal r;
+    if (settime.Month() < 3) {
+      n = y - 1;
+      r = 13;
+    } else {
+      n = y;
+      r = 1;
+    }
+    _jd.set(1720995 + floor(n * 365.25) + (30.6001 * (settime.Month() + r)).truncate() + settime.Day());
+    if (caltype == CT_GREGORIAN) {
+      TimeVal m = (n / 100).truncate();
+      TimeVal q = 2 + 2 * (n / 400).truncate();
+      _jd += q - m - (m / 4).truncate();
+    }
+    
+    // Add the time.
+    _jd += ((settime.Hour() - 12) + (settime.Minute() + (settime.Second() + settime.Millisecond() / 1000) / 60) / 60) / 24;
+    
+    // We done, return.
+    return *this;
+    
+  }
+  
+  // Get the individual values of this timestamp.
+  Timestamp::Interval Timestamp::_get () const {
+    
+    // Return value.
+    Interval retval;
+    
+    // Work area.
+    TimeVal alpha;
+    TimeVal a;
+    TimeVal b;
+    TimeVal c;
+    TimeVal d;
+    TimeVal e;
+    TimeVal ty;
+    TimeVal tm;
+    TimeVal td;
+    TimeVal th;
+    TimeVal tn;
+    TimeVal ts;
+    TimeVal ti;
+    
+    // Create a "corrected" julian date, minus the time. Use set() to insulate
+    // from picking up _jd's fixed-pointedness. Also create a time only.
+    TimeVal insulate;
+    insulate.set(_jd);
+    insulate += _offset;
+    TimeVal cjd;
+    TimeVal time;
+    cjd.set((insulate + 0.5).floor());
+    time.set(insulate + 0.5 - cjd);
+    /*
+    TimeVal cjd;
+    TimeVal time;
+    cjd.set((_jd + 0.5).floor());
+    time.set(_jd + 0.5 - cjd);
+    */
+    
+    // FIXME: 2005 9 17 0 1 5 0 doesn't work, try adding in offset when not fixed-point.
+    
+    // Calculate time first so that any corrections needed can be pushed up
+    // to the jd and accounted for properly. In practice, this is never, ever
+    // going to happen, but it _can_, so just in case...
+    cout << "_jd: " << _jd << "  cjd: " << cjd << "  time: " << time << "  _offset: " << _offset << endl;
+    cout << "time1: " << time << endl;
+    time *= 24;   th = time.toInt(); time -= th; if (time < 0) { --th; ++time; }
+    cout << "time2: " << time << endl;
+    time *= 60;   tn = time.toInt(); time -= tn; if (time < 0) { --tn; ++time; }
+    cout << "time3: " << time << " * 60: " << (time * 60) << " int: " << (time * 60).toInt() << endl;
+    time *= 60;   ts = time.toInt(); time -= ts; if (time < 0) { --ts; ++time; }
+    cout << "time4: " << time << endl;
+    time *= 1000; ti = time.toInt();
+    cout << "time5: " << time << endl;
+    if (ti > 999) {
+      ti = 0;
+      ++ts;
+      if (ts > 59) {
+        ts = 0;
+        ++tn;
+        if (tn > 59) {
+          tn = 0;
+          ++th;
+          if (th > 24) {
+            th = 0;
+            ++cjd;
+          }
+        }
+      }
+    }
+    
+    // Correct for Julian / Gregorian calendars.
+    if (cjd > _lastjulianjd) {
+      alpha = floor((cjd - 1867216 - 0.25) / 36524.25);
+      a     = cjd + 1 + alpha - floor(alpha * 0.25);
+    } else {
+      a     = cjd;
+    }
+    
+    b = a + 1524;
+    c = 6680 + floor((b - 2439870 - 122.1) / 365.25);
+    d = 365 * c + floor(0.25 * c);
+    e = floor((b - d) / 30.6001);
+    
+    td = b - d - floor(30.6001 * e);
+    tm = e - 1;
+    if (tm > 12) {
+      tm -= 12;
+    }
+    ty = c - 4715;
+    if (tm > 2) {
+      --ty;
+    }
+    if (ty <= 0) {
+      --ty;
+    }
+    
+    // Return.
+    retval.Millisecond(ti)
+          .Second     (ts)
+          .Minute     (tn)
+          .Hour       (th)
+          .Day        (td)
+          .Month      (tm)
+          .Year       (ty);
+    return retval;
     
   }
   

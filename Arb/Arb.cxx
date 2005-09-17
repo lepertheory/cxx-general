@@ -569,6 +569,22 @@ namespace DAC {
     return *this;
     
   }
+  Arb& Arb::op_mul (ArbInt const& number) {
+    
+    // Work area.
+    Arb retval(*this, true);
+    
+    // Multiply.
+    retval._data->p *= number;
+    
+    // Reduce the fraction.
+    retval._reduce();
+    
+    // Move the result into place and return.
+    _data = retval._data;
+    return *this;
+    
+  }
   
   // Division operator backend.
   Arb& Arb::op_div (Arb const& number) {
@@ -587,6 +603,27 @@ namespace DAC {
     
     // Set the sign.
     retval._data->positive = (retval._data->positive == number._data->positive);
+    
+    // Reduce the fraction.
+    retval._reduce();
+    
+    // Move the result into place and return.
+    _data = retval._data;
+    return *this;
+    
+  }
+  Arb& Arb::op_div (ArbInt const& number) {
+    
+    // Throw an error on divide by zero.
+    if (number == 0) {
+      throw ArbErrors::DivByZero();
+    }
+    
+    // Work area.
+    Arb retval(*this, true);
+    
+    // Divide the numbers, multiply by the inverse.
+    retval._data->q *= number;
     
     // Reduce the fraction.
     retval._reduce();
@@ -621,14 +658,32 @@ namespace DAC {
     return *this;
     
   }
+  Arb& Arb::op_mod (ArbInt const& number) {
+    
+    // Throw an error on divide by zero.
+    if (number == 0) {
+      throw ArbErrors::DivByZero();
+    }
+    
+    // Throw an error if this number is not integer.
+    if (!isInteger()) {
+      throw ArbErrors::NonInteger();
+    }
+    
+    // Work area.
+    Arb retval(*this, true);
+    
+    // Modulo divide p.
+    retval._data->p %= number;
+    
+    // We done, return.
+    _data = retval._data;
+    return *this;
+    
+  }
   
   // Addition operator backend.
   Arb& Arb::op_add (Arb const& number) {
-    
-    // If signs are opposite, subtract the negative.
-    if (_data->positive != number._data->positive) {
-      return op_sub(-number);
-    }
     
     // Work area.
     Arb tmp_l(*this,  true);
@@ -637,8 +692,17 @@ namespace DAC {
     // Numbers must have the same denominator to add.
     tmp_l._normalize(tmp_r);
     
-    // Add the numerators.
-    tmp_l._data->p += tmp_r._data->p;
+    // If signs are same add, otherwise subtract.
+    if (tmp_l < 0 == tmp_r < 0) {
+      tmp_l._data->p += tmp_r._data->p;
+    } else {
+      if (tmp_r._data->p > tmp_l._data->p) {
+        tmp_l._data->p        = tmp_r._data->p - tmp_l._data->p;
+        tmp_l._data->positive = !tmp_l._data->positive;
+      } else {
+        tmp_l._data->p -= tmp_r._data->p;
+      }
+    }
     
     // Reduce the fraction.
     tmp_l._reduce();
@@ -648,14 +712,38 @@ namespace DAC {
     return *this;
     
   }
+  Arb& Arb::op_add (ArbInt const& number) {
+    
+    // Work area.
+    Arb    retval(*this, true);
+    ArbInt tmp(number, true);
+    
+    // Normalize.
+    tmp *= retval._data->q;
+    
+    // If signs are same add, otherwise subtract.
+    if (retval < 0) {
+      if (tmp > retval._data->p) {
+        retval._data->p        = tmp - retval._data->p;
+        retval._data->positive = !retval._data->positive;
+      } else {
+        retval._data->p -= tmp;
+      }
+    } else {
+      retval._data->p += tmp;
+    }
+    
+    // Reduce the fraction.
+    retval._reduce();
+    
+    // We done. Move the result into place and return.
+    _data = retval._data;
+    return *this;
+    
+  }
   
   // Subtraction operator backend.
   Arb& Arb::op_sub (Arb const& number) {
-    
-    // If signs are opposite, add the negative.
-    if (_data->positive != number._data->positive) {
-      return op_add(-number);
-    }
     
     // Work area.
     Arb tmp_l(*this,  true);
@@ -664,12 +752,16 @@ namespace DAC {
     // Numbers must have the same denominator to subtract.
     tmp_l._normalize(tmp_r);
     
-    // Add or subtract the numbers.
-    if (tmp_r._data->p > tmp_l._data->p) {
-      tmp_l._data->p        = tmp_r._data->p - tmp_l._data->p;
-      tmp_l._data->positive = !tmp_l._data->positive;
+    // If signs are same subtract, otherwise add.
+    if (tmp_l < 0 == tmp_r < 0) {
+      if (tmp_r._data->p > tmp_l._data->p) {
+        tmp_l._data->p        = tmp_r._data->p - tmp_l._data->p;
+        tmp_l._data->positive = !tmp_l._data->positive;
+      } else {
+        tmp_l._data->p -= tmp_r._data->p;
+      }
     } else {
-      tmp_l._data->p -= tmp_r._data->p;
+      tmp_l._data->p += tmp_r._data->p;
     }
     
     // Reduce the fraction.
@@ -677,6 +769,35 @@ namespace DAC {
     
     // We done. Move the result into place and return.
     _data = tmp_l._data;
+    return *this;
+    
+  }
+  Arb& Arb::op_sub (ArbInt const& number) {
+    
+    // Work area.
+    Arb    retval(*this, true);
+    ArbInt tmp(number, true);
+    
+    // Normalize.
+    tmp *= retval._data->q;
+    
+    // If signs are same subtract, otherwise add.
+    if (retval < 0) {
+      retval._data->p += tmp;
+    } else {
+      if (tmp > retval._data->p) {
+        retval._data->p        = tmp - retval._data->p;
+        retval._data->positive = !retval._data->positive;
+      } else {
+        retval._data->p -= tmp;
+      }
+    }
+    
+    // Reduce the fraction.
+    retval._reduce();
+    
+    // We done. Move the result into place and return.
+    _data = retval._data;
     return *this;
     
   }
@@ -719,6 +840,32 @@ namespace DAC {
     }
     
   }
+  bool Arb::op_gt (ArbInt const& number) const {
+    
+    // If one or both numbers are zero, compare is easy.
+    if (_data->p.isZero()) {
+      return false;
+    } else if (number == 0) {
+      return _data->positive;
+    }
+    
+    // Neither number is zero. If signs are different, they are sufficient
+    // for this test.
+    if (!_data->positive) {
+      return false;
+    }
+    
+    // Signs are the same, we will have to compare numbers. Copy numbers since
+    // we will be modifying them.
+    ArbInt tmp(number, true);
+    
+    // Normalize.
+    tmp *= _data->q;
+    
+    // Compare.
+    return _data->p > tmp;
+    
+  }
   
   // Less-than operator backend.
   bool Arb::op_lt (Arb const& number) const {
@@ -757,6 +904,32 @@ namespace DAC {
     }
     
   }
+  bool Arb::op_lt (ArbInt const& number) const {
+    
+    // If one or both numbers are zero, compare is easy.
+    if (_data->p.isZero()) {
+      return number > 0;
+    } else if (number == 0) {
+      return !_data->positive;
+    }
+    
+    // Neither number is zero. If signs are different, they are sufficient
+    // for this test.
+    if (!_data->positive) {
+      return true;
+    }
+    
+    // Signs are the same, we will have to compare numbers. Copy numbers since
+    // we will be modifying them.
+    ArbInt tmp(number, true);
+    
+    // Normalize.
+    tmp *= _data->q;
+    
+    // Compare.
+    return _data->p < tmp;
+    
+  }
   
   // Equal-to operator backend.
   bool Arb::op_eq (Arb const& number) const {
@@ -776,6 +949,25 @@ namespace DAC {
     // Check the numbers themselves. No need to normalize, if they're not,
     // they're not equal.
     return ((_data->q == number._data->q) && (_data->p == number._data->p));
+    
+  }
+  bool Arb::op_eq (ArbInt const& number) const {
+    
+    // Check for 0.
+    if (_data->p.isZero()) {
+      return number == 0;
+    } else if (number == 0) {
+      return false;
+    }
+    
+    // Neither number is zero. Check signs.
+    if (!_data->positive) {
+      return false;
+    }
+    
+    // Check the numbers themselves. No need to normalize, if they're not,
+    // they're not equal.
+    return (isInteger() && (_data->p == number));
     
   }
   
@@ -1037,6 +1229,27 @@ namespace DAC {
       _data->p << bits._data->p;
     } else {
       _data->q << bits._data->p;
+    }
+    
+    // Reduce the fraction.
+    _reduce();
+    
+    // We done.
+    return *this;
+    
+  }
+  Arb& Arb::_shift (ArbInt const& bits, _Dir const dir) {
+    
+    // Only work if necessary.
+    if (!*this || !bits) {
+      return *this;
+    }
+    
+    // Shift left by left-shifting p. Shift right by left-shifting q.
+    if (dir == _DIR_L) {
+      _data->p << bits;
+    } else {
+      _data->q << bits;
     }
     
     // Reduce the fraction.

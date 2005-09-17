@@ -146,46 +146,59 @@ namespace DAC {
       
       // Arithmetic operator backends.
                          Arb& op_mul (Arb        const& number);
+                         Arb& op_mul (ArbInt     const& number);
       template <class T> Arb& op_mul (SafeInt<T> const  number);
       template <class T> Arb& op_mul (T          const  number);
                          Arb& op_div (Arb        const& number);
+                         Arb& op_div (ArbInt     const& number);
       template <class T> Arb& op_div (SafeInt<T> const  number);
       template <class T> Arb& op_div (T          const  number);
                          Arb& op_mod (Arb        const& number);
+                         Arb& op_mod (ArbInt     const& number);
       template <class T> Arb& op_mod (SafeInt<T> const  number);
       template <class T> Arb& op_mod (T          const  number);
                          Arb& op_add (Arb        const& number);
+                         Arb& op_add (ArbInt     const& number);
       template <class T> Arb& op_add (SafeInt<T> const  number);
       template <class T> Arb& op_add (T          const  number);
                          Arb& op_sub (Arb        const& number);
+                         Arb& op_sub (ArbInt     const& number);
       template <class T> Arb& op_sub (SafeInt<T> const  number);
       template <class T> Arb& op_sub (T          const  number);
       
       // Bit shift operator backends.
                          Arb& op_shl (Arb        const& number);
+                         Arb& op_shl (ArbInt     const& number);
       template <class T> Arb& op_shl (SafeInt<T> const  number);
       template <class T> Arb& op_shl (T          const  number);
                          Arb& op_shr (Arb        const& number);
+                         Arb& op_shr (ArbInt     const& number);
       template <class T> Arb& op_shr (SafeInt<T> const  number);
       template <class T> Arb& op_shr (T          const  number);
       
       // Comparison operator backends.
                          bool op_gt (Arb        const& number) const;
+                         bool op_gt (ArbInt     const& number) const;
       template <class T> bool op_gt (SafeInt<T> const  number) const;
       template <class T> bool op_gt (T          const  number) const;
                          bool op_ge (Arb        const& number) const;
+                         bool op_ge (ArbInt     const& number) const;
       template <class T> bool op_ge (SafeInt<T> const  number) const;
       template <class T> bool op_ge (T          const  number) const;
                          bool op_lt (Arb        const& number) const;
+                         bool op_lt (ArbInt     const& number) const;
       template <class T> bool op_lt (SafeInt<T> const  number) const;
       template <class T> bool op_lt (T          const  number) const;
                          bool op_le (Arb        const& number) const;
+                         bool op_le (ArbInt     const& number) const;
       template <class T> bool op_le (SafeInt<T> const  number) const;
       template <class T> bool op_le (T          const  number) const;
                          bool op_eq (Arb        const& number) const;
+                         bool op_eq (ArbInt     const& number) const;
       template <class T> bool op_eq (SafeInt<T> const  number) const;
       template <class T> bool op_eq (T          const  number) const;
                          bool op_ne (Arb        const& number) const;
+                         bool op_ne (ArbInt     const& number) const;
       template <class T> bool op_ne (SafeInt<T> const  number) const;
       template <class T> bool op_ne (T          const  number) const;
       
@@ -457,6 +470,7 @@ namespace DAC {
       
       // Bit shift this number.
                          Arb& _shift (Arb        const& bits, _Dir const dir);
+                         Arb& _shift (ArbInt     const& bits, _Dir const dir);
       template <class T> Arb& _shift (SafeInt<T> const  bits, _Dir const dir);
       template <class T> Arb& _shift (T          const  bits, _Dir const dir);
       
@@ -842,6 +856,7 @@ namespace DAC {
   // Assignment operator.
                      inline Arb& Arb::operator = (Arb         const& number) { return copy(number); }
                      inline Arb& Arb::operator = (std::string const& number) { return set(number);  }
+                     inline Arb& Arb::operator = (ArbInt      const& number) { return set(number);  }
   template <class T> inline Arb& Arb::operator = (T           const  number) { return set(number);  }
   
   // Get the base of this number.
@@ -895,9 +910,11 @@ namespace DAC {
   
   // Shift left, shift right.
                      inline Arb& Arb::op_shl (Arb        const& number) { Arb retval(*this, true); retval._shift(number, _DIR_L);                      return copy(retval); }
+                     inline Arb& Arb::op_shl (ArbInt     const& number) { Arb retval(*this, true); retval._shift(number, _DIR_L);                      return copy(retval); }
   template <class T> inline Arb& Arb::op_shl (SafeInt<T> const  number) { Arb retval(*this, true); _ShL<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
   template <class T> inline Arb& Arb::op_shl (T          const  number) { Arb retval(*this, true); _ShL<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
                      inline Arb& Arb::op_shr (Arb        const& number) { Arb retval(*this, true); retval._shift(number, _DIR_R);                      return copy(retval); }
+                     inline Arb& Arb::op_shr (ArbInt     const& number) { Arb retval(*this, true); retval._shift(number, _DIR_R);                      return copy(retval); }
   template <class T> inline Arb& Arb::op_shr (SafeInt<T> const  number) { Arb retval(*this, true); _ShR<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
   template <class T> inline Arb& Arb::op_shr (T          const  number) { Arb retval(*this, true); _ShR<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
   
@@ -1215,7 +1232,7 @@ namespace DAC {
     }
     
     // Dividing by 1 is also easy.
-    if (l == 1) {
+    if (r == 1) {
       return;
     }
     

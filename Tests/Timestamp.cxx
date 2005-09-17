@@ -62,8 +62,10 @@ int main () {
     Timestamp test1;
     Timestamp::Interval ti;
     
+    test1.Offset(-240);
+    test1.TZName("EDT");
     test1.getSystemTime();
-    ti = test1.get();
+    ti = test1.getGMT();
     
     cout << "Current:" << endl
          << "  Julian:      " << test1.Julian()   << endl
@@ -76,6 +78,7 @@ int main () {
          << "  Millisecond: " << ti.Millisecond() << endl;
     
     Timestamp test2;
+    test2.Offset(-240);
     
     typedef Timestamp::TimeVal TV;
     
@@ -89,7 +92,7 @@ int main () {
     cout << "Second:      "; cin >> s;
     cout << "Millisecond: "; cin >> ms;
     
-    test2.set(Timestamp::Interval().Year(y).Month(m).Day(d).Hour(h).Minute(n).Second(s).Millisecond(ms));
+    test2.setGMT(Timestamp::Interval().Year(y).Month(m).Day(d).Hour(h).Minute(n).Second(s).Millisecond(ms));
     
     cout << "Julian: " << test2.Julian() << endl;
     
