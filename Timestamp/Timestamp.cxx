@@ -110,7 +110,7 @@ namespace DAC {
     Timestamp  newtime(*this);
     Interval   interval;
     time_t     t       = 0;
-    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     struct tm* stp     = &systime;
     
     // Set the interval.
