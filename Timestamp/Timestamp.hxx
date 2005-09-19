@@ -515,8 +515,8 @@ namespace DAC {
   }
   inline Timestamp::YMD Timestamp::LastJulianDate () const { return _lastjulianymd; }
   
-  inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _jd = jd; return *this; }
-  inline Timestamp::TimeVal Timestamp::Julian ()                  const { return _jd;             }
+  inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _jd.set(jd); return *this; }
+  inline Timestamp::TimeVal Timestamp::Julian ()                  const { return _jd;                }
   
   // FIXME: Offset range checking, should not be able to go past +/-720.
   inline Timestamp& Timestamp::Offset (int const offset)       { _offset = offset / TimeVal(1440); return *this; }

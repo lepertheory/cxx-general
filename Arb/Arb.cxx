@@ -221,8 +221,7 @@ namespace DAC {
         
         // Create the radix part.
         _DigsT remainder = _data->p % _data->q;
-        if ((_data->fix && _data->fixq != 1) || (_data->fix && remainder)) {
-        //if (((_data->fixq != 0) && (_data->pointpos > 0)) || ((_data->fixq == 0) && (remainder != 0))) {
+        if ((_data->fix && _data->fixq != 1) || (!_data->fix && remainder)) {
           
           // Get the radix digits, one by one. Output digits until the entire
           // fraction is output or the maximum requested significant radix digits

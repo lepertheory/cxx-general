@@ -110,7 +110,7 @@ namespace DAC {
     Timestamp  newtime(*this);
     Interval   interval;
     time_t     t       = 0;
-    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     struct tm* stp     = &systime;
     
     // Set the interval.
@@ -141,7 +141,7 @@ namespace DAC {
     
     // Make a new jd.
     TimeVal tmp_jd;
-    tmp_jd.Base(10).PointPos(8).Fixed(true);
+    tmp_jd.FixQ(Arb(24 * 60 * 60 * 1000)).Fix(Arb::FIX_DENOM).Fixed(true);
     
     // Make a new lastjulian.
     YMD     new_lastjulianymd(1582, 10, 4);
@@ -693,51 +693,10 @@ namespace DAC {
     
     // Create a "corrected" julian date, minus the time. Use set() to insulate
     // from picking up _jd's fixed-pointedness. Also create a time only.
-    TimeVal insulate;
-    insulate.set(_jd);
-    insulate += _offset;
-    TimeVal cjd;
-    TimeVal time;
-    cjd.set((insulate + 0.5).floor());
-    time.set(insulate + 0.5 - cjd);
-    /*
     TimeVal cjd;
     TimeVal time;
     cjd.set((_jd + 0.5).floor());
     time.set(_jd + 0.5 - cjd);
-    */
-    
-    // FIXME: 2005 9 17 0 1 5 0 doesn't work, try adding in offset when not fixed-point.
-    
-    // Calculate time first so that any corrections needed can be pushed up
-    // to the jd and accounted for properly. In practice, this is never, ever
-    // going to happen, but it _can_, so just in case...
-    cout << "_jd: " << _jd << "  cjd: " << cjd << "  time: " << time << "  _offset: " << _offset << endl;
-    cout << "time1: " << time << endl;
-    time *= 24;   th = time.toInt(); time -= th; if (time < 0) { --th; ++time; }
-    cout << "time2: " << time << endl;
-    time *= 60;   tn = time.toInt(); time -= tn; if (time < 0) { --tn; ++time; }
-    cout << "time3: " << time << " * 60: " << (time * 60) << " int: " << (time * 60).toInt() << endl;
-    time *= 60;   ts = time.toInt(); time -= ts; if (time < 0) { --ts; ++time; }
-    cout << "time4: " << time << endl;
-    time *= 1000; ti = time.toInt();
-    cout << "time5: " << time << endl;
-    if (ti > 999) {
-      ti = 0;
-      ++ts;
-      if (ts > 59) {
-        ts = 0;
-        ++tn;
-        if (tn > 59) {
-          tn = 0;
-          ++th;
-          if (th > 24) {
-            th = 0;
-            ++cjd;
-          }
-        }
-      }
-    }
     
     // Correct for Julian / Gregorian calendars.
     if (cjd > _lastjulianjd) {
@@ -747,6 +706,7 @@ namespace DAC {
       a     = cjd;
     }
     
+    // Get the date.
     b = a + 1524;
     c = 6680 + floor((b - 2439870 - 122.1) / 365.25);
     d = 365 * c + floor(0.25 * c);
@@ -764,6 +724,12 @@ namespace DAC {
     if (ty <= 0) {
       --ty;
     }
+    
+    // Get the time.
+    time *= 24;   th = time.floor(); time -= th;
+    time *= 60;   tn = time.floor(); time -= tn;
+    time *= 60;   ts = time.floor(); time -= ts;
+    time *= 1000; ti = time;
     
     // Return.
     retval.Millisecond(ti)
