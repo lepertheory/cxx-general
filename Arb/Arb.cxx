@@ -87,7 +87,7 @@ namespace DAC {
     if (base != _data->base) {
       _data = new _Data(*_data);
       _data->base = base;
-      if (_data->fix) {
+      if (_data->fix && _data->fixtype == FIX_RADIX) {
         _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
         _reduce();
       }
@@ -98,7 +98,7 @@ namespace DAC {
     if (pointpos != _data->pointpos) {
       _data = new _Data(*_data);
       _data->pointpos = pointpos;
-      if (_data->fix) {
+      if (_data->fix && _data->fixtype == FIX_RADIX) {
         _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
         _reduce();
       }
@@ -110,9 +110,35 @@ namespace DAC {
       _data = new _Data(*_data);
       _data->fix = fixed;
       if (_data->fix) {
-        _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
+        if (_data->fixtype == FIX_RADIX) {
+          _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
+        }
       }
       _reduce();
+    }
+    return *this;
+  }
+  Arb& Arb::Fix (FixType const fix) {
+    if (fix != _data->fixtype) {
+      _data = new _Data(*_data);
+      _data->fixtype = fix;
+      if (_data->fix) {
+        _reduce();
+      }
+    }
+    return *this;
+  }
+  Arb& Arb::FixQ (Arb const& fixq) {
+    if (fixq != _data->fixq) {
+      if (!fixq.isInteger()) {
+        throw ArbErrors::NonInteger();
+      }
+      _data = new _Data(*_data);
+      _data->fixq    = fixq._data->p;
+      _data->fixtype = FIX_DENOM;
+      if (_data->fix) {
+        _reduce();
+      }
     }
     return *this;
   }
@@ -195,7 +221,8 @@ namespace DAC {
         
         // Create the radix part.
         _DigsT remainder = _data->p % _data->q;
-        if (((_data->fixq != 0) && (_data->pointpos > 0)) || ((_data->fixq == 0) && (remainder != 0))) {
+        if ((_data->fix && _data->fixq != 1) || (_data->fix && remainder)) {
+        //if (((_data->fixq != 0) && (_data->pointpos > 0)) || ((_data->fixq == 0) && (remainder != 0))) {
           
           // Get the radix digits, one by one. Output digits until the entire
           // fraction is output or the maximum requested significant radix digits
@@ -433,6 +460,8 @@ namespace DAC {
       // Carry fixed-point status from last number.
       new_num._data->pointpos = _data->pointpos;
       new_num._data->fix      = _data->fix;
+      new_num._data->fixtype  = _data->fixtype;
+      new_num._data->fixq     = _data->fixq;
       
       // Determine the exponent given.
       _DigsT expn(exp);
@@ -466,28 +495,34 @@ namespace DAC {
       // radix digits as needed.
       if (new_num._data->fix) {
         
-        // If the exponent is positive, it is a simple case of increasing the
-        // number of radix digits, this is a number represented by 1s by now.
-        if (p_exp) {
-          new_num._data->q  = _DigsT(_data->base).pow(_DigsT(new_num._data->pointpos));
-          new_num._data->p *= new_num._data->q;
-        
-        // If the exponent is negative, we must add or subtract the difference
-        // in digits.
-        } else {
-          if (_DigsT(new_num._data->pointpos) >= expn) {
-            _DigsT mod        = _DigsT(_data->base).pow(_DigsT(new_num._data->pointpos) - expn);
-            new_num._data->p *= mod;
-            new_num._data->q *= mod;
+        // A number that is fixed by the number of radix digits needs to
+        // figure q, others will be told what q is.
+        if (new_num._data->fixtype == FIX_RADIX) {
+          
+          // If the exponent is positive, it is a simple case of increasing the
+          // number of radix digits, this is a number represented by 1s by now.
+          if (p_exp) {
+            new_num._data->q  = _DigsT(_data->base).pow(_DigsT(new_num._data->pointpos));
+            new_num._data->p *= new_num._data->q;
+          
+          // If the exponent is negative, we must add or subtract the difference
+          // in digits.
           } else {
-            _DigsT mod        = _DigsT(_data->base).pow(expn - _DigsT(new_num._data->pointpos));
-            new_num._data->p /= mod;
-            new_num._data->q /= mod;
+            if (_DigsT(new_num._data->pointpos) >= expn) {
+              _DigsT mod        = _DigsT(_data->base).pow(_DigsT(new_num._data->pointpos) - expn);
+              new_num._data->p *= mod;
+              new_num._data->q *= mod;
+            } else {
+              _DigsT mod        = _DigsT(_data->base).pow(expn - _DigsT(new_num._data->pointpos));
+              new_num._data->p /= mod;
+              new_num._data->q /= mod;
+            }
           }
+          
+          // This is the q that we always need to fix at.
+          new_num._data->fixq = new_num._data->q;
+          
         }
-        
-        // This is the q that we always need to fix at.
-        new_num._data->fixq = new_num._data->q;
         
       }
       
@@ -1687,7 +1722,8 @@ namespace DAC {
     _DigsT new_p;
     _DigsT new_q;
     _DigsT new_fixq;
-    new_q.set(1);
+    new_q    = 1;
+    new_fixq = 1;
     
     // These operations will never throw.
     p    = new_p;
@@ -1697,6 +1733,7 @@ namespace DAC {
     positive = true;
     pointpos = 0;
     fix      = false;
+    fixtype  = FIX_RADIX;
     base     = 10;
     
     // We done.
@@ -1715,6 +1752,7 @@ namespace DAC {
     positive = data.positive;
     pointpos = data.pointpos;
     fix      = data.fix;
+    fixtype  = data.fixtype;
     base     = data.base;
     
     // We done.

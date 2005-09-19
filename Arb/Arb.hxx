@@ -68,6 +68,12 @@ namespace DAC {
         ROUND_DEFAULT
       };
       
+      // Type of fixed number {
+      enum FixType {
+        FIX_RADIX,
+        FIX_DENOM
+      };
+      
       /*********************************************************************/
       // Function members.
       
@@ -113,19 +119,23 @@ namespace DAC {
       template <class T> Arb& operator = (T           const  number);
       
       // Accessors.
-                         Arb& Base     (BaseT                  const base);
-                         Arb& MaxRadix (std::string::size_type const maxradix);
-                         Arb& PointPos (PointPosT              const pointpos);
-                         Arb& Fixed    (bool                   const fixed);
-                         Arb& Format   (OutputFormat           const format);
-                         Arb& Round    (RoundMethod            const round);
-      template <class T> Arb& Value    (T                      const number);
+                         Arb& Base     (BaseT                  const  base);
+                         Arb& MaxRadix (std::string::size_type const  maxradix);
+                         Arb& PointPos (PointPosT              const  pointpos);
+                         Arb& Fixed    (bool                   const  fixed);
+                         Arb& Fix      (FixType                const  fix);
+                         Arb& Format   (OutputFormat           const  format);
+                         Arb& Round    (RoundMethod            const  round);
+                         Arb& FixQ     (Arb                    const& fixq);
+      template <class T> Arb& Value    (T                      const  number);
                          BaseT                  Base     () const;
                          std::string::size_type MaxRadix () const;
                          PointPosT              PointPos () const;
                          bool                   Fixed    () const;
+                         FixType                Fix      () const;
                          OutputFormat           Format   () const;
                          RoundMethod            Round    () const;
+                         Arb                    FixQ     () const;
       template <class T> T                      Value    () const;
       
       // Reset to just-constructed defaults.
@@ -418,6 +428,7 @@ namespace DAC {
           bool      positive; // True if the number is positive.
           PointPosT pointpos; // Radix point position.
           bool      fix;      // If true, fix the radix point.
+          FixType   fixtype;  // What to fix on, radix points or denominator.
           BaseT     base;     // The base of the number.
           
           /*****************************************************************/
@@ -874,6 +885,9 @@ namespace DAC {
   // Get whether this is a fixed-point number or not.
   inline bool Arb::Fixed () const { return _data->fix; }
   
+  // Get the fix source for this number.
+  inline Arb::FixType Arb::Fix () const { return _data->fixtype; }
+  
   // Get the output format of this number.
   inline Arb::OutputFormat Arb::Format () const { return _format; }
   
@@ -885,6 +899,9 @@ namespace DAC {
   
   // Set the round method of this number.
   inline Arb& Arb::Round (RoundMethod const round) { _round = (round == ROUND_DEFAULT) ? _round : round; return *this; }
+  
+  // Get the fixed quotient of this number.
+  inline Arb Arb::FixQ () const { return Arb(_data->fixq); }
   
   // Get the value of this number.
   template <class T> inline T Arb::Value () const { T retval; _Get<T, _GetNumType<T>::value>::op(retval, *this); return retval; }
@@ -922,16 +939,19 @@ namespace DAC {
   template <class T> inline bool Arb::op_gt (SafeInt<T> const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_gt (T          const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
                      inline bool Arb::op_ge (Arb        const& number) const { return !op_lt(number);                                   }
+                     inline bool Arb::op_ge (ArbInt     const& number) const { return !op_lt(number);                                   }
   template <class T> inline bool Arb::op_ge (SafeInt<T> const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_ge (T          const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_lt (SafeInt<T> const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_lt (T          const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
                      inline bool Arb::op_le (Arb        const& number) const { return !op_gt(number);                                   }
+                     inline bool Arb::op_le (ArbInt     const& number) const { return !op_gt(number);                                   }
   template <class T> inline bool Arb::op_le (SafeInt<T> const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_le (T          const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_eq (SafeInt<T> const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_eq (T          const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
                      inline bool Arb::op_ne (Arb        const& number) const { return !op_eq(number);                                   }
+                     inline bool Arb::op_ne (ArbInt     const& number) const { return !op_eq(number);                                   }
   template <class T> inline bool Arb::op_ne (SafeInt<T> const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool Arb::op_ne (T          const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   
