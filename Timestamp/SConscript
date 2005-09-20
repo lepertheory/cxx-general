@@ -21,29 +21,61 @@ if BUILD_TARGETS != [] :
   
   conf = Configure(env)
   
-  if conf.CheckHeader(header = 'windows.h', language = 'C++') :
-    defines += [ 'HAVE_WINDOWS_H' ]
-    if conf.CheckType(type_name = '_SYSTEMTIME',  includes = '#include <windows.h>', language = 'C++') : defines += [ 'HAVE__SYSTEMTIME'  ]
-    if conf.CheckType(type_name = 'LPSYSTEMTIME', includes = '#include <windows.h>', language = 'C++') : defines += [ 'HAVE_LPSYSTEMTIME' ]
+  have_windows_h  = conf.CheckHeader(header = 'windows.h',  language = 'C++')
+  have_sys_time_h = conf.CheckHeader(header = 'sys/time.h', language = 'C++')
+  have_time_h     = conf.CheckHeader(header = 'time.h',     language = 'C++')
   
-  if conf.CheckHeader(header = 'sys/time.h', language = 'C++') :
-    defines += [ 'HAVE_SYS_TIME_H' ]
-    if conf.CheckType(type_name = 'timeval',  includes = '#include <sys/time.h>', language = 'C++') : defines += [ 'HAVE_TIMEVAL'  ]
-    if conf.CheckType(type_name = 'timezone', includes = '#include <sys/time.h>', language = 'C++') : defines += [ 'HAVE_TIMEZONE' ]
-    if conf.CheckFunc(function_name = 'gettimeofday', language = 'C++') : defines += [ 'HAVE_GETTIMEOFDAY' ]
+  if have_windows_h :
+    have__systemtime  = conf.CheckType(type_name = '_SYSTEMTIME',  includes = '#include <windows.h>', language = 'C++')
+    have_lpsystemtime = conf.CheckType(type_name = 'LPSYSTEMTIME', includes = '#include <windows.h>', language = 'C++')
   
-  if conf.CheckHeader(header = 'time.h', language = 'C++') :
-    defines += [ 'HAVE_TIME_H' ]
-    if conf.CheckType(type_name = 'time_t', includes = '#include <time.h>', language = 'C++') : defines += [ 'HAVE_TIME_T' ]
-    if conf.CheckType(type_name = 'tm',     includes = '#include <time.h>', language = 'C++') : defines += [ 'HAVE_TM'     ]
-    if conf.CheckFunc(function_name = 'time',     language = 'C++') : defines += [ 'HAVE_TIME'     ]
-    if conf.CheckFunc(function_name = 'gmtime',   language = 'C++') : defines += [ 'HAVE_GMTIME'   ]
-    if conf.CheckFunc(function_name = 'gmtime_r', language = 'C++') : defines += [ 'HAVE_GMTIME_R' ]
+  if have_sys_time_h :
+    have_timeval  = conf.CheckType(type_name = 'timeval',  includes = '#include <sys/time.h>', language = 'C++')
+    have_timezone = conf.CheckType(type_name = 'timezone', includes = '#include <sys/time.h>', language = 'C++')
+    have_gettimeofday = conf.CheckFunc(function_name = 'gettimeofday', language = 'C++')
+  
+  if have_time_h :
+    have_time_t = conf.CheckType(type_name = 'time_t', includes = '#include <time.h>', language = 'C++')
+    have_tm     = conf.CheckType(type_name = 'tm',     includes = '#include <time.h>', language = 'C++')
+    have_time     = conf.CheckFunc(function_name = 'time',     language = 'C++')
+    have_gmtime   = conf.CheckFunc(function_name = 'gmtime',   language = 'C++')
+    have_gmtime_r = conf.CheckFunc(function_name = 'gmtime_r', language = 'C++')
   
   env = conf.Finish()
   
   # Restore CCFLAGS.
   env['CCFLAGS'] = tmpccflags
+
+# Set defines
+if have_windows_h    : defines += [ 'HAVE_WINDOWS_H'    ]
+if have_sys_time_h   : defines += [ 'HAVE_SYS_TIME_H'   ]
+if have_time_h       : defines += [ 'HAVE_TIME_H'       ]
+if have__systemtime  : defines += [ 'HAVE__SYSTEMTIME'  ]
+if have_lpsystemtime : defines += [ 'HAVE_LPSYSTEMTIME' ]
+if have_timeval      : defines += [ 'HAVE_TIMEVAL'      ]
+if have_timezone     : defines += [ 'HAVE_TIMEZONE'     ]
+if have_gettimeofday : defines += [ 'HAVE_GETTIMEOFDAY' ]
+if have_time_t       : defines += [ 'HAVE_TIME_T'       ]
+if have_tm           : defines += [ 'HAVE_TM'           ]
+if have_gmtime       : defines += [ 'HAVE_GMTIME'       ]
+if have_gmtime_r     : defines += [ 'HAVE_GMTIME_R'     ]
+
+# Determine what our timestamp will support.
+if have_windows_h and have__systime and have_lpsystime :
+  defines += [ 'TIMESTAMP_SYSTIME_GETSYSTEMTIME' ]
+  defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'     ]
+elif have_sys_time_h and have_timeval and have_timezone and have_gettimeofday and have_time_h and have_tm and have_time_t and have_gmtime_r :
+  defines += [ 'TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R' ]
+  defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'             ]
+elif have_sys_time_h and have_timeval and have_timezone and have_gettimeofday and have_time_h and have_tm and have_time_t and have_gmtime :
+  defines += [ 'TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME' ]
+elif have_time_h and have_time_t and have_time and have_tm and have_gmtime_r :
+  defines += [ 'TIMESTAMP_SYSTIME_TIME_GMTIME_R' ]
+  defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'     ]
+elif have_time_h and have_time_t and have_time and have_tm and have_gmtime :
+  defines += [ 'TIMESTAMP_SYSTIME_TIME_GMTIME' ]
+else :
+  defines += [ 'TIMESTAMP_SYSTIME_NONE' ]
 
 # Create defines.
 for define in defines : env.Append(CPPDEFINES = [ define ])

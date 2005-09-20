@@ -4,15 +4,14 @@
  * Implementation for class Timestamp.
  *****************************************************************************/
 
-// Determine the method to get system times.
-#if defined(HAVE_WINDOWS_H) && defined(HAVE__SYSTEMTIME) && defined(HAVE_LPSYSTEMTIME)
-  #define SYSTIME_GETSYSTEMTIME
-#elseif defined(HAVE_SYS_TIME_H) && defined(HAVE_TIMEVAL) && defined(HAVE_TIMEZONE) && defined
-#endif
-
 // OS includes.
-#if defined(SYSTIME_GETSYSTEMTIME)
+#if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
   #include <windows.h>
+#elseif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
+  #include <time.h>
+  #include <sys/time.h>
+#elseif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
+  #include <time.h>
 #endif
 
 // Class include.
@@ -120,12 +119,15 @@ namespace DAC {
     // Work area.
     Timestamp  newtime(*this);
     Interval   interval;
-#if defined(SYSTIME_GETSYSTEMTIME)
+#if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
     _SYSTEMTIME systime;
-#else
-    time_t     t       = 0;
-    struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    struct tm* stp     = &systime;
+#elseif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
+    timeval  tv      = { 0, 0 };
+    timezone tz      = { 0, 0 };
+    tm       systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+#elseif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
+    time_t time    = 0;
+    tm     systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #endif
     
     // Set the interval.
@@ -138,6 +140,12 @@ namespace DAC {
             .Day        (TimeVal(systime.wDay         ))
             .Month      (TimeVal(systime.wMonth       ))
             .Year       (TimeVal(systime.wYear        ));
+#elseif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
+    if (gettimeofday(&tv, &tz)) {
+      
+
+
+
 #else
     if (!time(&t)) {
       throw TimestampErrors::SysCallError();
