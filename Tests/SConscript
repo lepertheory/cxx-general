@@ -6,14 +6,14 @@ env.Append(CPPPATH = ['..'])
 
 # Create program-specific environments.
 env_ArbInt = env.Copy()
-for incdir in cArbInt['include'] :
-  env_ArbInt.Append(CPPPATH = ['#' + incdir])
+for incdir in cArbInt['include'] : env_ArbInt.Append(CPPPATH    = ['#' + incdir])
+for define in cArbInt['defines'] : env_ArbInt.Append(CPPDEFINES = [ define ])
 env_Arb = env.Copy()
-for incdir in cArb['include'] :
-  env_Arb.Append(CPPPATH = ['#' + incdir])
+for incdir in cArb['include'] : env_Arb.Append(CPPPATH    = ['#' + incdir])
+for define in cArb['defines'] : env_Arb.Append(CPPDEFINES = [ define ])
 env_Timestamp = env.Copy()
-for incdir in cTimestamp['include'] :
-  env_Timestamp.Append(CPPPATH = ['#' + incdir])
+for incdir in cTimestamp['include'] : env_Timestamp.Append(CPPPATH    = ['#' + incdir])
+for define in cTimestamp['defines'] : env_Timestamp.Append(CPPDEFINES = [ define ])
 
 # Object files.
 o_SafeInt   = env          .Object(target = 'SafeInt',   source = ['SafeInt.cxx']  )

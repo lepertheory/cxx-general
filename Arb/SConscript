@@ -13,7 +13,9 @@ o_Arb = env.Object(target = 'Arb', source = ['Arb.cxx'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with Arb.
-cArb = { 'obj': list(cArbInt['obj']) + [o_Arb], 'include': list(cArbInt['include']) + ['Arb'] }
+cArb = { 'obj':     list(cArbInt['obj'])     + [o_Arb],
+         'include': list(cArbInt['include']) + ['Arb'],
+         'defines': list(cArbInt['defines']) }
 
 # Return.
 Return('cArb')

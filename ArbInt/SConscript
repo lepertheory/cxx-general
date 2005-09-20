@@ -9,7 +9,7 @@ o_ArbInt = env.Object(target = 'ArbInt', source = ['ArbInt.cxx'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with ArbInt.
-cArbInt = { 'obj': [o_ArbInt], 'include': ['ArbInt'] }
+cArbInt = { 'obj': [o_ArbInt], 'include': ['ArbInt'], 'defines': [] }
 
 # Return.
 Return('cArbInt')

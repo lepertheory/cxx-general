@@ -4,6 +4,17 @@
  * Implementation for class Timestamp.
  *****************************************************************************/
 
+// Determine the method to get system times.
+#if defined(HAVE_WINDOWS_H) && defined(HAVE__SYSTEMTIME) && defined(HAVE_LPSYSTEMTIME)
+  #define SYSTIME_GETSYSTEMTIME
+#elseif defined(HAVE_SYS_TIME_H) && defined(HAVE_TIMEVAL) && defined(HAVE_TIMEZONE) && defined
+#endif
+
+// OS includes.
+#if defined(SYSTIME_GETSYSTEMTIME)
+  #include <windows.h>
+#endif
+
 // Class include.
 #include "Timestamp.hxx"
 
@@ -109,11 +120,25 @@ namespace DAC {
     // Work area.
     Timestamp  newtime(*this);
     Interval   interval;
+#if defined(SYSTIME_GETSYSTEMTIME)
+    _SYSTEMTIME systime;
+#else
     time_t     t       = 0;
     struct tm  systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     struct tm* stp     = &systime;
+#endif
     
     // Set the interval.
+#if defined(SYSTIME_GETSYSTEMTIME)
+    GetSystemTime(&systime);
+    interval.Millisecond(TimeVal(systime.wMilliseconds))
+            .Second     (TimeVal(systime.wSecond      ))
+            .Minute     (TimeVal(systime.wMinute      ))
+            .Hour       (TimeVal(systime.wHour        ))
+            .Day        (TimeVal(systime.wDay         ))
+            .Month      (TimeVal(systime.wMonth       ))
+            .Year       (TimeVal(systime.wYear        ));
+#else
     if (!time(&t)) {
       throw TimestampErrors::SysCallError();
     }
@@ -126,6 +151,7 @@ namespace DAC {
             .Day   (TimeVal(stp->tm_mday)       )
             .Month (TimeVal(stp->tm_mon ) +    1)
             .Year  (TimeVal(stp->tm_year) + 1900);
+#endif
     
     // Set the new time.
     newtime.setGMT(interval);

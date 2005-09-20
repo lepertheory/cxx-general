@@ -8,12 +8,54 @@ env.Append(CPPPATH = ['..'])
 for incdir in cArb['include'] :
   env.Append(CPPPATH = ['#' + incdir])
 
+# Create a list of defines.
+defines = []
+
+# Configure the environment.
+if BUILD_TARGETS != [] :
+  
+  # Configure without CCFLAGS, or configure will fail with all the extra
+  # warnings that are turned on.
+  tmpccflags = env['CCFLAGS']
+  env['CCFLAGS'] = []
+  
+  conf = Configure(env)
+  
+  if conf.CheckHeader(header = 'windows.h', language = 'C++') :
+    defines += [ 'HAVE_WINDOWS_H' ]
+    if conf.CheckType(type_name = '_SYSTEMTIME',  includes = '#include <windows.h>', language = 'C++') : defines += [ 'HAVE__SYSTEMTIME'  ]
+    if conf.CheckType(type_name = 'LPSYSTEMTIME', includes = '#include <windows.h>', language = 'C++') : defines += [ 'HAVE_LPSYSTEMTIME' ]
+  
+  if conf.CheckHeader(header = 'sys/time.h', language = 'C++') :
+    defines += [ 'HAVE_SYS_TIME_H' ]
+    if conf.CheckType(type_name = 'timeval',  includes = '#include <sys/time.h>', language = 'C++') : defines += [ 'HAVE_TIMEVAL'  ]
+    if conf.CheckType(type_name = 'timezone', includes = '#include <sys/time.h>', language = 'C++') : defines += [ 'HAVE_TIMEZONE' ]
+    if conf.CheckFunc(function_name = 'gettimeofday', language = 'C++') : defines += [ 'HAVE_GETTIMEOFDAY' ]
+  
+  if conf.CheckHeader(header = 'time.h', language = 'C++') :
+    defines += [ 'HAVE_TIME_H' ]
+    if conf.CheckType(type_name = 'time_t', includes = '#include <time.h>', language = 'C++') : defines += [ 'HAVE_TIME_T' ]
+    if conf.CheckType(type_name = 'tm',     includes = '#include <time.h>', language = 'C++') : defines += [ 'HAVE_TM'     ]
+    if conf.CheckFunc(function_name = 'time',     language = 'C++') : defines += [ 'HAVE_TIME'     ]
+    if conf.CheckFunc(function_name = 'gmtime',   language = 'C++') : defines += [ 'HAVE_GMTIME'   ]
+    if conf.CheckFunc(function_name = 'gmtime_r', language = 'C++') : defines += [ 'HAVE_GMTIME_R' ]
+  
+  env = conf.Finish()
+  
+  # Restore CCFLAGS.
+  env['CCFLAGS'] = tmpccflags
+
+# Create defines.
+for define in defines : env.Append(CPPDEFINES = [ define ])
+
 # Object files.
 o_Timestamp = env.Object(target = 'Timestamp', source = ['Timestamp.cxx'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with Timestamp.
-cTimestamp = { 'obj': list(cArb['obj']) + [o_Timestamp], 'include': list(cArb['include']) + ['Timestamp'] }
+cTimestamp = { 'obj':     list(cArb['obj'])     + [o_Timestamp],
+               'include': list(cArb['include']) + ['Timestamp'],
+               'defines': list(cArb['defines']) + defines }
 
 # Return.
 Return('cTimestamp')
