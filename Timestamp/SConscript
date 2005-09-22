@@ -11,6 +11,20 @@ for incdir in cArb['include'] :
 # Create a list of defines.
 defines = []
 
+# Define... uh, defines.
+have_windows_h    = 0
+have_sys_time_h   = 0
+have_time_h       = 0
+have__systemtime  = 0
+have_lpsystemtime = 0
+have_timeval      = 0
+have_timezone     = 0
+have_gettimeofday = 0
+have_time_t       = 0
+have_tm           = 0
+have_gmtime       = 0
+have_gmtime_r     = 0
+
 # Configure the environment.
 if BUILD_TARGETS != [] :
   
@@ -61,7 +75,7 @@ if have_gmtime       : defines += [ 'HAVE_GMTIME'       ]
 if have_gmtime_r     : defines += [ 'HAVE_GMTIME_R'     ]
 
 # Determine what our timestamp will support.
-if have_windows_h and have__systime and have_lpsystime :
+if have_windows_h and have__systemtime and have_lpsystemtime :
   defines += [ 'TIMESTAMP_SYSTIME_GETSYSTEMTIME' ]
   defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'     ]
 elif have_sys_time_h and have_timeval and have_timezone and have_gettimeofday and have_time_h and have_tm and have_time_t and have_gmtime_r :

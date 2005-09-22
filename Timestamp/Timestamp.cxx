@@ -7,10 +7,10 @@
 // OS includes.
 #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
   #include <windows.h>
-#elseif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
+#elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
   #include <time.h>
   #include <sys/time.h>
-#elseif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
+#elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
   #include <time.h>
 #endif
 
@@ -116,23 +116,72 @@ namespace DAC {
   // itself as unsafe. Use gmtime_r on linux, or the Windows API on Win.
   Timestamp& Timestamp::getSystemTime () {
     
+    // Disable this function if system support is missing.
+#if !defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME        ) && \
+    !defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) && \
+    !defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  ) && \
+    !defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        ) && \
+    !defined(TIMESTAMP_SYSTIME_TIME_GMTIME          )
+    throw TimestampErrors::MissingSysSupport();
+#else
+    
     // Work area.
     Timestamp  newtime(*this);
     Interval   interval;
-#if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
+  #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
     _SYSTEMTIME systime;
-#elseif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
+  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
+          defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     timeval  tv      = { 0, 0 };
     timezone tz      = { 0, 0 };
-    tm       systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-#elseif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
-    time_t time    = 0;
-    tm     systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-#endif
+  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
+          defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+    time_t tv = 0;
+  #endif
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
+      defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        )
+    tm systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \
+          defined(TIMESTAMP_SYSTIME_TIME_GMTIME        )
+    tm* systime = 0;
+  #endif
+    
+    // Get the time from the system.
+  #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
+    GetSystemTime(&systime);
+  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
+          defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+    if (gettimeofday(&tv, &tz)) {
+      throw TimeStampErrors::SysCallError();
+    }
+  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
+          defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+    if (time(&tv) == -1) {
+      throw TimeStampErrors::SysCallError();
+    }
+  #endif
+  
+    // Convert time to YMDHMS.
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R)
+    if (!gmtime_r(&(tv.tv_sec), &systime)) {
+      throw TimestampErrors::SysCallError();
+    }
+  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
+    if (!(systime = gmtime(&(tv.tv_sec)))) {
+      throw TimestampErrors::SysCallError();
+    }
+  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R)
+    if (!gmtime_r(&tv, &systime)) {
+      throw TimestampErrors::SysCallError();
+    }
+  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
+    if (!(systime = gmtime(&tv))) {
+      throw TimestampErrors::SysCallError();
+    }
+  #endif
     
     // Set the interval.
-#if defined(SYSTIME_GETSYSTEMTIME)
-    GetSystemTime(&systime);
+  #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
     interval.Millisecond(TimeVal(systime.wMilliseconds))
             .Second     (TimeVal(systime.wSecond      ))
             .Minute     (TimeVal(systime.wMinute      ))
@@ -140,32 +189,31 @@ namespace DAC {
             .Day        (TimeVal(systime.wDay         ))
             .Month      (TimeVal(systime.wMonth       ))
             .Year       (TimeVal(systime.wYear        ));
-#elseif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
-    if (gettimeofday(&tv, &tz)) {
-      
-
-
-
-#else
-    if (!time(&t)) {
-      throw TimestampErrors::SysCallError();
-    }
-    if (!(stp = gmtime(&t))) {
-      throw TimestampErrors::SysCallError();
-    }
-    interval.Second(TimeVal(stp->tm_sec )       )
-            .Minute(TimeVal(stp->tm_min )       )
-            .Hour  (TimeVal(stp->tm_hour)       )
-            .Day   (TimeVal(stp->tm_mday)       )
-            .Month (TimeVal(stp->tm_mon ) +    1)
-            .Year  (TimeVal(stp->tm_year) + 1900);
-#endif
+  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
+          defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+    interval.Millisecond(TimeVal((tv.tv_usec / 1000).toInt())       )
+            .Second     (TimeVal(systime.tm_sec             )       )
+            .Minute     (TimeVal(systime.tm_min             )       )
+            .Hour       (TimeVal(systime.tm_hour            )       )
+            .Day        (TimeVal(systime.tm_mday            )       )
+            .Month      (TimeVal(systime.tm_mon             ) +    1)
+            .Year       (TimeVal(systime.tm_year            ) + 1900);
+  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
+          defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+    interval.Second(TimeVal(systime.tm_sec )       )
+            .Minute(TimeVal(systime.tm_min )       )
+            .Hour  (TimeVal(systime.tm_hour)       )
+            .Day   (TimeVal(systime.tm_mday)       )
+            .Month (TimeVal(systime.tm_mon ) +    1)
+            .Year  (TimeVal(systime.tm_year) + 1900);
+  #endif
     
     // Set the new time.
     newtime.setGMT(interval);
     
     // We done, return.
     _jd = newtime._jd;
+#endif
     return *this;
     
   }
