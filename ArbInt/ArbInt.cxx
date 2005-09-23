@@ -15,7 +15,6 @@
 #include "ReferencePointer.hxx"
 #include "toString.hxx"
 #include "rppower.hxx"
-#include "logBase.hxx"
 
 // Class include.
 #include "ArbInt.hxx"
