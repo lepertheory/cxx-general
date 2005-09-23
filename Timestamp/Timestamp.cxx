@@ -190,7 +190,7 @@ namespace DAC {
             .Month      (TimeVal(systime.wMonth       ))
             .Year       (TimeVal(systime.wYear        ));
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-          defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+        defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     interval.Millisecond((TimeVal(tv.tv_usec     ) / 1000).toInt())
             .Second     ( TimeVal(systime.tm_sec )                )
             .Minute     ( TimeVal(systime.tm_min )                )
@@ -199,7 +199,7 @@ namespace DAC {
             .Month      ( TimeVal(systime.tm_mon ) +    1         )
             .Year       ( TimeVal(systime.tm_year) + 1900         );
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
-          defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+        defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     interval.Second(TimeVal(systime.tm_sec )       )
             .Minute(TimeVal(systime.tm_min )       )
             .Hour  (TimeVal(systime.tm_hour)       )
@@ -212,7 +212,8 @@ namespace DAC {
     newtime.setGMT(interval);
     
     // We done, return.
-    _jd = newtime._jd;
+    _cache_valid = false;
+    _jd          = newtime._jd;
 #endif
     return *this;
     
@@ -222,8 +223,8 @@ namespace DAC {
   Timestamp& Timestamp::clear () {
     
     // Make a new jd.
-    TimeVal tmp_jd;
-    tmp_jd.FixQ(Arb(24 * 60 * 60 * 1000)).Fix(Arb::FIX_DENOM).Fixed(true);
+    TimeVal new_jd;
+    new_jd.FixQ(Arb(24 * 60 * 60 * 1000)).Fix(Arb::FIX_DENOM).Fixed(true);
     
     // Make a new lastjulian.
     YMD     new_lastjulianymd(1582, 10, 4);
@@ -247,7 +248,10 @@ namespace DAC {
     _caltype = CT_DEFAULT;
     
     // Clear the jd.
-    _jd = tmp_jd;
+    _jd = new_jd;
+    
+    // Invalidate the cache.
+    _cache_valid = false;
     
     // We done.
     return *this;
@@ -278,6 +282,16 @@ namespace DAC {
     
     // Set the timezone name.
     _tzname = ts._tzname;
+    
+    // Copy the cache.
+    _cache_year        = ts._cache_year;
+    _cache_month       = ts._cache_month;
+    _cache_day         = ts._cache_day;
+    _cache_hour        = ts._cache_hour;
+    _cache_minute      = ts._cache_minute;
+    _cache_second      = ts._cache_second;
+    _cache_millisecond = ts._cache_millisecond;
+    _cache_valid       = ts._cache_valid;
     
     // We done.
     return *this;
@@ -347,12 +361,12 @@ namespace DAC {
           
           // Abbreviated month name.
           case 'b': {
-            retval += SHORT_MONTH_NAME[get().Month()];
+            retval += SHORT_MONTH_NAME[Month()];
           } break;
           
           // Full month name, variable length.
           case 'B': {
-            retval += LONG_MONTH_NAME[get().Month()];
+            retval += LONG_MONTH_NAME[Month()];
           } break;
           
           // Default date and time format.
@@ -363,13 +377,13 @@ namespace DAC {
           // Century (00..99).
           case 'C': {
             fieldlen = 2;
-            numfield = ((get().Year() / 100).floor().abs() % 100).toString();
+            numfield = ((Year() / 100).floor().abs() % 100).toString();
           } break;
           
           // Day of month (01..31).
           case 'd': {
             fieldlen = 2;
-            numfield = get().Day().toString();
+            numfield = Day().toString();
           } break;
           
           // Date (mm/dd/yy).
@@ -381,7 +395,7 @@ namespace DAC {
           case 'e': {
             fieldlen = 2;
             fieldpad = PAD_SPPAD;
-            numfield = get().Month().toString();
+            numfield = Month().toString();
           } break;
           
           // Same as %Y-%m-%d, ISO 8601:2000.
@@ -397,7 +411,7 @@ namespace DAC {
           
           // The ISO year.
           case 'G': {
-            retval += get().Year().toString();
+            retval += Year().toString();
           } break;
           
           // Equivalent to %b.
@@ -408,13 +422,13 @@ namespace DAC {
           // 24-hour clock hour (00..23).
           case 'H': {
             fieldlen = 2;
-            numfield = get().Hour().toString();
+            numfield = Hour().toString();
           } break;
           
           // 12-hour clock hour (01..12).
           case 'I': {
             fieldlen = 2;
-            TimeVal hour = get().Hour();
+            TimeVal hour = Hour();
             numfield = ((hour > 12) ? hour - 12 : ((hour == 0) ? hour + 12 : hour)).toString();
           } break;
           
@@ -427,13 +441,13 @@ namespace DAC {
           // Month (01..12).
           case 'm': {
             fieldlen = 2;
-            numfield = get().Month().toString();
+            numfield = Month().toString();
           } break;
           
           // Minute (00..59).
           case 'M': {
             fieldlen = 2;
-            numfield = get().Minute().toString();
+            numfield = Minute().toString();
           } break;
           
           // Newline.
@@ -443,12 +457,12 @@ namespace DAC {
           
           // Capital AM/PM indicator.
           case 'p': {
-            retval += (get().Hour() < 12) ? "AM" : "PM";
+            retval += (Hour() < 12) ? "AM" : "PM";
           } break;
           
           // Lowercase am/pm indicator.
           case 'P': {
-            retval += (get().Hour() < 12) ? "am" : "pm";
+            retval += (Hour() < 12) ? "am" : "pm";
           } break;
           
           // Time in am/pm notation. In POSIX locale this is equivalent to
@@ -465,7 +479,21 @@ namespace DAC {
           // Second (00..60).
           case 'S': {
             fieldlen = 2;
-            numfield = get().Second().toString();
+            numfield = Second().toString();
+          } break;
+          
+          // Day of month suffix (st, nd, rd, th).
+          case 's': {
+            if (Day() > 3 && Day() < 21) {
+              retval += "th";
+            } else {
+              switch (static_cast<int>(Day()) % 10) {
+                case 1:  retval += "st"; break;
+                case 2:  retval += "nd"; break;
+                case 3:  retval += "rd"; break;
+                default: retval += "th"; break;
+              }
+            }
           } break;
           
           // Horizontal tab.
@@ -523,12 +551,12 @@ namespace DAC {
           // Last two digits of the year.
           case 'y': {
             fieldlen = 2;
-            numfield = (get().Year() % 100).toString();
+            numfield = (Year() % 100).toString();
           } break;
           
           // Year.
           case 'Y': {
-            retval += get().Year().toString();
+            retval += Year().toString();
           } break;
           
           // Offset from UTC in the ISO 8601:2000 standard format
@@ -608,11 +636,8 @@ namespace DAC {
   // Get the day of the year.
   Timestamp::TimeVal Timestamp::doy () const {
     
-    // Cache individual values.
-    Interval now(get());
-    
     // This is it.
-    return (_isLeapYear(now.Year()) ? _DAYS_OF_YEAR_LY[now.Month()] : _DAYS_OF_YEAR_NY[now.Month()]) + now.Day();
+    return (_isLeapYear(Year()) ? _DAYS_OF_YEAR_LY[Month()] : _DAYS_OF_YEAR_NY[Month()]) + Day();
     
   }
   
@@ -620,7 +645,7 @@ namespace DAC {
   Timestamp::TimeVal Timestamp::woy (DayOfWeek const base) const {
     
     // Get the first day of this year.
-    Timestamp dayone(Interval().Year(get().Year()).Month(TimeVal(static_cast<unsigned int>(MON_JANUARY))).Day(TimeVal(1)));
+    Timestamp dayone(Interval().Year(Year()).Month(TimeVal(static_cast<unsigned int>(MON_JANUARY))).Day(TimeVal(1)));
     
     // Find the next base day.
     if (dayone.dow() > static_cast<unsigned int>(base)) {
@@ -661,23 +686,20 @@ namespace DAC {
   // Get the ISO year.
   Timestamp::TimeVal Timestamp::getISOYear () const {
     
-    // Get the current date as individual values.
-    Interval date(get());
-    
     // If it is before January 4th and this week did not contain a Thursday,
     // then according to ISO it is last year.
-    if ((date.Month() == 1 && date.Day() < 4) && dowISO() - date.Day() >= static_cast<unsigned int>(ISO_DOW_THURSDAY)) {
-      return date.Year() - 1;
+    if ((Month() == 1 && Day() < 4) && dowISO() - Day() >= static_cast<unsigned int>(ISO_DOW_THURSDAY)) {
+      return Year() - 1;
     }
     
     // If it is after December 28th and this week will not contain a Thursday,
     // then according to ISO it is next year.
-    if ((date.Month() == 12 && date.Day() > 28) && date.Day() + static_cast<unsigned int>(ISO_DOW_THURSDAY) - dowISO() > _daysInMonth(date.Year(), TimeVal(static_cast<unsigned int>(MON_DECEMBER)))) {
-      return date.Year() + 1;
+    if ((Month() == 12 && Day() > 28) && Day() + static_cast<unsigned int>(ISO_DOW_THURSDAY) - dowISO() > _daysInMonth(Year(), TimeVal(static_cast<unsigned int>(MON_DECEMBER)))) {
+      return Year() + 1;
     }
     
     // Otherwise, it's this year.
-    return date.Year();
+    return Year();
     
   }
   
@@ -723,6 +745,9 @@ namespace DAC {
     ) {
       throw TimestampErrors::InvalidTime();
     }
+    
+    // Invalidate the cache.
+    _cache_valid = false;
     
     // Adjust BCE years.
     TimeVal y = settime.Year() + ((settime.Year() < 0) ? 1 : 0);
@@ -865,6 +890,29 @@ namespace DAC {
     
   }
   
+  // Load the cache.
+  void Timestamp::_loadCache () const {
+    
+    // Work area.
+    Interval cache;
+    
+    // Get the current interval.
+    cache = get();
+    
+    // Load the cache.
+    _cache_year        = cache.Year       ();
+    _cache_month       = cache.Month      ();
+    _cache_day         = cache.Day        ();
+    _cache_hour        = cache.Hour       ();
+    _cache_minute      = cache.Minute     ();
+    _cache_second      = cache.Second     ();
+    _cache_millisecond = cache.Millisecond();
+    
+    // Cache is now valid. We done, return.
+    _cache_valid = true;
+    
+  }
+  
   // Get the number of days in this month.
   Timestamp::TimeVal Timestamp::_daysInMonth (TimeVal const& year, TimeVal const& month) const {
     
@@ -913,11 +961,21 @@ namespace DAC {
   // Return the leap seconds of a given day.
   Timestamp::TimeVal Timestamp::_leapSecond (TimeVal const& year, TimeVal const& month, TimeVal const& day) const {
     
-    // List should be very short, just iterate through it and determine if this is a leap second.
+    // Work area.
+    LeapSecondList::iterator lastleap = _leapseconds->end();
+    
+    // Iterate through the list and try to find today. If found, subtract to
+    // find the leap seconds today, should always be 1 or -1, or 0 if not
+    // found.
     for (LeapSecondList::iterator i = _leapseconds->begin(); i != _leapseconds->end(); ++i) {
       if ((i->Year == year) && (i->Month == month) && (i->Day == day)) {
-        return i->Leap;
+        if (lastleap == _leapseconds->end()) {
+          return i->Leap;
+        } else {
+          return i->Leap - lastleap->Leap;
+        }
       }
+      lastleap = i;
     }
     
     // No leap second found.
@@ -930,29 +988,29 @@ namespace DAC {
     
     // Set the default leap seconds.
     s_defaultleapseconds = new LeapSecondList;
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1972,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1972, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1973, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1974, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1975, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1976, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1977, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1978, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1979, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1981,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1982,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1983,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1985,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1987, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1989, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1990, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1992,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1993,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1994,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1995, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1997,  6, 30), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1998, 12, 31), 1));
-    s_defaultleapseconds->push_back(LeapSecondDay(YMD(2005, 12, 31), 1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1972,  6, 30),  1));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1972, 12, 31),  2));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1973, 12, 31),  3));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1974, 12, 31),  4));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1975, 12, 31),  5));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1976, 12, 31),  6));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1977, 12, 31),  7));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1978, 12, 31),  8));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1979, 12, 31),  9));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1981,  6, 30), 10));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1982,  6, 30), 11));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1983,  6, 30), 12));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1985,  6, 30), 13));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1987, 12, 31), 14));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1989, 12, 31), 15));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1990, 12, 31), 16));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1992,  6, 30), 17));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1993,  6, 30), 18));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1994,  6, 30), 19));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1995, 12, 31), 20));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1997,  6, 30), 21));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(1998, 12, 31), 22));
+    s_defaultleapseconds->push_back(LeapSecondDay(YMD(2005, 12, 31), 23));
     
     // Set the default format.
     s_defaultformat = new Format("%c");

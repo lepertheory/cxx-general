@@ -58,7 +58,11 @@ namespace DAC {
     _init();
     
     // Set the number.
-    copy(number, copynow);
+    if (copynow) {
+      deepcopy(number);
+    } else {
+      copy(number);
+    }
     
   }
   
@@ -163,16 +167,24 @@ namespace DAC {
   }
   
   // Copy another number.
-  Arb& Arb::copy (Arb const& number, bool const copynow) {
+  Arb& Arb::copy (Arb const& number) throw() {
     
-    // Set the new data. Copy if instructed to do so, otherwise just
-    // make a reference and wait for COW.
-    _DataPT new_data;
-    if (copynow) {
-      new_data = new _Data(*(number._data));
-    } else {
-      new_data = number._data;
-    }
+    // Copy. Easy.
+    _maxradix = number._maxradix;
+    _format   = number._format;
+    _round    = number._round;
+    _data     = number._data;
+    
+    // We done.
+    return *this;
+    
+  }
+  
+  // Perform a deep copy of another number, do not wait for COW.
+  Arb& Arb::deepcopy (Arb const& number) {
+    
+    // Set the new data. This is the deep copy.
+    _DataPT new_data(new _Data(*(number._data)));
     
     // Now do non-throwing operations.
     _maxradix = number._maxradix;
@@ -1702,14 +1714,6 @@ namespace DAC {
     
     // Copy the given data.
     copy(data);
-    
-  }
-  
-  // Assignment operator.
-  Arb::_Data& Arb::_Data::operator = (_Data const& data) {
-    
-    // Copy the given data.
-    return copy(data);
     
   }
   

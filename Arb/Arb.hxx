@@ -142,7 +142,8 @@ namespace DAC {
       Arb& clear ();
       
       // Copy another number.
-      Arb& copy (Arb const& number, bool const copynow = false);
+      Arb& copy     (Arb const& number) throw();
+      Arb& deepcopy (Arb const& number)        ;
       
       // Set the number.
                          Arb& set (std::string const& number);
@@ -1076,6 +1077,9 @@ namespace DAC {
     return tmpnum._data->p;
     
   }
+  
+  // Assignment operator for _Data.
+  inline Arb::_Data& Arb::_Data::operator = (_Data const& data) { return copy(data); }
   
   // Determine number type.
   template <class T> Arb::_NumType const Arb::_GetNumType<T>::value =

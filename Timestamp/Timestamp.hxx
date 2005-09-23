@@ -251,10 +251,21 @@ namespace DAC {
       YMD         LastJulianDate (                             ) const;
       Timestamp&  Julian         (TimeVal     const& jd        )      ;
       TimeVal     Julian         (                             ) const;
+      Timestamp&  MJD            (TimeVal     const& mjd       )      ;
+      TimeVal     MJD            (                             ) const;
+      Timestamp&  POSIXDate      (TimeVal     const& posixdate )      ;
+      TimeVal     POSIXDate      (                             ) const;
       Timestamp&  Offset         (int const          offset    )      ;
       int         Offset         (                             ) const;
       Timestamp&  TZName         (char const* const  name      )      ;
       char const* TZName         (                             ) const;
+      TimeVal     Year           (                             ) const;
+      TimeVal     Month          (                             ) const;
+      TimeVal     Day            (                             ) const;
+      TimeVal     Hour           (                             ) const;
+      TimeVal     Minute         (                             ) const;
+      TimeVal     Second         (                             ) const;
+      TimeVal     Millisecond    (                             ) const;
       
       // Reset to just-constructed defaults.
       Timestamp& clear ();
@@ -318,6 +329,21 @@ namespace DAC {
       // Get the ISO year.
       TimeVal getISOYear () const;
       
+      // Get whether or not this is a leap year.
+      bool isLeapYear () const;
+      
+      // Get the leap seconds for this day.
+      TimeVal leapSecond () const;
+      
+      // Get the number of days in this year.
+      TimeVal daysInYear () const;
+      
+      // Get the number of days in this month.
+      TimeVal daysInMonth () const;
+      
+      // Get the number of seconds in this minute.
+      TimeVal secondsInMinute () const;
+      
     /*
      * Private members.
      */
@@ -334,6 +360,16 @@ namespace DAC {
       
       // Timezone name. Only exists for cosmetic purposes at the moment.
       std::string _tzname;
+      
+      // Cache individual date components.
+      mutable TimeVal _cache_year;
+      mutable TimeVal _cache_month;
+      mutable TimeVal _cache_day;
+      mutable TimeVal _cache_hour;
+      mutable TimeVal _cache_minute;
+      mutable TimeVal _cache_second;
+      mutable TimeVal _cache_millisecond;
+      mutable bool    _cache_valid;
       
       // List of leap seconds, must always be sorted.
       LSLptr _leapseconds;
@@ -378,6 +414,9 @@ namespace DAC {
       
       // Internal get routine.
       Interval _get () const;
+      
+      // Load the cache.
+      void _loadCache () const;
       
       // Return whether a given year is a leap year.
       bool _isLeapYear (TimeVal const& year) const;
@@ -509,30 +548,47 @@ namespace DAC {
                 .Day(lastjulian.Day)
                 .Hour(TimeVal(12))
     );
+    _cache_valid   = false;
     _lastjulianymd = lastjulian;
     _lastjulianjd  = tmp.Julian().floor();
     return *this;
   }
   inline Timestamp::YMD Timestamp::LastJulianDate () const { return _lastjulianymd; }
   
-  inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _jd.set(jd); return *this; }
-  inline Timestamp::TimeVal Timestamp::Julian ()                  const { return _jd;                }
+  inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _cache_valid = false; _jd.set(jd); return *this; }
+  inline Timestamp::TimeVal Timestamp::Julian (                 ) const { return _jd;                                      }
+  
+  // FIXME: This will allow mjd of > 99999. Will have to make this throw, make
+  // up a new error, pain in the ass, get to it later.
+  inline Timestamp&         Timestamp::MJD (TimeVal const& mjd)       { _cache_valid = false; _jd.set(mjd + 2400000.5 - _offset); return *this; }
+  inline Timestamp::TimeVal Timestamp::MJD (                  ) const { return _jd - 2400000.5 + _offset;                                       }
+  
+  inline Timestamp&         Timestamp::POSIXDate (TimeVal const& posixdate)       { _cache_valid = false; _jd.set(posixdate / 86400 + 2440587.5); return *this; }
+  inline Timestamp::TimeVal Timestamp::POSIXDate (                        ) const { return (_jd - 2440587.5) * 86400;                                           }
+  
+  inline Timestamp::TimeVal Timestamp::Year        () const { if (!_cache_valid) { _loadCache(); } return _cache_year       ; }
+  inline Timestamp::TimeVal Timestamp::Month       () const { if (!_cache_valid) { _loadCache(); } return _cache_month      ; }
+  inline Timestamp::TimeVal Timestamp::Day         () const { if (!_cache_valid) { _loadCache(); } return _cache_day        ; }
+  inline Timestamp::TimeVal Timestamp::Hour        () const { if (!_cache_valid) { _loadCache(); } return _cache_hour       ; }
+  inline Timestamp::TimeVal Timestamp::Minute      () const { if (!_cache_valid) { _loadCache(); } return _cache_minute     ; }
+  inline Timestamp::TimeVal Timestamp::Second      () const { if (!_cache_valid) { _loadCache(); } return _cache_second     ; }
+  inline Timestamp::TimeVal Timestamp::Millisecond () const { if (!_cache_valid) { _loadCache(); } return _cache_millisecond; }
   
   // FIXME: Offset range checking, should not be able to go past +/-720.
-  inline Timestamp& Timestamp::Offset (int const offset)       { _offset = offset / TimeVal(1440); return *this; }
-  inline int        Timestamp::Offset ()                 const { return _offset * 1440;                          }
+  inline Timestamp& Timestamp::Offset (int const offset)       { _cache_valid = false; _offset = offset / TimeVal(1440); return *this; }
+  inline int        Timestamp::Offset ()                 const { return _offset * 1440;                                                }
   
   inline Timestamp&  Timestamp::TZName (char const* const name)       { _tzname = name; return *this; }
   inline char const* Timestamp::TZName ()                       const { return _tzname.c_str();       }
     
   // Set the timestamp with an interval.
-  inline Timestamp& Timestamp::set (Interval const& time) { Timestamp newtime(*this); newtime._set(time); _jd = newtime._jd - _offset; return *this; }
+  inline Timestamp& Timestamp::set (Interval const& time) { Timestamp newtime(*this); newtime._set(time); _cache_valid = false; _jd = newtime._jd - _offset; return *this; }
   
   // Set the timestamp with a Julian Date.
   inline Timestamp& Timestamp::set (TimeVal const& jd) { return Julian(jd); }
   
   // Set the timestamp with an interval, no GMT offset.
-  inline Timestamp& Timestamp::setGMT (Interval const& time) { Timestamp newtime(*this); newtime._set(time); _jd = newtime._jd; return *this; }
+  inline Timestamp& Timestamp::setGMT (Interval const& time) { Timestamp newtime(*this); newtime._set(time); _cache_valid = false; _jd = newtime._jd; return *this; }
   
   // Get the interval of the timestamp.
   inline Timestamp::Interval Timestamp::get () const { return (*this + _offset)._get(); }
@@ -541,7 +597,7 @@ namespace DAC {
   inline Timestamp::Interval Timestamp::getGMT () const { return _get(); }
   
   // Arithmetic.
-  inline Timestamp&         Timestamp::op_add (TimeVal   const& tv)       { _jd += tv; return *this;                        }
+  inline Timestamp&         Timestamp::op_add (TimeVal   const& tv)       { _cache_valid = false; _jd += tv; return *this;  }
   inline Timestamp&         Timestamp::op_sub (TimeVal   const& tv)       { return op_add(-tv);                             }
   inline Timestamp::TimeVal Timestamp::op_sub (Timestamp const& ts) const { return (_jd + _offset) - (ts._jd + ts._offset); }
   
@@ -555,6 +611,21 @@ namespace DAC {
   
   // Get the day only JD.
   inline Timestamp::TimeVal Timestamp::jdday () const { TimeVal retval; retval.set((_jd + 0.5).floor()); return retval; }
+  
+  // Get whether or not this is a leap year.
+  inline bool Timestamp::isLeapYear () const { return _isLeapYear(Year()); }
+  
+  // Get the leap second for this day, 1, -1, or 0.
+  inline Timestamp::TimeVal Timestamp::leapSecond () const { return (Hour() == 23 && Minute() == 59) ? _leapSecond(Year(), Month(), Day()) : TimeVal(0); }
+  
+  // Get the number of days in this year.
+  inline Timestamp::TimeVal Timestamp::daysInYear () const { return TimeVal(isLeapYear() ? 366 : 365); }
+  
+  // Get the number of days in this month.
+  inline Timestamp::TimeVal Timestamp::daysInMonth () const { return _daysInMonth(Year(), Month()); }
+  
+  // Get the number of seconds in this minute.
+  inline Timestamp::TimeVal Timestamp::secondsInMinute () const { return 60 + leapSecond(); }
   
   // Return true if the given date is Gregorian.
   inline bool Timestamp::_isGregorian (TimeVal const& year, TimeVal const& month, TimeVal const& day) const {

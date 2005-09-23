@@ -92,9 +92,10 @@ int main () {
     cout << "Second:      "; cin >> s;
     cout << "Millisecond: "; cin >> ms;
     
-    test2.set(Timestamp::Interval().Year(y).Month(m).Day(d).Hour(h).Minute(n).Second(s).Millisecond(ms));
+    test2.setGMT(Timestamp::Interval().Year(y).Month(m).Day(d).Hour(h).Minute(n).Second(s).Millisecond(ms));
     
     cout << "Julian: " << test2.Julian() << endl;
+    cout << "POSIX:  " << test2.POSIXDate() << endl;
     
     ti = test2.get();
     
