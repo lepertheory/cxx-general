@@ -132,15 +132,15 @@ namespace DAC {
     _SYSTEMTIME systime;
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
           defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
-    timeval  tv      = { 0, 0 };
-    timezone tz      = { 0, 0 };
+    struct timeval  tv      = { 0, 0 };
+    struct timezone tz      = { 0, 0 };
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
           defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     time_t tv = 0;
   #endif
   #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
       defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        )
-    tm systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct tm systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \
           defined(TIMESTAMP_SYSTIME_TIME_GMTIME        )
     tm* systime = 0;
@@ -152,7 +152,7 @@ namespace DAC {
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
           defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     if (gettimeofday(&tv, &tz)) {
-      throw TimeStampErrors::SysCallError();
+      throw TimestampErrors::SysCallError();
     }
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
           defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
@@ -191,13 +191,13 @@ namespace DAC {
             .Year       (TimeVal(systime.wYear        ));
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
           defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
-    interval.Millisecond(TimeVal((tv.tv_usec / 1000).toInt())       )
-            .Second     (TimeVal(systime.tm_sec             )       )
-            .Minute     (TimeVal(systime.tm_min             )       )
-            .Hour       (TimeVal(systime.tm_hour            )       )
-            .Day        (TimeVal(systime.tm_mday            )       )
-            .Month      (TimeVal(systime.tm_mon             ) +    1)
-            .Year       (TimeVal(systime.tm_year            ) + 1900);
+    interval.Millisecond((TimeVal(tv.tv_usec     ) / 1000).toInt())
+            .Second     ( TimeVal(systime.tm_sec )                )
+            .Minute     ( TimeVal(systime.tm_min )                )
+            .Hour       ( TimeVal(systime.tm_hour)                )
+            .Day        ( TimeVal(systime.tm_mday)                )
+            .Month      ( TimeVal(systime.tm_mon ) +    1         )
+            .Year       ( TimeVal(systime.tm_year) + 1900         );
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
           defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     interval.Second(TimeVal(systime.tm_sec )       )
