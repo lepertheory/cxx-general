@@ -395,7 +395,7 @@ namespace DAC {
           case 'e': {
             fieldlen = 2;
             fieldpad = PAD_SPPAD;
-            numfield = Month().toString();
+            numfield = Day().toString();
           } break;
           
           // Same as %Y-%m-%d, ISO 8601:2000.

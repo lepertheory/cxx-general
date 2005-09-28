@@ -462,6 +462,9 @@ namespace DAC {
     num += rad;
     
     // Load the number.
+    // FIXME: If ArbInt throws an error due to bad format, the error returned
+    //        is basically useless to the user. Catch the error, correct the
+    //        position, and throw from ArbErrors.
     new_num._data->p.Base(_data->base) = num;
     
     // Adjust the number based on the exponent. Negative exponent increases
