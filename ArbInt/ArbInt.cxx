@@ -138,7 +138,7 @@ namespace DAC {
       
       // Make sure this digit is within the number base.
       if ((digval >= _base || (digval == numeric_limits<_NumChrT>::max()))) {
-        throw ArbIntErrors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
+        throw ArbInt::Errors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
       }
       
       // Add the digit to the digit string.
@@ -272,7 +272,7 @@ namespace DAC {
     
     // If number is zero, throw error.
     if (number.isZero()) {
-      throw ArbIntErrors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("/").Right(number);
+      throw ArbInt::Errors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("/").Right(number);
     }
     
     // Work area.
@@ -412,7 +412,7 @@ namespace DAC {
     // Cannot divide by zero. check is redundant, but needed for exception to
     // report proper operator.
     if (number.isZero()) {
-      throw ArbIntErrors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("%").Right(number);
+      throw ArbInt::Errors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("%").Right(number);
     }
     
     // Work area.
@@ -460,7 +460,7 @@ namespace DAC {
     
     // These are unsigned numbers, so if number > this, throw an error.
     if (number > retval) {
-      throw ArbIntErrors::NegativeBinary<ArbInt, ArbInt>().Left(*this).Operator("-").Right(number);
+      throw ArbInt::Errors::NegativeBinary<ArbInt, ArbInt>().Left(*this).Operator("-").Right(number);
     }
     
     // Subtract like kindergarten.
@@ -729,7 +729,7 @@ namespace DAC {
     
     // Ensure that the start is not beyond the end of the container.
     if (start >= _digits->size()) {
-      throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Carry requested beyond end of container").Offset(start).Limit(_digits->size());
+      throw ArbInt::Errors::OverrunSpecialized<_DigsT::size_type>().Problem("Carry requested beyond end of container").Offset(start).Limit(_digits->size());
     }
     
     // Loop through the container looking for base overflow.
@@ -772,7 +772,7 @@ namespace DAC {
     
     // Ensure that the start is not beyond the end of the container.
     if (start >= _digits->size()) {
-      throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Borrow requested beyond end of container").Offset(start).Limit(_digits->size());
+      throw ArbInt::Errors::OverrunSpecialized<_DigsT::size_type>().Problem("Borrow requested beyond end of container").Offset(start).Limit(_digits->size());
     }
     
     // Loop through the container borrowing until we've met our borrow.
@@ -797,7 +797,7 @@ namespace DAC {
     }
     
     // If we get here, we have not paid for our borrow.
-    throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Borrow requested ran out of digits").Offset(_digits->size()).Limit(_digits->size());
+    throw ArbInt::Errors::OverrunSpecialized<_DigsT::size_type>().Problem("Borrow requested ran out of digits").Offset(_digits->size()).Limit(_digits->size());
     
   }
   
@@ -868,7 +868,7 @@ namespace DAC {
         
         // Check if shift will overrun _DigsT::size_type.
         if (digits > numeric_limits<_DigsT::size_type>::max() - _digits->size()) {
-          throw ArbIntErrors::OverrunSpecialized<_DigsT::size_type>().Problem("Shift requested will overrun maximum size of digit container").Offset(digits).Limit(numeric_limits<_DigsT::size_type>::max());
+          throw ArbInt::Errors::OverrunSpecialized<_DigsT::size_type>().Problem("Shift requested will overrun maximum size of digit container").Offset(digits).Limit(numeric_limits<_DigsT::size_type>::max());
         }
         
         // Insert 0s to shift left.
@@ -900,8 +900,11 @@ namespace DAC {
     if (*this && bits) {
       
       // Pull out any whole digits and shift them.
-      SafeInt<_DigsT::size_type> tmp_digits = bits / s_digitbits;
-      SafeInt<unsigned int>      tmp_bits   = bits - tmp_digits;
+      try {
+        SafeInt<_DigsT::size_type> tmp_digits = bits / s_digitbits;
+        SafeInt<unsigned int>      tmp_bits   = bits - tmp_digits;
+      } catch (ArbInt::Errors::ScalarOverflow) {
+        throw ArbInt::Errors::ShiftTooLarge().Bits(bits.toString()).MaxBits(
       if (tmp_digits) {
         _shiftDigits(tmp_digits, dir);
       }
@@ -963,64 +966,6 @@ namespace DAC {
     
     // Class has successfully been initialized.
     s_initialized = true;
-    
-  }
-  
-  /***************************************************************************
-   * Errors.
-   ***************************************************************************/
-  namespace ArbIntErrors {
-    
-    char const* Base::what () const throw() {
-      return "Undefined error in ArbInt.";
-    }
-    Base::~Base () throw() {
-      // Da nada.
-    }
-    
-    char const* BadFormat::what () const throw() {
-      try {
-        return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".").c_str();
-      } catch (...) {
-        return "Bad format. Error creating message string.";
-      }
-    }
-    
-    char const* Negative::what () const throw() {
-      return "Attempt to set ArbInt to a negative number.";
-    }
-    
-    char const* NegativeUnary::what () const throw() {
-      try {
-        return (std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + _number.toString() + " results in a negative number.").c_str();
-      } catch (...) {
-        return "Unary operation results in a negative number. Error creating message string.";
-      }
-    }
-    
-    char const* Overrun::what () const throw() {
-      return "Instruction overruns end of container.";
-    }
-    
-    char const* DivByZero::what () const throw() {
-      return "Divide by zero.";
-    }
-    
-    char const* ScalarOverflow::what () const throw() {
-      return "ArbInt overflows requested scalar type.";
-    }
-    
-    char const* BaseOutOfRange::what () const throw() {
-      return "Requested base is out of range.";
-    }
-    
-    char const* RootTooLarge::what () const throw() {
-      try {
-        return (_root.toString() + " root of " + _number.toString() + ": Root is too large to calculate.").c_str();
-      } catch (...) {
-        return "Root is too large to calculate. Error creating message string.";
-      }
-    }
     
   }
   
