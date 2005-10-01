@@ -135,7 +135,7 @@ namespace DAC {
   Arb& Arb::FixQ (Arb const& fixq) {
     if (fixq != _data->fixq) {
       if (!fixq.isInteger()) {
-        throw ArbErrors::NonInteger();
+        throw Arb::Errors::NonInteger();
       }
       _data = new _Data(*_data);
       _data->fixq    = fixq._data->p;
@@ -361,12 +361,21 @@ namespace DAC {
     ConstReferencePointer<string> tmp_number(new std::string(number));
     
     // Parser will load data into here.
-    string            num;
-    string            rad;
-    string            exp;
-    bool              p_num = true;
-    bool              p_exp = true;
-    string::size_type nexp  = 0;
+    string            num               ;
+    string            rad               ;
+    string            exp               ;
+    bool              p_num      = true ;
+    bool              p_exp      = true ;
+    string::size_type nexp       = 0    ;
+    string::size_type numstart   = 0    ;
+    string::size_type radstart   = 0    ;
+    string::size_type expstart   = 0    ;
+    string::size_type numlen     = 0    ;
+    string::size_type radlen     = 0    ;
+    string::size_type explen     = 0    ;
+    bool              numstarted = false;
+    bool              radstarted = false;
+    bool              expstarted = false;
     
     // Parse the number, scoped for temp variables.
     {
@@ -385,9 +394,9 @@ namespace DAC {
           // Decimal point.
           case '.':
             switch (mode) {
-              case NUM: mode = RAD;                                                                                                 break;
-              case RAD: throw ArbErrors::BadFormat().Problem("Radix point given for a second time").Position(i).Number(tmp_number); break;
-              case EXP: throw ArbErrors::BadFormat().Problem("Radix point given in exponent").Position(i).Number(tmp_number);       break;
+              case NUM: mode = RAD;                                                                                                   break;
+              case RAD: throw Arb::Errors::BadFormat().Problem("Radix point given for a second time").Position(i).Number(tmp_number); break;
+              case EXP: throw Arb::Errors::BadFormat().Problem("Radix point given in exponent"      ).Position(i).Number(tmp_number); break;
             }
           break;
           
@@ -395,9 +404,9 @@ namespace DAC {
           case 'e':
           case 'E':
             switch (mode) {
-              case NUM: mode = EXP;                                                                                                     break;
-              case RAD: mode = EXP;                                                                                                     break;
-              case EXP: throw ArbErrors::BadFormat().Problem("Exponent symbol given for a second time").Position(i).Number(tmp_number); break;
+              case NUM: mode = EXP;                                                                                                       break;
+              case RAD: mode = EXP;                                                                                                       break;
+              case EXP: throw Arb::Errors::BadFormat().Problem("Exponent symbol given for a second time").Position(i).Number(tmp_number); break;
             }
             diggiven = false;
           break;
@@ -406,22 +415,22 @@ namespace DAC {
           case '+':
           case '-':
             if (diggiven) {
-              throw ArbErrors::BadFormat().Problem("Sign given after digits").Position(i).Number(tmp_number);
+              throw Arb::Errors::BadFormat().Problem("Sign given after digits").Position(i).Number(tmp_number);
             }
             switch (mode) {
               case NUM:
                 if (s_num) {
-                  throw ArbErrors::BadFormat().Problem("Sign of number given for a second time").Position(i).Number(tmp_number);
+                  throw Arb::Errors::BadFormat().Problem("Sign of number given for a second time").Position(i).Number(tmp_number);
                 }
                 p_num = (number[i] == '+');
                 s_num = true;
               break;
               case RAD:
-                throw ArbErrors::BadFormat().Problem("Sign given after radix point").Position(i).Number(tmp_number);
+                throw Arb::Errors::BadFormat().Problem("Sign given after radix point").Position(i).Number(tmp_number);
               break;
               case EXP:
                 if (s_exp) {
-                  throw ArbErrors::BadFormat().Problem("Sign of exponent given for a second time").Position(i).Number(tmp_number);
+                  throw Arb::Errors::BadFormat().Problem("Sign of exponent given for a second time").Position(i).Number(tmp_number);
                 }
                 p_exp = (number[i] == '+');
                 s_exp = true;
@@ -434,9 +443,9 @@ namespace DAC {
             
             // Add the digit to its proper place.
             switch (mode) {
-              case NUM: num += number[i]; break;
-              case RAD: rad += number[i]; break;
-              case EXP: exp += number[i]; break;
+              case NUM: if (!numstarted) { numstarted = true; numstart = i; } ++numlen; num += number[i]; break;
+              case RAD: if (!radstarted) { radstarted = true; radstart = i; } ++radlen; rad += number[i]; break;
+              case EXP: if (!expstarted) { expstarted = true; expstart = i; } ++explen; exp += number[i]; break;
             }
             diggiven = true;
             
@@ -465,7 +474,15 @@ namespace DAC {
     // FIXME: If ArbInt throws an error due to bad format, the error returned
     //        is basically useless to the user. Catch the error, correct the
     //        position, and throw from ArbErrors.
-    new_num._data->p.Base(_data->base) = num;
+    try {
+      new_num._data->p.Base(_data->base) = num;
+    } catch (ArbInt::Errors::BadFormat& e) {
+      if (e.Position() < numstart + numlen) {
+        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart                      ).Number(tmp_number);
+      } else {
+        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart + (radstart - numlen)).Number(tmp_number);
+      }
+    }
     
     // Adjust the number based on the exponent. Negative exponent increases
     // radix digits, positive exponent ups order of magnitude.
@@ -478,8 +495,13 @@ namespace DAC {
       new_num._data->fixq     = _data->fixq;
       
       // Determine the exponent given.
-      _DigsT expn(exp);
+      _DigsT expn;
       _DigsT expr(nexp);
+      try {
+        expn = exp;
+      } catch (ArbInt::Errors::BadFormat& e) {
+        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + expstart).Number(tmp_number);
+      }
       if (p_exp) {
         if (expn >= expr) {
           expn -= expr;
@@ -640,7 +662,7 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw ArbErrors::DivByZero();
+      throw Arb::Errors::DivByZeroBinary<Arb, Arb>().Left(*this).Operator("/").Right(number);
     }
     
     // Work area
@@ -665,7 +687,7 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw ArbErrors::DivByZero();
+      throw Arb::Errors::DivByZeroBinary<Arb, ArbInt>().Left(*this).Operator("/").Right(number);
     }
     
     // Work area.
@@ -688,12 +710,12 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw ArbErrors::DivByZero();
+      throw Arb::Errors::DivByZeroBinary<Arb, Arb>().Left(*this).Operator("%").Right(number);
     }
     
     // Throw an error if both numbers are not integer.
     if (!isInteger() || !number.isInteger()) {
-      throw ArbErrors::NonInteger();
+      throw Arb::Errors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator("%").Right(number);
     }
     
     // Work area.
@@ -711,12 +733,12 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw ArbErrors::DivByZero();
+      throw Arb::Errors::DivByZeroBinary<Arb, ArbInt>().Left(*this).Operator("%").Right(number);
     }
     
     // Throw an error if this number is not integer.
     if (!isInteger()) {
-      throw ArbErrors::NonInteger();
+      throw Arb::Errors::NonIntegerBinary<Arb, ArbInt>().Left(*this).Operator("%").Right(number);
     }
     
     // Work area.
@@ -1166,12 +1188,12 @@ namespace DAC {
     
     // No divide by zero.
     if (n.isZero()) {
-      throw ArbErrors::DivByZero();
+      throw Arb::Errors::DivByZeroBinary<Arb, Arb>().Left(*this).Operator("**").Right(n);
     }
     
     // This is a rational number class, not complex.
     if (!isPositive() && n.isEven()) {
-      throw ArbErrors::Complex();
+      throw Arb::Errors::Complex();
     }
     
     // Common work area.
@@ -1266,9 +1288,9 @@ namespace DAC {
     // Number of bits to shift must be integer.
     if (!bits.isInteger()) {
       if (dir == _DIR_L) {
-        throw ArbErrors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator("<<").Right(bits);
+        throw Arb::Errors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator("<<").Right(bits);
       } else {
-        throw ArbErrors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator(">>").Right(bits);
+        throw Arb::Errors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator(">>").Right(bits);
       }
     }
     
@@ -1425,14 +1447,14 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissa == 0) {
         if (converter.bits.sign == 0) {
-          throw ArbErrors::PositiveInfinity<float>().Number(r);
+          throw Arb::Errors::PositiveInfinity<float>().Number(r);
         } else {
-          throw ArbErrors::NegativeInfinity<float>().Number(r);
+          throw Arb::Errors::NegativeInfinity<float>().Number(r);
         }
       }
       
       // NaN.
-      throw ArbErrors::NaN<float>().Number(r);
+      throw Arb::Errors::NaN<float>().Number(r);
       
     }
     
@@ -1507,14 +1529,14 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
         if (converter.bits.sign == 0) {
-          throw ArbErrors::PositiveInfinity<double>().Number(r);
+          throw Arb::Errors::PositiveInfinity<double>().Number(r);
         } else {
-          throw ArbErrors::NegativeInfinity<double>().Number(r);
+          throw Arb::Errors::NegativeInfinity<double>().Number(r);
         }
       }
       
       // NaN.
-      throw ArbErrors::NaN<double>().Number(r);
+      throw Arb::Errors::NaN<double>().Number(r);
       
     }
     
@@ -1589,14 +1611,14 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
         if (converter.bits.sign == 0) {
-          throw ArbErrors::PositiveInfinity<long double>().Number(r);
+          throw Arb::Errors::PositiveInfinity<long double>().Number(r);
         } else {
-          throw ArbErrors::NegativeInfinity<long double>().Number(r);
+          throw Arb::Errors::NegativeInfinity<long double>().Number(r);
         }
       }
       
       // NaN.
-      throw ArbErrors::NaN<long double>().Number(r);
+      throw Arb::Errors::NaN<long double>().Number(r);
       
     }
     
@@ -1773,60 +1795,6 @@ namespace DAC {
     // default constructor must do nothing more than call clear().
     clear();
 
-  }
-  
-  /***************************************************************************
-   * Errors.
-   ***************************************************************************/
-  namespace ArbErrors {
-    
-    char const* Base::what () const throw() {
-      return "Undefined error in Arb.";
-    }
-    Base::~Base () throw() {
-      // Nothing.
-    }
-    
-    char const* BadFormat::what () const throw() {
-      try {
-        return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".").c_str();
-      } catch (...) {
-        return "Bad format. Error creating message string.";
-      }
-    }
-    
-    char const* DivByZero::what () const throw() {
-      return "Divide by zero.";
-    }
-    
-    char const* Complex::what () const throw() {
-      return "Even roots of negative numbers can only be complex numbers.";
-    }
-    
-    char const* ComplexRoot::what () const throw() {
-      try {
-        return (std::string("Attempting to take the even root ") + DAC::toString(_root) + " of negative number " + DAC::toString(_number) + " results in a complex number.").c_str();
-      } catch (...) {
-        return "Even roots of negative numbers can only be complex numbers. Error creating message string.";
-      }
-    }
-    
-    char const* NonInteger::what () const throw() {
-      return "An integer operation was attempted on a non-integer number.";
-    }
-    
-    char const* ScalarOverflow::what () const throw() {
-      return "Arb overflows requested scalar type.";
-    }
-    
-    char const* ScalarUnderflow::what () const throw() {
-      return "Arb underflows requested scalar type.";
-    }
-    
-    char const* InvalidFloat::what () const throw() {
-      return "Attempt to set Arb from an invalid floating-point number.";
-    }
-    
   }
   
 }

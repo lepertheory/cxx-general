@@ -74,6 +74,231 @@ namespace DAC {
         FIX_DENOM
       };
       
+      /***********************************************************************/
+      // Errors.
+      class Errors {
+        
+        public:
+    
+          // All Arb errors are based off of this.
+          class Base : public Exception {
+            public:
+              virtual char const* what () const throw() { return "Undefined error in Arb."; };
+              virtual ~Base () throw() {};
+          };
+          
+          // Bad format.
+          // FIXME: char const*s need to be initialized to 0.
+          class BadFormat : public Base {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".").c_str();
+                } catch (...) {
+                  return "Bad format. Error creating message string.";
+                }
+              };
+              BadFormat& Problem  (char const*                        const problem)  throw() { _problem  = problem ; return *this; };
+              BadFormat& Position (std::string::size_type             const position) throw() { _position = position; return *this; };
+              BadFormat& Number   (ConstReferencePointer<std::string> const number)   throw() { _number   = number  ; return *this; };
+              char const*                        Problem  () const throw() { return _problem ; };
+              std::string::size_type             Position () const throw() { return _position; };
+              ConstReferencePointer<std::string> Number   () const throw() { return _number  ; };
+            private:
+              char const*                        _problem;
+              std::string::size_type             _position;
+              ConstReferencePointer<std::string> _number;
+          };
+          
+          // Divide by zero.
+          class DivByZero : public Base {
+            public:
+              virtual char const* what () const throw() { return "Divide by zero."; };
+          };
+          template <class T, class U> class DivByZeroBinary : public DivByZero {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return (DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Divide by zero.").c_str();
+                } catch (...) {
+                  return "Divide by zero. Error creating message string.";
+                }
+              };
+              DivByZeroBinary& Left     (T           const l)  throw() { _l  = l ; return *this; };
+              DivByZeroBinary& Operator (char const* const op) throw() { _op = op; return *this; };
+              DivByZeroBinary& Right    (U           const r)  throw() { _r  = r ; return *this; };
+              T           Left     () const throw() { return _l ; };
+              char const* Operator () const throw() { return _op; };
+              U           Right    () const throw() { return _r ; };
+            private:
+              T           _l;
+              char const* _op;
+              U           _r;
+          };
+          
+          // Operation results in a complex number.
+          class Complex : public Base {
+            public:
+              virtual char const* what () const throw() { return "Even roots of negative numbers can only be complex numbers."; };
+          };
+          class ComplexRoot : public Complex {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return (std::string("Attempting to take the even root ") + DAC::toString(*_root) + " of negative number " + DAC::toString(*_number) + " results in a complex number.").c_str();
+                } catch (...) {
+                  return "Even roots of negative numbers can only be complex numbers. Error creating message string.";
+                }
+              };
+              ComplexRoot& Number (ConstReferencePointer<Arb> const number) throw() { _number = number; return *this; };
+              ComplexRoot& Root   (ConstReferencePointer<Arb> const root)   throw() { _root   = root  ; return *this; };
+              ConstReferencePointer<Arb> Number () const throw() { return _number; };
+              ConstReferencePointer<Arb> Root   () const throw() { return _root  ; };
+            private:
+              ConstReferencePointer<Arb> _number;
+              ConstReferencePointer<Arb> _root;
+          };
+          
+          // Integer-only operation attempted on a non-integer.
+          class NonInteger : public Base {
+            public:
+              virtual char const* what () const throw() { return "An integer operation was attempted on a non-integer number."; };
+          };
+          template <class T, class U> class NonIntegerBinary : public NonInteger {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return (DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Integer operation attempted on a non-integer.").c_str();
+                } catch (...) {
+                  return "Integer operation attempted on a non-integer. Error creating message string.";
+                }
+              };
+              NonIntegerBinary& Left     (T           const l)  throw() { _l  = l ; return *this; };
+              NonIntegerBinary& Operator (char const* const op) throw() { _op = op; return *this; };
+              NonIntegerBinary& Right    (U           const r)  throw() { _r  = r ; return *this; };
+              T           Left     () const throw() { return _l ; };
+              char const* Operator () const throw() { return _op; };
+              U           Right    () const throw() { return _r ; };
+            private:
+              T           _l;
+              char const* _op;
+              U           _r;
+          };
+          
+          // Attempt to stuff Arb into a type that will not fit.
+          class ScalarOverflow : public Base {
+            public:
+              virtual char const* what () const throw() { return "Arb overflows requested scalar type."; };
+          };
+          template <class T> class ScalarOverflowSpecialized : public ScalarOverflow {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return (_number->toString() + ": Overflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
+                } catch (...) {
+                  return "Arb overflows requested scalar type. Error creating message string.";
+                }
+              };
+              ScalarOverflowSpecialized& Number (ConstReferencePointer<Arb> const number) throw() { _number = number; return *this; };
+              ScalarOverflowSpecialized& Limit  (T                          const limit ) throw() { _limit  = limit ; return *this; };
+              ConstReferencePointer<Arb> Number () const throw() { return _number; };
+              T                          Limit  () const throw() { return _limit ; };
+            private:
+              ConstReferencePointer<Arb> _number;
+              T                          _limit;
+          };
+          
+          // Attempt to move Arb into a number that won't see it.
+          class ScalarUnderflow : public Base {
+            public:
+              virtual char const* what () const throw() { return "Arb underflows requested scalar type."; };
+          };
+          template <class T> class ScalarUnderflowSpecialized : public ScalarUnderflow {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return (_number->toString() + ": Underflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
+                } catch (...) {
+                  return "Arb underflows requested scalar type. Error creating message string.";
+                }
+              };
+              ScalarUnderflowSpecialized& Number (ConstReferencePointer<Arb> const number) throw() { _number = number; return *this; };
+              ScalarUnderflowSpecialized& Limit  (T                          const limit ) throw() { _limit  = limit ; return *this; };
+              ConstReferencePointer<Arb> Number () const throw() { return _number; };
+              T                          Limit  () const throw() { return _limit ; };
+            private:
+              ConstReferencePointer<Arb> _number;
+              T                          _limit ;
+          };
+          
+          // Attempt to set Arb with an invalid floating-point number.
+          class InvalidFloat : public Base {
+            public:
+              virtual char const* what () const throw() { return "Attempt to set Arb from an invalid floating-point number."; };
+          };
+          template <class T> class InvalidFloatSpecialized : public InvalidFloat {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Attempt to set Arb from an invalid floating-point number: " + DAC::toString(_number)).c_str();
+                } catch (...) {
+                  return "Attempt to set Arb from an invalid floating-point number. Error creating message string.";
+                }
+              };
+              InvalidFloatSpecialized& Number (T const number) throw() { _number = number; return *this; };
+              T Number () const throw() { return _number; };
+            private:
+              T _number;
+          };
+          template <class T> class Infinity : public InvalidFloatSpecialized<T> {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Attempt to set Arb to infinity: " + DAC::toString(this->Number())).c_str();
+                } catch (...) {
+                  return "Attempt to set Arb to infinity. Error creating message string.";
+                }
+              };
+          };
+          template <class T> class PositiveInfinity : public Infinity<T> {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Attempt to set Arb to positive infinity: " + DAC::toString(this->Number())).c_str();
+                } catch (...) {
+                  return "Attempt to set Arb to positive infinity. Error creating message string.";
+                }
+              };
+          };
+          template <class T> class NegativeInfinity : public Infinity<T> {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Attempt to set Arb to negative infinity: " + DAC::toString(this->Number())).c_str();
+                } catch (...) {
+                  return "Attempt to set Arb to negative infinity. Error creating message string.";
+                }
+              };
+          };
+          template <class T> class NaN : public InvalidFloatSpecialized<T> {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Attempt to set Arb to Not-a-Number: " + DAC::toString(this->Number())).c_str();
+                } catch (...) {
+                  return "Attempt to set Arb to Not-a-Number. Error creating message string.";
+                }
+              };
+          };
+        
+        // Private constructor so this cannot be instantiated.
+        private:
+          Errors ();
+          Errors (Errors const&);
+          Errors& operator = (Errors const&);
+          
+      };
+      
       /*********************************************************************/
       // Function members.
       
@@ -502,157 +727,6 @@ namespace DAC {
       
   };
   
-  /***************************************************************************
-   * Errors.
-   ***************************************************************************/
-  namespace ArbErrors {
-    
-    // All Arb errors are based off of this.
-    class Base : public Exception {
-      public:
-        virtual char const* what () const throw();
-        virtual ~Base () throw();
-    };
-    
-    // Bad format.
-    class BadFormat : public Base {
-      public:
-        virtual char const* what () const throw();
-        BadFormat& Problem  (char const*                        const  problem)  throw();
-        BadFormat& Position (std::string::size_type             const  position) throw();
-        BadFormat& Number   (ConstReferencePointer<std::string> const& number)   throw();
-        char const*                        Problem  () const throw();
-        std::string::size_type             Position () const throw();
-        ConstReferencePointer<std::string> Number   () const throw();
-      private:
-        char const*                        _problem;
-        std::string::size_type             _position;
-        ConstReferencePointer<std::string> _number;
-    };
-    
-    // Divide by zero.
-    class DivByZero : public Base {
-      public:
-        virtual char const* what () const throw();
-    };
-    template <class T, class U> class DivByZeroBinary : public DivByZero {
-      public:
-        virtual char const* what () const throw();
-        DivByZeroBinary& Left     (T           const l)  throw();
-        DivByZeroBinary& Operator (char const* const op) throw();
-        DivByZeroBinary& Right    (U           const r)  throw();
-        T           Left     () const throw();
-        char const* Operator () const throw();
-        U           Right    () const throw();
-      private:
-        T           _l;
-        char const* _op;
-        U           _r;
-    };
-    
-    // Operation results in a complex number.
-    class Complex : public Base {
-      public:
-        virtual char const* what () const throw();
-    };
-    class ComplexRoot : public Complex {
-      public:
-        virtual char const* what () const throw();
-        ComplexRoot& Number (Arb const& number) throw();
-        ComplexRoot& Root   (Arb const& root)   throw();
-        Arb Number () const throw();
-        Arb Root   () const throw();
-      private:
-        Arb _number;
-        Arb _root;
-    };
-    
-    // Integer-only operation attempted on a non-integer.
-    class NonInteger : public Base {
-      public:
-        virtual char const* what () const throw();
-    };
-    template <class T, class U> class NonIntegerBinary : public NonInteger {
-      public:
-        virtual char const* what () const throw();
-        NonIntegerBinary& Left     (T           const l)  throw();
-        NonIntegerBinary& Operator (char const* const op) throw();
-        NonIntegerBinary& Right    (U           const r)  throw();
-        T           Left     () const throw();
-        char const* Operator () const throw();
-        U           Right    () const throw();
-      private:
-        T           _l;
-        char const* _op;
-        U           _r;
-    };
-    
-    // Attempt to stuff Arb into a type that will not fit.
-    class ScalarOverflow : public Base {
-      public:
-        virtual char const* what () const throw();
-    };
-    template <class T> class ScalarOverflowSpecialized : public ScalarOverflow {
-      public:
-        virtual char const* what () const throw();
-        ScalarOverflowSpecialized& Number (Arb const& number) throw();
-        ScalarOverflowSpecialized& Limit  (T   const  limit)  throw();
-        Arb Number () const throw();
-        T   Limit  () const throw();
-      private:
-        Arb _number;
-        T   _limit;
-    };
-    
-    // Attempt to move Arb into a number that won't see it.
-    class ScalarUnderflow : public Base {
-      public:
-        virtual char const* what () const throw();
-    };
-    template <class T> class ScalarUnderflowSpecialized : public ScalarUnderflow {
-      public:
-        virtual char const* what () const throw();
-        ScalarUnderflowSpecialized& Number (Arb const& number) throw();
-        ScalarUnderflowSpecialized& Limit  (T   const  limit)  throw();
-        Arb Number () const throw();
-        T   Limit  () const throw();
-      private:
-        Arb _number;
-        T   _limit;
-    };
-    
-    // Attempt to set Arb with an invalid floating-point number.
-    class InvalidFloat : public Base {
-      public:
-        virtual char const* what () const throw();
-    };
-    template <class T> class InvalidFloatSpecialized : public InvalidFloat {
-      public:
-        virtual char const* what () const throw();
-        InvalidFloatSpecialized& Number (T const number) throw();
-        T Number () const throw();
-      private:
-        T _number;
-    };
-    template <class T> class Infinity : public InvalidFloatSpecialized<T> {
-      public:
-        virtual char const* what () const throw();
-    };
-    template <class T> class PositiveInfinity : public Infinity<T> {
-      public:
-        virtual char const* what () const throw();
-    };
-    template <class T> class NegativeInfinity : public Infinity<T> {
-      public:
-        virtual char const* what () const throw();
-    };
-    template <class T> class NaN : public InvalidFloatSpecialized<T> {
-      public:
-        virtual char const* what () const throw();
-    };
-    
-  }
-  
   /*************************************************************************
    * Operators.
    *************************************************************************/
@@ -1015,7 +1089,7 @@ namespace DAC {
         // result left. If not, throw an exception, caller should deal with
         // underflow.
         if (bitdiff >= _FloatInfo<T>::bias + (_FloatInfo<T>::mantissabits - 1)) {
-          throw ArbErrors::ScalarUnderflowSpecialized<T>().Number(*this).Limit(std::numeric_limits<T>::denorm_min());
+          throw Arb::Errors::ScalarUnderflowSpecialized<T>().Number(ConstReferencePointer<Arb>(new Arb(*this))).Limit(std::numeric_limits<T>::denorm_min());
         }
         
         // We will have room, flag as denormalized.
@@ -1051,7 +1125,7 @@ namespace DAC {
       // If bitdiff > bias, we won't be able to store this number, it will
       // overflow the exponent.
       if (bitdiff > _FloatInfo<T>::bias) {
-        throw ArbErrors::ScalarOverflowSpecialized<T>().Number(*this).Limit(std::numeric_limits<T>::max());
+        throw Arb::Errors::ScalarOverflowSpecialized<T>().Number(ConstReferencePointer<Arb>(new Arb(*this))).Limit(std::numeric_limits<T>::max());
       }
       
       // Shift q up until it has the same number of bits as p, then make sure
@@ -1155,7 +1229,7 @@ namespace DAC {
     
     // If r is negative, error.
     if (r.isNegative()) {
-      throw ArbErrors::ScalarOverflowSpecialized<T>().Number(r).Limit(0);
+      throw Arb::Errors::ScalarOverflowSpecialized<T>().Number(ConstReferencePointer<Arb>(new Arb(r))).Limit(0);
     }
     
     // Get the value the same way as a signed integer.
@@ -1182,8 +1256,8 @@ namespace DAC {
       }
       
     // Only error that should occur.
-    } catch (ArbIntErrors::ScalarOverflowSpecialized<T>& e) {
-      throw ArbErrors::ScalarOverflowSpecialized<T>().Number(r).Limit(e.Limit());
+    } catch (ArbInt::Errors::ScalarOverflowSpecialized<T>& e) {
+      throw Arb::Errors::ScalarOverflowSpecialized<T>().Number(ConstReferencePointer<Arb>(new Arb(r))).Limit(e.Limit());
     }
     
   }
@@ -1226,7 +1300,7 @@ namespace DAC {
     // Multiply by the abs.
     try {
       Arb::_Mul<T, _NUM_UINT>::op(retval, r.abs());
-    } catch (SafeIntErrors::UnOpOverflow<T>) {
+    } catch (typename SafeInt<T>::Errors::UnOpOverflow) {
       retval.op_mul(ArbInt(~r) + 1);
     }
     
@@ -1252,7 +1326,7 @@ namespace DAC {
     
     // Dividing by 0 is verboten.
     if (r == 0) {
-      throw ArbErrors::DivByZeroBinary<Arb, T>().Left(l).Operator("/").Right(r);
+      throw Arb::Errors::DivByZeroBinary<Arb, T>().Left(ConstReferencePointer<Arb>(new Arb(l))).Operator("/").Right(r);
     }
     
     // Dividing by 1 is also easy.
@@ -1284,7 +1358,7 @@ namespace DAC {
     // Divide by the abs.
     try {
       Arb::_Div<T, _NUM_UINT>::op(retval, r.abs());
-    } catch (SafeIntErrors::UnOpOverflow<T>) {
+    } catch (typename SafeInt<T>::Errors::UnOpOverflow) {
       retval.op_div(ArbInt(~r) + 1);
     }
     
@@ -1310,12 +1384,12 @@ namespace DAC {
     
     // Dividing by 0 is verboten.
     if (r == 0) {
-      throw ArbErrors::DivByZeroBinary<Arb, T>().Left(l).Operator("%").Right(r);
+      throw Arb::Errors::DivByZeroBinary<Arb, T>().Left(ConstReferencePointer<Arb>(new Arb(l))).Operator("%").Right(r);
     }
     
     // Throw an error if both numbers are not integer.
     if (!l.isInteger()) {
-      throw ArbErrors::NonIntegerBinary<Arb, T>().Left(l).Operator("%").Right(r);
+      throw Arb::Errors::NonIntegerBinary<Arb, T>().Left(ConstReferencePointer<Arb>(new Arb(l))).Operator("%").Right(r);
     }
     
     // Work area.
@@ -1418,7 +1492,7 @@ namespace DAC {
     SafeInt<T> rabs;
     try {
       rabs = r.abs();
-    } catch (SafeIntErrors::UnOpOverflow<T>) {
+    } catch (typename SafeInt<T>::Errors::UnOpOverflow) {
       // Rethrow the error if we're not here for the reason this hack is
       // intended for.
       if (r != std::numeric_limits<T>::min()) {
@@ -1558,7 +1632,7 @@ namespace DAC {
     SafeInt<T> rabs;
     try {
       rabs = r.abs();
-    } catch (SafeIntErrors::UnOpOverflow<T>) {
+    } catch (typename SafeInt<T>::Errors::UnOpOverflow) {
       // Rethrow the error if we're not here for the reason this hack is
       // intended for.
       if (r != std::numeric_limits<T>::min()) {
@@ -1638,7 +1712,7 @@ namespace DAC {
     if (r < 0) {
       try {
         Arb::_Shift<T, Arb::_NUM_UINT>::op(l, -r, dir == _DIR_L ? _DIR_R : _DIR_L);
-      } catch (SafeIntErrors::UnOpOverflow<T>) {
+      } catch (typename SafeInt<T>::Errors::UnOpOverflow) {
         l._shift(Arb(~r) + 1, dir == _DIR_L ? _DIR_R : _DIR_L);
       }
     } else {
@@ -1892,119 +1966,6 @@ namespace DAC {
   
   // Not equal to a floating-point type.
   template <class T> inline bool Arb::_NE<T, Arb::_NUM_FLPT>::op (Arb const& l, T const r) { return l.op_ne(Arb(r)); }
-  
-  /***************************************************************************
-   * Errors.
-   ***************************************************************************/
-  namespace ArbErrors {
-    
-    inline BadFormat& BadFormat::Problem  (char const*                        const  problem)  throw() { _problem  = problem;  return *this; }
-    inline BadFormat& BadFormat::Position (std::string::size_type             const  position) throw() { _position = position; return *this; }
-    inline BadFormat& BadFormat::Number   (ConstReferencePointer<std::string> const& number)   throw() { _number   = number;   return *this; }
-    inline char const*                        BadFormat::Problem  () const throw () { return _problem;  }
-    inline std::string::size_type             BadFormat::Position () const throw () { return _position; }
-    inline ConstReferencePointer<std::string> BadFormat::Number   () const throw () { return _number;   }
-    
-    template <class T, class U> char const* DivByZeroBinary<T, U>::what () const throw() {
-      try {
-        return (toString(_l) + " " + std::string(_op) + " " + toString(_r) + ": Divide by zero.").c_str();
-      } catch (...) {
-        return "Divide by zero. Error creating message string.";
-      }
-    }
-    template <class T, class U> inline DivByZeroBinary<T, U>& DivByZeroBinary<T, U>::Left     (T           const l)  throw() { _l  = l;  return *this; }
-    template <class T, class U> inline DivByZeroBinary<T, U>& DivByZeroBinary<T, U>::Operator (char const* const op) throw() { _op = op; return *this; }
-    template <class T, class U> inline DivByZeroBinary<T, U>& DivByZeroBinary<T, U>::Right    (U           const r)  throw() { _r  = r;  return *this; }
-    template <class T, class U> inline T           DivByZeroBinary<T, U>::Left     () const throw() { return _l;  }
-    template <class T, class U> inline char const* DivByZeroBinary<T, U>::Operator () const throw() { return _op; }
-    template <class T, class U> inline U           DivByZeroBinary<T, U>::Right    () const throw() { return _r;  }
-    
-    inline ComplexRoot& ComplexRoot::Number (Arb const& number) throw() { _number = number; return *this; }
-    inline ComplexRoot& ComplexRoot::Root   (Arb const& root)   throw() { _root   = root;   return *this; }
-    inline Arb ComplexRoot::Number () const throw() { return _number; }
-    inline Arb ComplexRoot::Root   () const throw() { return _root;   }
-    
-    template <class T, class U> char const* NonIntegerBinary<T, U>::what () const throw() {
-      try {
-        return (toString(_l) + " " + std::string(_op) + " " + toString(_r) + ": Integer operation attempted on a non-integer.").c_str();
-      } catch (...) {
-        return "Integer operation attempted on a non-integer. Error creating message string.";
-      }
-    }
-    template <class T, class U> NonIntegerBinary<T, U>& NonIntegerBinary<T, U>::Left     (T           const l)  throw() { _l  = l;  return *this; }
-    template <class T, class U> NonIntegerBinary<T, U>& NonIntegerBinary<T, U>::Operator (char const* const op) throw() { _op = op; return *this; }
-    template <class T, class U> NonIntegerBinary<T, U>& NonIntegerBinary<T, U>::Right    (U           const r)  throw() { _r  = r;  return *this; }
-    template <class T, class U> T           NonIntegerBinary<T, U>::Left     () const throw() { return _l;  }
-    template <class T, class U> char const* NonIntegerBinary<T, U>::Operator () const throw() { return _op; }
-    template <class T, class U> U           NonIntegerBinary<T, U>::Right    () const throw() { return _r;  }
-    
-    template <class T> char const* ScalarOverflowSpecialized<T>::what () const throw() {
-      try {
-        return (_number.toString() + ": Overflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
-      } catch (...) {
-        return "Arb overflows requested scalar type. Error creating message string.";
-      }
-    }
-    template <class T> inline ScalarOverflowSpecialized<T>& ScalarOverflowSpecialized<T>::Number (Arb const& number) throw() { _number = number; return *this; }
-    template <class T> inline ScalarOverflowSpecialized<T>& ScalarOverflowSpecialized<T>::Limit  (T   const  limit)  throw() { _limit  = limit;  return *this; }
-    template <class T> inline Arb ScalarOverflowSpecialized<T>::Number () const throw() { return _number; }
-    template <class T> inline T   ScalarOverflowSpecialized<T>::Limit  () const throw() { return _limit;  }
-    
-    template <class T> char const* ScalarUnderflowSpecialized<T>::what () const throw() {
-      try {
-        return (_number.toString() + ": Underflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
-      } catch (...) {
-        return "Arb underflows requested scalar type. Error creating message string.";
-      }
-    }
-    template <class T> inline ScalarUnderflowSpecialized<T>& ScalarUnderflowSpecialized<T>::Number (Arb const& number) throw() { _number = number; return *this; }
-    template <class T> inline ScalarUnderflowSpecialized<T>& ScalarUnderflowSpecialized<T>::Limit  (T   const  limit)  throw() { _limit  = limit;  return *this; }
-    template <class T> inline Arb ScalarUnderflowSpecialized<T>::Number () const throw() { return _number; }
-    template <class T> inline T   ScalarUnderflowSpecialized<T>::Limit  () const throw() { return _limit;  }
-    
-    template <class T> char const* InvalidFloatSpecialized<T>::what () const throw() {
-      try {
-        return ("Attempt to set Arb from an invalid floating-point number: " + DAC::toString(_number)).c_str();
-      } catch (...) {
-        return "Attempt to set Arb from an invalid floating-point number. Error creating message string.";
-      }
-    }
-    template <class T> inline InvalidFloatSpecialized<T>& InvalidFloatSpecialized<T>::Number (T const number) throw() { _number = number; return *this; }
-    template <class T> inline T InvalidFloatSpecialized<T>::Number () const throw() { return _number; }
-    
-    template <class T> char const* Infinity<T>::what () const throw() {
-      try {
-        return ("Attempt to set Arb to infinity: " + DAC::toString(this->Number())).c_str();
-      } catch (...) {
-        return "Attempt to set Arb to infinity. Error creating message string.";
-      }
-    }
-    
-    template <class T> char const* PositiveInfinity<T>::what () const throw() {
-      try {
-        return ("Attempt to set Arb to positive infinity: " + DAC::toString(this->Number())).c_str();
-      } catch (...) {
-        return "Attempt to set Arb to positive infinity. Error creating message string.";
-      }
-    }
-    
-    template <class T> char const* NegativeInfinity<T>::what () const throw() {
-      try {
-        return ("Attempt to set Arb to negative infinity: " + DAC::toString(this->Number())).c_str();
-      } catch (...) {
-        return "Attempt to set Arb to negative infinity. Error creating message string.";
-      }
-    }
-    
-    template <class T> char const* NaN<T>::what () const throw() {
-      try {
-        return ("Attempt to set Arb to Not-a-Number: " + DAC::toString(this->Number())).c_str();
-      } catch (...) {
-        return "Attempt to set Arb to Not-a-Number. Error creating message string.";
-      }
-    }
-    
-  }
   
   /***************************************************************************
    * Operators.

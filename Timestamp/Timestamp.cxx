@@ -131,18 +131,18 @@ namespace DAC {
   #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
     _SYSTEMTIME systime;
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-          defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+        defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     struct timeval  tv      = { 0, 0 };
     struct timezone tz      = { 0, 0 };
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
-          defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+        defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     time_t tv = 0;
   #endif
   #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
       defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        )
     struct tm systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \
-          defined(TIMESTAMP_SYSTIME_TIME_GMTIME        )
+        defined(TIMESTAMP_SYSTIME_TIME_GMTIME        )
     tm* systime = 0;
   #endif
     
@@ -150,12 +150,12 @@ namespace DAC {
   #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
     GetSystemTime(&systime);
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-          defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+        defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     if (gettimeofday(&tv, &tz)) {
       throw TimestampErrors::SysCallError();
     }
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
-          defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+        defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     if (time(&tv) == -1) {
       throw TimeStampErrors::SysCallError();
     }

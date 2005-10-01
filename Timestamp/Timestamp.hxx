@@ -134,7 +134,7 @@ namespace DAC {
         public:
           
           /*******************************************************************/
-          // Function members.
+          // Class members.
           
           // Default constructor.
           Interval ();
@@ -191,6 +191,129 @@ namespace DAC {
           bool    _set_year;
         
       };
+      
+      /***********************************************************************/
+      // Errors
+      class Errors {
+        
+        public:
+          
+          // All Timestamp errors are based off of this.
+          class Base : public Exception {
+            public:
+              virtual char const* what () const throw() { return "Undefined error in Timestamp."; };
+              virtual ~Base () throw() {};
+          };
+          
+          // Bad format.
+          class BadFormat : public Base {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in format \"" + *_format + "\".").c_str();
+                } catch (...) {
+                  return "Bad format. Error creating message string.";
+                }
+              };
+              BadFormat& Problem  (char const*                        const problem ) throw() { _problem  = problem ; return *this; };
+              BadFormat& Position (std::string::size_type             const position) throw() { _position = position; return *this; };
+              BadFormat& Format   (ConstReferencePointer<std::string> const format  ) throw() { _format   = format  ; return *this; };
+              char const*                        Problem  () const throw() { return _problem ; }
+              std::string::size_type             Position () const throw() { return _position; }
+              ConstReferencePointer<std::string> Format   () const throw() { return _format  ; }
+            private:
+              char const*                        _problem ;
+              std::string::size_type             _position;
+              ConstReferencePointer<std::string> _format  ;
+          };
+          
+          // Invalid time.
+          class InvalidTime : public Base {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Invalid time specified: " + _month->toString() + "/" + _day->toString() + "/" + _year->toString() + " " + _hour->toString() + ":" + _minute->toString() + ":" + _second->toString() + "." + _millisecond.toString()).c_str();
+                } catch (...) {
+                  return "Invalid time specified. Error creating message string.";
+                }
+              };
+              InvalidTime& Year        (TimeVal const& year       ) throw() { _year        = year       ; return *this; };
+              InvalidTime& Month       (TimeVal const& month      ) throw() { _month       = month      ; return *this; };
+              InvalidTime& Day         (TimeVal const& day        ) throw() { _day         = day        ; return *this; };
+              InvalidTime& Hour        (TimeVal const& hour       ) throw() { _hour        = hour       ; return *this; };
+              InvalidTime& Minute      (TimeVal const& minute     ) throw() { _minute      = minute     ; return *this; };
+              InvalidTime& Second      (TimeVal const& second     ) throw() { _second      = second     ; return *this; };
+              InvalidTime& Millisecond (TimeVal const& millisecond) throw() { _millisecond = millisecond; return *this; };
+              TimeVal Year        () const throw() { return _year       ; };
+              TimeVal Month       () const throw() { return _month      ; };
+              TimeVal Day         () const throw() { return _day        ; };
+              TimeVal Hour        () const throw() { return _hour       ; };
+              TimeVal Minute      () const throw() { return _minute     ; };
+              TimeVal Second      () const throw() { return _second     ; };
+              TimeVal Millisecond () const throw() { return _millisecond; };
+            private:
+              TimeVal _year       ;
+              TimeVal _month      ;
+              TimeVal _day        ;
+              TimeVal _hour       ;
+              TimeVal _minute     ;
+              TimeVal _second     ;
+              TimeVal _millisecond;
+          };
+          
+          // The year zero does not exist.
+          class NoYearZero : public InvalidTime {
+            public:
+              virtual char const* what () const throw() {
+                return "There is no year 0.";
+              }
+          };
+          
+          // Error making a system call.
+          // FIXME: char const*s need to be initialized to 0.
+          class SysCallError : public Base {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Error making the requested system call to " + _syscall + ".").c_str();
+                } catch (...) {
+                  return "Error making the requested system call. Error creating message string.";
+                }
+              }
+              SysCallError& SysCall (char const* const syscall) throw() { _syscall = syscall; return *this; };
+              char const* SysCall () const throw() { return _syscall; }
+            private:
+              char const* _syscall;
+          };
+  #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
+          class GetSystemTimeError : public SysCallError
+  #endif
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \\
+      defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+          class 
+  #endif
+  #if defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \\
+      defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+  #endif
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \\
+      defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        )
+  #endif
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \\
+      defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
+  #endif
+                   
+        // Private constructor, no instantiation.
+        private:
+          Errors ();
+          Errors (Errors const&);
+          Errors& operator = (Errors const&);
+        
+      };
+    class SysCallError      : public Base        { public: virtual char const* what () const throw(); };
+    class MissingSysSupport : public Base        { public: virtual char const* what () const throw(); };
+    
+    inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                                                                                              }
+    inline char const* MissingSysSupport::what () const throw() { return "Missing necessary system-provided support.";                                                                                                           }
       
       /***********************************************************************/
       // Constants.
@@ -465,49 +588,8 @@ namespace DAC {
   bool operator != (Timestamp const& l, Timestamp const& r);
   
   /***************************************************************************
-   * Error declarations.
-   ****************************************************************************/
-  
-  // Errors.
-  namespace TimestampErrors {
-    class Base              : public Exception   { public: virtual char const* what () const throw(); };
-    class BadFormat  : public Base      {
-      public:
-        virtual char const* what () const throw();
-        virtual BadFormat& Problem  (char const*                   const problem)  throw();
-        virtual BadFormat& Position (std::string::size_type        const position) throw();
-        virtual BadFormat& Format   (ConstReferencePointer<std::string>& number)   throw();
-      protected:
-        char const*                        _problem;
-        std::string::size_type             _position;
-        ConstReferencePointer<std::string> _format;
-    };
-    class InvalidTime       : public Base        { public: virtual char const* what () const throw(); };
-    class NoYearZero        : public InvalidTime { public: virtual char const* what () const throw(); };
-    class SysCallError      : public Base        { public: virtual char const* what () const throw(); };
-    class MissingSysSupport : public Base        { public: virtual char const* what () const throw(); };
-  }
-  
-}
-
-/*****************************************************************************
- * Inline and template definitions.
- *****************************************************************************/
-
-namespace DAC {
-  
-  // Errors
-  namespace TimestampErrors {
-    inline char const* Base::what              () const throw() { return "Undefined error in class Timestamp.";                                                                                                                  }
-    inline char const* BadFormat::what         () const throw() { return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in format \"" + *_format + "\".").c_str(); }
-    inline BadFormat&  BadFormat::Problem      (char const*                   const problem)  throw() { _problem  = problem;  return *this; }
-    inline BadFormat&  BadFormat::Position     (std::string::size_type        const position) throw() { _position = position; return *this; }
-    inline BadFormat&  BadFormat::Format       (ConstReferencePointer<std::string>& format)   throw() { _format   = format;   return *this; }
-    inline char const* InvalidTime::what       () const throw() { return "The specified time is invalid.";                                                                                                                       }
-    inline char const* NoYearZero::what        () const throw() { return "There is no year 0.";                                                                                                                                  }
-    inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                                                                                              }
-    inline char const* MissingSysSupport::what () const throw() { return "Missing necessary system-provided support.";                                                                                                           }
-  }
+   * Inline and template definitions.
+   ***************************************************************************/
   
   /***************************************************************************
    * Class Timestamp.

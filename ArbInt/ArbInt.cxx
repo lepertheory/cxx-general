@@ -812,8 +812,12 @@ namespace DAC {
       SafeInt<unsigned int>      tmp_bits;
       SafeInt<_DigsT::size_type> tmp_digits;
       if (bits >= s_digitbits) {
-        tmp_digits = static_cast<_DigsT::size_type>(bits / s_digitbits);
-        tmp_bits   = static_cast<unsigned int>(bits - tmp_digits * s_digitbits);
+        try {
+          tmp_digits = static_cast<_DigsT::size_type>(bits / s_digitbits);
+        } catch (ArbInt::Errors::ScalarOverflowSpecialized<_DigsT::size_type>& e) {
+          throw ArbInt::Errors::ShiftTooLarge<_DigsT::size_type>().Bits(ConstReferencePointer<ArbInt>(new ArbInt(bits))).MaxBits(ConstReferencePointer<ArbInt>(new ArbInt(ArbInt(numeric_limits<_DigsT::size_type>::max()) * s_digitbits)));
+        }
+        tmp_bits = static_cast<unsigned int>(bits - tmp_digits * s_digitbits);
       } else {
         tmp_bits = static_cast<unsigned int>(bits);
       }
@@ -900,11 +904,8 @@ namespace DAC {
     if (*this && bits) {
       
       // Pull out any whole digits and shift them.
-      try {
-        SafeInt<_DigsT::size_type> tmp_digits = bits / s_digitbits;
-        SafeInt<unsigned int>      tmp_bits   = bits - tmp_digits;
-      } catch (ArbInt::Errors::ScalarOverflow) {
-        throw ArbInt::Errors::ShiftTooLarge().Bits(bits.toString()).MaxBits(
+      SafeInt<_DigsT::size_type> tmp_digits = bits / s_digitbits;
+      SafeInt<unsigned int>      tmp_bits   = bits - tmp_digits;
       if (tmp_digits) {
         _shiftDigits(tmp_digits, dir);
       }
