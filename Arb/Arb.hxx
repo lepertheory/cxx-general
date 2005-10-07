@@ -88,7 +88,6 @@ namespace DAC {
           };
           
           // Bad format.
-          // FIXME: char const*s need to be initialized to 0.
           class BadFormat : public Base {
             public:
               virtual char const* what () const throw() {
@@ -98,14 +97,15 @@ namespace DAC {
                   return "Bad format. Error creating message string.";
                 }
               };
+              virtual ~BadFormat () throw() {};
               BadFormat& Problem  (char const*                        const problem)  throw() { _problem  = problem ; return *this; };
               BadFormat& Position (std::string::size_type             const position) throw() { _position = position; return *this; };
               BadFormat& Number   (ConstReferencePointer<std::string> const number)   throw() { _number   = number  ; return *this; };
-              char const*                        Problem  () const throw() { return _problem ; };
-              std::string::size_type             Position () const throw() { return _position; };
-              ConstReferencePointer<std::string> Number   () const throw() { return _number  ; };
+              char const*                        Problem  () const throw() { return _problem.c_str(); };
+              std::string::size_type             Position () const throw() { return _position       ; };
+              ConstReferencePointer<std::string> Number   () const throw() { return _number         ; };
             private:
-              char const*                        _problem;
+              std::string                        _problem;
               std::string::size_type             _position;
               ConstReferencePointer<std::string> _number;
           };
@@ -124,15 +124,16 @@ namespace DAC {
                   return "Divide by zero. Error creating message string.";
                 }
               };
+              virtual ~DivByZeroBinary () throw() {};
               DivByZeroBinary& Left     (T           const l)  throw() { _l  = l ; return *this; };
               DivByZeroBinary& Operator (char const* const op) throw() { _op = op; return *this; };
               DivByZeroBinary& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l ; };
-              char const* Operator () const throw() { return _op; };
-              U           Right    () const throw() { return _r ; };
+              T           Left     () const throw() { return _l         ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              U           Right    () const throw() { return _r         ; };
             private:
               T           _l;
-              char const* _op;
+              std::string _op;
               U           _r;
           };
           
@@ -173,15 +174,16 @@ namespace DAC {
                   return "Integer operation attempted on a non-integer. Error creating message string.";
                 }
               };
+              virtual ~NonIntegerBinary () throw() {};
               NonIntegerBinary& Left     (T           const l)  throw() { _l  = l ; return *this; };
               NonIntegerBinary& Operator (char const* const op) throw() { _op = op; return *this; };
               NonIntegerBinary& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l ; };
-              char const* Operator () const throw() { return _op; };
-              U           Right    () const throw() { return _r ; };
+              T           Left     () const throw() { return _l         ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              U           Right    () const throw() { return _r         ; };
             private:
               T           _l;
-              char const* _op;
+              std::string _op;
               U           _r;
           };
           
@@ -1326,7 +1328,7 @@ namespace DAC {
     
     // Dividing by 0 is verboten.
     if (r == 0) {
-      throw Arb::Errors::DivByZeroBinary<Arb, T>().Left(ConstReferencePointer<Arb>(new Arb(l))).Operator("/").Right(r);
+      throw Arb::Errors::DivByZeroBinary<Arb, T>().Left(l).Operator("/").Right(r);
     }
     
     // Dividing by 1 is also easy.
@@ -1384,12 +1386,12 @@ namespace DAC {
     
     // Dividing by 0 is verboten.
     if (r == 0) {
-      throw Arb::Errors::DivByZeroBinary<Arb, T>().Left(ConstReferencePointer<Arb>(new Arb(l))).Operator("%").Right(r);
+      throw Arb::Errors::DivByZeroBinary<Arb, T>().Left(l).Operator("%").Right(r);
     }
     
     // Throw an error if both numbers are not integer.
     if (!l.isInteger()) {
-      throw Arb::Errors::NonIntegerBinary<Arb, T>().Left(ConstReferencePointer<Arb>(new Arb(l))).Operator("%").Right(r);
+      throw Arb::Errors::NonIntegerBinary<Arb, T>().Left(l).Operator("%").Right(r);
     }
     
     // Work area.

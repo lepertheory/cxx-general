@@ -30,25 +30,31 @@ namespace DAC {
   /***************************************************************************/
   // Static data members.
   
+#if defined(TIMESTAMP_SYSTIME_REENTRANT)
+  bool const Timestamp::THREADSAFE = true;
+#else
+  bool const Timestamp::THREADSAFE = false;
+#endif
+  
   // Short weekday name array.
-  char const* const Timestamp::SHORT_WEEKDAY_NAME[] = {
+  char const* const Timestamp::_SHORT_WEEKDAY_NAME[] = {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
   };
   
   // Long weekday name array.
-  char const* const Timestamp::LONG_WEEKDAY_NAME[] = {
+  char const* const Timestamp::_LONG_WEEKDAY_NAME[] = {
     "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
   };
   
   // Short month name array.
-  char const* const Timestamp::SHORT_MONTH_NAME[] = {
+  char const* const Timestamp::_SHORT_MONTH_NAME[] = {
     "Err",
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   };
   
   // Long month name array.
-  char const* const Timestamp::LONG_MONTH_NAME[] = {
+  char const* const Timestamp::_LONG_MONTH_NAME[] = {
     "Error",
     "January", "February", "March",     "April",   "May",      "June",
     "July",    "August",   "September", "October", "November", "December"
@@ -111,9 +117,22 @@ namespace DAC {
     
   }
   
+  // Accessors.
+  Timestamp& Timestamp::MJD (unsigned int const mjd) {
+    if (mjd > 99999) { throw Errors::MJDMax().MJD(mjd); }
+    _cache_valid = false;
+    _jd.set(mjd + TimeVal(2400000.5) - _offset);
+    return *this;
+  }
+  Timestamp& Timestamp::Offset (int const offset) {
+    if (offset < -720) { throw Errors::OffsetMin().Offset(offset); }
+    if (offset >  720) { throw Errors::OffsetMax().Offset(offset); }
+    _cache_valid = false;
+    _offset = offset / TimeVal(1440);
+    return *this;
+  }
+  
   // Get the current system time.
-  // FIXME: This needs to use thread-safe functions and if it can't, mark
-  // itself as unsafe. Use gmtime_r on linux, or the Windows API on Win.
   Timestamp& Timestamp::getSystemTime () {
     
     // Disable this function if system support is missing.
@@ -122,7 +141,7 @@ namespace DAC {
     !defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  ) && \
     !defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        ) && \
     !defined(TIMESTAMP_SYSTIME_TIME_GMTIME          )
-    throw TimestampErrors::MissingSysSupport();
+    throw Errors::MissingSysSupport().Operation("Timestamp::getSystemTime");
 #else
     
     // Work area.
@@ -132,8 +151,8 @@ namespace DAC {
     _SYSTEMTIME systime;
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
         defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
-    struct timeval  tv      = { 0, 0 };
-    struct timezone tz      = { 0, 0 };
+    struct timeval  tv = { 0, 0 };
+    struct timezone tz = { 0, 0 };
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
         defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     time_t tv = 0;
@@ -152,31 +171,31 @@ namespace DAC {
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
         defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     if (gettimeofday(&tv, &tz)) {
-      throw TimestampErrors::SysCallError();
+      throw Errors::SysCall_gettimeofday();
     }
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
         defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     if (time(&tv) == -1) {
-      throw TimeStampErrors::SysCallError();
+      throw Errors::SysCall_time();
     }
   #endif
   
     // Convert time to YMDHMS.
   #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R)
     if (!gmtime_r(&(tv.tv_sec), &systime)) {
-      throw TimestampErrors::SysCallError();
+      throw Errors::SysCall_gmtime_r();
     }
   #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
     if (!(systime = gmtime(&(tv.tv_sec)))) {
-      throw TimestampErrors::SysCallError();
+      throw Errors::SysCall_gmtime();
     }
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R)
     if (!gmtime_r(&tv, &systime)) {
-      throw TimestampErrors::SysCallError();
+      throw Errors::SysCall_gmtime_r();
     }
   #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
     if (!(systime = gmtime(&tv))) {
-      throw TimestampErrors::SysCallError();
+      throw Errors::SysCall_gmtime();
     }
   #endif
     
@@ -323,7 +342,7 @@ namespace DAC {
         
         // No dangling escape character.
         if (++i == fmt->end()) {
-          throw TimestampErrors::BadFormat().Problem("Dangling escape character").Position(i - 1 - fmt->begin()).Format(fmt);
+          throw Errors::BadFormat().Problem("Dangling escape character").Position(i - 1 - fmt->begin()).Format(fmt);
         }
         
         // Modifiers.
@@ -335,7 +354,7 @@ namespace DAC {
         
         // No dangling modifier.
         if (i == fmt->end()) {
-          throw TimestampErrors::BadFormat().Problem("Dangling modifier").Position(i - 1 - fmt->begin()).Format(fmt);
+          throw Errors::BadFormat().Problem("Dangling modifier").Position(i - 1 - fmt->begin()).Format(fmt);
         }
         
         // Next character is a format option.
@@ -351,22 +370,22 @@ namespace DAC {
           
           // Abbreviated weekday name.
           case 'a': {
-            retval += SHORT_WEEKDAY_NAME[dow()];
+            retval += _SHORT_WEEKDAY_NAME[dow()];
           } break;
           
           // Full weekday name, variable length.
           case 'A': {
-            retval += LONG_WEEKDAY_NAME[dow()];
+            retval += _LONG_WEEKDAY_NAME[dow()];
           } break;
           
           // Abbreviated month name.
           case 'b': {
-            retval += SHORT_MONTH_NAME[Month()];
+            retval += _SHORT_MONTH_NAME[Month()];
           } break;
           
           // Full month name, variable length.
           case 'B': {
-            retval += LONG_MONTH_NAME[Month()];
+            retval += _LONG_MONTH_NAME[Month()];
           } break;
           
           // Default date and time format.
@@ -576,7 +595,7 @@ namespace DAC {
           
           // Unknown option.
           default: {
-            throw TimestampErrors::BadFormat().Problem("Invalid character").Position(i - fmt->begin()).Format(fmt);
+            throw Errors::BadFormat().Problem("Invalid character").Position(i - fmt->begin()).Format(fmt);
           } break;
           
         }
@@ -743,7 +762,13 @@ namespace DAC {
         !settime.Second     ().isInteger() || (settime.Second     () <  0) || (settime.Second     () > 59 + ((settime.Hour() == 23 && settime.Minute() == 59) ? _leapSecond(settime.Year(), settime.Month(), settime.Day()) : 0)) ||
         !settime.Millisecond().isInteger() || (settime.Millisecond() <  0) || (settime.Millisecond() > 999                                                                                                                      )
     ) {
-      throw TimestampErrors::InvalidTime();
+      throw Errors::InvalidTime().Year       (settime.Year       ())
+                                 .Month      (settime.Month      ())
+                                 .Day        (settime.Month      ())
+                                 .Hour       (settime.Hour       ())
+                                 .Minute     (settime.Minute     ())
+                                 .Second     (settime.Second     ())
+                                 .Millisecond(settime.Millisecond());
     }
     
     // Invalidate the cache.
@@ -865,7 +890,7 @@ namespace DAC {
     
     // The year 0 did not exist.
     if (year == 0) {
-      throw TimestampErrors::NoYearZero();
+      throw Errors::NoYearZero();
     }
     
     // Correct for no 0 year.
@@ -949,7 +974,7 @@ namespace DAC {
         break;
         
       }
-    } catch (ArbIntErrors::ScalarOverflow) {
+    } catch (Arb::Errors::ScalarOverflow) {
       days = 0;
     }
     

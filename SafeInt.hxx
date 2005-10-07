@@ -81,17 +81,18 @@ namespace DAC {
                   return "Unary operation overflow. Error returning message string.";
                 }
               };
+              virtual ~UnOpOverflow () throw() {};
               UnOpOverflow& Number   (T           const number) throw() { _number = number; return *this; };
               UnOpOverflow& Operator (char const* const op)     throw() { _op     = op    ; return *this; };
               UnOpOverflow& Prefix   (bool        const prefix) throw() { _prefix = prefix; return *this; };
               UnOpOverflow& Limit    (T           const limit)  throw() { _limit  = limit ; return *this; };
-              T           Number   () const throw() { return _number; };
-              char const* Operator () const throw() { return _op    ; };
-              bool        Prefix   () const throw() { return _prefix; };
-              T           Limit    () const throw() { return _limit ; };
+              T           Number   () const throw() { return _number    ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              bool        Prefix   () const throw() { return _prefix    ; };
+              T           Limit    () const throw() { return _limit     ; };
             private:
               T           _number;
-              char const* _op;
+              std::string _op;
               bool        _prefix;
               T           _limit;
           };
@@ -106,17 +107,18 @@ namespace DAC {
                   return "Binary operation overflow. Error returning message string.";
                 }
               };
+              virtual ~BinOpOverflow () throw() {};
               BinOpOverflow& Left     (T           const l)     throw() { _l     = l    ; return *this; };
               BinOpOverflow& Operator (char const* const op)    throw() { _op    = op   ; return *this; };
               BinOpOverflow& Right    (U           const r)     throw() { _r     = r    ; return *this; };
               BinOpOverflow& Limit    (T           const limit) throw() { _limit = limit; return *this; };
-              T           Left     () const throw() { return _l    ; };
-              char const* Operator () const throw() { return _op   ; };
-              U           Right    () const throw() { return _r    ; };
-              T           Limit    () const throw() { return _limit; };
+              T           Left     () const throw() { return _l         ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              U           Right    () const throw() { return _r         ; };
+              T           Limit    () const throw() { return _limit     ; };
             private:
               T           _l;
-              char const* _op;
+              std::string _op;
               U           _r;
               T           _limit;
           };
@@ -134,12 +136,12 @@ namespace DAC {
               BitOverflow& Left     (T           const l)  throw() { _l  = l ; return *this; };
               BitOverflow& Operator (char const* const op) throw() { _op = op; return *this; };
               BitOverflow& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l ; };
-              char const* Operator () const throw() { return _op; };
-              U           Right    () const throw() { return _r ; };
+              T           Left     () const throw() { return _l         ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              U           Right    () const throw() { return _r         ; };
             private:
               T           _l;
-              char const* _op;
+              std::string _op;
               U           _r;
           };
           
@@ -153,15 +155,16 @@ namespace DAC {
                   return "Divide by zero. Error returning message string.";
                 }
               };
+              virtual ~DivByZero () throw() {};
               DivByZero& Left     (T           const l)  throw() { _l  = l ; return *this; };
               DivByZero& Operator (char const* const op) throw() { _op = op; return *this; };
               DivByZero& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l ; };
-              char const* Operator () const throw() { return _op; };
-              U           Right    () const throw() { return _r ; };
+              T           Left     () const throw() { return _l         ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              U           Right    () const throw() { return _r         ; };
             private:
               T           _l;
-              char const* _op;
+              std::string _op;
               U           _r;
           };
           
@@ -181,15 +184,16 @@ namespace DAC {
                   return "Result of operation is undefined. Error returning message string.";
                 }
               };
+              virtual ~BinOpUndefined () throw() {};
               BinOpUndefined& Left     (T           const l)  throw() { _l  = l ; return *this; };
               BinOpUndefined& Operator (char const* const op) throw() { _op = op; return *this; };
               BinOpUndefined& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left ()     const throw() { return _l ; };
-              char const* Operator () const throw() { return _op; };
-              U           Right ()    const throw() { return _r ; };
+              T           Left ()     const throw() { return _l         ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              U           Right ()    const throw() { return _r         ; };
             private:
               T           _l;
-              char const* _op;
+              std::string _op;
               U           _r;
           };
         

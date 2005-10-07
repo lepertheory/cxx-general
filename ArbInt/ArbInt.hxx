@@ -64,7 +64,6 @@ namespace DAC {
           };
           
           // Bad format.
-          // FIXME: char const*s need to be initialized to 0.
           class BadFormat : public Base {
             public:
               virtual char const* what () const throw() {
@@ -78,11 +77,11 @@ namespace DAC {
               BadFormat& Problem  (char const*                        const problem)  throw() { _problem  = problem ; return *this; };
               BadFormat& Position (std::string::size_type             const position) throw() { _position = position; return *this; };
               BadFormat& Number   (ConstReferencePointer<std::string> const number)   throw() { _number   = number  ; return *this; };
-              char const*                        Problem  () const throw() { return _problem ; };
-              std::string::size_type             Position () const throw() { return _position; };
-              ConstReferencePointer<std::string> Number   () const throw() { return _number  ; };
+              char const*                        Problem  () const throw() { return _problem.c_str(); };
+              std::string::size_type             Position () const throw() { return _position       ; };
+              ConstReferencePointer<std::string> Number   () const throw() { return _number         ; };
             private:
-              char const*                        _problem;
+              std::string                        _problem;
               std::string::size_type             _position;
               ConstReferencePointer<std::string> _number;
           };
@@ -121,12 +120,12 @@ namespace DAC {
               NegativeUnary& Number   (ConstReferencePointer<ArbInt> const number) throw() { _number = number; return *this; };
               NegativeUnary& Operator (char const*                   const op)     throw() { _op     = op    ; return *this; };
               NegativeUnary& Prefix   (bool                          const prefix) throw() { _prefix = prefix; return *this; };
-              ConstReferencePointer<ArbInt> Number   () const throw() { return _number; };
-              char const*                   Operator () const throw() { return _op;     };
-              bool                          Prefix   () const throw() { return _prefix; };
+              ConstReferencePointer<ArbInt> Number   () const throw() { return _number;     };
+              char const*                   Operator () const throw() { return _op.c_str(); };
+              bool                          Prefix   () const throw() { return _prefix;     };
             private:
               ConstReferencePointer<ArbInt> _number;
-              char const*                   _op;
+              std::string                   _op;
               bool                          _prefix;
           };
           template <class T, class U> class NegativeBinary : public Negative {
@@ -142,12 +141,12 @@ namespace DAC {
               NegativeBinary& Left     (T           const l)  throw() { _l  = l ; return *this; };
               NegativeBinary& Operator (char const* const op) throw() { _op = op; return *this; };
               NegativeBinary& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l ; };
-              char const* Operator () const throw() { return _op; };
-              U           Right    () const throw() { return _r ; };
+              T           Left     () const throw() { return _l         ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              U           Right    () const throw() { return _r         ; };
             private:
               T           _l;
-              char const* _op;
+              std::string _op;
               U           _r;
           };
           
@@ -171,11 +170,11 @@ namespace DAC {
               OverrunSpecialized& Problem (char const* const problem) throw() { _problem = problem; return *this; };
               OverrunSpecialized& Offset  (T           const offset)  throw() { _offset  = offset ; return *this; };
               OverrunSpecialized& Limit   (T           const limit)   throw() { _limit   = limit  ; return *this; };
-              char const* Problem () const throw() { return _problem; };
-              T           Offset  () const throw() { return _offset ; };
-              T           Limit   () const throw() { return _limit  ; };
+              char const* Problem () const throw() { return _problem.c_str(); };
+              T           Offset  () const throw() { return _offset         ; };
+              T           Limit   () const throw() { return _limit          ; };
             private:
-              char const* _problem;
+              std::string _problem;
               T           _offset ;
               T           _limit  ;
           };
@@ -217,12 +216,12 @@ namespace DAC {
               DivByZeroBinary& Left     (T           const l)  throw() { _l  = l ; return *this; };
               DivByZeroBinary& Operator (char const* const op) throw() { _op = op; return *this; };
               DivByZeroBinary& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l ; };
-              char const* Operator () const throw() { return _op; };
-              U           Right    () const throw() { return _r ; };
+              T           Left     () const throw() { return _l         ; };
+              char const* Operator () const throw() { return _op.c_str(); };
+              U           Right    () const throw() { return _r         ; };
             private:
               T           _l;
-              char const* _op;
+              std::string _op;
               U           _r;
           };
           
@@ -244,8 +243,8 @@ namespace DAC {
               virtual ~ScalarOverflowSpecialized () throw() {};
               ScalarOverflowSpecialized& Number (ConstReferencePointer<ArbInt> const number) throw() { _number = number; return *this; };
               ScalarOverflowSpecialized& Limit  (T                             const limit)  throw() { _limit  = limit ; return *this; };
-              ConstReferencePointer<ArbInt> Number () const throw();
-              T                             Limit  () const throw();
+              ConstReferencePointer<ArbInt> Number () const throw() { return _number; };
+              T                             Limit  () const throw() { return _limit ; };
             private:
               ConstReferencePointer<ArbInt> _number;
               T                             _limit;

@@ -210,29 +210,98 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in format \"" + *_format + "\".").c_str();
+                  return (_problem + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in format \"" + *_format + "\".").c_str();
                 } catch (...) {
                   return "Bad format. Error creating message string.";
                 }
               };
+              virtual ~BadFormat () throw() {};
               BadFormat& Problem  (char const*                        const problem ) throw() { _problem  = problem ; return *this; };
               BadFormat& Position (std::string::size_type             const position) throw() { _position = position; return *this; };
               BadFormat& Format   (ConstReferencePointer<std::string> const format  ) throw() { _format   = format  ; return *this; };
-              char const*                        Problem  () const throw() { return _problem ; }
-              std::string::size_type             Position () const throw() { return _position; }
-              ConstReferencePointer<std::string> Format   () const throw() { return _format  ; }
+              char const*                        Problem  () const throw() { return _problem.c_str(); }
+              std::string::size_type             Position () const throw() { return _position       ; }
+              ConstReferencePointer<std::string> Format   () const throw() { return _format         ; }
             private:
-              char const*                        _problem ;
+              std::string                        _problem ;
               std::string::size_type             _position;
               ConstReferencePointer<std::string> _format  ;
           };
           
-          // Invalid time.
-          class InvalidTime : public Base {
+          // Bad value.
+          class BadValue : public Base {
+            public:
+              virtual char const* what () const throw() { return "Bad value passed."; };
+          };
+          
+          // Invalid MJD sent.
+          class BadMJD : public BadValue {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Invalid time specified: " + _month->toString() + "/" + _day->toString() + "/" + _year->toString() + " " + _hour->toString() + ":" + _minute->toString() + ":" + _second->toString() + "." + _millisecond.toString()).c_str();
+                  return ("Invalid MJD of " + DAC::toString(_mjd) + " sent.").c_str();
+                } catch (...) {
+                  return "Invalid MJD sent. Error creating message string.";
+                }
+              };
+              BadMJD& MJD (unsigned int const mjd) throw() { _mjd = mjd; return *this; };
+              unsigned int MJD () const throw() { return _mjd; };
+            protected:
+              unsigned int _mjd;
+          };
+          class MJDMax : public BadMJD {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("MJD of " + DAC::toString(_mjd) + " sent, MJD maximum is 99999.").c_str();
+                } catch (...) {
+                  return "MJD over maximum of 99999 sent. Error creating message string.";
+                }
+              };
+          };
+          
+          // Invalid offset.
+          class BadOffset : public BadValue {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Invalid offset of " + DAC::toString(_offset) + " sent.").c_str();
+                } catch (...) {
+                  return "Invalid offset sent. Error creating message string.";
+                }
+              };
+              BadOffset& Offset (int const offset) throw() { _offset = offset; return *this; }
+              int Offset () const throw() { return _offset; }
+            protected:
+              int _offset;
+          };
+          class OffsetMin : public BadOffset {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Offset of " + DAC::toString(_offset) + " sent, offset minimum is -720.").c_str();
+                } catch (...) {
+                  return "Offset under minimum of -720 sent. Error creating message string.";
+                }
+              };
+          };
+          class OffsetMax : public BadOffset {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Offset of " + DAC::toString(_offset) + " sent, offset maximum is 720.").c_str();
+                } catch (...) {
+                  return "Offset over maximum of 720 sent. Error creating message string.";
+                }
+              };
+          };
+          
+          // Invalid time.
+          class InvalidTime : public BadValue {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Invalid time specified: " + _month.toString() + "/" + _day.toString() + "/" + _year.toString() + " " + _hour.toString() + ":" + _minute.toString() + ":" + _second.toString() + "." + _millisecond.toString()).c_str();
                 } catch (...) {
                   return "Invalid time specified. Error creating message string.";
                 }
@@ -270,7 +339,6 @@ namespace DAC {
           };
           
           // Error making a system call.
-          // FIXME: char const*s need to be initialized to 0.
           class SysCallError : public Base {
             public:
               virtual char const* what () const throw() {
@@ -279,29 +347,75 @@ namespace DAC {
                 } catch (...) {
                   return "Error making the requested system call. Error creating message string.";
                 }
-              }
+              };
+              virtual ~SysCallError () throw() {};
               SysCallError& SysCall (char const* const syscall) throw() { _syscall = syscall; return *this; };
-              char const* SysCall () const throw() { return _syscall; }
+              char const* SysCall () const throw() { return _syscall.c_str(); }
             private:
-              char const* _syscall;
+              std::string _syscall;
           };
   #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
-          class GetSystemTimeError : public SysCallError
+          class SysCall_GetSystemTime : public SysCallError {
+            public:
+              SysCall_GetSystemTime () {
+                SysCall("GetSystemTime");
+              };
+          };
   #endif
-  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \\
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
       defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
-          class 
+          class SysCall_gettimeofday : public SysCallError {
+            public:
+              SysCall_gettimeofday () {
+                SysCall("gettimeofday");
+              };
+          };
   #endif
-  #if defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \\
+  #if defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
       defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+          class SysCall_time : public SysCallError {
+            public:
+              SysCall_time () {
+                SysCall("time");
+              };
+          };
   #endif
-  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \\
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
       defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        )
+          class SysCall_gmtime_r : public SysCallError {
+            public:
+              SysCall_gmtime_r () {
+                SysCall("gmtime_r");
+              };
+          };
   #endif
-  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \\
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \
       defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
+          class SysCall_gmtime : public SysCallError {
+            public:
+              SysCall_gmtime () {
+                SysCall("gmtime");
+              };
+          };
   #endif
-                   
+          
+          // Missing system support.
+          class MissingSysSupport : public Base {
+            public:
+              virtual char const* what () const throw() {
+                try {
+                  return ("Missing support for the requested operation: " + _op).c_str();
+                } catch (...) {
+                  return "Missing support for the requested operation. Error creating message string.";
+                }
+              };
+              virtual ~MissingSysSupport () throw() {};
+              MissingSysSupport& Operation (char const* const op) throw() { _op = op; return *this; };
+              char const* Operation () const throw() { return _op.c_str(); }
+            private:
+              std::string _op;
+          };
+        
         // Private constructor, no instantiation.
         private:
           Errors ();
@@ -309,26 +423,11 @@ namespace DAC {
           Errors& operator = (Errors const&);
         
       };
-    class SysCallError      : public Base        { public: virtual char const* what () const throw(); };
-    class MissingSysSupport : public Base        { public: virtual char const* what () const throw(); };
-    
-    inline char const* SysCallError::what      () const throw() { return "Error making the requested system call.";                                                                                                              }
-    inline char const* MissingSysSupport::what () const throw() { return "Missing necessary system-provided support.";                                                                                                           }
       
       /***********************************************************************/
       // Constants.
       
-      // 3-letter weekday abbreviations, Sun-Sat, 0 indexed.
-      static char const* const SHORT_WEEKDAY_NAME[];
-      
-      // Full weekday names, Sunday-Saturday, 0 indexed.
-      static char const* const LONG_WEEKDAY_NAME[];
-      
-      // 3-letter month abbreviation, Jan-Dec, 1 indexed.
-      static char const* const SHORT_MONTH_NAME[];
-      
-      // Full month names, January-December, 1 indexed.
-      static char const* const LONG_MONTH_NAME[];
+      static const bool THREADSAFE;
       
       /***********************************************************************/
       // Function members.
@@ -370,25 +469,25 @@ namespace DAC {
       Timestamp& operator -= (TimeVal const& days);
       
       // Properties.
-      Timestamp&  LastJulianDate (YMD         const& lastjulian)      ;
-      YMD         LastJulianDate (                             ) const;
-      Timestamp&  Julian         (TimeVal     const& jd        )      ;
-      TimeVal     Julian         (                             ) const;
-      Timestamp&  MJD            (TimeVal     const& mjd       )      ;
-      TimeVal     MJD            (                             ) const;
-      Timestamp&  POSIXDate      (TimeVal     const& posixdate )      ;
-      TimeVal     POSIXDate      (                             ) const;
-      Timestamp&  Offset         (int const          offset    )      ;
-      int         Offset         (                             ) const;
-      Timestamp&  TZName         (char const* const  name      )      ;
-      char const* TZName         (                             ) const;
-      TimeVal     Year           (                             ) const;
-      TimeVal     Month          (                             ) const;
-      TimeVal     Day            (                             ) const;
-      TimeVal     Hour           (                             ) const;
-      TimeVal     Minute         (                             ) const;
-      TimeVal     Second         (                             ) const;
-      TimeVal     Millisecond    (                             ) const;
+      Timestamp&   LastJulianDate (YMD         const& lastjulian)      ;
+      YMD          LastJulianDate (                             ) const;
+      Timestamp&   Julian         (TimeVal     const& jd        )      ;
+      TimeVal      Julian         (                             ) const;
+      Timestamp&   MJD            (unsigned int const mjd       )      ;
+      unsigned int MJD            (                             ) const;
+      Timestamp&   POSIXDate      (TimeVal     const& posixdate )      ;
+      TimeVal      POSIXDate      (                             ) const;
+      Timestamp&   Offset         (int const          offset    )      ;
+      int          Offset         (                             ) const;
+      Timestamp&   TZName         (char const* const  name      )      ;
+      char const*  TZName         (                             ) const;
+      TimeVal      Year           (                             ) const;
+      TimeVal      Month          (                             ) const;
+      TimeVal      Day            (                             ) const;
+      TimeVal      Hour           (                             ) const;
+      TimeVal      Minute         (                             ) const;
+      TimeVal      Second         (                             ) const;
+      TimeVal      Millisecond    (                             ) const;
       
       // Reset to just-constructed defaults.
       Timestamp& clear ();
@@ -415,7 +514,6 @@ namespace DAC {
       
       // Follows the formatting rules at the following URL:
       // http://www.opengroup.org/onlinepubs/009695399/functions/strftime.html
-      // FIXME: This does not, for now, include any locale functionality.
       std::string toString (std::string const& format = "") const;
       
       // Arithmetic operator backends.
@@ -471,6 +569,21 @@ namespace DAC {
      * Private members.
      */
     private:
+      
+      /***********************************************************************/
+      // Constants.
+      
+      // 3-letter weekday abbreviations, Sun-Sat, 0 indexed.
+      static char const* const _SHORT_WEEKDAY_NAME[];
+      
+      // Full weekday names, Sunday-Saturday, 0 indexed.
+      static char const* const _LONG_WEEKDAY_NAME[];
+      
+      // 3-letter month abbreviation, Jan-Dec, 1 indexed.
+      static char const* const _SHORT_MONTH_NAME[];
+      
+      // Full month names, January-December, 1 indexed.
+      static char const* const _LONG_MONTH_NAME[];
       
       /***********************************************************************/
       // Data members.
@@ -640,10 +753,7 @@ namespace DAC {
   inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _cache_valid = false; _jd.set(jd); return *this; }
   inline Timestamp::TimeVal Timestamp::Julian (                 ) const { return _jd;                                      }
   
-  // FIXME: This will allow mjd of > 99999. Will have to make this throw, make
-  // up a new error, pain in the ass, get to it later.
-  inline Timestamp&         Timestamp::MJD (TimeVal const& mjd)       { _cache_valid = false; _jd.set(mjd + 2400000.5 - _offset); return *this; }
-  inline Timestamp::TimeVal Timestamp::MJD (                  ) const { return _jd - 2400000.5 + _offset;                                       }
+  inline unsigned int Timestamp::MJD () const { return (_jd - 2400000.5 + _offset) % 100000; }
   
   inline Timestamp&         Timestamp::POSIXDate (TimeVal const& posixdate)       { _cache_valid = false; _jd.set(posixdate / 86400 + 2440587.5); return *this; }
   inline Timestamp::TimeVal Timestamp::POSIXDate (                        ) const { return (_jd - 2440587.5) * 86400;                                           }
@@ -656,9 +766,7 @@ namespace DAC {
   inline Timestamp::TimeVal Timestamp::Second      () const { if (!_cache_valid) { _loadCache(); } return _cache_second     ; }
   inline Timestamp::TimeVal Timestamp::Millisecond () const { if (!_cache_valid) { _loadCache(); } return _cache_millisecond; }
   
-  // FIXME: Offset range checking, should not be able to go past +/-720.
-  inline Timestamp& Timestamp::Offset (int const offset)       { _cache_valid = false; _offset = offset / TimeVal(1440); return *this; }
-  inline int        Timestamp::Offset ()                 const { return _offset * 1440;                                                }
+  inline int Timestamp::Offset () const { return _offset * 1440; }
   
   inline Timestamp&  Timestamp::TZName (char const* const name)       { _tzname = name; return *this; }
   inline char const* Timestamp::TZName ()                       const { return _tzname.c_str();       }
