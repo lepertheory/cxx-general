@@ -837,7 +837,15 @@ namespace DAC {
    ***************************************************************************/
   
   // Default constructor.
-  inline Timestamp::Interval::Interval () {}
+  inline Timestamp::Interval::Interval () :
+    _set_millisecond(false),
+    _set_second     (false),
+    _set_minute     (false),
+    _set_hour       (false),
+    _set_day        (false),
+    _set_month      (false),
+    _set_year       (false)
+  {}
   
   // Set properties.
   inline Timestamp::Interval& Timestamp::Interval::Millisecond (TimeVal const& millisecond) { _millisecond = millisecond; _set_millisecond = true; return *this; }
