@@ -735,6 +735,7 @@ namespace DAC {
   inline Timestamp& Timestamp::operator -= (TimeVal const& days) { return op_sub(days); }
   
   // Properties.
+  // TODO: See if there's a practical way to set this as a JD.
   inline Timestamp& Timestamp::LastJulianDate (YMD const& lastjulian) {
     Timestamp tmp;
     tmp.set(
