@@ -121,7 +121,7 @@ namespace DAC {
   Timestamp& Timestamp::MJD (unsigned int const mjd) {
     if (mjd > 99999) { throw Errors::MJDMax().MJD(mjd); }
     _cache_valid = false;
-    _jd.set(mjd + TimeVal(2400000.5) - _offset);
+    _jd.set(mjd + TimeVal(2400000) - 0.5 - _offset);
     return *this;
   }
   Timestamp& Timestamp::Offset (int const offset) {
