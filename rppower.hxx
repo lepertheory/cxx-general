@@ -35,7 +35,6 @@ namespace DAC {
   // Raise an integral type.
   template <class NumT, class ExpT> NumT rppower (NumT const x, ExpT const y) {
     
-    std::cout << "fuckfart1" << std::endl;
     // Work area.
     ExpT tmp_y  = y;
     NumT tmp_x  = x;
@@ -74,7 +73,6 @@ namespace DAC {
   // Raise a SafeInt.
   #if defined(SAFEINT_3k54kbuihub7hbh0)
   template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const x, SafeInt<ExpT> const y) {
-    std::cout << "fuckfart2" << std::endl;
     SafeInt<ExpT> tmp_y(y);
     SafeInt<NumT> tmp_x(x);
     SafeInt<NumT> result(1);
@@ -102,7 +100,6 @@ namespace DAC {
     return result;
   }
   template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const x, ExpT const y) {
-    std::cout << "fuckfart3" << std::endl;
     SafeInt<ExpT> tmp_y(y);
     SafeInt<NumT> tmp_x(x);
     SafeInt<NumT> result(1);
