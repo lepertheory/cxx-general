@@ -8,6 +8,7 @@
 // Include guard.
 #if !defined(RPPOWER_gu2j9g8uuhu)
   #define RPPOWER_gu2j9g8uuhu
+#include <iostream>
 
 // Contain in namespace.
 namespace DAC {
@@ -16,11 +17,11 @@ namespace DAC {
   // Functions.
   
   // Raise a number to a power.
-  template <class NumT, class ExpT> NumT          rppower (NumT          const  x, ExpT          const  y);
+  template <class NumT, class ExpT> NumT          rppower (NumT          const x, ExpT          const y);
   #if defined(SAFEINT_3k54kbuihub7hbh0)
-  template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const& x, SafeInt<ExpT> const& y);
-  template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const& x, ExpT          const  y);
-  template <class NumT, class ExpT> SafeInt<NumT> rppower (NumT          const  x, SafeInt<ExpT> const& y);
+  template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const x, SafeInt<ExpT> const y);
+  template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const x, ExpT          const y);
+  template <class NumT, class ExpT> SafeInt<NumT> rppower (NumT          const x, SafeInt<ExpT> const y);
   #endif
   
 }
@@ -32,9 +33,12 @@ namespace DAC {
 namespace DAC {
   
   // Raise an integral type.
-  template <class NumT, class ExpT> inline NumT rppower (NumT x, ExpT y) {
+  template <class NumT, class ExpT> NumT rppower (NumT const x, ExpT const y) {
     
-    // Powers start at 1.
+    std::cout << "fuckfart1" << std::endl;
+    // Work area.
+    ExpT tmp_y  = y;
+    NumT tmp_x  = x;
     NumT result = static_cast<NumT>(1);
     
     // Here it is. I didn't write this. It's very sneaky. x's last
@@ -43,21 +47,21 @@ namespace DAC {
     // number to see if y is 1 and return at that point. I like less lines
     // though. Whee. I did write the bit that makes this handle negative
     // powers though. Whee.
-    if (y >= 0) {
-      while (y) {
-        if (y & 1) {
-          result *= x;
+    if (tmp_y >= 0) {
+      while (tmp_y) {
+        if (tmp_y & 1) {
+          result *= tmp_x;
         }
-        x  *= x;
-        y >>= 1;
+        tmp_x  *= tmp_x;
+        tmp_y >>= 1;
       }
     } else {
-      while (y) {
-        if (y & 1) {
-          result /= x; // I did this. I am so smrt. S-M-R-T.
+      while (tmp_y) {
+        if (tmp_y & 1) {
+          result /= tmp_x; // I did this. I am so smrt. S-M-R-T.
         }
-        x  *= x;
-        y >>= 1;
+        tmp_x  *= tmp_x;
+        tmp_y >>= 1;
       }
     }
     
@@ -69,7 +73,8 @@ namespace DAC {
   
   // Raise a SafeInt.
   #if defined(SAFEINT_3k54kbuihub7hbh0)
-  template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const& x, SafeInt<ExpT> const& y) {
+  template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const x, SafeInt<ExpT> const y) {
+    std::cout << "fuckfart2" << std::endl;
     SafeInt<ExpT> tmp_y(y);
     SafeInt<NumT> tmp_x(x);
     SafeInt<NumT> result(1);
@@ -96,10 +101,12 @@ namespace DAC {
     }
     return result;
   }
-  template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const& x, ExpT const y) {
+  template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const x, ExpT const y) {
+    std::cout << "fuckfart3" << std::endl;
     SafeInt<ExpT> tmp_y(y);
     SafeInt<NumT> tmp_x(x);
     SafeInt<NumT> result(1);
+    std::cout.flush();
     if (tmp_y >= 0) {
       while (tmp_y.Value()) {
         if ((tmp_y & 1).Value()) {
@@ -123,7 +130,8 @@ namespace DAC {
     }
     return result;
   }
-  template <class NumT, class ExpT> SafeInt<NumT> rppower (NumT const x, SafeInt<ExpT> const& y) {
+  template <class NumT, class ExpT> SafeInt<NumT> rppower (NumT const x, SafeInt<ExpT> const y) {
+    std::cout << "fuckfart4" << std::endl;
     SafeInt<ExpT> tmp_y(y);
     SafeInt<NumT> tmp_x(x);
     SafeInt<NumT> result(1);

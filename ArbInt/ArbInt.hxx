@@ -903,10 +903,14 @@ namespace DAC {
   
   // Get the value of this number.
   template <class T> T ArbInt::Value () const {
-    SafeInt<T> retval;
+    SafeInt<T> retval   ;
+    SafeInt<T> mag   (1);
     for (typename _DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
       try {
-        retval += *i * rppower(SafeInt<T>(s_digitbase), (i - _digits->begin()));
+        retval += *i * mag;
+        if (i != _digits->end() - 1) {
+          mag *= s_digitbase;
+        }
       } catch (typename SafeInt<T>::Errors::Overflow) {
         throw ArbInt::Errors::ScalarOverflowSpecialized<T>().Number(ConstReferencePointer<ArbInt>(new ArbInt(*this))).Limit(std::numeric_limits<T>::max());
       }
