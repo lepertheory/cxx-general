@@ -754,7 +754,7 @@ namespace DAC {
   inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _cache_valid = false; _jd.set(jd); return *this; }
   inline Timestamp::TimeVal Timestamp::Julian (                 ) const { return _jd;                                      }
   
-  inline unsigned int Timestamp::MJD () const { return (_jd - 2400000.5 + _offset) % 100000; }
+  inline unsigned int Timestamp::MJD () const { return (_jd - 2400000 + 0.5 + _offset).floor() % 100000; }
   
   inline Timestamp&         Timestamp::POSIXDate (TimeVal const& posixdate)       { _cache_valid = false; _jd.set(posixdate / 86400 + 2440587.5); return *this; }
   inline Timestamp::TimeVal Timestamp::POSIXDate (                        ) const { return (_jd - 2440587.5) * 86400;                                           }

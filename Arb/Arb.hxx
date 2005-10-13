@@ -1596,7 +1596,7 @@ namespace DAC {
           retval._data->p -= r;
         }
       } else {
-        ArbInt tmp(r * retval._data->p);
+        ArbInt tmp(r * retval._data->q);
         if (tmp > retval._data->p) {
           retval._data->p        = tmp - retval._data->p;
           retval._data->positive = !retval._data->positive;
@@ -1671,7 +1671,7 @@ namespace DAC {
           retval._data->p -= rabs;
         }
       } else {
-        ArbInt tmp(rabs * retval._data->p);
+        ArbInt tmp(rabs * retval._data->q);
         if (tmp > retval._data->p) {
           retval._data->p        = tmp - retval._data->p;
           retval._data->positive = !retval._data->positive;
