@@ -8,7 +8,6 @@
 // Include guard.
 #if !defined(RPPOWER_gu2j9g8uuhu)
   #define RPPOWER_gu2j9g8uuhu
-#include <iostream>
 
 // Contain in namespace.
 namespace DAC {
