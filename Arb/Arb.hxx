@@ -1069,6 +1069,12 @@ namespace DAC {
     Arb                   tmpnum;
     SafeInt<unsigned int> tmpexp;
     
+    // Check for zero.
+    if (isZero()) {
+      exponent = 0;
+      return tmpnum._data->p;
+    }
+    
     // Set tmpnum to *this here to avoid carrying over rounding or fixed-point
     // properties, all we are interested in here is the value.
     tmpnum.set(*this);

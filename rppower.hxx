@@ -102,7 +102,6 @@ namespace DAC {
     SafeInt<ExpT> tmp_y(y);
     SafeInt<NumT> tmp_x(x);
     SafeInt<NumT> result(1);
-    std::cout.flush();
     if (tmp_y >= 0) {
       while (tmp_y.Value()) {
         if ((tmp_y & 1).Value()) {
@@ -127,7 +126,6 @@ namespace DAC {
     return result;
   }
   template <class NumT, class ExpT> SafeInt<NumT> rppower (NumT const x, SafeInt<ExpT> const y) {
-    std::cout << "fuckfart4" << std::endl;
     SafeInt<ExpT> tmp_y(y);
     SafeInt<NumT> tmp_x(x);
     SafeInt<NumT> result(1);
