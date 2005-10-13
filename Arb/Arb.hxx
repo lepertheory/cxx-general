@@ -1110,7 +1110,7 @@ namespace DAC {
         tmpnum._data->p <<= bitdiff;
         tmpexp            = static_cast<unsigned int>(_FloatInfo<T>::bias - bitdiff);
         if (tmpnum._data->q > tmpnum._data->p) {
-          if (tmpexp = 1) {
+          if (tmpexp == 1) {
             --tmpexp;
           } else {
             tmpnum._data->p <<= 1;
