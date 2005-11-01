@@ -88,6 +88,7 @@ namespace DAC {
           };
           
           // Bad format.
+          // FIXME: *s must be initialized to 0!
           class BadFormat : public Base {
             public:
               virtual char const* what () const throw() {
