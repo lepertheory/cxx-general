@@ -9,13 +9,21 @@ for incdir in cArbInt['include']:
   env.Append(CPPPATH = ['#' + incdir])
 
 # Object files.
-o_Arb = env.Object(target = 'Arb', source = ['Arb.cxx'])
+o_Arb = env.Object      (target = 'Arb', source = ['Arb.cxx'])
+s_Arb = env.SharedObject(target = 'Arb', source = ['Arb.cxx'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with Arb.
-cArb = { 'obj':     list(cArbInt['obj'])     + [o_Arb],
-         'include': list(cArbInt['include']) + ['Arb'],
-         'defines': list(cArbInt['defines']) }
+cArb = { 'obj'        : cArbInt['obj']     + [o_Arb]        ,
+         'sobj'       : cArbInt['sobj']    + [s_Arb]        ,
+         'include'    : cArbInt['include'] + ['Arb']        ,
+         'headers'    : cArbInt['headers'] + ['Arb/Arb.hxx'],
+         'defines'    : cArbInt['defines']                  ,
+         'own_obj'    : [o_Arb]                             ,
+         'own_sobj'   : [s_Arb]                             ,
+         'own_include': 'Arb'                               ,
+         'own_headers': ['Arb/Arb.hxx']                     ,
+         'own_defines': []                                    }
 
 # Return.
 Return('cArb')

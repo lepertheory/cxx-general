@@ -25,40 +25,37 @@ have_tm           = 0
 have_gmtime       = 0
 have_gmtime_r     = 0
 
-# Configure the environment.
-if BUILD_TARGETS != [] :
-  
-  # Configure without CCFLAGS, or configure will fail with all the extra
-  # warnings that are turned on.
-  tmpccflags = env['CCFLAGS']
-  env['CCFLAGS'] = []
-  
-  conf = Configure(env)
-  
-  have_windows_h  = conf.CheckHeader(header = 'windows.h',  language = 'C++')
-  have_sys_time_h = conf.CheckHeader(header = 'sys/time.h', language = 'C++')
-  have_time_h     = conf.CheckHeader(header = 'time.h',     language = 'C++')
-  
-  if have_windows_h :
-    have__systemtime  = conf.CheckType(type_name = '_SYSTEMTIME',  includes = '#include <windows.h>', language = 'C++')
-    have_lpsystemtime = conf.CheckType(type_name = 'LPSYSTEMTIME', includes = '#include <windows.h>', language = 'C++')
-  
-  if have_sys_time_h :
-    have_timeval  = conf.CheckType(type_name = 'timeval',  includes = '#include <sys/time.h>', language = 'C++')
-    have_timezone = conf.CheckType(type_name = 'timezone', includes = '#include <sys/time.h>', language = 'C++')
-    have_gettimeofday = conf.CheckFunc(function_name = 'gettimeofday', language = 'C++')
-  
-  if have_time_h :
-    have_time_t = conf.CheckType(type_name = 'time_t', includes = '#include <time.h>', language = 'C++')
-    have_tm     = conf.CheckType(type_name = 'tm',     includes = '#include <time.h>', language = 'C++')
-    have_time     = conf.CheckFunc(function_name = 'time',     language = 'C++')
-    have_gmtime   = conf.CheckFunc(function_name = 'gmtime',   language = 'C++')
-    have_gmtime_r = conf.CheckFunc(function_name = 'gmtime_r', language = 'C++')
-  
-  env = conf.Finish()
-  
-  # Restore CCFLAGS.
-  env['CCFLAGS'] = tmpccflags
+# Configure without CCFLAGS, or configure will fail with all the extra
+# warnings that are turned on.
+tmpccflags = env['CCFLAGS']
+env['CCFLAGS'] = []
+
+conf = Configure(env)
+
+have_windows_h  = conf.CheckHeader(header = 'windows.h',  language = 'C++')
+have_sys_time_h = conf.CheckHeader(header = 'sys/time.h', language = 'C++')
+have_time_h     = conf.CheckHeader(header = 'time.h',     language = 'C++')
+
+if have_windows_h :
+  have__systemtime  = conf.CheckType(type_name = '_SYSTEMTIME',  includes = '#include <windows.h>', language = 'C++')
+  have_lpsystemtime = conf.CheckType(type_name = 'LPSYSTEMTIME', includes = '#include <windows.h>', language = 'C++')
+
+if have_sys_time_h :
+  have_timeval  = conf.CheckType(type_name = 'timeval',  includes = '#include <sys/time.h>', language = 'C++')
+  have_timezone = conf.CheckType(type_name = 'timezone', includes = '#include <sys/time.h>', language = 'C++')
+  have_gettimeofday = conf.CheckFunc(function_name = 'gettimeofday', language = 'C++')
+
+if have_time_h :
+  have_time_t = conf.CheckType(type_name = 'time_t', includes = '#include <time.h>', language = 'C++')
+  have_tm     = conf.CheckType(type_name = 'tm',     includes = '#include <time.h>', language = 'C++')
+  have_time     = conf.CheckFunc(function_name = 'time',     language = 'C++')
+  have_gmtime   = conf.CheckFunc(function_name = 'gmtime',   language = 'C++')
+  have_gmtime_r = conf.CheckFunc(function_name = 'gmtime_r', language = 'C++')
+
+env = conf.Finish()
+
+# Restore CCFLAGS.
+env['CCFLAGS'] = tmpccflags
 
 # Set defines
 if have_windows_h    : defines += [ 'HAVE_WINDOWS_H'    ]
@@ -95,13 +92,21 @@ else :
 for define in defines : env.Append(CPPDEFINES = [ define ])
 
 # Object files.
-o_Timestamp = env.Object(target = 'Timestamp', source = ['Timestamp.cxx'])
+o_Timestamp = env.Object      (target = 'Timestamp', source = ['Timestamp.cxx'])
+s_Timestamp = env.SharedObject(target = 'Timestamp', source = ['Timestamp.cxx'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with Timestamp.
-cTimestamp = { 'obj':     list(cArb['obj'])     + [o_Timestamp],
-               'include': list(cArb['include']) + ['Timestamp'],
-               'defines': list(cArb['defines']) + defines }
+cTimestamp = { 'obj'        : cArb['obj']     + [o_Timestamp]              ,
+               'sobj'       : cArb['sobj']    + [s_Timestamp]              ,
+               'include'    : cArb['include'] + ['Timestamp']              ,
+               'headers'    : cArb['headers'] + ['Timestamp/Timestamp.hxx'],
+               'defines'    : cArb['defines'] + [defines]                  ,
+               'own_obj'    : [o_Timestamp]                                ,
+               'own_sobj'   : [s_Timestamp]                                ,
+               'own_include': 'Timestamp'                                  ,
+               'own_headers': ['Timestamp/Timestamp.hxx']                  ,
+               'own_defines': defines                                        }
 
 # Return.
 Return('cTimestamp')

@@ -136,11 +136,7 @@ namespace DAC {
   Timestamp& Timestamp::getSystemTime () {
     
     // Disable this function if system support is missing.
-#if !defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME        ) && \
-    !defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) && \
-    !defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  ) && \
-    !defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        ) && \
-    !defined(TIMESTAMP_SYSTIME_TIME_GMTIME          )
+#if defined(TIMESTAMP_SYSTIME_NONE)
     throw Errors::MissingSysSupport().Operation("Timestamp::getSystemTime");
 #else
     
@@ -233,8 +229,8 @@ namespace DAC {
     // We done, return.
     _cache_valid = false;
     _jd          = newtime._jd;
-#endif
     return *this;
+#endif
     
   }
   
