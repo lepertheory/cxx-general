@@ -13,8 +13,8 @@
   #include <string>
   #include <iostream>
 
-// Internal includes.
-  #include "cxx-general/demangle.hxx"
+// System includes.
+  #include <cxx-general/demangle.hxx>
 
 // Namespace wrapper.
 namespace DAC {

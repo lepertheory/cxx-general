@@ -8,10 +8,10 @@
   #include <string>
   #include <algorithm>
 
-// Internal includes.
-  #include "cxx-general/rppower.hxx"
-  #include "cxx-general/toString.hxx"
-  #include "cxx-general/reduce.hxx"
+// System includes.
+  #include <cxx-general/rppower.hxx>
+  #include <cxx-general/toString.hxx>
+  #include <cxx-general/reduce.hxx>
 
 // Class include.
   #include "Arb.hxx"

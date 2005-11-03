@@ -14,12 +14,12 @@
   #include <string>
   #include <limits>
 
-// Internal includes.
-  #include "cxx-general/SafeInt.hxx"
-  #include "cxx-general/ReferencePointer.hxx"
-  #include "cxx-general/toString.hxx"
-  #include "cxx-general/ArbInt/ArbInt.hxx"
-  #include "cxx-general/abs.hxx"
+// System includes.
+  #include <cxx-general/SafeInt.hxx>
+  #include <cxx-general/ReferencePointer.hxx>
+  #include <cxx-general/toString.hxx>
+  #include <cxx-general/ArbInt/ArbInt.hxx>
+  #include <cxx-general/abs.hxx>
 
 // Namespace wrapping.
 namespace DAC {

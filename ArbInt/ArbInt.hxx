@@ -16,12 +16,12 @@
   #include <limits>
   #include <cmath>
   
-// Internal includes.
-  #include "cxx-general/SafeInt.hxx"
-  #include "cxx-general/ReferencePointer.hxx"
-  #include "cxx-general/toString.hxx"
-  #include "cxx-general/rppower.hxx"
-  #include "cxx-general/Exception.hxx"
+// System includes.
+  #include <cxx-general/SafeInt.hxx>
+  #include <cxx-general/ReferencePointer.hxx>
+  #include <cxx-general/toString.hxx>
+  #include <cxx-general/rppower.hxx>
+  #include <cxx-general/Exception.hxx>
 
 // Namespace wrapping.
 namespace DAC {

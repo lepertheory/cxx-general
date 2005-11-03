@@ -14,10 +14,10 @@
   #include <vector>
   #include <map>
 
-// Internal includes.
-  #include "cxx-general/Exception.hxx"
-  #include "cxx-general/Arb/Arb.hxx"
-  #include "cxx-general/ReferencePointer.hxx"
+// System includes.
+  #include <cxx-general/Exception.hxx>
+  #include <cxx-general/Arb/Arb.hxx>
+  #include <cxx-general/ReferencePointer.hxx>
 
 // Namespace wrapping.
 namespace DAC {

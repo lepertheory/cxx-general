@@ -8,8 +8,8 @@
 #if !defined(LCM_28ky54089bgyxkykg8)
   #define LCM_28ky54089bgyxkykg8
 
-// Internal includes.
-  #include "cxx-general/gcd.hxx"
+// System includes.
+  #include <cxx-general/gcd.hxx>
 
 // Contain in namespace.
 namespace DAC {
