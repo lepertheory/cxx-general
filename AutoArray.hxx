@@ -6,7 +6,7 @@
   #define AUTOARRAY_9234khti934
   
   // Contain in a namespace.
-  namespace AutoArrayClass {
+  namespace DAC {
     
     // The class.
     template<class T> class AutoArray {
