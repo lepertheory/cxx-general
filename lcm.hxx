@@ -9,7 +9,7 @@
   #define LCM_28ky54089bgyxkykg8
 
 // Internal includes.
-  #include "gcd.hxx"
+  #include "cxx-general/gcd.hxx"
 
 // Contain in namespace.
 namespace DAC {

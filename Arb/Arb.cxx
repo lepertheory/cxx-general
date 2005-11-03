@@ -9,9 +9,9 @@
   #include <algorithm>
 
 // Internal includes.
-  #include "rppower.hxx"
-  #include "toString.hxx"
-  #include "reduce.hxx"
+  #include "cxx-general/rppower.hxx"
+  #include "cxx-general/toString.hxx"
+  #include "cxx-general/reduce.hxx"
 
 // Class include.
   #include "Arb.hxx"

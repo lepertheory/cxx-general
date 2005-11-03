@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 // Internal includes.
-#include "gcd.hxx"
+#include "cxx-general/gcd.hxx"
 
 // Include guard.
 #if !defined(REDUCE_ykbf73k3ub834b)

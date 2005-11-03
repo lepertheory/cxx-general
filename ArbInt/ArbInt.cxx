@@ -11,10 +11,10 @@
 #include <algorithm>
 
 // Internal includes.
-#include "SafeInt.hxx"
-#include "ReferencePointer.hxx"
-#include "toString.hxx"
-#include "rppower.hxx"
+#include "cxx-general/SafeInt.hxx"
+#include "cxx-general/ReferencePointer.hxx"
+#include "cxx-general/toString.hxx"
+#include "cxx-general/rppower.hxx"
 
 // Class include.
 #include "ArbInt.hxx"
