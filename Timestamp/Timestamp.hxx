@@ -6,7 +6,7 @@
 
 // Include guard.
 #if !defined(TIMESTAMP_982yk298huh98u)
-#define TIMESTAMP_982yk298huh98u
+  #define TIMESTAMP_982yk298huh98u
 
 // STL includes.
   #include <iostream>

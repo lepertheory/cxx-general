@@ -56,11 +56,12 @@ if env['CC'] == 'cl' :
 # Make a backup of env so SConscript files do not modify it.
 tmpenv = env.Copy()
 
-cArbInt    = SConscript(['ArbInt/SConscript'],    exports = 'env')         ; env = tmpenv.Copy()
-cArb       = SConscript(['Arb/SConscript'],       exports = 'env cArbInt') ; env = tmpenv.Copy()
-cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb')    ; env = tmpenv.Copy()
+cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'        ) ; env = tmpenv.Copy()
+cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt') ; env = tmpenv.Copy()
+cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'   ) ; env = tmpenv.Copy()
+cFile      = SConscript(['File/SConscript'     ], exports = 'env'        ) ; env = tmpenv.Copy()
 
-SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp') ; env = tmpenv.Copy()
+SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cFile') ; env = tmpenv.Copy()
 
 # Determine the soname.
 cxxgeneral_name   = env['LIBPREFIX'] + 'cxx-general' + env['SHLIBSUFFIX']
@@ -74,6 +75,8 @@ for obj in cArbInt['own_sobj'] :
 for obj in cArb['own_sobj'] :
   cxxgeneral_objs += obj
 for obj in cTimestamp['own_sobj'] :
+  cxxgeneral_objs += obj
+for obj in cFile['own_sobj'] :
   cxxgeneral_objs += obj
 cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, source = cxxgeneral_objs, SHLINKFLAGS = '-shared -Wl,-soname,' + cxxgeneral_soname, SHLIBSUFFIX = '')
 
@@ -89,7 +92,10 @@ if not env.GetOption('clean') :
   os.symlink(cxxgeneral_rname, cxxgeneral_soname)
 
 # Build the library by default.
-env.Default(cxxgeneral)
+if env.GetOption('clean') :
+  env.Default('.')
+else :
+  env.Default(cxxgeneral)
 
 # Top level header files.
 headers = list()
@@ -113,6 +119,7 @@ installdirs = [includedir, libdir]
 installdirs.append(includedir + '/' + cArbInt   ['own_include'])
 installdirs.append(includedir + '/' + cArb      ['own_include'])
 installdirs.append(includedir + '/' + cTimestamp['own_include'])
+installdirs.append(includedir + '/' + cFile     ['own_include'])
 env.Alias('install', installdirs)
 
 # Installation.
@@ -125,6 +132,7 @@ Install(includedir                                  , headers                  )
 Install(includedir + '/' + cArbInt   ['own_include'], cArbInt   ['own_headers'])
 Install(includedir + '/' + cArb      ['own_include'], cArb      ['own_headers'])
 Install(includedir + '/' + cTimestamp['own_include'], cTimestamp['own_headers'])
+Install(includedir + '/' + cFile     ['own_include'], cFile     ['own_headers'])
 Install(libdir                                      , cxxgeneral               )
 Install(libdir                                      , cxxgeneral_name          )
 Install(libdir                                      , cxxgeneral_soname        )
