@@ -1,0 +1,75 @@
+# Imports from caller.
+Import ('*')
+
+# Include the parent directory.
+env.Append(CPPPATH = ['..'])
+
+# Create a list of defines.
+defines = []
+have_sys_types_h = 0
+have_sys_stat_h  = 0
+have_unistd_h    = 0
+have_errno_h     = 0
+have_dev_t       = 0
+have_ino_t       = 0
+have_mode_t      = 0
+have_nlink_t     = 0
+have_uid_t       = 0
+have_gid_t       = 0
+have_off_t       = 0
+have_blksize_t   = 0
+have_blkcnt_t    = 0
+have_time_t      = 0
+have_struct_stat = 0
+have_stat        = 0
+
+# Configure without CFLAGS to avoid errors from extra warnings.
+if not env.GetOption('clean') :
+  tmpccflags = env['CCFLAGS']
+  env['CCFLAGS'] = []
+  
+  conf = Configure(env)
+  
+  if not conf.CheckHeader(header = 'sys/types.h', language = 'C++') : print 'Header sys/types.h is required.'; exit(1)
+  if not conf.CheckHeader(header = 'sys/stat.h' , language = 'C++') : print 'Header sys/stat.h is required.' ; exit(1)
+  if not conf.CheckHeader(header = 'unistd.h'   , language = 'C++') : print 'Header unistd.h is required.'   ; exit(1)
+  if not conf.CheckHeader(header = 'errno.h'    , language = 'C++') : print 'Header errno.h is required.'    ; exit(1)
+  
+  if not conf.CheckType(type_name = 'dev_t'      , includes = '#include <sys/types.h>', language = 'C++') : print 'Type dev_t is required.'      ; exit(1)
+  if not conf.CheckType(type_name = 'ino_t'      , includes = '#include <sys/types.h>', language = 'C++') : print 'Type ino_t is required.'      ; exit(1)
+  if not conf.CheckType(type_name = 'mode_t'     , includes = '#include <sys/types.h>', language = 'C++') : print 'Type mode_t is requried.'     ; exit(1)
+  if not conf.CheckType(type_name = 'nlink_t'    , includes = '#include <sys/types.h>', language = 'C++') : print 'Type nlink_t is required.'    ; exit(1)
+  if not conf.CheckType(type_name = 'uid_t'      , includes = '#include <sys/types.h>', language = 'C++') : print 'Type uid_t is required.'      ; exit(1)
+  if not conf.CheckType(type_name = 'gid_t'      , includes = '#include <sys/types.h>', language = 'C++') : print 'Type gid_t is required.'      ; exit(1)
+  if not conf.CheckType(type_name = 'off_t'      , includes = '#include <sys/types.h>', language = 'C++') : print 'Type off_t is required.'      ; exit(1)
+  if not conf.CheckType(type_name = 'blksize_t'  , includes = '#include <sys/types.h>', language = 'C++') : print 'Type blksize_t is required.'  ; exit(1)
+  if not conf.CheckType(type_name = 'blkcnt_t'   , includes = '#include <sys/types.h>', language = 'C++') : print 'Type blkcnt_t is required.'   ; exit(1)
+  if not conf.CheckType(type_name = 'time_t'     , includes = '#include <sys/stat.h>' , language = 'C++') : print 'Type time_t is required.'     ; exit(1)
+  if not conf.CheckType(type_name = 'struct stat', includes = '#include <sys/stat.h>' , language = 'C++') : print 'Type struct stat is required.'; exit(1)
+  
+  if not conf.CheckFunc(function_name = 'stat', language = 'C++') : print 'Function stat() is required.'; exit(1)
+  
+  env = conf.Finish();
+  
+  # Restore CFLAGS.
+  env['CCFLAGS'] = tmpccflags
+
+# Object files.
+o_File = env.Object      (target = 'File', source = ['File.cxx'])
+s_File = env.SharedObject(target = 'File', source = ['File.cxx'])
+
+# Create a dictionary containing all necessary information and objects to
+# compile with File.
+cFile = { 'obj'        : [o_File]         ,
+          'sobj'       : [s_File]         ,
+          'include'    : ['File']         ,
+          'headers'    : ['File/File.hxx'],
+          'defines'    : []               ,
+          'own_obj'    : [o_File]         ,
+          'own_sobj'   : [s_File]         ,
+          'own_include': 'File'           ,
+          'own_headers': ['File/File.hxx'],
+          'own_defines': []                 }
+
+# Return.
+Return('cFile')
