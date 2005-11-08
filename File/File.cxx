@@ -75,6 +75,7 @@ namespace DAC {
   // Update the cache.
   void File::_update_cache () const {
     
+    // Call correct stat() or fstat() if the file is already open.
     
     
   }
