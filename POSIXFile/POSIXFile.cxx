@@ -1,7 +1,7 @@
 /*****************************************************************************
- * File.cxx
+ * POSIXFile.cxx
  *****************************************************************************
- * Implementation of class File.
+ * Implementation of class POSIXFile.
  *****************************************************************************/
 
 // STL includes.
@@ -14,7 +14,7 @@
 #include <errno.h>
 
 // Class include.
-#include "File.hxx"
+#include "POSIXFile.hxx"
 
 // Namespaces used.
 using namespace std;
@@ -26,7 +26,7 @@ namespace DAC {
   // Function members.
   
   // Constructor names the file.
-  File::File (string const& filename) {
+  POSIXFile::POSIXFile (string const& filename) {
     
     // Do standard init.
     clear();
@@ -37,7 +37,7 @@ namespace DAC {
   }
   
   // Reset to just-constructed defaults.
-  void File::clear () {
+  void POSIXFile::clear () {
     
     _cachevalid = false;
     
@@ -60,7 +60,7 @@ namespace DAC {
   }
   
   // Copy a given File. Does not copy the file itself.
-  void File::copy (File const& source) {
+  void POSIXFile::copy (POSIXFile const& source) {
     
     // Prepare for the new file if necessary.
     if (!_filename.empty() && _filename != source._filename) {
@@ -73,7 +73,7 @@ namespace DAC {
   }
   
   // Update the cache.
-  void File::_update_cache () const {
+  void POSIXFile::_update_cache () const {
     
     // Call correct stat() or fstat() if the file is already open.
     
