@@ -55,21 +55,21 @@ if not env.GetOption('clean') :
   env['CCFLAGS'] = tmpccflags
 
 # Object files.
-o_File = env.Object      (target = 'File', source = ['File.cxx'])
-s_File = env.SharedObject(target = 'File', source = ['File.cxx'])
+o_POSIXFile = env.Object      (target = 'POSIXFile', source = ['POSIXFile.cxx'])
+s_POSIXFile = env.SharedObject(target = 'POSIXFile', source = ['POSIXFile.cxx'])
 
 # Create a dictionary containing all necessary information and objects to
-# compile with File.
-cFile = { 'obj'        : [o_File]         ,
-          'sobj'       : [s_File]         ,
-          'include'    : ['File']         ,
-          'headers'    : ['File/File.hxx'],
-          'defines'    : []               ,
-          'own_obj'    : [o_File]         ,
-          'own_sobj'   : [s_File]         ,
-          'own_include': 'File'           ,
-          'own_headers': ['File/File.hxx'],
-          'own_defines': []                 }
+# compile with POSIXFile.
+cPOSIXFile = { 'obj'        : [o_POSIXFile]              ,
+               'sobj'       : [s_POSIXFile]              ,
+               'include'    : ['POSIXFile']              ,
+               'headers'    : ['POSIXFile/POSIXFile.hxx'],
+               'defines'    : []                         ,
+               'own_obj'    : [o_POSIXFile]              ,
+               'own_sobj'   : [s_POSIXFile]              ,
+               'own_include': 'POSIXFile'                ,
+               'own_headers': ['POSIXFile/POSIXFile.hxx'],
+               'own_defines': []                           }
 
 # Return.
-Return('cFile')
+Return('cPOSIXFile')
