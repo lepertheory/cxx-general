@@ -51,17 +51,64 @@ namespace DAC {
     
   }
   
-  // Copy a given POSIXFile. Does not copy the file itself.
-  void POSIXFile::copy (POSIXFile const& source) {
+  // Deep copy a given POSIXFile. Does not copy the file itself.
+  void POSIXFile::deepcopy (POSIXFile const& source, bool const reopen) {
     
-    // Prepare for the new file if necessary.
-    if (!_data->filename.empty() && _data->filename != source._data->filename) {
-      clear();
+    // Two entirely different methods based on whether we are re-opening the
+    // file or not. Probably not much of a performance gain here, but whee.
+    if (reopen && _data->fd) {
+      POSIXFile retval(source, true, false);
+      retval.open();
+      _data = retval._data;
+    } else {
+      _data = new _Data(*source._data);
     }
     
-    // Work area.
-    _data = source._data;
+  }
+  
+  // Set the filename.
+  POSIXFile& POSIXFile::Filename (std::string const& filename) {
     
+    // If we are pointing to a new file, disconnect from the old one and set
+    // the new one.
+    if (filename != _data->filename) {
+      POSIXFile retval(*this, true, false);
+      retval._data->filename = filename;
+      _data = retval._data;
+    }
+    
+    // Return.
+    return *this;
+    
+  }
+  
+  // Set the append mode.
+  POSIXFile& POSIXFile::Append (bool const append) {
+    
+    // Only work if the append mode is different.
+    if (append != _data->append) {
+      
+      // Diverge from any other copies and set the new append mode.
+      POSIXFile retval(*this, true, false);
+      retval._data->append = append;
+      
+      // If the file was open previously, re-open it.
+      if (_data->fd) {
+        retval.open();
+      }
+      
+      // Move the new data in.
+      _data = retval._data;
+      
+    }
+    
+    // Return.
+    return *this;
+    
+  }
+  
+  // Open the file.
+  void POSIXFile::open () const {
   }
   
   // Get the file part of the filename.
@@ -152,6 +199,8 @@ namespace DAC {
     stat.st_mtime   = 0;
     stat.st_ctime   = 0;
     
+    append = true;
+    
     filename.clear();
     
   }
@@ -165,8 +214,8 @@ namespace DAC {
     // New filename.
     filename = source.filename;
     
-    // Open with the same mode as the previous file.
-    
+    // Append mode.
+    append = source.append;
     
   }
   

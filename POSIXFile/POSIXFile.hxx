@@ -187,20 +187,26 @@ namespace DAC {
       POSIXFile (std::string const& filename);
       
       // Copy constructor.
-      POSIXFile (POSIXFile const& source);
+      POSIXFile (POSIXFile const& source, bool const copynow = true, bool const reopen = true);
       
       // Assignment operator.
       POSIXFile& operator = (POSIXFile const& right);
       
       // Properties.
       POSIXFile& Filename (std::string const& filename);
+      POSIXFile& Append   (bool        const  append  );
       std::string Filename () const;
+      bool        Append   () const;
       
       // Reset to just-constructed defaults.
       void clear ();
       
       // Copy a given File object. Does not copy the file itself.
-      void copy (POSIXFile const& source);
+      void copy     (POSIXFile const& source                          );
+      void deepcopy (POSIXFile const& source, bool const reopen = true);
+      
+      // Open the file.
+      void open () const;
       
       // Get the filename itself.
       std::string basename () const;
@@ -253,7 +259,7 @@ namespace DAC {
           ~_FD ();
           
           // Assignment operator.
-          _FD& operator = (_FDType const fd);
+          _FD& operator = (_FDType const right);
           
           // Casting operator, use _FD just like a normal fd.
           operator _FDType () const;
@@ -306,6 +312,9 @@ namespace DAC {
           // Whether the stat cache is valid.
           bool cache_valid;
           
+          // Open in append mode if opening for writing. Defaults to true.
+          bool append;
+          
           /*******************************************************************/
           // Function members.
 
@@ -357,20 +366,25 @@ namespace DAC {
   inline POSIXFile::POSIXFile () { clear(); }
   
   // Copy constructor.
-  inline POSIXFile::POSIXFile (POSIXFile const& source) { copy(source); }
+  inline POSIXFile::POSIXFile (POSIXFile const& source, bool const copynow, bool const reopen) {
+    if (copynow) {
+      deepcopy(source, reopen);
+    } else {
+      copy(source);
+    }
+  }
   
   // Assignment operator.
   inline POSIXFile& POSIXFile::operator = (POSIXFile const& right) { copy(right); return *this; }
   
-  // Properties.
-  inline POSIXFile& POSIXFile::Filename (std::string const& filename) {
-    if (!_data->filename.empty() && filename != _data->filename) {
-      clear();
-    }
-    _data->filename = filename;
-    return *this;
-  }
+  // Get the filename.
   inline std::string POSIXFile::Filename () const { return _data->filename; }
+  
+  // Get the append mode.
+  inline bool POSIXFile::Append () const { return _data->append; }
+  
+  // Copy another POSIXFile.
+  inline void POSIXFile::copy (POSIXFile const& source) { _data = source._data; }
   
   // File info.
   inline dev_t     POSIXFile::device    (bool cache) const { _check_cache(cache); return _data->stat.st_dev    ; }
@@ -397,7 +411,7 @@ namespace DAC {
   inline POSIXFile::_FD::~_FD () { set(0); }
   
   // _FD assignment operator.
-  inline POSIXFile::_FD& POSIXFile::_FD::operator = (_FDType const fd) { set(fd); return *this; }
+  inline POSIXFile::_FD& POSIXFile::_FD::operator = (_FDType const right) { set(right); return *this; }
   
   // _FD cast operator.
   inline POSIXFile::_FD::operator _FDType () const { return _fd; }
