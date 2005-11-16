@@ -15,7 +15,6 @@
 // System includes.
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <cxx-general/ReferencePointer.hxx>
 #include <cxx-general/Exception.hxx>
 #include <cxx-general/toString.hxx>
 
@@ -88,6 +87,86 @@ namespace DAC {
               };
               AccessDenied& Operation (std::string const& op      ) { _op       = op      ; return *this; };
               AccessDenied& Filename  (std::string const& filename) { _filename = filename; return *this; };
+              std::string Operation () const { return _op      ; };
+              std::string Filename  () const { return _filename; };
+            private:
+              std::string _op      ;
+              std::string _filename;
+          };
+          
+          // Bad file descriptor.
+          class BadDescriptor : public Base {
+            public:
+              virtual ~BadDescriptor () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Bad file descriptor when attempting " + _op + ".").c_str();
+                } catch (...) {
+                  return "Bad file descriptor. Error creating message string.";
+                }
+              };
+              BadDescriptor& Operation  (std::string const& op) { _op = op; return *this; };
+              BadDescriptor& Descriptor (int         const  fd) { _fd = fd; return *this; };
+              std::string Operation  () const { return _op; };
+              int         Descriptor () const { return _fd; };
+            private:
+              std::string _op;
+              int         _fd;
+          };
+          
+          // I/O error.
+          class IOError : public Base {
+            public:
+              virtual ~IOError () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("I/O error when attempting to " + _op + " \"" + _filename + "\".").c_str();
+                } catch (...) {
+                  return "I/O error. Error creating message string.";
+                }
+              };
+              IOError& Operation (std::string const& op      ) { _op       = op      ; return *this; };
+              IOError& Filename  (std::string const& filename) { _filename = filename; return *this; };
+              std::string Operation () const { return _op      ; };
+              std::string Filename  () const { return _filename; };
+            private:
+              std::string _op      ;
+              std::string _filename;
+          };
+          
+          // No permission to specified file.
+          class NoPermission : public Base {
+            public:
+              virtual ~NoPermission () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("No permission to " + _op + " \"" + _filename + "\".").c_str();
+                } catch (...) {
+                  return "No permission. Error creating message string.";
+                }
+              };
+              NoPermission& Operation (std::string const& op      ) { _op       = op      ; return *this; };
+              NoPermission& Filename  (std::string const& filename) { _filename = filename; return *this; };
+              std::string Operation () const { return _op      ; };
+              std::string Filename  () const { return _filename; };
+            private:
+              std::string _op      ;
+              std::string _filename;
+          };
+          
+          // Operation on a read-only filesystem.
+          class ReadOnlyFS : public Base {
+            public:
+              virtual ~ReadOnlyFS () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Cannot " + _op + " \"" + _filename + "\" on a read-only filesystem.").c_str();
+                } catch (...) {
+                  return "Cannot perform operation on a read-only filesystem. Error creating message string.";
+                }
+              };
+              ReadOnlyFS& Operation (std::string const& op      ) { _op       = op      ; return *this; };
+              ReadOnlyFS& Filename  (std::string const& filename) { _filename = filename; return *this; };
               std::string Operation () const { return _op      ; };
               std::string Filename  () const { return _filename; };
             private:
@@ -187,23 +266,68 @@ namespace DAC {
       POSIXFile (std::string const& filename);
       
       // Copy constructor.
-      POSIXFile (POSIXFile const& source, bool const copynow = true, bool const reopen = true);
+      POSIXFile (POSIXFile const& source);
       
       // Assignment operator.
       POSIXFile& operator = (POSIXFile const& right);
       
       // Properties.
-      POSIXFile& Filename (std::string const& filename);
-      POSIXFile& Append   (bool        const  append  );
-      std::string Filename () const;
-      bool        Append   () const;
+      POSIXFile& Filename  (std::string const& filename );
+      POSIXFile& Append    (bool        const  append   );
+      POSIXFile& Create    (bool        const  create   );
+      POSIXFile& Exclusive (bool        const  exclusive);
+      POSIXFile& DoATime   (bool        const  doatime  );
+      POSIXFile& CanCTTY   (bool        const  canctty  );
+      POSIXFile& FollowSym (bool        const  followsym);
+      POSIXFile& Synch     (bool        const  synch    );
+      POSIXFile& Truncate  (bool        const  truncate );
+      POSIXFile& SetUID    (bool        const  setuid   );
+      POSIXFile& SetGID    (bool        const  setgid   );
+      POSIXFile& Sticky    (bool        const  sticky   );
+      POSIXFile& U_Read    (bool        const  u_read   );
+      POSIXFile& U_Write   (bool        const  u_write  );
+      POSIXFile& U_Execute (bool        const  u_execute);
+      POSIXFile& G_Read    (bool        const  g_read   );
+      POSIXFile& G_Write   (bool        const  g_write  );
+      POSIXFile& G_Execute (bool        const  g_execute);
+      POSIXFile& O_Read    (bool        const  o_read   );
+      POSIXFile& O_Write   (bool        const  o_write  );
+      POSIXFile& O_Execute (bool        const  o_execute);
+      POSIXFile& A_Read    (bool        const  a_read   );
+      POSIXFile& A_Write   (bool        const  a_write  );
+      POSIXFile& A_Execute (bool        const  a_execute);
+      POSIXFile& Mode      (mode_t      const  new_mode , bool const cache = true);
+      std::string Filename  () const;
+      bool        Append    () const;
+      bool        Create    () const;
+      bool        Exclusive () const;
+      bool        DoATime   () const;
+      bool        CanCTTY   () const;
+      bool        FollowSym () const;
+      bool        Synch     () const;
+      bool        Truncate  () const;
+      bool        SetUID    () const;
+      bool        SetGID    () const;
+      bool        Sticky    () const;
+      bool        U_Read    () const;
+      bool        U_Write   () const;
+      bool        U_Execute () const;
+      bool        G_Read    () const;
+      bool        G_Write   () const;
+      bool        G_Execute () const;
+      bool        O_Read    () const;
+      bool        O_Write   () const;
+      bool        O_Execute () const;
+      bool        A_Read    () const;
+      bool        A_Write   () const;
+      bool        A_Execute () const;
+      mode_t      Mode      (bool const cache = true) const;
       
       // Reset to just-constructed defaults.
       void clear ();
       
       // Copy a given File object. Does not copy the file itself.
-      void copy     (POSIXFile const& source                          );
-      void deepcopy (POSIXFile const& source, bool const reopen = true);
+      void copy (POSIXFile const& source);
       
       // Open the file.
       void open () const;
@@ -287,62 +411,50 @@ namespace DAC {
         
       };
       
-      /***********************************************************************
-       * _Data
-       ***********************************************************************/
-      class _Data {
-        
-        /*
-         * Public members.
-         */
-        public:
-          
-          /*******************************************************************/
-          // Data members.
-          
-          // The name of the file.
-          std::string filename;
-          
-          // File descriptor. 0 if file is closed.
-          _FD fd;
-          
-          // Results of stat().
-          struct stat stat;
-          
-          // Whether the stat cache is valid.
-          bool cache_valid;
-          
-          // Open in append mode if opening for writing. Defaults to true.
-          bool append;
-          
-          /*******************************************************************/
-          // Function members.
+      /***********************************************************************/
+      // Constants.
 
-          // Default constructor.
-          _Data ();
-          
-          // Copy constructor.
-          _Data (_Data const& source);
-          
-          // Assignment operator.
-          _Data& operator = (_Data const& source);
-          
-          // Reset to just-constructed defaults.
-          void clear ();
-          
-          // Copy a given _Data.
-          void copy (_Data const& source);
-          
-      };
-      
-      // Pointer to _Data.
-      typedef ReferencePointer<_Data> _DataPT;
+      static mode_t const PERM_MASK;
       
       /***********************************************************************/
       // Data members.
       
-      // All file data. Allows multiple references to the same file, and COW.
-      _DataPT _data;
+      // The name of the file.
+      std::string _filename;
+      
+      // File descriptor. 0 if file is closed.
+      _FD _fd;
+      
+      // Results of stat().
+      mutable struct stat _stat;
+      
+      // Whether the stat cache is valid.
+      mutable bool _cache_valid;
+      
+      // Open in append mode if opening for writing. Defaults to true.
+      bool _append;
+      
+      // Create a non-existant file on open. Defaults to true.
+      bool _create;
+      
+      // Open fails if the file already exists.
+      bool _exclusive;
+      
+      // Update access time on read. Defaults to true.
+      bool _doatime;
+      
+      // Allow this file to become the controlling process's terminal.
+      // Defaults to true.
+      bool _canctty;
+      
+      // Follow symlinks when opening. Defaults to true.
+      bool _followsym;
+      
+      // Open for synchronous I/O.
+      bool _synch;
+      
+      // Truncate the file when opening for write.
+      bool _truncate;
       
       /***********************************************************************/
       // Function members.
@@ -366,43 +478,129 @@ namespace DAC {
   inline POSIXFile::POSIXFile () { clear(); }
   
   // Copy constructor.
-  inline POSIXFile::POSIXFile (POSIXFile const& source, bool const copynow, bool const reopen) {
-    if (copynow) {
-      deepcopy(source, reopen);
-    } else {
-      copy(source);
-    }
-  }
+  inline POSIXFile::POSIXFile (POSIXFile const& source) { copy(source); }
   
   // Assignment operator.
   inline POSIXFile& POSIXFile::operator = (POSIXFile const& right) { copy(right); return *this; }
   
-  // Get the filename.
-  inline std::string POSIXFile::Filename () const { return _data->filename; }
+  // Set / get the filename.
+  inline POSIXFile& POSIXFile::Filename (std::string const& filename) {
+    if (filename != _filename) {
+      clear();
+      _filename = filename;
+    }
+    return *this;
+  }
+  inline std::string POSIXFile::Filename () const { return _filename; }
   
-  // Get the append mode.
-  inline bool POSIXFile::Append () const { return _data->append; }
+  // Set / get the append mode.
+  inline POSIXFile& POSIXFile::Append (bool const append)       { _append = append; return *this; }
+  inline bool       POSIXFile::Append (                 ) const { return _append;                 }
   
-  // Copy another POSIXFile.
-  inline void POSIXFile::copy (POSIXFile const& source) { _data = source._data; }
+  // Set / get whether to create a non-existant file on open.
+  inline POSIXFile& POSIXFile::Create (bool const create)       { _create = create; return *this; }
+  inline bool       POSIXFile::Create (                 ) const { return _create;                 }
+  
+  // Set / get whether we want exclusive access to this file.
+  inline POSIXFile& POSIXFile::Exclusive (bool const exclusive)       { _exclusive = exclusive; return *this; }
+  inline bool       POSIXFile::Exclusive (                    ) const { return _exclusive;                    }
+  
+  // Set / get whether we are updating access time on read.
+  inline POSIXFile& POSIXFile::DoATime (bool const doatime)       { _doatime = doatime; return *this; }
+  inline bool       POSIXFile::DoATime (                  ) const { return _doatime;                  }
+  
+  // Set / get whether this is allowed to become the process's controlling terminal.
+  inline POSIXFile& POSIXFile::CanCTTY (bool const canctty)       { _canctty = canctty; return *this; }
+  inline bool       POSIXFile::CanCTTY (                  ) const { return _canctty;                  }
+  
+  // Follow symlinks when opening the file.
+  inline POSIXFile& POSIXFile::FollowSym (bool const followsym)       { _followsym = followsym; return *this; }
+  inline bool       POSIXFile::FollowSym (                    ) const { return _followsym;                    }
+  
+  // Use synchronous I/O.
+  inline POSIXFile& POSIXFile::Synch (bool const synch)       { _synch = synch; return *this; }
+  inline bool       POSIXFile::Synch (                ) const { return _synch;                }
+  
+  // Truncate the file when opening for write.
+  inline POSIXFile& POSIXFile::Truncate (bool const truncate)       { _truncate = truncate; return *this; }
+  inline bool       POSIXFile::Truncate (                   ) const { return _truncate;                   }
+  
+  // Set file modes.
+  inline POSIXFile& POSIXFile::SetUID    (bool   const setuid   ) { if (setuid   ) { Mode(Mode() | S_ISUID); } else { Mode(Mode() & ~S_ISUID); } return *this; }
+  inline POSIXFile& POSIXFile::SetGID    (bool   const setgid   ) { if (setgid   ) { Mode(Mode() | S_ISGID); } else { Mode(Mode() & ~S_ISGID); } return *this; }
+  inline POSIXFile& POSIXFile::Sticky    (bool   const sticky   ) { if (sticky   ) { Mode(Mode() | S_ISVTX); } else { Mode(Mode() & ~S_ISVTX); } return *this; }
+  inline POSIXFile& POSIXFile::U_Read    (bool   const u_read   ) { if (u_read   ) { Mode(Mode() | S_IRUSR); } else { Mode(Mode() & ~S_IRUSR); } return *this; }
+  inline POSIXFile& POSIXFile::U_Write   (bool   const u_write  ) { if (u_write  ) { Mode(Mode() | S_IWUSR); } else { Mode(Mode() & ~S_IWUSR); } return *this; }
+  inline POSIXFile& POSIXFile::U_Execute (bool   const u_execute) { if (u_execute) { Mode(Mode() | S_IXUSR); } else { Mode(Mode() & ~S_IXUSR); } return *this; }
+  inline POSIXFile& POSIXFile::G_Read    (bool   const g_read   ) { if (g_read   ) { Mode(Mode() | S_IRGRP); } else { Mode(Mode() & ~S_IRGRP); } return *this; }
+  inline POSIXFile& POSIXFile::G_Write   (bool   const g_write  ) { if (g_write  ) { Mode(Mode() | S_IWGRP); } else { Mode(Mode() & ~S_IWGRP); } return *this; }
+  inline POSIXFile& POSIXFile::G_Execute (bool   const g_execute) { if (g_execute) { Mode(Mode() | S_IXGRP); } else { Mode(Mode() & ~S_IXGRP); } return *this; }
+  inline POSIXFile& POSIXFile::O_Read    (bool   const o_read   ) { if (o_read   ) { Mode(Mode() | S_IROTH); } else { Mode(Mode() & ~S_IROTH); } return *this; }
+  inline POSIXFile& POSIXFile::O_Write   (bool   const o_write  ) { if (o_write  ) { Mode(Mode() | S_IWOTH); } else { Mode(Mode() & ~S_IWOTH); } return *this; }
+  inline POSIXFile& POSIXFile::O_Execute (bool   const o_execute) { if (o_execute) { Mode(Mode() | S_IXOTH); } else { Mode(Mode() & ~S_IXOTH); } return *this; }
+  inline POSIXFile& POSIXFile::A_Read (bool const a_read) {
+    if (a_read) {
+      Mode(Mode() | S_IRUSR | S_IRGRP | S_IROTH);
+    } else {
+      Mode(Mode() & ~(S_IRUSR | S_IRGRP | S_IROTH));
+    }
+    return *this;
+  }
+  inline POSIXFile& POSIXFile::A_Write (bool const a_write) {
+    if (a_write) {
+      Mode(Mode() | S_IWUSR | S_IWGRP | S_IWOTH);
+    } else {
+      Mode(Mode() & ~(S_IWUSR | S_IWGRP | S_IWOTH));
+    }
+    return *this;
+  }
+  inline POSIXFile& POSIXFile::A_Execute (bool const a_execute) {
+    if (a_execute) {
+      Mode(Mode() | S_IXUSR | S_IXGRP | S_IXOTH);
+    } else {
+      Mode(Mode() & ~(S_IXUSR | S_IXGRP | S_IXOTH));
+    }
+    return *this;
+  }
+  
+  // Get file modes.
+  inline bool POSIXFile::SetUID    () const { return Mode() & S_ISUID                    ; }
+  inline bool POSIXFile::SetGID    () const { return Mode() & S_ISGID                    ; }
+  inline bool POSIXFile::Sticky    () const { return Mode() & S_ISVTX                    ; }
+  inline bool POSIXFile::U_Read    () const { return Mode() & S_IRUSR                    ; }
+  inline bool POSIXFile::U_Write   () const { return Mode() & S_IWUSR                    ; }
+  inline bool POSIXFile::U_Execute () const { return Mode() & S_IXUSR                    ; }
+  inline bool POSIXFile::G_Read    () const { return Mode() & S_IRGRP                    ; }
+  inline bool POSIXFile::G_Write   () const { return Mode() & S_IWGRP                    ; }
+  inline bool POSIXFile::G_Execute () const { return Mode() & S_IXGRP                    ; }
+  inline bool POSIXFile::O_Read    () const { return Mode() & S_IROTH                    ; }
+  inline bool POSIXFile::O_Write   () const { return Mode() & S_IWOTH                    ; }
+  inline bool POSIXFile::O_Execute () const { return Mode() & S_IXOTH                    ; }
+  inline bool POSIXFile::A_Read    () const { return Mode() & S_IRUSR & S_IRGRP & S_IROTH; }
+  inline bool POSIXFile::A_Write   () const { return Mode() & S_IWUSR & S_IWGRP & S_IWOTH; }
+  inline bool POSIXFile::A_Execute () const { return Mode() & S_IXUSR & S_IXGRP & S_IXOTH; }
+  inline mode_t POSIXFile::Mode (bool const cache) const {
+    return mode(cache) & PERM_MASK;
+  }
+    
   
   // File info.
-  inline dev_t     POSIXFile::device    (bool cache) const { _check_cache(cache); return _data->stat.st_dev    ; }
-  inline ino_t     POSIXFile::inode     (bool cache) const { _check_cache(cache); return _data->stat.st_ino    ; }
-  inline mode_t    POSIXFile::mode      (bool cache) const { _check_cache(cache); return _data->stat.st_mode   ; }
-  inline nlink_t   POSIXFile::links     (bool cache) const { _check_cache(cache); return _data->stat.st_nlink  ; }
-  inline uid_t     POSIXFile::uid       (bool cache) const { _check_cache(cache); return _data->stat.st_uid    ; }
-  inline gid_t     POSIXFile::gid       (bool cache) const { _check_cache(cache); return _data->stat.st_gid    ; }
-  inline dev_t     POSIXFile::devid     (bool cache) const { _check_cache(cache); return _data->stat.st_rdev   ; }
-  inline off_t     POSIXFile::size      (bool cache) const { _check_cache(cache); return _data->stat.st_size   ; }
-  inline blksize_t POSIXFile::blockSize (bool cache) const { _check_cache(cache); return _data->stat.st_blksize; }
-  inline blkcnt_t  POSIXFile::blocks    (bool cache) const { _check_cache(cache); return _data->stat.st_blocks ; }
-  inline time_t    POSIXFile::atime     (bool cache) const { _check_cache(cache); return _data->stat.st_atime  ; }
-  inline time_t    POSIXFile::mtime     (bool cache) const { _check_cache(cache); return _data->stat.st_mtime  ; }
-  inline time_t    POSIXFile::ctime     (bool cache) const { _check_cache(cache); return _data->stat.st_ctime  ; }
+  inline dev_t     POSIXFile::device    (bool cache) const { _check_cache(cache); return _stat.st_dev    ; }
+  inline ino_t     POSIXFile::inode     (bool cache) const { _check_cache(cache); return _stat.st_ino    ; }
+  inline mode_t    POSIXFile::mode      (bool cache) const { _check_cache(cache); return _stat.st_mode   ; }
+  inline nlink_t   POSIXFile::links     (bool cache) const { _check_cache(cache); return _stat.st_nlink  ; }
+  inline uid_t     POSIXFile::uid       (bool cache) const { _check_cache(cache); return _stat.st_uid    ; }
+  inline gid_t     POSIXFile::gid       (bool cache) const { _check_cache(cache); return _stat.st_gid    ; }
+  inline dev_t     POSIXFile::devid     (bool cache) const { _check_cache(cache); return _stat.st_rdev   ; }
+  inline off_t     POSIXFile::size      (bool cache) const { _check_cache(cache); return _stat.st_size   ; }
+  inline blksize_t POSIXFile::blockSize (bool cache) const { _check_cache(cache); return _stat.st_blksize; }
+  inline blkcnt_t  POSIXFile::blocks    (bool cache) const { _check_cache(cache); return _stat.st_blocks ; }
+  inline time_t    POSIXFile::atime     (bool cache) const { _check_cache(cache); return _stat.st_atime  ; }
+  inline time_t    POSIXFile::mtime     (bool cache) const { _check_cache(cache); return _stat.st_mtime  ; }
+  inline time_t    POSIXFile::ctime     (bool cache) const { _check_cache(cache); return _stat.st_ctime  ; }
   
   // Update cache if necessary.
-  inline void POSIXFile::_check_cache (bool cache) const { if (!cache || !_data->cache_valid) { _update_cache(); } }
+  inline void POSIXFile::_check_cache (bool cache) const { if (!cache || !_cache_valid) { _update_cache(); } }
   
   // _FD constructor.
   inline POSIXFile::_FD::_FD (_FDType const fd) { set(fd); }
@@ -427,15 +625,6 @@ namespace DAC {
     }
     return retval;
   }
-  
-  // _Data default constructor.
-  inline POSIXFile::_Data::_Data () { clear(); }
-  
-  // _Data copy constructor.
-  inline POSIXFile::_Data::_Data (_Data const& source) { copy(source); }
-  
-  // _Data assignment operator.
-  inline POSIXFile::_Data& POSIXFile::_Data::operator = (_Data const& right) { copy(right); return *this; }
   
 }
 
