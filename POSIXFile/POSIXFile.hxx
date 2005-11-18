@@ -15,6 +15,7 @@
 // System includes.
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <cxx-general/Exception.hxx>
 #include <cxx-general/toString.hxx>
@@ -39,6 +40,9 @@ namespace DAC {
       
       // Open mode.
       enum OpenMode { OM_READ, OM_WRITE, OM_READWRITE };
+      
+      // Seek modes.
+      enum SeekMode { SM_SET = SEEK_SET, SM_CUR = SEEK_CUR, SM_END = SEEK_END };
       
       /***********************************************************************/
       // Constants.
@@ -114,6 +118,26 @@ namespace DAC {
               };
               AccessDenied& Operation (std::string const& op      ) { _op       = op      ; return *this; };
               AccessDenied& Filename  (std::string const& filename) { _filename = filename; return *this; };
+              std::string Operation () const { return _op      ; };
+              std::string Filename  () const { return _filename; };
+            private:
+              std::string _op      ;
+              std::string _filename;
+          };
+          
+          // File is unsuitable for requested operation.
+          class Invalid : public Base {
+            public:
+              virtual ~Invalid () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("\"" + _filename + "\" is unsuitable for requested " + _op + " operation.").c_str();
+                } catch (...) {
+                  return "File is unsuitable for requested operation. Error creating message string.";
+                }
+              };
+              Invalid& Operation (std::string const& op      ) { _op       = op      ; return *this; };
+              Invalid& Filename  (std::string const& filename) { _filename = filename; return *this; };
               std::string Operation () const { return _op      ; };
               std::string Filename  () const { return _filename; };
             private:
@@ -254,18 +278,32 @@ namespace DAC {
               virtual ~Interrupted () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Attempted " + _op + " operation on \"" + _filename + "\" was interrupted by a signal.").c_str();
+                  return ("Attempted " + _op + " operation was interrupted by a signal.").c_str();
                 } catch (...) {
                   return "Attempted operation was interrupted by a signal. Error creating message string.";
                 }
               };
-              Interrupted& Operation (std::string const& op      ) { _op       = op      ; return *this; }
-              Interrupted& Filename  (std::string const& filename) { _filename = filename; return *this; }
-              std::string Operation () const { return _op      ; }
-              std::string Filename  () const { return _filename; }
+              Interrupted& Operation (std::string const& op) { _op = op; return *this; }
+              std::string Operation () const { return _op; }
             private:
-              std::string _op      ;
-              std::string _filename;
+              std::string _op;
+          };
+          
+          // Operation attempted at end of file.
+          class EoF : public Base {
+            public:
+              virtual ~EoF () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Requested " + _op + " operation cannot be performed at end of file.").c_str();
+                } catch (...) {
+                  return "Requested operation cannot be performed at end of file. Error creating message string.";
+                }
+              };
+              EoF& Operation (std::string const& op) { _op = op; return *this; }
+              std::string Operation () const { return _op; }
+            private:
+              std::string _op;
           };
           
           // I/O error.
@@ -402,6 +440,9 @@ namespace DAC {
           // Out of memory.
           class OutOfMemory : public Base {};
           
+          // Non-blocking I/O was selected and there is no data available.
+          class TryAgain : public Base {};
+          
           // Component of the path is not a directory.
           class NotDirectory : public Base {
             public:
@@ -529,9 +570,11 @@ namespace DAC {
       // Get the filename itself.
       std::string basename () const;
       
-      // Read the entire file as a string or void*.
-      std::string get_file (                                    ) const;
-      ssize_t     get_file (void* const buf, off_t const bufsize) const;
+      // Seek to a particular location.
+      void seek (off_t const offset, SeekMode const whence);
+      
+      // Read the entire file as a string.
+      std::string get_file ();
       
       // File info.
       dev_t     device    (bool cache = true) const;
@@ -561,9 +604,6 @@ namespace DAC {
       
       // Open mode flag type.
       typedef int _OMFlagType;
-      
-      // Seek modes.
-      enum _SeekMode { _SEEK_SET = SEEK_SET, _SEEK_CUR = SEEK_CUR, _SEEK_END = SEEK_END };
       
       /***********************************************************************
        * _FD
@@ -617,7 +657,7 @@ namespace DAC {
       
       /***********************************************************************/
       // Constants.
-
+      
       static mode_t const PERM_MASK;
       
       /***********************************************************************/
@@ -628,6 +668,9 @@ namespace DAC {
       
       // File descriptor. 0 if file is closed.
       _FD _fd;
+      
+      // Current file read/write position.
+      off_t _curpos;
       
       // Results of stat().
       mutable struct stat _stat;
@@ -647,8 +690,12 @@ namespace DAC {
       // Update the cache now.
       void _update_cache () const;
       
+      // Wrapper around ::read().
+      ssize_t _read (void* const buf, off_t const bufsize, bool const updatepos = true);
+      
       // Seek to a particular offset.
-      void _seek (off_t const offset, _SeekMode const whence = _SEEK_SET);
+      void _seek            (off_t const offset, SeekMode const whence = SM_SET);
+      void _seek_update_pos (off_t const offset, SeekMode const whence = SM_SET);
     
   };
   
@@ -772,6 +819,16 @@ namespace DAC {
   // Update cache if necessary.
   inline void POSIXFile::_check_cache (bool cache) const { if (!cache || !_cache_valid) { _update_cache(); } }
   
+  // Seek and update the current file position.
+  inline void POSIXFile::_seek_update_pos (off_t const offset, SeekMode const whence) {
+    _seek(offset, whence);
+    switch (whence) {
+      case SM_SET: _curpos  = offset         ; break;
+      case SM_CUR: _curpos += offset         ; break;
+      case SM_END: _curpos  = size() + offset; break;
+    };
+  }
+  
   // _FD constructor.
   inline POSIXFile::_FD::_FD (_FDType const fd) { set(fd); }
   
@@ -789,7 +846,7 @@ namespace DAC {
     int retval = 0;
     if (fd != _fd) {
       if (_fd) {
-        retval = close(_fd);
+        retval = ::close(_fd);
       }
       _fd = fd;
     }

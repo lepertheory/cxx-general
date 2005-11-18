@@ -134,7 +134,7 @@ namespace DAC {
     }
     
     // Open the file.
-    if ((_fd = open(_filename.c_str(), _flags)) == -1) {
+    if ((_fd = ::open(_filename.c_str(), _flags)) == -1) {
       switch (errno) {
         case EACCES      : throw Errors::AccessDenied ().Operation("open").Filename(_filename);
         case EEXIST      : throw Errors::FileExists   ().Operation("open").Filename(_filename);
@@ -147,7 +147,7 @@ namespace DAC {
         case ENOMEM      : throw Errors::OutOfMemory  ();
         case ENOSPC      : throw Errors::NoSpace      ();
         case ENOTDIR     : throw Errors::NotDirectory ().Filename(_filename);
-        case EOVERFLOW   : throw Errors::SizeOverflow ().Filename(_filename);
+        case EOVERFLOW   : throw Errors::FileOverflow ().Filename(_filename);
         case EPERM       : throw Errors::NoPermission ().Operation("open").Filename(_filename);
         case EROFS       : throw Errors::ReadOnlyFS   ().Operation("open").Filename(_filename);
         case ETXTBSY     : throw Errors::ExecuteWrite ().Filename(_filename);
@@ -175,8 +175,8 @@ namespace DAC {
     // Close the file.
     if (_fd.set(0)) {
       switch (errno) {
-        case EBADF: throw Errors::BadDescriptor().Operation("close").Filename(_filename);
-        case EINTR: throw Errors::Interrupted  ().Operation("close").Filename(_filename);
+        case EBADF: throw Errors::BadDescriptor().Operation("close");
+        case EINTR: throw Errors::Interrupted  ().Operation("close");
         case EIO  : throw Errors::IOError      ().Operation("close").Filename(_filename);
         default   : throw Errors::Unexpected   ().Errno(errno);
       };
@@ -242,45 +242,117 @@ namespace DAC {
     
   }
   
-  // Read the entire file as a void*.
+  // Seek to a particular offset.
+  void POSIXFile::seek (off_t const offset, SeekMode const whence) {
+    
+    // Make sure the file is open.
+    if (!_fd) {
+      throw Errors::NotOpen();
+    }
+    
+    // Seek.
+    _seek_update_pos(offset, whence);
+    
+  }
+  
+  // Read the entire file as a string.
+  string POSIXFile::get_file () {
+    
+    // Work area.
+    string         retval;
+    auto_ptr<char> buf   (new char[size()]);
+    
+    // Reserve space for the file contents.
+    retval.reserve(size());
+    
+    // Read the file.
+    _read(reinterpret_cast<void*>(buf.get()), size(), false);
+    
+    // Copy the buffer into the string.
+    retval.assign(buf.get(), size());
+    
+    // Done.
+    return retval;
+    
+  }
   
   // Read from the file.
-  ssize_t POSIXFile::_read (void* const buf, off_t const bufsize) {
-    
-    // If the file is larger than the buffer, throw.
-    if (size() > bufsize) {
-      throw Errors::BufTooSmall().BufSize(bufsize).FileSize(size());
-    }
+  ssize_t POSIXFile::_read (void* const buf, off_t const bufsize, bool const updatepos) {
     
     // Work area.
     ssize_t retval = 0;
     
-    // If the file is open, just read the entire file.
-    if (_fd) {
+    // Get the current file status.
+    bool  fileopen = _fd;
+    off_t tmppos   = _curpos;
+    
+    // Try block to ensure that any changes are undone.
+    try {
       
-      // Seek to the beginning of the file. Do not update the current position
-      // so that subsequent reads begin at the same place.
-      _seek(0);
+      // If the file is not open, open it.
+      if (!fileopen) {
+        open();
+      }
+      
+      // Seek to the beginning of the file.
+      // FIXME: Duh. Generic read, not entire file, we don't want to seek to beginning.
+      if (updatepos) {
+        _seek_update_pos(0);
+      } else {
+        _seek(0);
+      }
       
       // Read the file.
       if ((retval = read(_fd, buf, bufsize)) == -1) {
         switch (errno) {
-          case EAGAIN:
-          default: throw Errors::Unexpected().Errno(errno);
+          case EAGAIN: throw Errors::TryAgain     ();
+          case EBADF : throw Errors::BadDescriptor().Operation("read");
+          case EINTR : throw Errors::Interrupted  ().Operation("read");
+          case EINVAL: throw Errors::Invalid      ().Operation("read").Filename(_filename);
+          case EIO   : throw Errors::IOError      ().Operation("read").Filename(_filename);
+          case EISDIR: throw Errors::IsDirectory  ().Filename(_filename);
+          default    : throw Errors::Unexpected   ().Errno(errno);
         };
       }
       
+      // Check for end of file.
+      if (!retval) {
+        throw Errors::EoF().Operation("read");
+      }
+      
+    // Restore the previous state.
+    } catch (...) {
+      if (!fileopen) {
+        try { _fd = 0; } catch (...) {}
+      }
+      _curpos = tmppos;
+      throw;
     }
+    
+    // Close the file if it was not previously opened.
+    if (!fileopen) {
+      _fd = 0;
+    }
+    
+    // Update / restore the current position.
+    if (updatepos) {
+      _curpos += retval;
+    } else {
+      _curpos = tmppos;
+    }
+    
+    // Return the number of bytes read.
+    return retval;
     
   }
   
   // Seek to a particular offset.
-  void POSIXFile::_seek (off_t const offset, int const whence) {
+  void POSIXFile::_seek (off_t const offset, SeekMode const whence) {
     
     // Do the seek.
     if (lseek(_fd, offset, whence) == -1) {
       switch (errno) {
-        case EBADF : throw Errors::BadDescriptor().Operation("lseek").Filename(_filename);
+        case EBADF : throw Errors::BadDescriptor().Operation("lseek");
         case ESPIPE: throw Errors::CannotSeek   ().Filename(_filename);
         default    : throw Errors::Unexpected   ().Errno(errno);
       };

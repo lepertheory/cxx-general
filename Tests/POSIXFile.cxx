@@ -31,6 +31,9 @@ int main (int argc, char** argv) {
        << "  \n"
        << "  basename: " << test.basename() << "\n";
   
+  cout << "  contents:\n"
+       << test.get_file();
+  
   return 0;
   
 }
