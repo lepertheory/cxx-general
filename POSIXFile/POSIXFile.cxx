@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <cxx-general/toString.hxx>
+#include <cxx-general/AutoArray.hxx>
 
 // Class include.
 #include "POSIXFile.hxx"
@@ -28,6 +29,10 @@ namespace DAC {
   
   // Directory separator.
   char const POSIXFile::DIR_SEP = '/';
+  
+  // Do not change UID/GID.
+  uid_t const POSIXFile::UID_NOCHANGE = static_cast<uid_t>(-1);
+  gid_t const POSIXFile::GID_NOCHANGE = static_cast<uid_t>(-1);
   
   // Permissions mask.
   mode_t const POSIXFile::PERM_MASK = S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO;
@@ -47,14 +52,14 @@ namespace DAC {
   }
   
   // Set the mode.
-  POSIXFile& POSIXFile::Mode (mode_t const new_mode, bool const cache) {
+  POSIXFile& POSIXFile::Mode (mode_t const new_mode) {
     
     // Make sure the stat cache is updated.
-    _check_cache(cache);
+    _check_cache(CACHE_NO);
     
     // Update the mode of the file.
     _cache_valid = false;
-    if (_fd && fchmod(_fd, new_mode) || chmod(_filename.c_str(), new_mode)) {
+    if (_fd && fchmod(_fd, new_mode) || ::chmod(_filename.c_str(), new_mode)) {
       switch (errno) {
         case EACCES      : throw Errors::AccessDenied ().Operation("chmod").Filename(_filename);
         case EIO         : throw Errors::IOError      ().Operation("chmod").Filename(_filename);
@@ -184,6 +189,36 @@ namespace DAC {
     
   }
   
+  // Change file owner/group.
+  void POSIXFile::chown (uid_t const owner, gid_t const group) {
+    
+    // Don't waste time if there's nothing to do.
+    if (owner == UID_NOCHANGE && group == GID_NOCHANGE) {
+      return;
+    }
+    
+    // Invalidate the cache.
+    _cache_valid = false;
+    
+    // Call the correct chown whether the file is open or closed.
+    if (_fd && fchown(_fd, owner, group) || ::chown(_filename.c_str(), owner, group)) {
+      switch (errno) {
+        case EACCES      : throw Errors::AccessDenied ().Operation("chown").Filename(_filename);
+        case ELOOP       : throw Errors::SymlinkLoop  ().Operation("chown").Filename(_filename);
+        case ENAMETOOLONG: throw Errors::NameTooLong  ().Filename(_filename);
+        case ENOENT      : throw Errors::PathNonExist ().Filename(_filename);
+        case ENOMEM      : throw Errors::OutOfMemory  ();
+        case ENOTDIR     : throw Errors::NotDirectory ().Filename(_filename);
+        case EPERM       : throw Errors::NoPermission ().Operation("chown").Filename(_filename);
+        case EROFS       : throw Errors::ReadOnlyFS   ().Operation("chown").Filename(_filename);
+        case EBADF       : throw Errors::BadDescriptor().Operation("chown").Descriptor(_fd);
+        case EIO         : throw Errors::IOError      ().Operation("chown").Filename(_filename);
+        default          : throw Errors::Unexpected   ().Errno(errno);
+      };
+    }
+    
+  }
+  
   // Get the file part of the filename.
   string POSIXFile::basename () const {
     
@@ -259,14 +294,45 @@ namespace DAC {
   string POSIXFile::get_file () {
     
     // Work area.
-    string         retval;
-    auto_ptr<char> buf   (new char[size()]);
+    string          retval;
+    AutoArray<char> buf;
+    
+    // Make sure we're not trying to read from an empty file.
+    if (size() == 0) {
+      return retval;
+    }
     
     // Reserve space for the file contents.
     retval.reserve(size());
+    buf = new char[size()];
     
-    // Read the file.
-    _read(reinterpret_cast<void*>(buf.get()), size(), false);
+    // Get the current file open status.
+    bool fileopen = _fd;
+    
+    // Try block to ensure that any changes are undone.
+    try {
+      
+      // If the file is not open, open it.
+      if (!fileopen) {
+        open();
+      }
+      
+      // Read the entire file.
+      _seek(0);
+      _read(reinterpret_cast<void*>(buf.get()), size());
+      
+    // Restore the previous state and rethrow the error.
+    } catch (...) {
+      if (!fileopen) {
+        try { _fd = 0; } catch (...) {}
+      }
+      throw;
+    }
+    
+    // Close the file if it was not already open.
+    if (!fileopen) {
+      close();
+    }
     
     // Copy the buffer into the string.
     retval.assign(buf.get(), size());
@@ -277,68 +343,27 @@ namespace DAC {
   }
   
   // Read from the file.
-  ssize_t POSIXFile::_read (void* const buf, off_t const bufsize, bool const updatepos) {
+  ssize_t POSIXFile::_read (void* const buf, off_t const bufsize) {
     
     // Work area.
     ssize_t retval = 0;
     
-    // Get the current file status.
-    bool  fileopen = _fd;
-    off_t tmppos   = _curpos;
-    
-    // Try block to ensure that any changes are undone.
-    try {
-      
-      // If the file is not open, open it.
-      if (!fileopen) {
-        open();
-      }
-      
-      // Seek to the beginning of the file.
-      // FIXME: Duh. Generic read, not entire file, we don't want to seek to beginning.
-      if (updatepos) {
-        _seek_update_pos(0);
-      } else {
-        _seek(0);
-      }
-      
-      // Read the file.
-      if ((retval = read(_fd, buf, bufsize)) == -1) {
-        switch (errno) {
-          case EAGAIN: throw Errors::TryAgain     ();
-          case EBADF : throw Errors::BadDescriptor().Operation("read");
-          case EINTR : throw Errors::Interrupted  ().Operation("read");
-          case EINVAL: throw Errors::Invalid      ().Operation("read").Filename(_filename);
-          case EIO   : throw Errors::IOError      ().Operation("read").Filename(_filename);
-          case EISDIR: throw Errors::IsDirectory  ().Filename(_filename);
-          default    : throw Errors::Unexpected   ().Errno(errno);
-        };
-      }
-      
-      // Check for end of file.
-      if (!retval) {
-        throw Errors::EoF().Operation("read");
-      }
-      
-    // Restore the previous state.
-    } catch (...) {
-      if (!fileopen) {
-        try { _fd = 0; } catch (...) {}
-      }
-      _curpos = tmppos;
-      throw;
+    // Read the file.
+    if ((retval = read(_fd, buf, bufsize)) == -1) {
+      switch (errno) {
+        case EAGAIN: throw Errors::TryAgain     ();
+        case EBADF : throw Errors::BadDescriptor().Operation("read");
+        case EINTR : throw Errors::Interrupted  ().Operation("read");
+        case EINVAL: throw Errors::Invalid      ().Operation("read").Filename(_filename);
+        case EIO   : throw Errors::IOError      ().Operation("read").Filename(_filename);
+        case EISDIR: throw Errors::IsDirectory  ().Filename(_filename);
+        default    : throw Errors::Unexpected   ().Errno(errno);
+      };
     }
     
-    // Close the file if it was not previously opened.
-    if (!fileopen) {
-      _fd = 0;
-    }
-    
-    // Update / restore the current position.
-    if (updatepos) {
-      _curpos += retval;
-    } else {
-      _curpos = tmppos;
+    // Check for end of file.
+    if (!retval) {
+      throw Errors::EoF().Operation("read");
     }
     
     // Return the number of bytes read.

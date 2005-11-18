@@ -44,11 +44,18 @@ namespace DAC {
       // Seek modes.
       enum SeekMode { SM_SET = SEEK_SET, SM_CUR = SEEK_CUR, SM_END = SEEK_END };
       
+      // Cache mode.
+      enum CacheMode { CACHE_NO = 0, CACHE_DO = 1 };
+      
       /***********************************************************************/
       // Constants.
       
       // Directory separator.
       static char const DIR_SEP;
+      
+      // Do not change UID/GID.
+      static uid_t const UID_NOCHANGE;
+      static gid_t const GID_NOCHANGE;
       
       /***********************************************************************/
       // Errors.
@@ -61,49 +68,6 @@ namespace DAC {
               virtual ~Base () throw() {};
               virtual char const* what () const throw() { return "Undefined error in POSIXFile."; };
           };
-          
-          // Unexpected error.
-          class Unexpected : public Base {
-            public:
-              virtual ~Unexpected () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Unexpected system error. Error number is " + DAC::toString(_errno) + ".").c_str();
-                } catch (...) {
-                  return "Unexpected system error. Error creating message string.";
-                }
-              };
-              Unexpected& Errno (int const errnum) { _errno = errnum; return *this; };
-              int Errno () const { return _errno; }
-            private:
-              int _errno;
-          };
-          
-          // Attempt to open an already open file.
-          class AlreadyOpen : public Base {
-            public:
-              virtual ~AlreadyOpen () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("File \"" + _filename + "\" is already open.").c_str();
-                } catch (...) {
-                  return "File is already open. Error creating message string.";
-                }
-              };
-              AlreadyOpen& Filename (std::string const& filename) { _filename = filename; return *this; }
-              std::string Filename () const { return _filename; }
-            private:
-              std::string _filename;
-          };
-          
-          // Attempt to close a file that has not been opened.
-          class NotOpen : public Base {
-            public:
-              virtual ~NotOpen () throw() {};
-              virtual char const* what () const throw() {
-                return "Attempted to close a file that is not open.";
-              };
-          };  
           
           // Access error.
           class AccessDenied : public Base {
@@ -125,23 +89,111 @@ namespace DAC {
               std::string _filename;
           };
           
-          // File is unsuitable for requested operation.
-          class Invalid : public Base {
+          // Attempt to open an already open file.
+          class AlreadyOpen : public Base {
             public:
-              virtual ~Invalid () throw() {};
+              virtual ~AlreadyOpen () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("\"" + _filename + "\" is unsuitable for requested " + _op + " operation.").c_str();
+                  return ("File \"" + _filename + "\" is already open.").c_str();
                 } catch (...) {
-                  return "File is unsuitable for requested operation. Error creating message string.";
+                  return "File is already open. Error creating message string.";
                 }
               };
-              Invalid& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              Invalid& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
+              AlreadyOpen& Filename (std::string const& filename) { _filename = filename; return *this; }
+              std::string Filename () const { return _filename; }
             private:
-              std::string _op      ;
+              std::string _filename;
+          };
+          
+          // Bad file descriptor.
+          class BadDescriptor : public Base {
+            public:
+              virtual ~BadDescriptor () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Bad file descriptor when attempting " + _op + ".").c_str();
+                } catch (...) {
+                  return "Bad file descriptor. Error creating message string.";
+                }
+              };
+              BadDescriptor& Operation  (std::string const& op) { _op = op; return *this; };
+              BadDescriptor& Descriptor (int         const  fd) { _fd = fd; return *this; };
+              std::string Operation  () const { return _op; };
+              int         Descriptor () const { return _fd; };
+            private:
+              std::string _op;
+              int         _fd;
+          };
+          
+          // Passed buffer is too small.
+          class BufTooSmall : public Base {
+            public:
+              virtual ~BufTooSmall () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Passed buffer of " + DAC::toString(_bufsize) + " bytes, file is " + DAC::toString(_filesize) + " bytes.").c_str();
+                } catch (...) {
+                  return "Passed buffer is smaller than file size.";
+                }
+              };
+              BufTooSmall& BufSize  (off_t const bufsize ) { _bufsize  = bufsize ; return *this; };
+              BufTooSmall& FileSize (off_t const filesize) { _filesize = filesize; return *this; };
+              off_t BufSize  () const { return _bufsize ; };
+              off_t FileSize () const { return _filesize; };
+            private:
+              off_t _bufsize ;
+              off_t _filesize;
+          };
+          
+          // Cannot seek on this type of file.
+          class CannotSeek : public Base {
+            public:
+              virtual ~CannotSeek () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("File \"" + _filename + "\" is a pipe, socket, or FIFO and cannot seek.").c_str();
+                } catch (...) {
+                  return "File is a pipe, socket, or FIFO and cannot seek. Error creating message string.";
+                }
+              }
+              CannotSeek& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
+              std::string _filename;
+          };
+          
+          // Operation attempted at end of file.
+          class EoF : public Base {
+            public:
+              virtual ~EoF () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Requested " + _op + " operation cannot be performed at end of file.").c_str();
+                } catch (...) {
+                  return "Requested operation cannot be performed at end of file. Error creating message string.";
+                }
+              };
+              EoF& Operation (std::string const& op) { _op = op; return *this; }
+              std::string Operation () const { return _op; }
+            private:
+              std::string _op;
+          };
+          
+          // Write access was requested on a file that is currently executing.
+          class ExecuteWrite : public Base {
+            public:
+              virtual ~ExecuteWrite () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("File \"" + _filename + "\" is currently executing and cannot be opened for write.").c_str();
+                } catch (...) {
+                  return "File is currently executing and cannot be opened for write. Error creating message string.";
+                }
+              };
+              ExecuteWrite& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
               std::string _filename;
           };
           
@@ -158,6 +210,80 @@ namespace DAC {
               };
               FileExists& Operation (std::string const& op      ) { _op       = op      ; return *this; };
               FileExists& Filename  (std::string const& filename) { _filename = filename; return *this; };
+              std::string Operation () const { return _op      ; };
+              std::string Filename  () const { return _filename; };
+            private:
+              std::string _op      ;
+              std::string _filename;
+          };
+          
+          // File is too large to open without large file support.
+          class FileOverflow : public Base {
+            public:
+              virtual ~FileOverflow () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("File \"" + _filename + "\" is too large to open without large file support.").c_str();
+                } catch (...) {
+                  return "File is too large to open without large file support. Error creating message string.";
+                }
+              };
+              FileOverflow& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
+              std::string _filename;
+          };
+          
+          // I/O error.
+          class IOError : public Base {
+            public:
+              virtual ~IOError () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("I/O error when attempting to " + _op + " \"" + _filename + "\".").c_str();
+                } catch (...) {
+                  return "I/O error. Error creating message string.";
+                }
+              };
+              IOError& Operation (std::string const& op      ) { _op       = op      ; return *this; };
+              IOError& Filename  (std::string const& filename) { _filename = filename; return *this; };
+              std::string Operation () const { return _op      ; };
+              std::string Filename  () const { return _filename; };
+            private:
+              std::string _op      ;
+              std::string _filename;
+          };
+          
+          // Operation was interrupted by a signal.
+          class Interrupted : public Base {
+            public:
+              virtual ~Interrupted () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Attempted " + _op + " operation was interrupted by a signal.").c_str();
+                } catch (...) {
+                  return "Attempted operation was interrupted by a signal. Error creating message string.";
+                }
+              };
+              Interrupted& Operation (std::string const& op) { _op = op; return *this; }
+              std::string Operation () const { return _op; }
+            private:
+              std::string _op;
+          };
+          
+          // File is unsuitable for requested operation.
+          class Invalid : public Base {
+            public:
+              virtual ~Invalid () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("\"" + _filename + "\" is unsuitable for requested " + _op + " operation.").c_str();
+                } catch (...) {
+                  return "File is unsuitable for requested operation. Error creating message string.";
+                }
+              };
+              Invalid& Operation (std::string const& op      ) { _op       = op      ; return *this; };
+              Invalid& Filename  (std::string const& filename) { _filename = filename; return *this; };
               std::string Operation () const { return _op      ; };
               std::string Filename  () const { return _filename; };
             private:
@@ -191,138 +317,20 @@ namespace DAC {
               };
           };
           
-          // Maximum files for this process.
-          class ProcMaxFiles : public MaxFiles {
+          // Filename is too long.
+          class NameTooLong : public Base {
             public:
-              virtual ~ProcMaxFiles () throw() {};
-              virtual char const* what () const throw() {
-                return "This process is already at the maximum number of open files.";
-              };
-          };
-          
-          // Maximum files for the system.
-          class SysMaxFiles : public MaxFiles {
-            public:
-              virtual ~SysMaxFiles () throw() {};
-              virtual char const* what () const throw() {
-                return "The maximum number of files for this system are already open.";
-              };
-          };
-          
-          // No space available for the new file.
-          class NoSpace : public Base {
-            public:
-              virtual ~NoSpace () throw() {};
-              virtual char const* what () const throw() {
-                return "No space available to create the file.";
-              };
-          };
-          
-          // File is too large to open without large file support.
-          class FileOverflow : public Base {
-            public:
-              virtual ~FileOverflow () throw() {};
+              virtual ~NameTooLong () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("File \"" + _filename + "\" is too large to open without large file support.").c_str();
+                  return ("Filename \"" + _filename + "\" is too long.").c_str();
                 } catch (...) {
-                  return "File is too large to open without large file support. Error creating message string.";
+                  return "Filename is too long. Error creating message string.";
                 }
               };
-              FileOverflow& Filename (std::string const& filename) { _filename = filename; return *this; };
+              NameTooLong& Filename (std::string const& filename) { _filename = filename; return *this; };
               std::string Filename () const { return _filename; };
             private:
-              std::string _filename;
-          };
-          
-          // Write access was requested on a file that is currently executing.
-          class ExecuteWrite : public Base {
-            public:
-              virtual ~ExecuteWrite () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("File \"" + _filename + "\" is currently executing and cannot be opened for write.").c_str();
-                } catch (...) {
-                  return "File is currently executing and cannot be opened for write. Error creating message string.";
-                }
-              };
-              ExecuteWrite& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
-          // Bad file descriptor.
-          class BadDescriptor : public Base {
-            public:
-              virtual ~BadDescriptor () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Bad file descriptor when attempting " + _op + ".").c_str();
-                } catch (...) {
-                  return "Bad file descriptor. Error creating message string.";
-                }
-              };
-              BadDescriptor& Operation  (std::string const& op) { _op = op; return *this; };
-              BadDescriptor& Descriptor (int         const  fd) { _fd = fd; return *this; };
-              std::string Operation  () const { return _op; };
-              int         Descriptor () const { return _fd; };
-            private:
-              std::string _op;
-              int         _fd;
-          };
-          
-          // Operation was interrupted by a signal.
-          class Interrupted : public Base {
-            public:
-              virtual ~Interrupted () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Attempted " + _op + " operation was interrupted by a signal.").c_str();
-                } catch (...) {
-                  return "Attempted operation was interrupted by a signal. Error creating message string.";
-                }
-              };
-              Interrupted& Operation (std::string const& op) { _op = op; return *this; }
-              std::string Operation () const { return _op; }
-            private:
-              std::string _op;
-          };
-          
-          // Operation attempted at end of file.
-          class EoF : public Base {
-            public:
-              virtual ~EoF () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Requested " + _op + " operation cannot be performed at end of file.").c_str();
-                } catch (...) {
-                  return "Requested operation cannot be performed at end of file. Error creating message string.";
-                }
-              };
-              EoF& Operation (std::string const& op) { _op = op; return *this; }
-              std::string Operation () const { return _op; }
-            private:
-              std::string _op;
-          };
-          
-          // I/O error.
-          class IOError : public Base {
-            public:
-              virtual ~IOError () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("I/O error when attempting to " + _op + " \"" + _filename + "\".").c_str();
-                } catch (...) {
-                  return "I/O error. Error creating message string.";
-                }
-              };
-              IOError& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              IOError& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
-            private:
-              std::string _op      ;
               std::string _filename;
           };
           
@@ -344,6 +352,70 @@ namespace DAC {
             private:
               std::string _op      ;
               std::string _filename;
+          };
+          
+          // No space available for the new file.
+          class NoSpace : public Base {
+            public:
+              virtual ~NoSpace () throw() {};
+              virtual char const* what () const throw() {
+                return "No space available to create the file.";
+              };
+          };
+          
+          // Component of the path is not a directory.
+          class NotDirectory : public Base {
+            public:
+              virtual ~NotDirectory () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("A component of the path to \"" + _filename + "\" is not a directory.").c_str();
+                } catch (...) {
+                  return "A component of the path is not a directory. Error creating message string.";
+                }
+              };
+              NotDirectory& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
+              std::string _filename;
+          };
+          
+          // Attempt to close a file that has not been opened.
+          class NotOpen : public Base {
+            public:
+              virtual ~NotOpen () throw() {};
+              virtual char const* what () const throw() {
+                return "Attempted to close a file that is not open.";
+              };
+          };  
+          
+          // Out of memory.
+          class OutOfMemory : public Base {};
+          
+          // A component of the path does not exist.
+          class PathNonExist : public Base {
+            public:
+              virtual ~PathNonExist () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("A component of the path \"" + _filename + "\" does not exist.").c_str();
+                } catch (...) {
+                  return "A component of the specified path does not exist. Error creating message string.";
+                }
+              };
+              PathNonExist& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
+              std::string _filename;
+          };
+          
+          // Maximum files for this process.
+          class ProcMaxFiles : public MaxFiles {
+            public:
+              virtual ~ProcMaxFiles () throw() {};
+              virtual char const* what () const throw() {
+                return "This process is already at the maximum number of open files.";
+              };
           };
           
           // Operation on a read-only filesystem.
@@ -386,98 +458,33 @@ namespace DAC {
               std::string _filename;
           };
           
-          // Cannot seek on this type of file.
-          class CannotSeek : public Base {
+          // Maximum files for the system.
+          class SysMaxFiles : public MaxFiles {
             public:
-              virtual ~CannotSeek () throw() {};
+              virtual ~SysMaxFiles () throw() {};
               virtual char const* what () const throw() {
-                try {
-                  return ("File \"" + _filename + "\" is a pipe, socket, or FIFO and cannot seek.").c_str();
-                } catch (...) {
-                  return "File is a pipe, socket, or FIFO and cannot seek. Error creating message string.";
-                }
-              }
-              CannotSeek& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
-          // Filename is too long.
-          class NameTooLong : public Base {
-            public:
-              virtual ~NameTooLong () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Filename \"" + _filename + "\" is too long.").c_str();
-                } catch (...) {
-                  return "Filename is too long. Error creating message string.";
-                }
+                return "The maximum number of files for this system are already open.";
               };
-              NameTooLong& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
           };
-          
-          // A component of the path does not exist.
-          class PathNonExist : public Base {
-            public:
-              virtual ~PathNonExist () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("A component of the path \"" + _filename + "\" does not exist.").c_str();
-                } catch (...) {
-                  return "A component of the specified path does not exist. Error creating message string.";
-                }
-              };
-              PathNonExist& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
-          // Out of memory.
-          class OutOfMemory : public Base {};
           
           // Non-blocking I/O was selected and there is no data available.
           class TryAgain : public Base {};
           
-          // Component of the path is not a directory.
-          class NotDirectory : public Base {
+          // Unexpected error.
+          class Unexpected : public Base {
             public:
-              virtual ~NotDirectory () throw() {};
+              virtual ~Unexpected () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("A component of the path to \"" + _filename + "\" is not a directory.").c_str();
+                  return ("Unexpected system error. Error number is " + DAC::toString(_errno) + ".").c_str();
                 } catch (...) {
-                  return "A component of the path is not a directory. Error creating message string.";
+                  return "Unexpected system error. Error creating message string.";
                 }
               };
-              NotDirectory& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
+              Unexpected& Errno (int const errnum) { _errno = errnum; return *this; };
+              int Errno () const { return _errno; }
             private:
-              std::string _filename;
-          };
-          
-          // Passed buffer is too small.
-          class BufTooSmall : public Base {
-            public:
-              virtual ~BufTooSmall () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Passed buffer of " + DAC::toString(_bufsize) + " bytes, file is " + DAC::toString(_filesize) + " bytes.").c_str();
-                } catch (...) {
-                  return "Passed buffer is smaller than file size.";
-                }
-              };
-              BufTooSmall& BufSize  (off_t const bufsize ) { _bufsize  = bufsize ; return *this; };
-              BufTooSmall& FileSize (off_t const filesize) { _filesize = filesize; return *this; };
-              off_t BufSize  () const { return _bufsize ; };
-              off_t FileSize () const { return _filesize; };
-            private:
-              off_t _bufsize ;
-              off_t _filesize;
+              int _errno;
           };
         
         // This class cannot be initialized.
@@ -528,7 +535,9 @@ namespace DAC {
       POSIXFile& A_Read    (bool        const  a_read   );
       POSIXFile& A_Write   (bool        const  a_write  );
       POSIXFile& A_Execute (bool        const  a_execute);
-      POSIXFile& Mode      (mode_t      const  new_mode , bool const cache = true);
+      POSIXFile& Mode      (mode_t      const  new_mode );
+      POSIXFile& UID       (uid_t       const  new_uid  );
+      POSIXFile& GID       (gid_t       const  new_gid  );
       std::string Filename  () const;
       bool        Append    () const;
       bool        Create    () const;
@@ -553,7 +562,9 @@ namespace DAC {
       bool        A_Read    () const;
       bool        A_Write   () const;
       bool        A_Execute () const;
-      mode_t      Mode      (bool const cache = true) const;
+      mode_t      Mode      (CacheMode const cache = CACHE_DO) const;
+      uid_t       UID       () const;
+      gid_t       GID       () const;
       
       // Reset to just-constructed defaults.
       void clear ();
@@ -567,6 +578,9 @@ namespace DAC {
       // Close the file.
       void close ();
       
+      // Change the owner of the file.
+      void chown (uid_t const owner = UID_NOCHANGE, gid_t const group = GID_NOCHANGE);
+      
       // Get the filename itself.
       std::string basename () const;
       
@@ -577,19 +591,19 @@ namespace DAC {
       std::string get_file ();
       
       // File info.
-      dev_t     device    (bool cache = true) const;
-      ino_t     inode     (bool cache = true) const;
-      mode_t    mode      (bool cache = true) const;
-      nlink_t   links     (bool cache = true) const;
-      uid_t     uid       (bool cache = true) const;
-      gid_t     gid       (bool cache = true) const;
-      dev_t     devid     (bool cache = true) const;
-      off_t     size      (bool cache = true) const;
-      blksize_t blockSize (bool cache = true) const;
-      blkcnt_t  blocks    (bool cache = true) const;
-      time_t    atime     (bool cache = true) const;
-      time_t    mtime     (bool cache = true) const;
-      time_t    ctime     (bool cache = true) const;
+      dev_t     device    (CacheMode const cache = CACHE_DO) const;
+      ino_t     inode     (CacheMode const cache = CACHE_DO) const;
+      mode_t    mode      (CacheMode const cache = CACHE_DO) const;
+      nlink_t   links     (CacheMode const cache = CACHE_DO) const;
+      uid_t     uid       (CacheMode const cache = CACHE_DO) const;
+      gid_t     gid       (CacheMode const cache = CACHE_DO) const;
+      dev_t     devid     (CacheMode const cache = CACHE_DO) const;
+      off_t     size      (CacheMode const cache = CACHE_DO) const;
+      blksize_t blockSize (CacheMode const cache = CACHE_DO) const;
+      blkcnt_t  blocks    (CacheMode const cache = CACHE_DO) const;
+      time_t    atime     (CacheMode const cache = CACHE_DO) const;
+      time_t    mtime     (CacheMode const cache = CACHE_DO) const;
+      time_t    ctime     (CacheMode const cache = CACHE_DO) const;
     
     /*
      * Private members.
@@ -685,13 +699,13 @@ namespace DAC {
       // Function members.
       
       // Update the cache if necessary.
-      void _check_cache (bool cache = true) const;
+      void _check_cache (CacheMode const cache = CACHE_DO) const;
       
       // Update the cache now.
       void _update_cache () const;
       
       // Wrapper around ::read().
-      ssize_t _read (void* const buf, off_t const bufsize, bool const updatepos = true);
+      ssize_t _read (void* const buf, off_t const bufsize);
       
       // Seek to a particular offset.
       void _seek            (off_t const offset, SeekMode const whence = SM_SET);
@@ -797,27 +811,33 @@ namespace DAC {
   inline bool POSIXFile::A_Read    () const { return Mode() & S_IRUSR & S_IRGRP & S_IROTH; }
   inline bool POSIXFile::A_Write   () const { return Mode() & S_IWUSR & S_IWGRP & S_IWOTH; }
   inline bool POSIXFile::A_Execute () const { return Mode() & S_IXUSR & S_IXGRP & S_IXOTH; }
-  inline mode_t POSIXFile::Mode (bool const cache) const {
+  inline mode_t POSIXFile::Mode (CacheMode const cache) const {
     return mode(cache) & PERM_MASK;
   }
   
+  // Set/get file owner & group.
+  inline POSIXFile& POSIXFile::UID (uid_t const new_uid) { chown(new_uid     , GID_NOCHANGE); return *this; }
+  inline POSIXFile& POSIXFile::GID (gid_t const new_gid) { chown(UID_NOCHANGE, new_gid     ); return *this; }
+  inline uid_t POSIXFile::UID () const { return uid(); }
+  inline gid_t POSIXFile::GID () const { return gid(); }
+  
   // File info.
-  inline dev_t     POSIXFile::device    (bool cache) const { _check_cache(cache); return _stat.st_dev    ; }
-  inline ino_t     POSIXFile::inode     (bool cache) const { _check_cache(cache); return _stat.st_ino    ; }
-  inline mode_t    POSIXFile::mode      (bool cache) const { _check_cache(cache); return _stat.st_mode   ; }
-  inline nlink_t   POSIXFile::links     (bool cache) const { _check_cache(cache); return _stat.st_nlink  ; }
-  inline uid_t     POSIXFile::uid       (bool cache) const { _check_cache(cache); return _stat.st_uid    ; }
-  inline gid_t     POSIXFile::gid       (bool cache) const { _check_cache(cache); return _stat.st_gid    ; }
-  inline dev_t     POSIXFile::devid     (bool cache) const { _check_cache(cache); return _stat.st_rdev   ; }
-  inline off_t     POSIXFile::size      (bool cache) const { _check_cache(cache); return _stat.st_size   ; }
-  inline blksize_t POSIXFile::blockSize (bool cache) const { _check_cache(cache); return _stat.st_blksize; }
-  inline blkcnt_t  POSIXFile::blocks    (bool cache) const { _check_cache(cache); return _stat.st_blocks ; }
-  inline time_t    POSIXFile::atime     (bool cache) const { _check_cache(cache); return _stat.st_atime  ; }
-  inline time_t    POSIXFile::mtime     (bool cache) const { _check_cache(cache); return _stat.st_mtime  ; }
-  inline time_t    POSIXFile::ctime     (bool cache) const { _check_cache(cache); return _stat.st_ctime  ; }
+  inline dev_t     POSIXFile::device    (CacheMode const cache) const { _check_cache(cache); return _stat.st_dev    ; }
+  inline ino_t     POSIXFile::inode     (CacheMode const cache) const { _check_cache(cache); return _stat.st_ino    ; }
+  inline mode_t    POSIXFile::mode      (CacheMode const cache) const { _check_cache(cache); return _stat.st_mode   ; }
+  inline nlink_t   POSIXFile::links     (CacheMode const cache) const { _check_cache(cache); return _stat.st_nlink  ; }
+  inline uid_t     POSIXFile::uid       (CacheMode const cache) const { _check_cache(cache); return _stat.st_uid    ; }
+  inline gid_t     POSIXFile::gid       (CacheMode const cache) const { _check_cache(cache); return _stat.st_gid    ; }
+  inline dev_t     POSIXFile::devid     (CacheMode const cache) const { _check_cache(cache); return _stat.st_rdev   ; }
+  inline off_t     POSIXFile::size      (CacheMode const cache) const { _check_cache(cache); return _stat.st_size   ; }
+  inline blksize_t POSIXFile::blockSize (CacheMode const cache) const { _check_cache(cache); return _stat.st_blksize; }
+  inline blkcnt_t  POSIXFile::blocks    (CacheMode const cache) const { _check_cache(cache); return _stat.st_blocks ; }
+  inline time_t    POSIXFile::atime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_atime  ; }
+  inline time_t    POSIXFile::mtime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_mtime  ; }
+  inline time_t    POSIXFile::ctime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_ctime  ; }
   
   // Update cache if necessary.
-  inline void POSIXFile::_check_cache (bool cache) const { if (!cache || !_cache_valid) { _update_cache(); } }
+  inline void POSIXFile::_check_cache (CacheMode const cache) const { if (!cache || !_cache_valid) { _update_cache(); } }
   
   // Seek and update the current file position.
   inline void POSIXFile::_seek_update_pos (off_t const offset, SeekMode const whence) {
