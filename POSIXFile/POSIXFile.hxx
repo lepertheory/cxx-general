@@ -15,6 +15,7 @@
 // System includes.
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <cxx-general/Exception.hxx>
 #include <cxx-general/toString.hxx>
 
@@ -74,6 +75,32 @@ namespace DAC {
               int _errno;
           };
           
+          // Attempt to open an already open file.
+          class AlreadyOpen : public Base {
+            public:
+              virtual ~AlreadyOpen () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("File \"" + _filename + "\" is already open.").c_str();
+                } catch (...) {
+                  return "File is already open. Error creating message string.";
+                }
+              };
+              AlreadyOpen& Filename (std::string const& filename) { _filename = filename; return *this; }
+              std::string Filename () const { return _filename; }
+            private:
+              std::string _filename;
+          };
+          
+          // Attempt to close a file that has not been opened.
+          class NotOpen : public Base {
+            public:
+              virtual ~NotOpen () throw() {};
+              virtual char const* what () const throw() {
+                return "Attempted to close a file that is not open.";
+              };
+          };  
+          
           // Access error.
           class AccessDenied : public Base {
             public:
@@ -91,6 +118,113 @@ namespace DAC {
               std::string Filename  () const { return _filename; };
             private:
               std::string _op      ;
+              std::string _filename;
+          };
+          
+          // File already exists.
+          class FileExists : public Base {
+            public:
+              virtual ~FileExists () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("File already exists error attempting to " + _op + " \"" + _filename + "\".").c_str();
+                } catch (...) {
+                  return "File already exists. Error creating message string.";
+                }
+              };
+              FileExists& Operation (std::string const& op      ) { _op       = op      ; return *this; };
+              FileExists& Filename  (std::string const& filename) { _filename = filename; return *this; };
+              std::string Operation () const { return _op      ; };
+              std::string Filename  () const { return _filename; };
+            private:
+              std::string _op      ;
+              std::string _filename;
+          };
+          
+          // Write access requested for a directory.
+          class IsDirectory : public Base {
+            public:
+              virtual ~IsDirectory () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Attempted to open directory \"" + _filename + "\" for write.").c_str();
+                } catch (...) {
+                  return "Attempted to open directory for write. Error creating message string.";
+                }
+              };
+              IsDirectory& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
+              std::string _filename;
+          };
+          
+          // Maximum number of files are open.
+          class MaxFiles : public Base {
+            public:
+              virtual ~MaxFiles () throw() {};
+              virtual char const* what () const throw() {
+                return "The maximum number of available files are already open.";
+              };
+          };
+          
+          // Maximum files for this process.
+          class ProcMaxFiles : public MaxFiles {
+            public:
+              virtual ~ProcMaxFiles () throw() {};
+              virtual char const* what () const throw() {
+                return "This process is already at the maximum number of open files.";
+              };
+          };
+          
+          // Maximum files for the system.
+          class SysMaxFiles : public MaxFiles {
+            public:
+              virtual ~SysMaxFiles () throw() {};
+              virtual char const* what () const throw() {
+                return "The maximum number of files for this system are already open.";
+              };
+          };
+          
+          // No space available for the new file.
+          class NoSpace : public Base {
+            public:
+              virtual ~NoSpace () throw() {};
+              virtual char const* what () const throw() {
+                return "No space available to create the file.";
+              };
+          };
+          
+          // File is too large to open without large file support.
+          class FileOverflow : public Base {
+            public:
+              virtual ~FileOverflow () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("File \"" + _filename + "\" is too large to open without large file support.").c_str();
+                } catch (...) {
+                  return "File is too large to open without large file support. Error creating message string.";
+                }
+              };
+              FileOverflow& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
+              std::string _filename;
+          };
+          
+          // Write access was requested on a file that is currently executing.
+          class ExecuteWrite : public Base {
+            public:
+              virtual ~ExecuteWrite () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("File \"" + _filename + "\" is currently executing and cannot be opened for write.").c_str();
+                } catch (...) {
+                  return "File is currently executing and cannot be opened for write. Error creating message string.";
+                }
+              };
+              ExecuteWrite& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
               std::string _filename;
           };
           
@@ -112,6 +246,26 @@ namespace DAC {
             private:
               std::string _op;
               int         _fd;
+          };
+          
+          // Operation was interrupted by a signal.
+          class Interrupted : public Base {
+            public:
+              virtual ~Interrupted () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Attempted " + _op + " operation on \"" + _filename + "\" was interrupted by a signal.").c_str();
+                } catch (...) {
+                  return "Attempted operation was interrupted by a signal. Error creating message string.";
+                }
+              };
+              Interrupted& Operation (std::string const& op      ) { _op       = op      ; return *this; }
+              Interrupted& Filename  (std::string const& filename) { _filename = filename; return *this; }
+              std::string Operation () const { return _op      ; }
+              std::string Filename  () const { return _filename; }
+            private:
+              std::string _op      ;
+              std::string _filename;
           };
           
           // I/O error.
@@ -194,6 +348,23 @@ namespace DAC {
               std::string _filename;
           };
           
+          // Cannot seek on this type of file.
+          class CannotSeek : public Base {
+            public:
+              virtual ~CannotSeek () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("File \"" + _filename + "\" is a pipe, socket, or FIFO and cannot seek.").c_str();
+                } catch (...) {
+                  return "File is a pipe, socket, or FIFO and cannot seek. Error creating message string.";
+                }
+              }
+              CannotSeek& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
+            private:
+              std::string _filename;
+          };
+          
           // Filename is too long.
           class NameTooLong : public Base {
             public:
@@ -246,6 +417,26 @@ namespace DAC {
               std::string Filename () const { return _filename; };
             private:
               std::string _filename;
+          };
+          
+          // Passed buffer is too small.
+          class BufTooSmall : public Base {
+            public:
+              virtual ~BufTooSmall () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Passed buffer of " + DAC::toString(_bufsize) + " bytes, file is " + DAC::toString(_filesize) + " bytes.").c_str();
+                } catch (...) {
+                  return "Passed buffer is smaller than file size.";
+                }
+              };
+              BufTooSmall& BufSize  (off_t const bufsize ) { _bufsize  = bufsize ; return *this; };
+              BufTooSmall& FileSize (off_t const filesize) { _filesize = filesize; return *this; };
+              off_t BufSize  () const { return _bufsize ; };
+              off_t FileSize () const { return _filesize; };
+            private:
+              off_t _bufsize ;
+              off_t _filesize;
           };
         
         // This class cannot be initialized.
@@ -330,10 +521,17 @@ namespace DAC {
       void copy (POSIXFile const& source);
       
       // Open the file.
-      void open () const;
+      void open ();
+      
+      // Close the file.
+      void close ();
       
       // Get the filename itself.
       std::string basename () const;
+      
+      // Read the entire file as a string or void*.
+      std::string get_file (                                    ) const;
+      ssize_t     get_file (void* const buf, off_t const bufsize) const;
       
       // File info.
       dev_t     device    (bool cache = true) const;
@@ -360,6 +558,12 @@ namespace DAC {
       
       // File descriptor type.
       typedef int _FDType;
+      
+      // Open mode flag type.
+      typedef int _OMFlagType;
+      
+      // Seek modes.
+      enum _SeekMode { _SEEK_SET = SEEK_SET, _SEEK_CUR = SEEK_CUR, _SEEK_END = SEEK_END };
       
       /***********************************************************************
        * _FD
@@ -431,30 +635,8 @@ namespace DAC {
       // Whether the stat cache is valid.
       mutable bool _cache_valid;
       
-      // Open in append mode if opening for writing. Defaults to true.
-      bool _append;
-      
-      // Create a non-existant file on open. Defaults to true.
-      bool _create;
-      
-      // Open fails if the file already exists.
-      bool _exclusive;
-      
-      // Update access time on read. Defaults to true.
-      bool _doatime;
-      
-      // Allow this file to become the controlling process's terminal.
-      // Defaults to true.
-      bool _canctty;
-      
-      // Follow symlinks when opening. Defaults to true.
-      bool _followsym;
-      
-      // Open for synchronous I/O.
-      bool _synch;
-      
-      // Truncate the file when opening for write.
-      bool _truncate;
+      // Open flags.
+      _OMFlagType _flags;
       
       /***********************************************************************/
       // Function members.
@@ -464,6 +646,9 @@ namespace DAC {
       
       // Update the cache now.
       void _update_cache () const;
+      
+      // Seek to a particular offset.
+      void _seek (off_t const offset, _SeekMode const whence = _SEEK_SET);
     
   };
   
@@ -493,37 +678,23 @@ namespace DAC {
   }
   inline std::string POSIXFile::Filename () const { return _filename; }
   
-  // Set / get the append mode.
-  inline POSIXFile& POSIXFile::Append (bool const append)       { _append = append; return *this; }
-  inline bool       POSIXFile::Append (                 ) const { return _append;                 }
-  
-  // Set / get whether to create a non-existant file on open.
-  inline POSIXFile& POSIXFile::Create (bool const create)       { _create = create; return *this; }
-  inline bool       POSIXFile::Create (                 ) const { return _create;                 }
-  
-  // Set / get whether we want exclusive access to this file.
-  inline POSIXFile& POSIXFile::Exclusive (bool const exclusive)       { _exclusive = exclusive; return *this; }
-  inline bool       POSIXFile::Exclusive (                    ) const { return _exclusive;                    }
-  
-  // Set / get whether we are updating access time on read.
-  inline POSIXFile& POSIXFile::DoATime (bool const doatime)       { _doatime = doatime; return *this; }
-  inline bool       POSIXFile::DoATime (                  ) const { return _doatime;                  }
-  
-  // Set / get whether this is allowed to become the process's controlling terminal.
-  inline POSIXFile& POSIXFile::CanCTTY (bool const canctty)       { _canctty = canctty; return *this; }
-  inline bool       POSIXFile::CanCTTY (                  ) const { return _canctty;                  }
-  
-  // Follow symlinks when opening the file.
-  inline POSIXFile& POSIXFile::FollowSym (bool const followsym)       { _followsym = followsym; return *this; }
-  inline bool       POSIXFile::FollowSym (                    ) const { return _followsym;                    }
-  
-  // Use synchronous I/O.
-  inline POSIXFile& POSIXFile::Synch (bool const synch)       { _synch = synch; return *this; }
-  inline bool       POSIXFile::Synch (                ) const { return _synch;                }
-  
-  // Truncate the file when opening for write.
-  inline POSIXFile& POSIXFile::Truncate (bool const truncate)       { _truncate = truncate; return *this; }
-  inline bool       POSIXFile::Truncate (                   ) const { return _truncate;                   }
+  // Set / get the open flags.
+  inline POSIXFile& POSIXFile::Append    (bool const append   ) { if (append   ) { _flags |=  O_APPEND  ; } else { _flags &= ~O_APPEND  ; } return *this; }
+  inline POSIXFile& POSIXFile::Create    (bool const create   ) { if (create   ) { _flags |=  O_CREAT   ; } else { _flags &= ~O_CREAT   ; } return *this; }
+  inline POSIXFile& POSIXFile::Exclusive (bool const exclusive) { if (exclusive) { _flags |=  O_EXCL    ; } else { _flags &= ~O_EXCL    ; } return *this; }
+  inline POSIXFile& POSIXFile::DoATime   (bool const doatime  ) { if (doatime  ) { _flags &= ~O_NOATIME ; } else { _flags |=  O_NOATIME ; } return *this; }
+  inline POSIXFile& POSIXFile::CanCTTY   (bool const canctty  ) { if (canctty  ) { _flags &= ~O_NOCTTY  ; } else { _flags |=  O_NOCTTY  ; } return *this; }
+  inline POSIXFile& POSIXFile::FollowSym (bool const followsym) { if (followsym) { _flags &= ~O_NOFOLLOW; } else { _flags |=  O_NOFOLLOW; } return *this; }
+  inline POSIXFile& POSIXFile::Synch     (bool const synch    ) { if (synch    ) { _flags |=  O_SYNC    ; } else { _flags &= ~O_SYNC    ; } return *this; }
+  inline POSIXFile& POSIXFile::Truncate  (bool const truncate ) { if (truncate ) { _flags |=  O_TRUNC   ; } else { _flags &= ~O_TRUNC   ; } return *this; }
+  inline bool POSIXFile::Append    () const { return   _flags & O_APPEND   ; }
+  inline bool POSIXFile::Create    () const { return   _flags & O_CREAT    ; }
+  inline bool POSIXFile::Exclusive () const { return   _flags & O_EXCL     ; }
+  inline bool POSIXFile::DoATime   () const { return !(_flags & O_NOATIME ); }
+  inline bool POSIXFile::CanCTTY   () const { return !(_flags & O_NOCTTY  ); }
+  inline bool POSIXFile::FollowSym () const { return !(_flags & O_NOFOLLOW); }
+  inline bool POSIXFile::Synch     () const { return   _flags & O_SYNC     ; }
+  inline bool POSIXFile::Truncate  () const { return   _flags & O_TRUNC    ; }
   
   // Set file modes.
   inline POSIXFile& POSIXFile::SetUID    (bool   const setuid   ) { if (setuid   ) { Mode(Mode() | S_ISUID); } else { Mode(Mode() & ~S_ISUID); } return *this; }
@@ -582,7 +753,6 @@ namespace DAC {
   inline mode_t POSIXFile::Mode (bool const cache) const {
     return mode(cache) & PERM_MASK;
   }
-    
   
   // File info.
   inline dev_t     POSIXFile::device    (bool cache) const { _check_cache(cache); return _stat.st_dev    ; }

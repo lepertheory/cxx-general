@@ -28,7 +28,7 @@ int main (int argc, char** argv) {
        << "  atime:     " << test.atime    () << "\n"
        << "  mtime:     " << test.mtime    () << "\n"
        << "  ctime:     " << test.ctime    () << "\n"
-       << "\n"
+       << "  \n"
        << "  basename: " << test.basename() << "\n";
   
   return 0;
