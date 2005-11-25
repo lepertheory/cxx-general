@@ -1,5 +1,5 @@
 /*****************************************************************************
- * rppower.hxx
+ * rppower.h++
  *****************************************************************************
  * Russian Peasant Algorithm method of finding a power. Why isn't this in the
  * Standard Library? I don't want floating point.

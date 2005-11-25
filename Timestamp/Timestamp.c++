@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Timestamp.cxx
+ * Timestamp.c++
  *****************************************************************************
  * Implementation for class Timestamp.
  *****************************************************************************/
@@ -15,7 +15,7 @@
 #endif
 
 // Class include.
-#include "Timestamp.hxx"
+#include "Timestamp.h++"
 
 // Namespaces used.
 using namespace std;

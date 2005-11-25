@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Arbint-test.cxx
+ * Arbint-test.c++
  *****************************************************************************
  * Tests the class ArbInt.
  *****************************************************************************/
@@ -8,9 +8,9 @@
 #include <iostream>
 
 // Internal includes.
-#include "ArbInt.hxx"
-#include "demangle.hxx"
-#include "Exception.hxx"
+#include "ArbInt.h++"
+#include "demangle.h++"
+#include "Exception.h++"
 
 // Namespace declarations.
 using namespace std;

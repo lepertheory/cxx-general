@@ -1,5 +1,5 @@
 /*****************************************************************************
- * SafeInt.hxx
+ * SafeInt.h++
  *****************************************************************************
  * Safe integer class.
  *****************************************************************************/
@@ -14,8 +14,8 @@
   #include <sstream>
 
 // System includes.
-  #include <cxx-general/toString.hxx>
-  #include <cxx-general/Exception.hxx>
+  #include <cxx-general/toString.h++>
+  #include <cxx-general/Exception.h++>
 
 // Namespace wrapper.
 namespace DAC {

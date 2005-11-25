@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "POSIXFile/POSIXFile.hxx"
+#include "POSIXFile/POSIXFile.h++"
 
 using namespace std;
 using namespace DAC;

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * ArbInt.cxx
+ * ArbInt.c++
  *****************************************************************************
  * Implementation for class ArbInt.
  *****************************************************************************/
@@ -11,13 +11,13 @@
 #include <algorithm>
 
 // System includes.
-#include <cxx-general/SafeInt.hxx>
-#include <cxx-general/ReferencePointer.hxx>
-#include <cxx-general/toString.hxx>
-#include <cxx-general/rppower.hxx>
+#include <cxx-general/SafeInt.h++>
+#include <cxx-general/ReferencePointer.h++>
+#include <cxx-general/toString.h++>
+#include <cxx-general/rppower.h++>
 
 // Class include.
-#include "ArbInt.hxx"
+#include "ArbInt.h++"
 
 // Namespaces used.
 using namespace std;

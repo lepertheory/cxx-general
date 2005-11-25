@@ -55,20 +55,20 @@ if not env.GetOption('clean') :
   env['CCFLAGS'] = tmpccflags
 
 # Object files.
-o_POSIXFile = env.Object      (target = 'POSIXFile', source = ['POSIXFile.cxx'])
-s_POSIXFile = env.SharedObject(target = 'POSIXFile', source = ['POSIXFile.cxx'])
+o_POSIXFile = env.Object      (target = 'POSIXFile', source = ['POSIXFile.c++'])
+s_POSIXFile = env.SharedObject(target = 'POSIXFile', source = ['POSIXFile.c++'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with POSIXFile.
 cPOSIXFile = { 'obj'        : [o_POSIXFile]              ,
                'sobj'       : [s_POSIXFile]              ,
                'include'    : ['POSIXFile']              ,
-               'headers'    : ['POSIXFile/POSIXFile.hxx'],
+               'headers'    : ['POSIXFile/POSIXFile.h++'],
                'defines'    : []                         ,
                'own_obj'    : [o_POSIXFile]              ,
                'own_sobj'   : [s_POSIXFile]              ,
                'own_include': 'POSIXFile'                ,
-               'own_headers': ['POSIXFile/POSIXFile.hxx'],
+               'own_headers': ['POSIXFile/POSIXFile.h++'],
                'own_defines': []                           }
 
 # Return.

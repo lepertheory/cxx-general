@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Timestamp-test.cxx
+ * Timestamp-test.c++
  *****************************************************************************
  * Tests the class Timestamp.
  *****************************************************************************/
@@ -8,11 +8,11 @@
 #include <iostream>
 
 // Internal includes.
-#include "demangle.hxx"
-#include "Exception.hxx"
+#include "demangle.h++"
+#include "Exception.h++"
 
 // Testing include.
-#include "Timestamp.hxx"
+#include "Timestamp.h++"
 
 // Namespace declarations.
 using namespace std;

@@ -93,20 +93,20 @@ else :
 for define in defines : env.Append(CPPDEFINES = [ define ])
 
 # Object files.
-o_Timestamp = env.Object      (target = 'Timestamp', source = ['Timestamp.cxx'])
-s_Timestamp = env.SharedObject(target = 'Timestamp', source = ['Timestamp.cxx'])
+o_Timestamp = env.Object      (target = 'Timestamp', source = ['Timestamp.c++'])
+s_Timestamp = env.SharedObject(target = 'Timestamp', source = ['Timestamp.c++'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with Timestamp.
 cTimestamp = { 'obj'        : cArb['obj']     + [o_Timestamp]              ,
                'sobj'       : cArb['sobj']    + [s_Timestamp]              ,
                'include'    : cArb['include'] + ['Timestamp']              ,
-               'headers'    : cArb['headers'] + ['Timestamp/Timestamp.hxx'],
+               'headers'    : cArb['headers'] + ['Timestamp/Timestamp.h++'],
                'defines'    : cArb['defines'] + [defines]                  ,
                'own_obj'    : [o_Timestamp]                                ,
                'own_sobj'   : [s_Timestamp]                                ,
                'own_include': 'Timestamp'                                  ,
-               'own_headers': ['Timestamp/Timestamp.hxx']                  ,
+               'own_headers': ['Timestamp/Timestamp.h++']                  ,
                'own_defines': defines                                        }
 
 # Return.

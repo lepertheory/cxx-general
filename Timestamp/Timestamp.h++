@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Timestamp.hxx
+ * Timestamp.h++
  *****************************************************************************
  * Interface for class Timestamp.
  *****************************************************************************/
@@ -15,9 +15,9 @@
   #include <map>
 
 // System includes.
-  #include <cxx-general/Exception.hxx>
-  #include <cxx-general/Arb/Arb.hxx>
-  #include <cxx-general/ReferencePointer.hxx>
+  #include <cxx-general/Exception.h++>
+  #include <cxx-general/Arb/Arb.h++>
+  #include <cxx-general/ReferencePointer.h++>
 
 // Namespace wrapping.
 namespace DAC {

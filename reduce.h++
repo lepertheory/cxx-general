@@ -1,11 +1,11 @@
 /*****************************************************************************
- * reduce.hxx
+ * reduce.h++
  *****************************************************************************
  * Reduce a fraction.
  *****************************************************************************/
 
 // Internal includes.
-#include "cxx-general/gcd.hxx"
+#include "cxx-general/gcd.h++"
 
 // Include guard.
 #if !defined(REDUCE_ykbf73k3ub834b)

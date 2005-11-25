@@ -1,5 +1,5 @@
 /*****************************************************************************
- * POSIXFile.hxx
+ * POSIXFile.h++
  *****************************************************************************
  * Interface for class POSIXFile.
  *****************************************************************************/
@@ -17,8 +17,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <cxx-general/Exception.hxx>
-#include <cxx-general/toString.hxx>
+#include <cxx-general/Exception.h++>
+#include <cxx-general/toString.h++>
 
 // Namespace wrapping.
 namespace DAC {

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Arb-test.cxx
+ * Arb-test.c++
  *****************************************************************************
  * Tests the class Arb.
  *****************************************************************************/
@@ -9,11 +9,11 @@
 #include <string>
 
 // Internal includes.
-#include "demangle.hxx"
-#include "Exception.hxx"
+#include "demangle.h++"
+#include "Exception.h++"
 
 // Testing include.
-#include "Arb.hxx"
+#include "Arb.h++"
 
 // Namespace declarations.
 using namespace std;

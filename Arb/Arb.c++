@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Arb.cxx
+ * Arb.c++
  *****************************************************************************
  * Implementation for class Arb.
  *****************************************************************************/
@@ -9,12 +9,12 @@
   #include <algorithm>
 
 // System includes.
-  #include <cxx-general/rppower.hxx>
-  #include <cxx-general/toString.hxx>
-  #include <cxx-general/reduce.hxx>
+  #include <cxx-general/rppower.h++>
+  #include <cxx-general/toString.h++>
+  #include <cxx-general/reduce.h++>
 
 // Class include.
-  #include "Arb.hxx"
+  #include "Arb.h++"
 
 // Namespaces used.
 using namespace std;

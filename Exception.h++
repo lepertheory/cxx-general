@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Exception.hxx
+ * Exception.h++
  *****************************************************************************
  * Base class for all exceptions thrown by me, DAC.
  *****************************************************************************/
@@ -14,7 +14,7 @@
   #include <iostream>
 
 // System includes.
-  #include <cxx-general/demangle.hxx>
+  #include <cxx-general/demangle.h++>
 
 // Namespace wrapper.
 namespace DAC {

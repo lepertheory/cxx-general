@@ -99,18 +99,18 @@ else :
 
 # Top level header files.
 headers = list()
-h_AutoArray        = env.File('AutoArray.hxx'       ) ; headers += [h_AutoArray       ]
-h_Exception        = env.File('Exception.hxx'       ) ; headers += [h_Exception       ]
-h_ReferencePointer = env.File('ReferencePointer.hxx') ; headers += [h_ReferencePointer]
-h_SafeInt          = env.File('SafeInt.hxx'         ) ; headers += [h_SafeInt         ]
-h_abs              = env.File('abs.hxx'             ) ; headers += [h_abs             ]
-h_demangle         = env.File('demangle.hxx'        ) ; headers += [h_demangle        ]
-h_gcd              = env.File('gcd.hxx'             ) ; headers += [h_gcd             ]
-h_lcm              = env.File('lcm.hxx'             ) ; headers += [h_lcm             ]
-h_logBase          = env.File('logBase.hxx'         ) ; headers += [h_logBase         ]
-h_reduce           = env.File('reduce.hxx'          ) ; headers += [h_reduce          ]
-h_rppower          = env.File('rppower.hxx'         ) ; headers += [h_rppower         ]
-h_toString         = env.File('toString.hxx'        ) ; headers += [h_toString        ]
+h_AutoArray        = env.File('AutoArray.h++'       ) ; headers += [h_AutoArray       ]
+h_Exception        = env.File('Exception.h++'       ) ; headers += [h_Exception       ]
+h_ReferencePointer = env.File('ReferencePointer.h++') ; headers += [h_ReferencePointer]
+h_SafeInt          = env.File('SafeInt.h++'         ) ; headers += [h_SafeInt         ]
+h_abs              = env.File('abs.h++'             ) ; headers += [h_abs             ]
+h_demangle         = env.File('demangle.h++'        ) ; headers += [h_demangle        ]
+h_gcd              = env.File('gcd.h++'             ) ; headers += [h_gcd             ]
+h_lcm              = env.File('lcm.h++'             ) ; headers += [h_lcm             ]
+h_logBase          = env.File('logBase.h++'         ) ; headers += [h_logBase         ]
+h_reduce           = env.File('reduce.h++'          ) ; headers += [h_reduce          ]
+h_rppower          = env.File('rppower.h++'         ) ; headers += [h_rppower         ]
+h_toString         = env.File('toString.h++'        ) ; headers += [h_toString        ]
 
 # Alias for install location.
 includedir = env['INSTALLDIR'] + '/include/cxx-general'

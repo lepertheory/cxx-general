@@ -1,5 +1,5 @@
 /*****************************************************************************
- * SafeInt-test.cxx
+ * SafeInt-test.c++
  *****************************************************************************
  * Tests the class SafeInt.
  *****************************************************************************/
@@ -9,9 +9,9 @@
 #include <limits>
 
 // Internal includes.
-#include "SafeInt.hxx"
-#include "Exception.hxx"
-#include "toString.hxx"
+#include "SafeInt.h++"
+#include "Exception.h++"
+#include "toString.h++"
 
 // Namespace declarations.
 using namespace std;

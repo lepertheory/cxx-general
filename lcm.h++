@@ -1,5 +1,5 @@
 /*****************************************************************************
- * lcm.hxx
+ * lcm.h++
  *****************************************************************************
  * Finds the least common multiple of two given numbers.
  *****************************************************************************/
@@ -9,7 +9,7 @@
   #define LCM_28ky54089bgyxkykg8
 
 // System includes.
-  #include <cxx-general/gcd.hxx>
+  #include <cxx-general/gcd.h++>
 
 // Contain in namespace.
 namespace DAC {

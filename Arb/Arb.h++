@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Arb.hxx
+ * Arb.h++
  *****************************************************************************
  * Interface for class Arb.
  *****************************************************************************/
@@ -15,11 +15,11 @@
   #include <limits>
 
 // System includes.
-  #include <cxx-general/SafeInt.hxx>
-  #include <cxx-general/ReferencePointer.hxx>
-  #include <cxx-general/toString.hxx>
-  #include <cxx-general/ArbInt/ArbInt.hxx>
-  #include <cxx-general/abs.hxx>
+  #include <cxx-general/SafeInt.h++>
+  #include <cxx-general/ReferencePointer.h++>
+  #include <cxx-general/toString.h++>
+  #include <cxx-general/ArbInt/ArbInt.h++>
+  #include <cxx-general/abs.h++>
 
 // Namespace wrapping.
 namespace DAC {

@@ -5,20 +5,20 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Object files.
-o_ArbInt = env.Object      (target = 'ArbInt', source = ['ArbInt.cxx'])
-s_ArbInt = env.SharedObject(target = 'ArbInt', source = ['ArbInt.cxx'])
+o_ArbInt = env.Object      (target = 'ArbInt', source = ['ArbInt.c++'])
+s_ArbInt = env.SharedObject(target = 'ArbInt', source = ['ArbInt.c++'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with ArbInt.
 cArbInt = { 'obj'        : [o_ArbInt]           ,
             'sobj'       : [s_ArbInt]           ,
             'include'    : ['ArbInt']           ,
-            'headers'    : ['ArbInt/ArbInt.hxx'],
+            'headers'    : ['ArbInt/ArbInt.h++'],
             'defines'    : []                   ,
             'own_obj'    : [o_ArbInt]           ,
             'own_sobj'   : [s_ArbInt]           ,
             'own_include': 'ArbInt'             ,
-            'own_headers': ['ArbInt/ArbInt.hxx'],
+            'own_headers': ['ArbInt/ArbInt.h++'],
             'own_defines': []                     }
 
 # Return.

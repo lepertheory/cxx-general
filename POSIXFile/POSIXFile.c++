@@ -1,5 +1,5 @@
 /*****************************************************************************
- * POSIXFile.cxx
+ * POSIXFile.c++
  *****************************************************************************
  * Implementation of class POSIXFile.
  *****************************************************************************/
@@ -12,11 +12,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
-#include <cxx-general/toString.hxx>
-#include <cxx-general/AutoArray.hxx>
+#include <cxx-general/toString.h++>
+#include <cxx-general/AutoArray.h++>
 
 // Class include.
-#include "POSIXFile.hxx"
+#include "POSIXFile.h++"
 
 // Namespaces used.
 using namespace std;

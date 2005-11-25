@@ -19,12 +19,12 @@ for incdir in cPOSIXFile['include'] : env_POSIXFile.Append(CPPPATH    = ['#' + i
 for define in cPOSIXFile['defines'] : env_POSIXFile.Append(CPPDEFINES = [ define])
 
 # Object files.
-o_SafeInt   = env          .Object(target = 'SafeInt'  , source = ['SafeInt.cxx'  ])
-o_ArbInt    = env_ArbInt   .Object(target = 'ArbInt'   , source = ['ArbInt.cxx'   ])
-o_Arb       = env_Arb      .Object(target = 'Arb'      , source = ['Arb.cxx'      ])
-o_Timestamp = env_Timestamp.Object(target = 'Timestamp', source = ['Timestamp.cxx'])
-o_POSIXFile = env_POSIXFile.Object(target = 'POSIXFile', source = ['POSIXFile.cxx'])
-o_float     = env          .Object(target = 'float'    , source = ['float.cxx'    ])
+o_SafeInt   = env          .Object(target = 'SafeInt'  , source = ['SafeInt.c++'  ])
+o_ArbInt    = env_ArbInt   .Object(target = 'ArbInt'   , source = ['ArbInt.c++'   ])
+o_Arb       = env_Arb      .Object(target = 'Arb'      , source = ['Arb.c++'      ])
+o_Timestamp = env_Timestamp.Object(target = 'Timestamp', source = ['Timestamp.c++'])
+o_POSIXFile = env_POSIXFile.Object(target = 'POSIXFile', source = ['POSIXFile.c++'])
+o_float     = env          .Object(target = 'float'    , source = ['float.c++'    ])
 
 # Programs.
 env          .Program(target = 'SafeInt'  , source =                           [o_SafeInt  ])
