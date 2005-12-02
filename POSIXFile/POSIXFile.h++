@@ -9,16 +9,19 @@
   #define POSIXFILE_234b734278udud8hb48
 
 // STL includes.
-#include <string>
-#include <fstream>
+  #include <string>
+  #include <fstream>
+  #include <cstring>
 
 // System includes.
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <cxx-general/Exception.h++>
-#include <cxx-general/toString.h++>
+  #include <sys/types.h>
+  #include <sys/stat.h>
+  #include <unistd.h>
+  #include <fcntl.h>
+  #include <cxx-general/Exception.h++>
+  #include <cxx-general/toString.h++>
+  #include <cxx-general/AutoArray.h++>
+  #include <cxx-general/getErrorText.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -69,26 +72,6 @@ namespace DAC {
               virtual char const* what () const throw() { return "Undefined error in POSIXFile."; };
           };
           
-          // Access error.
-          class AccessDenied : public Base {
-            public:
-              virtual ~AccessDenied () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Access denied attempting to " + _op + " \"" + _filename + "\".").c_str();
-                } catch (...) {
-                  return "Access denied. Error creating message string.";
-                }
-              };
-              AccessDenied& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              AccessDenied& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
-            private:
-              std::string _op      ;
-              std::string _filename;
-          };
-          
           // Attempt to open an already open file.
           class AlreadyOpen : public Base {
             public:
@@ -102,63 +85,6 @@ namespace DAC {
               };
               AlreadyOpen& Filename (std::string const& filename) { _filename = filename; return *this; }
               std::string Filename () const { return _filename; }
-            private:
-              std::string _filename;
-          };
-          
-          // Bad file descriptor.
-          class BadDescriptor : public Base {
-            public:
-              virtual ~BadDescriptor () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Bad file descriptor when attempting " + _op + ".").c_str();
-                } catch (...) {
-                  return "Bad file descriptor. Error creating message string.";
-                }
-              };
-              BadDescriptor& Operation  (std::string const& op) { _op = op; return *this; };
-              BadDescriptor& Descriptor (int         const  fd) { _fd = fd; return *this; };
-              std::string Operation  () const { return _op; };
-              int         Descriptor () const { return _fd; };
-            private:
-              std::string _op;
-              int         _fd;
-          };
-          
-          // Passed buffer is too small.
-          class BufTooSmall : public Base {
-            public:
-              virtual ~BufTooSmall () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Passed buffer of " + DAC::toString(_bufsize) + " bytes, file is " + DAC::toString(_filesize) + " bytes.").c_str();
-                } catch (...) {
-                  return "Passed buffer is smaller than file size.";
-                }
-              };
-              BufTooSmall& BufSize  (off_t const bufsize ) { _bufsize  = bufsize ; return *this; };
-              BufTooSmall& FileSize (off_t const filesize) { _filesize = filesize; return *this; };
-              off_t BufSize  () const { return _bufsize ; };
-              off_t FileSize () const { return _filesize; };
-            private:
-              off_t _bufsize ;
-              off_t _filesize;
-          };
-          
-          // Cannot seek on this type of file.
-          class CannotSeek : public Base {
-            public:
-              virtual ~CannotSeek () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("File \"" + _filename + "\" is a pipe, socket, or FIFO and cannot seek.").c_str();
-                } catch (...) {
-                  return "File is a pipe, socket, or FIFO and cannot seek. Error creating message string.";
-                }
-              }
-              CannotSeek& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
             private:
               std::string _filename;
           };
@@ -180,312 +106,74 @@ namespace DAC {
               std::string _op;
           };
           
-          // Write access was requested on a file that is currently executing.
-          class ExecuteWrite : public Base {
-            public:
-              virtual ~ExecuteWrite () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("File \"" + _filename + "\" is currently executing and cannot be opened for write.").c_str();
-                } catch (...) {
-                  return "File is currently executing and cannot be opened for write. Error creating message string.";
-                }
-              };
-              ExecuteWrite& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
-          // File already exists.
-          class FileExists : public Base {
-            public:
-              virtual ~FileExists () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("File already exists error attempting to " + _op + " \"" + _filename + "\".").c_str();
-                } catch (...) {
-                  return "File already exists. Error creating message string.";
-                }
-              };
-              FileExists& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              FileExists& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
-            private:
-              std::string _op      ;
-              std::string _filename;
-          };
-          
-          // File is too large to open without large file support.
-          class FileOverflow : public Base {
-            public:
-              virtual ~FileOverflow () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("File \"" + _filename + "\" is too large to open without large file support.").c_str();
-                } catch (...) {
-                  return "File is too large to open without large file support. Error creating message string.";
-                }
-              };
-              FileOverflow& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
-          // I/O error.
-          class IOError : public Base {
-            public:
-              virtual ~IOError () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("I/O error when attempting to " + _op + " \"" + _filename + "\".").c_str();
-                } catch (...) {
-                  return "I/O error. Error creating message string.";
-                }
-              };
-              IOError& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              IOError& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
-            private:
-              std::string _op      ;
-              std::string _filename;
-          };
-          
-          // Operation was interrupted by a signal.
-          class Interrupted : public Base {
-            public:
-              virtual ~Interrupted () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Attempted " + _op + " operation was interrupted by a signal.").c_str();
-                } catch (...) {
-                  return "Attempted operation was interrupted by a signal. Error creating message string.";
-                }
-              };
-              Interrupted& Operation (std::string const& op) { _op = op; return *this; }
-              std::string Operation () const { return _op; }
-            private:
-              std::string _op;
-          };
-          
-          // File is unsuitable for requested operation.
-          class Invalid : public Base {
-            public:
-              virtual ~Invalid () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("\"" + _filename + "\" is unsuitable for requested " + _op + " operation.").c_str();
-                } catch (...) {
-                  return "File is unsuitable for requested operation. Error creating message string.";
-                }
-              };
-              Invalid& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              Invalid& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
-            private:
-              std::string _op      ;
-              std::string _filename;
-          };
-          
-          // Write access requested for a directory.
-          class IsDirectory : public Base {
-            public:
-              virtual ~IsDirectory () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Attempted to open directory \"" + _filename + "\" for write.").c_str();
-                } catch (...) {
-                  return "Attempted to open directory for write. Error creating message string.";
-                }
-              };
-              IsDirectory& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
-          // Maximum number of files are open.
-          class MaxFiles : public Base {
-            public:
-              virtual ~MaxFiles () throw() {};
-              virtual char const* what () const throw() {
-                return "The maximum number of available files are already open.";
-              };
-          };
-          
-          // Filename is too long.
-          class NameTooLong : public Base {
-            public:
-              virtual ~NameTooLong () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Filename \"" + _filename + "\" is too long.").c_str();
-                } catch (...) {
-                  return "Filename is too long. Error creating message string.";
-                }
-              };
-              NameTooLong& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
-          // No permission to specified file.
-          class NoPermission : public Base {
-            public:
-              virtual ~NoPermission () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("No permission to " + _op + " \"" + _filename + "\".").c_str();
-                } catch (...) {
-                  return "No permission. Error creating message string.";
-                }
-              };
-              NoPermission& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              NoPermission& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
-            private:
-              std::string _op      ;
-              std::string _filename;
-          };
-          
-          // No space available for the new file.
-          class NoSpace : public Base {
-            public:
-              virtual ~NoSpace () throw() {};
-              virtual char const* what () const throw() {
-                return "No space available to create the file.";
-              };
-          };
-          
-          // Component of the path is not a directory.
-          class NotDirectory : public Base {
-            public:
-              virtual ~NotDirectory () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("A component of the path to \"" + _filename + "\" is not a directory.").c_str();
-                } catch (...) {
-                  return "A component of the path is not a directory. Error creating message string.";
-                }
-              };
-              NotDirectory& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
-          // Attempt to close a file that has not been opened.
+          // Invalid operation on a non-opened file.
           class NotOpen : public Base {
             public:
               virtual ~NotOpen () throw() {};
               virtual char const* what () const throw() {
-                return "Attempted to close a file that is not open.";
+                try {
+                  return ("Requested " + _op + " operation cannot be performed on non-open file \"" + _filename + "\".").c_str();
+                } catch (...) {
+                  return "Requested operation cannot be performed on a non-opened file. Error creating message string.";
+                }
               };
+              NotOpen& Filename  (std::string const& filename) { _filename = filename; return *this; }
+              NotOpen& Operation (std::string const& op      ) { _op       = op      ; return *this; }
+              std::string Filename  () const { return _filename; }
+              std::string Operation () const { return _op      ; }
+            private:
+              std::string _filename;
+              std::string _op      ;
           };  
           
-          // Out of memory.
-          class OutOfMemory : public Base {};
-          
-          // A component of the path does not exist.
-          class PathNonExist : public Base {
+          // Error making a system call.
+          class SysCallError : public Base {
             public:
-              virtual ~PathNonExist () throw() {};
+              virtual ~SysCallError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("A component of the path \"" + _filename + "\" does not exist.").c_str();
+                  return ("System error number " + DAC::toString(_errno) + ", \"" + getErrorText(_errno) + "\" occured when attempting \"" + _syscall + "\" on file \"" + _filename + "\".").c_str();
                 } catch (...) {
-                  return "A component of the specified path does not exist. Error creating message string.";
+                  try {
+                    return ("System error number " + DAC::toString(_errno) + " occured when attempting \"" + _syscall + "\" on file \"" + _filename + "\". Error fetching system message string.").c_str();
+                  } catch (...) {
+                    return "Error making system call. Error creating message string.";
+                  }
                 }
               };
-              PathNonExist& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
+              SysCallError& Errno    (int         const  errnum  ) { _errno    = errnum  ; return *this; };
+              SysCallError& SysCall  (std::string const& syscall ) { _syscall  = syscall ; return *this; };
+              SysCallError& Filename (std::string const& filename) { _filename = filename; return *this; };
+              int         Errno   () const { return _errno   ; };
+              std::string SysCall () const { return _syscall ; };
+              std::string File    () const { return _filename; };
             private:
+              int         _errno   ;
+              std::string _syscall ;
               std::string _filename;
           };
-          
-          // Maximum files for this process.
-          class ProcMaxFiles : public MaxFiles {
-            public:
-              virtual ~ProcMaxFiles () throw() {};
-              virtual char const* what () const throw() {
-                return "This process is already at the maximum number of open files.";
-              };
-          };
-          
-          // Operation on a read-only filesystem.
-          class ReadOnlyFS : public Base {
-            public:
-              virtual ~ReadOnlyFS () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Cannot " + _op + " \"" + _filename + "\" on a read-only filesystem.").c_str();
-                } catch (...) {
-                  return "Cannot perform operation on a read-only filesystem. Error creating message string.";
-                }
-              };
-              ReadOnlyFS& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              ReadOnlyFS& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
-            private:
-              std::string _op      ;
-              std::string _filename;
-          };
-          
-          // Symlink loop / too many symlinks.
-          class SymlinkLoop : public Base {
-            public:
-              virtual ~SymlinkLoop () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Symlink loop or too many symlinks traversing path attempting to " + _op + " \"" + _filename + "\".").c_str();
-                } catch (...) {
-                  return "Symlink loop or too many symlinks. Error creating message string.";
-                }
-              };
-              SymlinkLoop& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              SymlinkLoop& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              std::string Operation () const { return _op      ; };
-              std::string Filename  () const { return _filename; };
-            private:
-              std::string _op      ;
-              std::string _filename;
-          };
-          
-          // Maximum files for the system.
-          class SysMaxFiles : public MaxFiles {
-            public:
-              virtual ~SysMaxFiles () throw() {};
-              virtual char const* what () const throw() {
-                return "The maximum number of files for this system are already open.";
-              };
-          };
-          
-          // Non-blocking I/O was selected and there is no data available.
-          class TryAgain : public Base {};
-          
-          // Unexpected error.
-          class Unexpected : public Base {
-            public:
-              virtual ~Unexpected () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Unexpected system error. Error number is " + DAC::toString(_errno) + ".").c_str();
-                } catch (...) {
-                  return "Unexpected system error. Error creating message string.";
-                }
-              };
-              Unexpected& Errno (int const errnum) { _errno = errnum; return *this; };
-              int Errno () const { return _errno; }
-            private:
-              int _errno;
-          };
+          class AccessDenied  : public SysCallError {};
+          class BadDescriptor : public SysCallError {};
+          class CannotSeek    : public SysCallError {};
+          class FileBusy      : public SysCallError {};
+          class FileExists    : public SysCallError {};
+          class FileOverflow  : public SysCallError {};
+          class IOError       : public SysCallError {};
+          class Interrupted   : public SysCallError {};
+          class Invalid       : public SysCallError {};
+          class IsDirectory   : public SysCallError {};
+          class NameTooLong   : public SysCallError {};
+          class NotPermitted  : public SysCallError {};
+          class NoSpace       : public SysCallError {};
+          class NotDirectory  : public SysCallError {};
+          class OutOfMemory   : public SysCallError {};
+          class PathNonExist  : public SysCallError {};
+          class ProcMaxFiles  : public SysCallError {};
+          class ReadOnlyFS    : public SysCallError {};
+          class SymlinkLoop   : public SysCallError {};
+          class SysMaxFiles   : public SysCallError {};
+          class TryAgain      : public SysCallError {};
+          class Unexpected    : public SysCallError {};
         
         // This class cannot be initialized.
         private:
@@ -578,6 +266,14 @@ namespace DAC {
       // Close the file.
       void close ();
       
+      // Delete the file.
+      void unlink ();
+      void rm     ();
+      void del    ();
+      
+      // Change the permissions of the file.
+      void chmod (mode_t const new_mode);
+      
       // Change the owner of the file.
       void chown (uid_t const owner = UID_NOCHANGE, gid_t const group = GID_NOCHANGE);
       
@@ -591,6 +287,29 @@ namespace DAC {
       std::string get_file ();
       
       // File info.
+      bool is_blockDev        () const;
+      bool is_charDev         () const;
+      bool is_dir             () const;
+      bool is_directory       () const;
+      bool is_executable      () const;
+      bool is_executable_real () const;
+      bool is_exist           () const;
+      bool is_file            () const;
+      bool is_groupOwned      () const;
+      bool is_userOwned       () const;
+      bool is_pipe            () const;
+      bool is_readable        () const;
+      bool is_readable_real   () const;
+      bool is_setGID          () const;
+      bool is_setUID          () const;
+      bool is_socket          () const;
+      bool is_sticky          () const;
+      bool is_symlink         () const;
+      bool is_writable        () const;
+      bool is_writable_real   () const;
+      bool is_zero            () const;
+      
+      // stat() info.
       dev_t     device    (CacheMode const cache = CACHE_DO) const;
       ino_t     inode     (CacheMode const cache = CACHE_DO) const;
       mode_t    mode      (CacheMode const cache = CACHE_DO) const;
@@ -672,7 +391,7 @@ namespace DAC {
       /***********************************************************************/
       // Constants.
       
-      static mode_t const PERM_MASK;
+      static mode_t const _PERM_MASK;
       
       /***********************************************************************/
       // Data members.
@@ -710,6 +429,12 @@ namespace DAC {
       // Seek to a particular offset.
       void _seek            (off_t const offset, SeekMode const whence = SM_SET);
       void _seek_update_pos (off_t const offset, SeekMode const whence = SM_SET);
+      
+      /***********************************************************************/
+      // Static members.
+
+      // Handle and throw a system call error.
+      static void s_throwSysCallError (int const errnum, std::string const& syscall, std::string const& filename);
     
   };
   
@@ -794,6 +519,10 @@ namespace DAC {
     }
     return *this;
   }
+  inline POSIXFile& POSIXFile::Mode (mode_t const new_mode) {
+    chmod(new_mode);
+    return *this;
+  }
   
   // Get file modes.
   inline bool POSIXFile::SetUID    () const { return Mode() & S_ISUID                    ; }
@@ -812,7 +541,7 @@ namespace DAC {
   inline bool POSIXFile::A_Write   () const { return Mode() & S_IWUSR & S_IWGRP & S_IWOTH; }
   inline bool POSIXFile::A_Execute () const { return Mode() & S_IXUSR & S_IXGRP & S_IXOTH; }
   inline mode_t POSIXFile::Mode (CacheMode const cache) const {
-    return mode(cache) & PERM_MASK;
+    return mode(cache) & _PERM_MASK;
   }
   
   // Set/get file owner & group.
@@ -835,6 +564,10 @@ namespace DAC {
   inline time_t    POSIXFile::atime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_atime  ; }
   inline time_t    POSIXFile::mtime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_mtime  ; }
   inline time_t    POSIXFile::ctime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_ctime  ; }
+  
+  // Delete the file.
+  inline void POSIXFile::rm  () { unlink(); }
+  inline void POSIXFile::del () { unlink(); }
   
   // Update cache if necessary.
   inline void POSIXFile::_check_cache (CacheMode const cache) const { if (!cache || !_cache_valid) { _update_cache(); } }

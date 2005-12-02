@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <errno.h>
+#include <cerrno>
 #include <cxx-general/toString.h++>
 #include <cxx-general/AutoArray.h++>
 
@@ -35,7 +35,7 @@ namespace DAC {
   gid_t const POSIXFile::GID_NOCHANGE = static_cast<uid_t>(-1);
   
   // Permissions mask.
-  mode_t const POSIXFile::PERM_MASK = S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO;
+  mode_t const POSIXFile::_PERM_MASK = S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO;
   
   /***************************************************************************/
   // Function members.
@@ -48,39 +48,6 @@ namespace DAC {
     
     // Set the filename.
     Filename(filename);
-    
-  }
-  
-  // Set the mode.
-  POSIXFile& POSIXFile::Mode (mode_t const new_mode) {
-    
-    // Make sure the stat cache is updated.
-    _check_cache(CACHE_NO);
-    
-    // Update the mode of the file.
-    _cache_valid = false;
-    if (_fd && fchmod(_fd, new_mode) || ::chmod(_filename.c_str(), new_mode)) {
-      switch (errno) {
-        case EACCES      : throw Errors::AccessDenied ().Operation("chmod").Filename(_filename);
-        case EIO         : throw Errors::IOError      ().Operation("chmod").Filename(_filename);
-        case EBADF       : throw Errors::BadDescriptor().Operation("chmod").Descriptor(_fd);
-        case ELOOP       : throw Errors::SymlinkLoop  ().Operation("chmod").Filename(_filename);
-        case ENAMETOOLONG: throw Errors::NameTooLong  ().Filename(_filename);
-        case ENOENT      : throw Errors::PathNonExist ().Filename(_filename);
-        case ENOMEM      : throw Errors::OutOfMemory  ();
-        case ENOTDIR     : throw Errors::NotDirectory ().Filename(_filename);
-        case EPERM       : throw Errors::NoPermission ().Operation("chmod").Filename(_filename);
-        case EROFS       : throw Errors::ReadOnlyFS   ().Operation("chmod").Filename(_filename);
-        default          : throw Errors::Unexpected   ().Errno(errno);
-      };
-    }
-    
-    // Set the new mode in the cache.
-    _stat.st_mode = _stat.st_mode & PERM_MASK | new_mode;
-    _cache_valid  = true;
-    
-    // Done.
-    return *this;
     
   }
   
@@ -140,24 +107,7 @@ namespace DAC {
     
     // Open the file.
     if ((_fd = ::open(_filename.c_str(), _flags)) == -1) {
-      switch (errno) {
-        case EACCES      : throw Errors::AccessDenied ().Operation("open").Filename(_filename);
-        case EEXIST      : throw Errors::FileExists   ().Operation("open").Filename(_filename);
-        case EISDIR      : throw Errors::IsDirectory  ().Filename(_filename);
-        case ELOOP       : throw Errors::SymlinkLoop  ().Operation("open").Filename(_filename);
-        case EMFILE      : throw Errors::ProcMaxFiles ();
-        case ENAMETOOLONG: throw Errors::NameTooLong  ().Filename(_filename);
-        case ENFILE      : throw Errors::SysMaxFiles  ();
-        case ENOENT      : throw Errors::PathNonExist ().Filename(_filename);
-        case ENOMEM      : throw Errors::OutOfMemory  ();
-        case ENOSPC      : throw Errors::NoSpace      ();
-        case ENOTDIR     : throw Errors::NotDirectory ().Filename(_filename);
-        case EOVERFLOW   : throw Errors::FileOverflow ().Filename(_filename);
-        case EPERM       : throw Errors::NoPermission ().Operation("open").Filename(_filename);
-        case EROFS       : throw Errors::ReadOnlyFS   ().Operation("open").Filename(_filename);
-        case ETXTBSY     : throw Errors::ExecuteWrite ().Filename(_filename);
-        default          : throw Errors::Unexpected   ().Errno(errno);
-      };
+      s_throwSysCallError(errno, "open", _filename);
     }
     
     // Reset the current file position.
@@ -174,18 +124,35 @@ namespace DAC {
     
     // Make sure the file is open.
     if (!_fd) {
-      throw Errors::NotOpen();
+      throw Errors::NotOpen().Filename(_filename).Operation("close");
     }
     
     // Close the file.
     if (_fd.set(0)) {
-      switch (errno) {
-        case EBADF: throw Errors::BadDescriptor().Operation("close");
-        case EINTR: throw Errors::Interrupted  ().Operation("close");
-        case EIO  : throw Errors::IOError      ().Operation("close").Filename(_filename);
-        default   : throw Errors::Unexpected   ().Errno(errno);
-      };
+      s_throwSysCallError(errno, "close", _filename);
     }
+    
+  }
+  
+  // Delete the file.
+  void POSIXFile::unlink () {
+  }
+  
+  // Change the mode.
+  void POSIXFile::chmod (mode_t const new_mode) {
+    
+    // Make sure the stat cache is updated.
+    _check_cache(CACHE_NO);
+    
+    // Update the mode of the file.
+    _cache_valid = false;
+    if (_fd && fchmod(_fd, new_mode & _PERM_MASK) || ::chmod(_filename.c_str(), new_mode & _PERM_MASK)) {
+      s_throwSysCallError(errno, "chmod", _filename);
+    }
+    
+    // Set the new mode in the cache.
+    _stat.st_mode = _stat.st_mode & ~_PERM_MASK | (new_mode & _PERM_MASK);
+    _cache_valid  = true;
     
   }
   
@@ -202,19 +169,7 @@ namespace DAC {
     
     // Call the correct chown whether the file is open or closed.
     if (_fd && fchown(_fd, owner, group) || ::chown(_filename.c_str(), owner, group)) {
-      switch (errno) {
-        case EACCES      : throw Errors::AccessDenied ().Operation("chown").Filename(_filename);
-        case ELOOP       : throw Errors::SymlinkLoop  ().Operation("chown").Filename(_filename);
-        case ENAMETOOLONG: throw Errors::NameTooLong  ().Filename(_filename);
-        case ENOENT      : throw Errors::PathNonExist ().Filename(_filename);
-        case ENOMEM      : throw Errors::OutOfMemory  ();
-        case ENOTDIR     : throw Errors::NotDirectory ().Filename(_filename);
-        case EPERM       : throw Errors::NoPermission ().Operation("chown").Filename(_filename);
-        case EROFS       : throw Errors::ReadOnlyFS   ().Operation("chown").Filename(_filename);
-        case EBADF       : throw Errors::BadDescriptor().Operation("chown").Descriptor(_fd);
-        case EIO         : throw Errors::IOError      ().Operation("chown").Filename(_filename);
-        default          : throw Errors::Unexpected   ().Errno(errno);
-      };
+      s_throwSysCallError(errno, "chown", _filename);
     }
     
   }
@@ -260,16 +215,7 @@ namespace DAC {
     
     // Call correct stat() or fstat() if the file is already open.
     if (_fd && fstat(_fd, &_stat) || stat(_filename.c_str(), &_stat)) {
-      switch (errno) {
-        case EACCES      : throw Errors::AccessDenied ().Operation("stat").Filename(_filename);
-        case EBADF       : throw Errors::BadDescriptor().Operation("stat").Descriptor(_fd);
-        case ELOOP       : throw Errors::SymlinkLoop  ().Operation("stat").Filename(_filename);
-        case ENAMETOOLONG: throw Errors::NameTooLong  ().Filename(_filename);
-        case ENOENT      : throw Errors::PathNonExist ().Filename(_filename);
-        case ENOMEM      : throw Errors::OutOfMemory  ();
-        case ENOTDIR     : throw Errors::NotDirectory ().Filename(_filename);
-        default          : throw Errors::Unexpected   ().Errno(errno);
-      };
+      s_throwSysCallError(errno, "stat", _filename);
     }
     
     // Cache has been successfully updated.
@@ -282,7 +228,7 @@ namespace DAC {
     
     // Make sure the file is open.
     if (!_fd) {
-      throw Errors::NotOpen();
+      throw Errors::NotOpen().Filename(_filename).Operation("seek");
     }
     
     // Seek.
@@ -350,15 +296,7 @@ namespace DAC {
     
     // Read the file.
     if ((retval = read(_fd, buf, bufsize)) == -1) {
-      switch (errno) {
-        case EAGAIN: throw Errors::TryAgain     ();
-        case EBADF : throw Errors::BadDescriptor().Operation("read");
-        case EINTR : throw Errors::Interrupted  ().Operation("read");
-        case EINVAL: throw Errors::Invalid      ().Operation("read").Filename(_filename);
-        case EIO   : throw Errors::IOError      ().Operation("read").Filename(_filename);
-        case EISDIR: throw Errors::IsDirectory  ().Filename(_filename);
-        default    : throw Errors::Unexpected   ().Errno(errno);
-      };
+      s_throwSysCallError(errno, "read", _filename);
     }
     
     // Check for end of file.
@@ -376,12 +314,39 @@ namespace DAC {
     
     // Do the seek.
     if (lseek(_fd, offset, whence) == -1) {
-      switch (errno) {
-        case EBADF : throw Errors::BadDescriptor().Operation("lseek");
-        case ESPIPE: throw Errors::CannotSeek   ().Filename(_filename);
-        default    : throw Errors::Unexpected   ().Errno(errno);
-      };
+      s_throwSysCallError(errno, "lseek", _filename);
     }
+    
+  }
+  
+  // Handle and throw a system call error.
+  void POSIXFile::s_throwSysCallError (int const errnum, std::string const& syscall, std::string const& filename) {
+    
+    // Throw the appropriate error.
+    switch (errnum) {
+      case EACCES      : throw dynamic_cast<Errors::AccessDenied &>(Errors::AccessDenied ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EAGAIN      : throw dynamic_cast<Errors::TryAgain     &>(Errors::TryAgain     ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EBADF       : throw dynamic_cast<Errors::BadDescriptor&>(Errors::BadDescriptor().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EEXIST      : throw dynamic_cast<Errors::FileExists   &>(Errors::FileExists   ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EINTR       : throw dynamic_cast<Errors::Interrupted  &>(Errors::Interrupted  ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EINVAL      : throw dynamic_cast<Errors::Invalid      &>(Errors::Invalid      ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EIO         : throw dynamic_cast<Errors::IOError      &>(Errors::IOError      ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EISDIR      : throw dynamic_cast<Errors::IsDirectory  &>(Errors::IsDirectory  ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ELOOP       : throw dynamic_cast<Errors::SymlinkLoop  &>(Errors::SymlinkLoop  ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EMFILE      : throw dynamic_cast<Errors::ProcMaxFiles &>(Errors::ProcMaxFiles ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ENAMETOOLONG: throw dynamic_cast<Errors::NameTooLong  &>(Errors::NameTooLong  ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ENFILE      : throw dynamic_cast<Errors::SysMaxFiles  &>(Errors::SysMaxFiles  ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ENOENT      : throw dynamic_cast<Errors::PathNonExist &>(Errors::PathNonExist ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ENOMEM      : throw dynamic_cast<Errors::OutOfMemory  &>(Errors::OutOfMemory  ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ENOSPC      : throw dynamic_cast<Errors::NoSpace      &>(Errors::NoSpace      ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ENOTDIR     : throw dynamic_cast<Errors::NotDirectory &>(Errors::NotDirectory ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EOVERFLOW   : throw dynamic_cast<Errors::FileOverflow &>(Errors::FileOverflow ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EPERM       : throw dynamic_cast<Errors::NotPermitted &>(Errors::NotPermitted ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ESPIPE      : throw dynamic_cast<Errors::CannotSeek   &>(Errors::CannotSeek   ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EROFS       : throw dynamic_cast<Errors::ReadOnlyFS   &>(Errors::ReadOnlyFS   ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ETXTBSY     : throw dynamic_cast<Errors::FileBusy     &>(Errors::FileBusy     ().Errno(errnum).SysCall(syscall).Filename(filename));
+      default          : throw dynamic_cast<Errors::Unexpected   &>(Errors::Unexpected   ().Errno(errnum).SysCall(syscall).Filename(filename));
+    };
     
   }
   
