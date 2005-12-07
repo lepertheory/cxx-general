@@ -136,6 +136,10 @@ namespace DAC {
   
   // Delete the file.
   void POSIXFile::unlink () {
+    
+    // Invalidate the cache.
+
+    
   }
   
   // Change the mode.
