@@ -102,7 +102,7 @@ namespace DAC {
     
     // Make sure the file is not already open.
     if (_fd) {
-      throw Errors::AlreadyOpen().Filename(_filename);
+      throw Errors::IsOpen().Filename(_filename);
     }
     
     // Open the file.
@@ -137,8 +137,18 @@ namespace DAC {
   // Delete the file.
   void POSIXFile::unlink () {
     
+    // Make sure we do not have the file open.
+    if (_fd) {
+      throw Errors::IsOpen().Filename(_filename);
+    }
+    
     // Invalidate the cache.
-
+    _cache_valid = false;
+    
+    // Unlink.
+    if (::unlink(_filename.c_str())) {
+      s_throwSysCallError(errno, "unlink", _filename);
+    }
     
   }
   
@@ -146,7 +156,7 @@ namespace DAC {
   void POSIXFile::chmod (mode_t const new_mode) {
     
     // Make sure the stat cache is updated.
-    _check_cache(CACHE_NO);
+    _update_cache();
     
     // Update the mode of the file.
     _cache_valid = false;
@@ -213,17 +223,31 @@ namespace DAC {
     return _filename.substr(pos + 1, lastchar - pos);
     
   }
-  
-  // Update the cache.
-  void POSIXFile::_update_cache () const {
+
+  // Get the directory part of the filename.
+  string POSIXFile::dirname () const {
     
-    // Call correct stat() or fstat() if the file is already open.
-    if (_fd && fstat(_fd, &_stat) || stat(_filename.c_str(), &_stat)) {
-      s_throwSysCallError(errno, "stat", _filename);
+    // Work area.
+    string::size_type lastsep = _filename.rfind(DIR_SEP);
+    string::size_type lastchr = string::npos;
+    
+    // If the filename does not contain a separator character, return an empty
+    // string.
+    if (lastsep == string::npos) {
+      return string();
     }
     
-    // Cache has been successfully updated.
-    _cache_valid = true;
+    // Get the last directory name character.
+    lastchr = _filename.find_last_not_of(DIR_SEP, lastsep);
+    
+    // If filename consists of only separator characters, return that.
+    if (lastchr == string::npos) {
+      return DAC::toStringChr(DIR_SEP);
+    }
+    
+    // Return the filename up to the start of the last separator block.
+    // lastchr + 1 because we are converting from an offset to a length.
+    return _filename.substr(0, lastchr + 1);
     
   }
   
@@ -289,6 +313,19 @@ namespace DAC {
     
     // Done.
     return retval;
+    
+  }
+  
+  // Update the cache.
+  void POSIXFile::_update_cache () const {
+    
+    // Call correct stat() or fstat() if the file is already open.
+    if (_fd && fstat(_fd, &_stat) || stat(_filename.c_str(), &_stat)) {
+      s_throwSysCallError(errno, "stat", _filename);
+    }
+    
+    // Cache has been successfully updated.
+    _cache_valid = true;
     
   }
   

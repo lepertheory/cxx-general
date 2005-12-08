@@ -47,9 +47,6 @@ namespace DAC {
       // Seek modes.
       enum SeekMode { SM_SET = SEEK_SET, SM_CUR = SEEK_CUR, SM_END = SEEK_END };
       
-      // Cache mode.
-      enum CacheMode { CACHE_NO = 0, CACHE_DO = 1 };
-      
       /***********************************************************************/
       // Constants.
       
@@ -72,18 +69,18 @@ namespace DAC {
               virtual char const* what () const throw() { return "Undefined error in POSIXFile."; };
           };
           
-          // Attempt to open an already open file.
-          class AlreadyOpen : public Base {
+          // Operation is not valid on an open file.
+          class IsOpen : public Base {
             public:
-              virtual ~AlreadyOpen () throw() {};
+              virtual ~IsOpen () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("File \"" + _filename + "\" is already open.").c_str();
+                  return ("Operation is not valid on open file \"" + _filename + "\".").c_str();
                 } catch (...) {
-                  return "File is already open. Error creating message string.";
+                  return "Operation is not valid on open file. Error creating message string.";
                 }
               };
-              AlreadyOpen& Filename (std::string const& filename) { _filename = filename; return *this; }
+              IsOpen& Filename (std::string const& filename) { _filename = filename; return *this; }
               std::string Filename () const { return _filename; }
             private:
               std::string _filename;
@@ -250,7 +247,7 @@ namespace DAC {
       bool        A_Read    () const;
       bool        A_Write   () const;
       bool        A_Execute () const;
-      mode_t      Mode      (CacheMode const cache = CACHE_DO) const;
+      mode_t      Mode      () const;
       uid_t       UID       () const;
       gid_t       GID       () const;
       
@@ -277,8 +274,9 @@ namespace DAC {
       // Change the owner of the file.
       void chown (uid_t const owner = UID_NOCHANGE, gid_t const group = GID_NOCHANGE);
       
-      // Get the filename itself.
+      // Get the file / directory names.
       std::string basename () const;
+      std::string dirname  () const;
       
       // Seek to a particular location.
       void seek (off_t const offset, SeekMode const whence);
@@ -310,19 +308,19 @@ namespace DAC {
       bool is_zero            () const;
       
       // stat() info.
-      dev_t     device    (CacheMode const cache = CACHE_DO) const;
-      ino_t     inode     (CacheMode const cache = CACHE_DO) const;
-      mode_t    mode      (CacheMode const cache = CACHE_DO) const;
-      nlink_t   links     (CacheMode const cache = CACHE_DO) const;
-      uid_t     uid       (CacheMode const cache = CACHE_DO) const;
-      gid_t     gid       (CacheMode const cache = CACHE_DO) const;
-      dev_t     devid     (CacheMode const cache = CACHE_DO) const;
-      off_t     size      (CacheMode const cache = CACHE_DO) const;
-      blksize_t blockSize (CacheMode const cache = CACHE_DO) const;
-      blkcnt_t  blocks    (CacheMode const cache = CACHE_DO) const;
-      time_t    atime     (CacheMode const cache = CACHE_DO) const;
-      time_t    mtime     (CacheMode const cache = CACHE_DO) const;
-      time_t    ctime     (CacheMode const cache = CACHE_DO) const;
+      dev_t     device    () const;
+      ino_t     inode     () const;
+      mode_t    mode      () const;
+      nlink_t   links     () const;
+      uid_t     uid       () const;
+      gid_t     gid       () const;
+      dev_t     devid     () const;
+      off_t     size      () const;
+      blksize_t blockSize () const;
+      blkcnt_t  blocks    () const;
+      time_t    atime     () const;
+      time_t    mtime     () const;
+      time_t    ctime     () const;
     
     /*
      * Private members.
@@ -418,7 +416,7 @@ namespace DAC {
       // Function members.
       
       // Update the cache if necessary.
-      void _check_cache (CacheMode const cache = CACHE_DO) const;
+      void _check_cache () const;
       
       // Update the cache now.
       void _update_cache () const;
@@ -525,23 +523,23 @@ namespace DAC {
   }
   
   // Get file modes.
-  inline bool POSIXFile::SetUID    () const { return Mode() & S_ISUID                    ; }
-  inline bool POSIXFile::SetGID    () const { return Mode() & S_ISGID                    ; }
-  inline bool POSIXFile::Sticky    () const { return Mode() & S_ISVTX                    ; }
-  inline bool POSIXFile::U_Read    () const { return Mode() & S_IRUSR                    ; }
-  inline bool POSIXFile::U_Write   () const { return Mode() & S_IWUSR                    ; }
-  inline bool POSIXFile::U_Execute () const { return Mode() & S_IXUSR                    ; }
-  inline bool POSIXFile::G_Read    () const { return Mode() & S_IRGRP                    ; }
-  inline bool POSIXFile::G_Write   () const { return Mode() & S_IWGRP                    ; }
-  inline bool POSIXFile::G_Execute () const { return Mode() & S_IXGRP                    ; }
-  inline bool POSIXFile::O_Read    () const { return Mode() & S_IROTH                    ; }
-  inline bool POSIXFile::O_Write   () const { return Mode() & S_IWOTH                    ; }
-  inline bool POSIXFile::O_Execute () const { return Mode() & S_IXOTH                    ; }
-  inline bool POSIXFile::A_Read    () const { return Mode() & S_IRUSR & S_IRGRP & S_IROTH; }
-  inline bool POSIXFile::A_Write   () const { return Mode() & S_IWUSR & S_IWGRP & S_IWOTH; }
-  inline bool POSIXFile::A_Execute () const { return Mode() & S_IXUSR & S_IXGRP & S_IXOTH; }
-  inline mode_t POSIXFile::Mode (CacheMode const cache) const {
-    return mode(cache) & _PERM_MASK;
+  inline bool POSIXFile::SetUID    () const { return Mode() & S_ISUID                      ; }
+  inline bool POSIXFile::SetGID    () const { return Mode() & S_ISGID                      ; }
+  inline bool POSIXFile::Sticky    () const { return Mode() & S_ISVTX                      ; }
+  inline bool POSIXFile::U_Read    () const { return Mode() & S_IRUSR                      ; }
+  inline bool POSIXFile::U_Write   () const { return Mode() & S_IWUSR                      ; }
+  inline bool POSIXFile::U_Execute () const { return Mode() & S_IXUSR                      ; }
+  inline bool POSIXFile::G_Read    () const { return Mode() & S_IRGRP                      ; }
+  inline bool POSIXFile::G_Write   () const { return Mode() & S_IWGRP                      ; }
+  inline bool POSIXFile::G_Execute () const { return Mode() & S_IXGRP                      ; }
+  inline bool POSIXFile::O_Read    () const { return Mode() & S_IROTH                      ; }
+  inline bool POSIXFile::O_Write   () const { return Mode() & S_IWOTH                      ; }
+  inline bool POSIXFile::O_Execute () const { return Mode() & S_IXOTH                      ; }
+  inline bool POSIXFile::A_Read    () const { return Mode() & (S_IRUSR | S_IRGRP | S_IROTH); }
+  inline bool POSIXFile::A_Write   () const { return Mode() & (S_IWUSR | S_IWGRP | S_IWOTH); }
+  inline bool POSIXFile::A_Execute () const { return Mode() & (S_IXUSR | S_IXGRP | S_IXOTH); }
+  inline mode_t POSIXFile::Mode () const {
+    return mode() & _PERM_MASK;
   }
   
   // Set/get file owner & group.
@@ -551,26 +549,83 @@ namespace DAC {
   inline gid_t POSIXFile::GID () const { return gid(); }
   
   // File info.
-  inline dev_t     POSIXFile::device    (CacheMode const cache) const { _check_cache(cache); return _stat.st_dev    ; }
-  inline ino_t     POSIXFile::inode     (CacheMode const cache) const { _check_cache(cache); return _stat.st_ino    ; }
-  inline mode_t    POSIXFile::mode      (CacheMode const cache) const { _check_cache(cache); return _stat.st_mode   ; }
-  inline nlink_t   POSIXFile::links     (CacheMode const cache) const { _check_cache(cache); return _stat.st_nlink  ; }
-  inline uid_t     POSIXFile::uid       (CacheMode const cache) const { _check_cache(cache); return _stat.st_uid    ; }
-  inline gid_t     POSIXFile::gid       (CacheMode const cache) const { _check_cache(cache); return _stat.st_gid    ; }
-  inline dev_t     POSIXFile::devid     (CacheMode const cache) const { _check_cache(cache); return _stat.st_rdev   ; }
-  inline off_t     POSIXFile::size      (CacheMode const cache) const { _check_cache(cache); return _stat.st_size   ; }
-  inline blksize_t POSIXFile::blockSize (CacheMode const cache) const { _check_cache(cache); return _stat.st_blksize; }
-  inline blkcnt_t  POSIXFile::blocks    (CacheMode const cache) const { _check_cache(cache); return _stat.st_blocks ; }
-  inline time_t    POSIXFile::atime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_atime  ; }
-  inline time_t    POSIXFile::mtime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_mtime  ; }
-  inline time_t    POSIXFile::ctime     (CacheMode const cache) const { _check_cache(cache); return _stat.st_ctime  ; }
+  inline bool POSIXFile::is_blockDev   () const { return is_exist() && ((mode() & S_IFMT) & S_IFBLK ) == S_IFBLK ; }
+  inline bool POSIXFile::is_charDev    () const { return is_exist() && ((mode() & S_IFMT) & S_IFCHR ) == S_IFCHR ; }
+  inline bool POSIXFile::is_dir        () const { return is_exist() && ((mode() & S_IFMT) & S_IFDIR ) == S_IFDIR ; }
+  inline bool POSIXFile::is_directory  () const { return is_dir();                                                 }
+  inline bool POSIXFile::is_file       () const { return is_exist() && ((mode() & S_IFMT) & S_IFREG ) == S_IFREG ; }
+  inline bool POSIXFile::is_pipe       () const { return is_exist() && ((mode() & S_IFMT) & S_IFIFO ) == S_IFIFO ; }
+  inline bool POSIXFile::is_socket     () const { return is_exist() && ((mode() & S_IFMT) & S_IFSOCK) == S_IFSOCK; }
+  inline bool POSIXFile::is_symlink    () const { return is_exist() && ((mode() & S_IFMT) & S_IFLNK ) == S_IFLNK ; }
+  inline bool POSIXFile::is_groupOwned () const { return is_exist() && gid() == getegid(); }
+  inline bool POSIXFile::is_userOwned  () const { return is_exist() && uid() == geteuid(); }
+  inline bool POSIXFile::is_setGID     () const { return is_exist() && SetGID(); }
+  inline bool POSIXFile::is_setUID     () const { return is_exist() && SetUID(); }
+  inline bool POSIXFile::is_sticky     () const { return is_exist() && Sticky(); }
+  
+  inline bool POSIXFile::is_executable () const {
+    return (is_userOwned () && U_Execute()) ||
+           (is_groupOwned() && G_Execute()) ||
+           (is_exist     () && O_Execute());
+  }
+  inline bool POSIXFile::is_executable_real () const {
+    return is_exist() && (
+             (uid() == getuid() && U_Execute()) ||
+             (gid() == getgid() && G_Execute()) ||
+                                   O_Execute()
+           );
+  }
+  inline bool POSIXFile::is_readable () const {
+    return (is_userOwned () && U_Read()) ||
+           (is_groupOwned() && G_Read()) ||
+           (is_exist     () && O_Read());
+  }
+  inline bool POSIXFile::is_readable_real () const {
+    return is_exist() && (
+             (uid() == getuid() && U_Read()) ||
+             (gid() == getgid() && G_Read()) ||
+                                   O_Read()
+           );
+  }
+  inline bool POSIXFile::is_writable () const {
+    return (is_userOwned () && U_Write()) ||
+           (is_groupOwned() && G_Write()) ||
+           (is_exist     () && O_Write());
+  }
+  inline bool POSIXFile::is_writable_real () const {
+    return is_exist() && (
+             (uid() == getuid() && U_Write()) ||
+             (gid() == getgid() && G_Write()) ||
+                                   O_Write()
+           );
+  }
+  
+  inline bool POSIXFile::is_exist () const {
+    return !stat(_filename.c_str(), &_stat) && (_cache_valid = true);
+  }
+  inline bool POSIXFile::is_zero () const { return is_exist() && size() == 0; }
+  
+  // stat() info.
+  inline dev_t     POSIXFile::device    () const { _check_cache(); return _stat.st_dev    ; }
+  inline ino_t     POSIXFile::inode     () const { _check_cache(); return _stat.st_ino    ; }
+  inline mode_t    POSIXFile::mode      () const { _check_cache(); return _stat.st_mode   ; }
+  inline nlink_t   POSIXFile::links     () const { _check_cache(); return _stat.st_nlink  ; }
+  inline uid_t     POSIXFile::uid       () const { _check_cache(); return _stat.st_uid    ; }
+  inline gid_t     POSIXFile::gid       () const { _check_cache(); return _stat.st_gid    ; }
+  inline dev_t     POSIXFile::devid     () const { _check_cache(); return _stat.st_rdev   ; }
+  inline off_t     POSIXFile::size      () const { _check_cache(); return _stat.st_size   ; }
+  inline blksize_t POSIXFile::blockSize () const { _check_cache(); return _stat.st_blksize; }
+  inline blkcnt_t  POSIXFile::blocks    () const { _check_cache(); return _stat.st_blocks ; }
+  inline time_t    POSIXFile::atime     () const { _check_cache(); return _stat.st_atime  ; }
+  inline time_t    POSIXFile::mtime     () const { _check_cache(); return _stat.st_mtime  ; }
+  inline time_t    POSIXFile::ctime     () const { _check_cache(); return _stat.st_ctime  ; }
   
   // Delete the file.
   inline void POSIXFile::rm  () { unlink(); }
   inline void POSIXFile::del () { unlink(); }
   
   // Update cache if necessary.
-  inline void POSIXFile::_check_cache (CacheMode const cache) const { if (!cache || !_cache_valid) { _update_cache(); } }
+  inline void POSIXFile::_check_cache () const { if (!_cache_valid) { _update_cache(); } }
   
   // Seek and update the current file position.
   inline void POSIXFile::_seek_update_pos (off_t const offset, SeekMode const whence) {
