@@ -263,6 +263,9 @@ namespace DAC {
       // Close the file.
       void close ();
       
+      // Create a hard link.
+      void link (std::string const& filename);
+      
       // Delete the file.
       void unlink ();
       void rm     ();
@@ -277,6 +280,9 @@ namespace DAC {
       // Get the file / directory names.
       std::string basename () const;
       std::string dirname  () const;
+      
+      // Convert name to an absolute path.
+      std::string expand_path () const;
       
       // Seek to a particular location.
       void seek (off_t const offset, SeekMode const whence);
@@ -321,6 +327,11 @@ namespace DAC {
       time_t    atime     () const;
       time_t    mtime     () const;
       time_t    ctime     () const;
+      
+      /***********************************************************************/
+      // Static function members.
+
+      static std::string getCWD ();
     
     /*
      * Private members.
@@ -430,9 +441,12 @@ namespace DAC {
       
       /***********************************************************************/
       // Static members.
-
+      
       // Handle and throw a system call error.
       static void s_throwSysCallError (int const errnum, std::string const& syscall, std::string const& filename);
+      
+      // Compress redundant directory separators.
+      static void s_compress_dirSep (std::string& path);
     
   };
   
