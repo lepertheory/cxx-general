@@ -15,6 +15,7 @@
 #include <pwd.h>
 #include <cxx-general/toString.h++>
 #include <cxx-general/AutoArray.h++>
+#include <cxx-general/SafeInt.h++>
 
 // Class include.
 #include "POSIXFile.h++"
@@ -37,6 +38,10 @@ namespace DAC {
   
   // Permissions mask.
   mode_t const POSIXFile::_PERM_MASK = S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO;
+  
+  // Hard min/maximum of any path length.
+  size_t const POSIXFile::_MIN_PATH =   256;
+  size_t const POSIXFile::_MAX_PATH = 32768;
   
   /***************************************************************************/
   // Function members.
@@ -138,18 +143,25 @@ namespace DAC {
   // Create a hard link.
   void POSIXFile::link (string const& filename) {
     
-    // Update the cache.
-    _update_cache();
+    // Work area.
+    string linksrc;
+    
+    // If we are supposed to follow symlinks, do so. is_symlink also updates
+    // the stat cache, which is necessary. This behavior is in line with POSIX,
+    // and deviates from Linux.
+    if (FollowSym() && is_symlink()) {
+      linksrc = dirname() + "/" + readlink();
+    } else {
+      linksrc = _filename;
+    }
     
     // Link.
-    _cache_valid = false;
-    if (::link(_filename.c_str(), filename.c_str())) {
-      s_throwSysCallError(errno, "link", "\"" + _filename + "\" \"" + filename + "\"");
+    if (::link(linksrc.c_str(), filename.c_str())) {
+      s_throwSysCallError(errno, "link", "\"" + linksrc + "\" \"" + filename + "\"");
     }
     
     // Update the link count to the file in the cache.
     _stat.st_nlink += 1;
-    _cache_valid = true;
     
   }
   
@@ -197,12 +209,26 @@ namespace DAC {
       return;
     }
     
+    // Work area.
+    string opfile;
+    bool   dosym;
+    
+    // Decide whether we will be changing the symlink's mode or the link
+    // target.
+    if (FollowSym() && is_symlink()) {
+      opfile = dirname() + "/" + readlink();
+      dosym  = true;
+    } else {
+      opfile = _filename;
+      dosym  = false;
+    }
+    
     // Invalidate the cache.
     _cache_valid = false;
     
     // Call the correct chown whether the file is open or closed.
-    if (_fd && fchown(_fd, owner, group) || ::chown(_filename.c_str(), owner, group)) {
-      s_throwSysCallError(errno, "chown", _filename);
+    if (_fd && fchown(_fd, owner, group) || ::chown(opfile.c_str(), owner, group)) {
+      s_throwSysCallError(errno, "chown", dosym ? opfile : _filename);
     }
     
   }
@@ -350,6 +376,41 @@ namespace DAC {
     
   }
   
+  // Read the target of a symbolic link.
+  string POSIXFile::readlink () const {
+    
+    // Work area. SafeInt for the signed/unsigned comparison.
+    AutoArray<char> buf;
+    SafeInt<int>    chars;
+    
+    // Double the buffer size with each iteration.
+    for (size_t bufsize = _MIN_PATH; bufsize <= _MAX_PATH; bufsize *= 2) {
+      
+      // Allocate buffer.
+      buf = new char[bufsize];
+      
+      // Make the system call, break if successful. bufsize - 1 because
+      // readlink() does not null terminate.
+      if ((chars = ::readlink(_filename.c_str(), buf.get(), bufsize - 1)) == -1) {
+        s_throwSysCallError(errno, "readlink", _filename);
+      }
+      
+      // Make sure that readlink did not fill the buffer. Will waste a call if
+      // the length of the path is exactly as long as buf, but there is no
+      // way to tell if there was truncation otherwise. Signed/unsigned
+      // comparison is the reason chars is a SafeInt.
+      if (chars < bufsize) {
+        buf[chars] = '\0';
+        break;
+      }
+      
+    }
+    
+    // Return the link target.
+    return buf.get();
+    
+  }
+  
   // Seek to a particular offset.
   void POSIXFile::seek (off_t const offset, SeekMode const whence) {
     
@@ -418,15 +479,11 @@ namespace DAC {
   // Get the current working directory.
   string POSIXFile::getCWD () {
     
-    // Hard min/maximum of any path length.
-    static size_t const MIN_PATH =   256;
-    static size_t const MAX_PATH = 32768;
-    
     // Work area.
     AutoArray<char> buf;
     
     // Double the buffer size with each iteration.
-    for (size_t bufsize = MIN_PATH; bufsize <= MAX_PATH; bufsize *= 2) {
+    for (size_t bufsize = _MIN_PATH; bufsize <= _MAX_PATH; bufsize *= 2) {
       
       // Allocate buffer.
       buf = new char[bufsize];

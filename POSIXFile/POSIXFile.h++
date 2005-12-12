@@ -42,10 +42,29 @@ namespace DAC {
       // Data types.
       
       // Open mode.
-      enum OpenMode { OM_READ, OM_WRITE, OM_READWRITE };
+      enum OpenMode {
+        OM_READ     ,
+        OM_WRITE    ,
+        OM_READWRITE
+      };
       
       // Seek modes.
-      enum SeekMode { SM_SET = SEEK_SET, SM_CUR = SEEK_CUR, SM_END = SEEK_END };
+      enum SeekMode {
+        SM_SET = SEEK_SET,
+        SM_CUR = SEEK_CUR,
+        SM_END = SEEK_END
+      };
+      
+      // File types.
+      enum FileType {
+        FT_SOCKET    = S_IFSOCK,
+        FT_SYMLINK   = S_IFLNK ,
+        FT_FILE      = S_IFREG ,
+        FT_BLOCKDEV  = S_IFBLK ,
+        FT_DIRECTORY = S_IFDIR ,
+        FT_CHARDEV   = S_IFCHR ,
+        FT_FIFO      = S_IFIFO
+      };
       
       /***********************************************************************/
       // Constants.
@@ -171,6 +190,26 @@ namespace DAC {
           class SysMaxFiles   : public SysCallError {};
           class TryAgain      : public SysCallError {};
           class Unexpected    : public SysCallError {};
+          
+          // Unknown file type returned.
+          class UnknownType : public Base {
+            public:
+              virtual ~UnknownType () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Unknown file type " + DAC::toString(_type) + " returned for file \"" + _filename + "\".").c_str();
+                } catch (...) {
+                  return "Unknown file type returned. Error creating message string.";
+                }
+              };
+              UnknownType& Filename (std::string const& filename) { _filename = filename; return *this; };
+              UnknownType& Type     (mode_t      const  filetype) { _type     = filetype; return *this; };
+              std::string Filename () const { return _filename; };
+              mode_t      Type     () const { return _type    ; };
+            private:
+              std::string _filename;
+              mode_t      _type    ;
+          };
         
         // This class cannot be initialized.
         private:
@@ -250,6 +289,7 @@ namespace DAC {
       mode_t      Mode      () const;
       uid_t       UID       () const;
       gid_t       GID       () const;
+      FileType    Type      () const;
       
       // Reset to just-constructed defaults.
       void clear ();
@@ -283,6 +323,9 @@ namespace DAC {
       
       // Convert name to an absolute path.
       std::string expand_path () const;
+      
+      // Read the target of a symbolic link.
+      std::string readlink () const;
       
       // Seek to a particular location.
       void seek (off_t const offset, SeekMode const whence);
@@ -346,6 +389,13 @@ namespace DAC {
       
       // Open mode flag type.
       typedef int _OMFlagType;
+      
+      /***********************************************************************/
+      // Constants.
+      
+      // Hard minimum / maximum of path lengths.
+      static size_t const _MIN_PATH;
+      static size_t const _MAX_PATH;
       
       /***********************************************************************
        * _FD
@@ -561,6 +611,21 @@ namespace DAC {
   inline POSIXFile& POSIXFile::GID (gid_t const new_gid) { chown(UID_NOCHANGE, new_gid     ); return *this; }
   inline uid_t POSIXFile::UID () const { return uid(); }
   inline gid_t POSIXFile::GID () const { return gid(); }
+  
+  // Get the file type.
+  inline POSIXFile::FileType POSIXFile::Type () const {
+    mode_t type(mode() & S_IFMT);
+    switch (type) {
+      case S_IFSOCK: return FT_SOCKET   ;
+      case S_IFLNK : return FT_SYMLINK  ;
+      case S_IFREG : return FT_FILE     ;
+      case S_IFBLK : return FT_BLOCKDEV ;
+      case S_IFDIR : return FT_DIRECTORY;
+      case S_IFCHR : return FT_CHARDEV  ;
+      case S_IFIFO : return FT_FIFO     ;
+      default      : throw Errors::UnknownType().Type(type).Filename(_filename);
+    };
+  }
   
   // File info.
   inline bool POSIXFile::is_blockDev   () const { return is_exist() && ((mode() & S_IFMT) & S_IFBLK ) == S_IFBLK ; }
