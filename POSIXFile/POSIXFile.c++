@@ -10,6 +10,7 @@
 // System includes.
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <unistd.h>
 #include <cerrno>
 #include <pwd.h>
@@ -66,6 +67,9 @@ namespace DAC {
     _curpos = 0;
     
     _filename.clear();
+    _recordsep = "\n";
+    _recordnum = 0;
+    _recordpos = 0;
     
     _stat.st_dev     = 0;
     _stat.st_ino     = 0;
@@ -93,6 +97,15 @@ namespace DAC {
     
     // New filename.
     _filename = source._filename;
+    
+    // Record separator.
+    _recordsep = source._recordsep;
+    
+    // Current record number.
+    _recordnum = source._recordnum;
+    
+    // Current record-at-a-time position.
+    _recordpos = source._recordpos;
     
     // Open flags.
     _flags = source._flags;
@@ -122,6 +135,40 @@ namespace DAC {
     } else {
       _curpos = 0;
     }
+    
+  }
+  
+  // Lock the file.
+  void POSIXFile::flock (LockMode const lockmode) {
+    
+    // Make sure the file is open.
+    if (!_fd) {
+      throw Errors::NotOpen().Filename(_filename).Operation("flock");
+    }
+    
+    // Do the lock.
+    if (::flock(_fd, lockmode)) {
+      s_throwSysCallError(errno, "flock", _filename);
+    }
+    
+  }
+  bool POSIXFile::flock_nb (LockMode const lockmode) {
+    
+    // Make sure the file is open.
+    if (!_fd) {
+      throw Errors::NotOpen().Filename(_filename).Operation("flock");
+    }
+    
+    // Do the lock.
+    if (::flock(_fd, lockmode | LOCK_NB)) {
+      if (errno == EWOULDBLOCK) {
+        return false;
+      }
+      s_throwSysCallError(errno, "flock", _filename);
+    }
+    
+    // Lock was successful.
+    return true;
     
   }
   
@@ -162,6 +209,29 @@ namespace DAC {
     
     // Update the link count to the file in the cache.
     _stat.st_nlink += 1;
+    
+  }
+  
+  // Create a symbolic link.
+  void POSIXFile::symlink (string const& filename) const {
+    
+    // Create symlink.
+    if (::symlink(_filename.c_str(), filename.c_str())) {
+      s_throwSysCallError(errno, "symlink", "\"" + _filename + "\" \"" + filename + "\"");
+    }
+    
+  }
+  
+  // Rename the file.
+  void POSIXFile::rename (string const& filename) {
+    
+    // Invalidate the cache.
+    _cache_valid = false;
+    
+    // Rename.
+    if (::rename(_filename.c_str(), filename.c_str())) {
+      s_throwSysCallError(errno, "rename", "\"" + _filename + "\" \"" + filename + "\"");
+    }
     
   }
   
@@ -229,6 +299,21 @@ namespace DAC {
     // Call the correct chown whether the file is open or closed.
     if (_fd && fchown(_fd, owner, group) || ::chown(opfile.c_str(), owner, group)) {
       s_throwSysCallError(errno, "chown", dosym ? opfile : _filename);
+    }
+    
+  }
+  
+  // Truncate or expand to an exact length.
+  void POSIXFile::truncate (off_t const length) {
+    
+    // Invalidate the cache.
+    _cache_valid = false;
+    
+    // Truncate. Temporary length because the truncate prototype does not name
+    // length as const.
+    off_t tmplen(length);
+    if (_fd && ftruncate(_fd, tmplen) || ::truncate(_filename.c_str(), tmplen)) {
+      s_throwSysCallError(errno, "truncate", _filename);
     }
     
   }
@@ -424,12 +509,95 @@ namespace DAC {
     
   }
   
-  // Read the entire file as a string.
-  string POSIXFile::get_file () {
+  // Read a particular number of bytes.
+  string POSIXFile::read (size_t const bytes) {
+    
+    // Make sure the file is open.
+    if (!_fd) {
+      throw Errors::NotOpen().Filename(_filename).Operation("read");
+    }
     
     // Work area.
-    string          retval;
-    AutoArray<char> buf;
+    AutoArray<char> buf       (new char[bytes]);
+    ssize_t         bytes_read                 ;
+    
+    // Read the requested number of bytes and update the current file position.
+    _seek(_curpos);
+    bytes_read  = _read(reinterpret_cast<void*>(buf.get()), bytes);
+    _curpos    += bytes_read;
+    
+    // Convert buffer to a string and return.
+    return string(buf.get(), bytes_read);
+    
+  }
+  string POSIXFile::read (size_t const bytes, off_t const offset) {
+    
+    // Make sure the file is open.
+    if (!_fd) {
+      throw Errors::NotOpen().Filename(_filename).Operation("read");
+    }
+    
+    // Make sure we are not overrunning the end of the file.
+    if (offset > size()) {
+      throw Errors::Overrun().Offset(offset).Filename(_filename).Size(size());
+    }
+    
+    // Work area.
+    AutoArray<char> buf       (new char[bytes]);
+    ssize_t         bytes_read                 ;
+    
+    // Read the requested number of bytes from the requested offset.
+    _seek(offset);
+    bytes_read = _read(reinterpret_cast<void*>(buf.get()), bytes);
+    
+    // We done.
+    return string(buf.get(), bytes_read);
+    
+  }
+  
+  // Read a single line.
+  string POSIXFile::read_line (off_t const linenum) {
+    
+    // Make sure the file is open.
+    if (!_fd) {
+      throw Errors::NotOpen().Filename(_filename).Operation("read");
+    }
+    
+    // Work area.
+    static string buf         ;
+    static time_t bufmtime = 0;
+    static off_t  bufpos   = 0;
+    
+    // Clear the buffer and rewind the position if the buffer is not valid.
+    if (!buf.empty && mtime() > bufmtime) {
+      bufpos -= buf.length();
+      buf.clear();
+    }
+    
+    // If the line number requested is earlier in the file, clear the buffer
+    // and reset the buffer position.
+    if (linenum <= _recordnum) {
+      buf.clear();
+      bufpos   = 0;
+      bufmtime = 0;
+    }
+    
+    // Fill buffer in recommended block size chunks.
+    for (;;) {
+      
+      
+      
+    }
+    
+  }
+  
+  // Read the entire file as a string.
+  string POSIXFile::read_file () {
+    
+    // Work area.
+    string          retval    ;
+    AutoArray<char> buf       ;
+    ssize_t         bytes_read;
     
     // Make sure we're not trying to read from an empty file.
     if (size() == 0) {
@@ -437,7 +605,6 @@ namespace DAC {
     }
     
     // Reserve space for the file contents.
-    retval.reserve(size());
     buf = new char[size()];
     
     // Get the current file open status.
@@ -453,7 +620,7 @@ namespace DAC {
       
       // Read the entire file.
       _seek(0);
-      _read(reinterpret_cast<void*>(buf.get()), size());
+      bytes_read = _read(reinterpret_cast<void*>(buf.get()), size());
       
     // Restore the previous state and rethrow the error.
     } catch (...) {
@@ -469,7 +636,7 @@ namespace DAC {
     }
     
     // Copy the buffer into the string.
-    retval.assign(buf.get(), size());
+    retval.assign(buf.get(), bytes_read);
     
     // Done.
     return retval;
@@ -508,9 +675,22 @@ namespace DAC {
   // Update the cache.
   void POSIXFile::_update_cache () const {
     
-    // Call correct stat() or fstat() if the file is already open.
-    if (_fd && fstat(_fd, &_stat) || stat(_filename.c_str(), &_stat)) {
-      s_throwSysCallError(errno, "stat", _filename);
+    // Call stat or lstat depending on whether we are following symlinks or
+    // not.
+    if (FollowSym() && is_symlink()) {
+      
+      // Link stat.
+      if (lstat(_filename.c_str(), &_stat)) {
+        s_throwSysCallError(errno, "stat", _filename);
+      }
+      
+    } else {
+      
+      // Call correct stat() or fstat() if the file is already open.
+      if (_fd && fstat(_fd, &_stat) || stat(_filename.c_str(), &_stat)) {
+        s_throwSysCallError(errno, "stat", _filename);
+      }
+      
     }
     
     // Cache has been successfully updated.
@@ -525,7 +705,7 @@ namespace DAC {
     ssize_t retval = 0;
     
     // Read the file.
-    if ((retval = read(_fd, buf, bufsize)) == -1) {
+    if ((retval = ::read(_fd, buf, bufsize)) == -1) {
       s_throwSysCallError(errno, "read", _filename);
     }
     

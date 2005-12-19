@@ -88,7 +88,7 @@ int main (int argc, char** argv) {
        << "  ctime:     " << test.ctime    () << "\n";
   
   cout << "  contents:\n"
-       << test.get_file();
+       << test.read_file();
   
   return 0;
   

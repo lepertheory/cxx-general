@@ -66,6 +66,13 @@ namespace DAC {
         FT_FIFO      = S_IFIFO
       };
       
+      // Lock modes.
+      enum LockMode {
+        LM_SHARED    = LOCK_SH,
+        LM_EXCLUSIVE = LOCK_EX,
+        LM_UNLOCK    = LOCK_UN
+      };
+      
       /***********************************************************************/
       // Constants.
       
@@ -99,8 +106,8 @@ namespace DAC {
                   return "Operation is not valid on open file. Error creating message string.";
                 }
               };
-              IsOpen& Filename (std::string const& filename) { _filename = filename; return *this; }
-              std::string Filename () const { return _filename; }
+              IsOpen& Filename (std::string const& filename) { _filename = filename; return *this; };
+              std::string Filename () const { return _filename; };
             private:
               std::string _filename;
           };
@@ -116,8 +123,8 @@ namespace DAC {
                   return "Requested operation cannot be performed at end of file. Error creating message string.";
                 }
               };
-              EoF& Operation (std::string const& op) { _op = op; return *this; }
-              std::string Operation () const { return _op; }
+              EoF& Operation (std::string const& op) { _op = op; return *this; };
+              std::string Operation () const { return _op; };
             private:
               std::string _op;
           };
@@ -133,14 +140,37 @@ namespace DAC {
                   return "Requested operation cannot be performed on a non-opened file. Error creating message string.";
                 }
               };
-              NotOpen& Filename  (std::string const& filename) { _filename = filename; return *this; }
-              NotOpen& Operation (std::string const& op      ) { _op       = op      ; return *this; }
-              std::string Filename  () const { return _filename; }
-              std::string Operation () const { return _op      ; }
+              NotOpen& Filename  (std::string const& filename) { _filename = filename; return *this; };
+              NotOpen& Operation (std::string const& op      ) { _op       = op      ; return *this; };
+              std::string Filename  () const { return _filename; };
+              std::string Operation () const { return _op      ; };
             private:
               std::string _filename;
               std::string _op      ;
           };  
+          
+          // Offset overrun.
+          class Overrun : public Base {
+            public:
+              virtual ~Overrun () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Offset " + DAC::toString(_offset) + " overruns end of file \"" + _filename + "\" with size of " + DAC::toString(_size) + ".").c_str();
+                } catch (...) {
+                  return "Offset overruns end of file. Error creating message string.";
+                }
+              };
+              Overrun& Offset   (off_t       const  offset  ) { _offset   = offset  ; return *this; };
+              Overrun& Filename (std::string const& filename) { _filename = filename; return *this; };
+              Overrun& Size     (off_t       const  size    ) { _size     = size    ; return *this; };
+              off_t       Offset   () const { return _offset  ; };
+              std::string Filename () const { return _filename; };
+              off_t       Size     () const { return _size    ; };
+            private:
+              off_t       _offset  ;
+              std::string _filename;
+              off_t       _size    ;
+          };
           
           // Error making a system call.
           class SysCallError : public Base {
@@ -236,6 +266,7 @@ namespace DAC {
       
       // Properties.
       POSIXFile& Filename  (std::string const& filename );
+      POSIXFile& RecordSep (std::string const& recordsep);
       POSIXFile& Append    (bool        const  append   );
       POSIXFile& Create    (bool        const  create   );
       POSIXFile& Exclusive (bool        const  exclusive);
@@ -263,6 +294,7 @@ namespace DAC {
       POSIXFile& UID       (uid_t       const  new_uid  );
       POSIXFile& GID       (gid_t       const  new_gid  );
       std::string Filename  () const;
+      std::string RecordSep () const;
       bool        Append    () const;
       bool        Create    () const;
       bool        Exclusive () const;
@@ -300,11 +332,21 @@ namespace DAC {
       // Open the file.
       void open ();
       
+      // Lock the file.
+      void flock    (LockMode const lockmode);
+      bool flock_nb (LockMode const lockmode);
+      
       // Close the file.
       void close ();
       
       // Create a hard link.
       void link (std::string const& filename);
+      
+      // Create a symbolic link.
+      void symlink (std::string const& filename) const;
+      
+      // Rename/move the file.
+      void rename (std::string const& filename);
       
       // Delete the file.
       void unlink ();
@@ -317,6 +359,9 @@ namespace DAC {
       // Change the owner of the file.
       void chown (uid_t const owner = UID_NOCHANGE, gid_t const group = GID_NOCHANGE);
       
+      // Truncate or expand to an exact length.
+      void truncate (off_t const length);
+      
       // Get the file / directory names.
       std::string basename () const;
       std::string dirname  () const;
@@ -328,10 +373,17 @@ namespace DAC {
       std::string readlink () const;
       
       // Seek to a particular location.
-      void seek (off_t const offset, SeekMode const whence);
+      void seek (off_t const offset, SeekMode const whence = SM_SET);
+      
+      // Read a particular number of bytes.
+      std::string read (size_t const bytes                    );
+      std::string read (size_t const bytes, off_t const offset);
+      
+      // Read a line.
+      std::string read_line (off_t const linenum = -1);
       
       // Read the entire file as a string.
-      std::string get_file ();
+      std::string read_file ();
       
       // File info.
       bool is_blockDev        () const;
@@ -458,6 +510,12 @@ namespace DAC {
       // The name of the file.
       std::string _filename;
       
+      // The record separator.
+      std::string _recordsep;
+      
+      // The current record number we are reading.
+      off_t _recordnum;
+      
       // File descriptor. 0 if file is closed.
       _FD _fd;
       
@@ -526,15 +584,35 @@ namespace DAC {
   }
   inline std::string POSIXFile::Filename () const { return _filename; }
   
+  // Set / get the record separator.
+  inline POSIXFile& POSIXFile::RecordSep (std::string const& recordsep) {
+    if (recordsep != _recordsep) {
+      _recordnum = 0;
+      _recordsep = recordsep;
+    }
+    return *this;
+  }
+  inline std::string POSIXFile::RecordSep () const { return _recordsep; }
+  
   // Set / get the open flags.
   inline POSIXFile& POSIXFile::Append    (bool const append   ) { if (append   ) { _flags |=  O_APPEND  ; } else { _flags &= ~O_APPEND  ; } return *this; }
   inline POSIXFile& POSIXFile::Create    (bool const create   ) { if (create   ) { _flags |=  O_CREAT   ; } else { _flags &= ~O_CREAT   ; } return *this; }
   inline POSIXFile& POSIXFile::Exclusive (bool const exclusive) { if (exclusive) { _flags |=  O_EXCL    ; } else { _flags &= ~O_EXCL    ; } return *this; }
   inline POSIXFile& POSIXFile::DoATime   (bool const doatime  ) { if (doatime  ) { _flags &= ~O_NOATIME ; } else { _flags |=  O_NOATIME ; } return *this; }
   inline POSIXFile& POSIXFile::CanCTTY   (bool const canctty  ) { if (canctty  ) { _flags &= ~O_NOCTTY  ; } else { _flags |=  O_NOCTTY  ; } return *this; }
-  inline POSIXFile& POSIXFile::FollowSym (bool const followsym) { if (followsym) { _flags &= ~O_NOFOLLOW; } else { _flags |=  O_NOFOLLOW; } return *this; }
+  inline POSIXFile& POSIXFile::FollowSym (bool const followsym) {
+    if (followsym != FollowSym()) {
+      _cache_valid = false;
+      if (followsym) {
+        _flags &= ~O_NOFOLLOW;
+      } else {
+        _flags |=  O_NOFOLLOW;
+      }
+    }
+    return *this;
+  }
   inline POSIXFile& POSIXFile::Synch     (bool const synch    ) { if (synch    ) { _flags |=  O_SYNC    ; } else { _flags &= ~O_SYNC    ; } return *this; }
-  inline POSIXFile& POSIXFile::Truncate  (bool const truncate ) { if (truncate ) { _flags |=  O_TRUNC   ; } else { _flags &= ~O_TRUNC   ; } return *this; }
+  inline POSIXFile& POSIXFile::Truncate  (bool const trunc    ) { if (trunc    ) { _flags |=  O_TRUNC   ; } else { _flags &= ~O_TRUNC   ; } return *this; }
   inline bool POSIXFile::Append    () const { return   _flags & O_APPEND   ; }
   inline bool POSIXFile::Create    () const { return   _flags & O_CREAT    ; }
   inline bool POSIXFile::Exclusive () const { return   _flags & O_EXCL     ; }
