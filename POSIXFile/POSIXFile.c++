@@ -439,7 +439,6 @@ namespace DAC {
     
     // Process any previous directories.
     for (string::size_type pos = 0; pos = retval.find(PREV_DIR, pos), pos != string::npos;) {
-      cout << "retval: " << retval << "  pos: " << pos << "\n";
       if (retval.length() > pos + PREV_DIR_LEN) {
         if (retval[pos + PREV_DIR_LEN] == DIR_SEP) {
           if (pos == 0) {
@@ -531,6 +530,34 @@ namespace DAC {
     
     // Convert buffer to a string and return.
     return string(buf.get(), bytes_read);
+    
+  }
+  
+  // Write.
+  ssize_t POSIXFile::write (void const* const data, size_t const bytes) {
+    
+    // Make sure the file is open.
+    if (!_fd) {
+      throw Errors::NotOpen().Filename(_filename).Operation("write");
+    }
+    
+    // Work area.
+    ssize_t retval = 0;
+    
+    // Write the data.
+    if ((retval = ::write(_fd, data, bytes)) == -1) {
+      s_throwSysCallError(errno, "write", _filename);
+    }
+    
+    // Update the current position and file size.
+    _curpos       += retval;
+    _stat.st_size += retval;
+    
+    // Check for end of file.
+    _eof = _curpos >= size();
+    
+    // Return the number of bytes written.
+    return retval;
     
   }
   

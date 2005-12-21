@@ -397,7 +397,8 @@ namespace DAC {
       std::string read_file ();
       
       // Write.
-      void write (std::string const& data);
+      ssize_t write (std::string const& data                    );
+      ssize_t write (void const* const  data, size_t const bytes);
       
       // Detect EOF.
       bool eof      () const;
@@ -732,6 +733,9 @@ namespace DAC {
   
   // Return the current read/write position.
   inline off_t POSIXFile::tell () const { return _curpos; }
+  
+  // Write.
+  inline ssize_t POSIXFile::write (std::string const& data) { return write(data.data(), data.length()); }
   
   // End of file.
   inline bool POSIXFile::eof      () const { return _eof             ; }
