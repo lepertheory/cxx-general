@@ -6,6 +6,7 @@
 
 // STL includes.
 #include <string>
+#include <vector>
 
 // System includes.
 #include <sys/types.h>
@@ -69,7 +70,6 @@ namespace DAC {
     _filename.clear();
     _recordsep = "\n";
     _recordnum = 0;
-    _recordpos = 0;
     
     _stat.st_dev     = 0;
     _stat.st_ino     = 0;
@@ -86,6 +86,9 @@ namespace DAC {
     _stat.st_ctime   = 0;
     
     _flags = O_APPEND | O_CREAT;
+    
+    _eof      = true;
+    _eof_line = true;
     
   }
   
@@ -104,15 +107,16 @@ namespace DAC {
     // Current record number.
     _recordnum = source._recordnum;
     
-    // Current record-at-a-time position.
-    _recordpos = source._recordpos;
-    
     // Open flags.
     _flags = source._flags;
     
     // Transfer the current position. Will be overwritten unless saved before
     // open and restored after.
     _curpos = source._curpos;
+    
+    // End of file.
+    _eof      = source._eof     ;
+    _eof_line = source._eof_line;
     
   }
   
@@ -130,6 +134,7 @@ namespace DAC {
     }
     
     // Reset the current file position.
+    _eof = false;
     if (_flags & O_APPEND) {
       _curpos = size();
     } else {
@@ -505,7 +510,7 @@ namespace DAC {
     }
     
     // Seek.
-    _seek_update_pos(offset, whence);
+    _seek(offset, whence);
     
   }
   
@@ -522,72 +527,91 @@ namespace DAC {
     ssize_t         bytes_read                 ;
     
     // Read the requested number of bytes and update the current file position.
-    _seek(_curpos);
-    bytes_read  = _read(reinterpret_cast<void*>(buf.get()), bytes);
-    _curpos    += bytes_read;
+    bytes_read = _read(reinterpret_cast<void*>(buf.get()), bytes);
     
     // Convert buffer to a string and return.
     return string(buf.get(), bytes_read);
     
   }
-  string POSIXFile::read (size_t const bytes, off_t const offset) {
-    
-    // Make sure the file is open.
-    if (!_fd) {
-      throw Errors::NotOpen().Filename(_filename).Operation("read");
-    }
-    
-    // Make sure we are not overrunning the end of the file.
-    if (offset > size()) {
-      throw Errors::Overrun().Offset(offset).Filename(_filename).Size(size());
-    }
+  
+  // Read a single line.
+  string POSIXFile::read_line () {
     
     // Work area.
-    AutoArray<char> buf       (new char[bytes]);
-    ssize_t         bytes_read                 ;
+    static string            buf                   ;
+    static string::size_type next_sep(string::npos);
+    string retval;
     
-    // Read the requested number of bytes from the requested offset.
-    _seek(offset);
-    bytes_read = _read(reinterpret_cast<void*>(buf.get()), bytes);
+    // Find the end of this record.
+    next_sep = buf.find(_recordsep);
+    while (next_sep == string::npos && !eof()) {
+      string tmp = read(blockSize());
+      buf      += tmp;
+      next_sep  = buf.find(_recordsep, buf.length() - tmp.length());
+    }
+    _eof_line = false;
     
-    // We done.
-    return string(buf.get(), bytes_read);
+    // Create return value and trim buffer down to size. Turn on eof_line if
+    // there are no more lines available in the file.
+    retval = buf.substr(0, next_sep);
+    if ((next_sep == string::npos || next_sep == buf.length() - 1) && eof()) {
+      next_sep = string::npos;
+      buf.clear();
+      _eof_line = true;
+    } else {
+      buf.erase(0, next_sep + 1);
+    }
+    
+    return retval;
     
   }
   
-  // Read a single line.
-  string POSIXFile::read_line (off_t const linenum) {
-    
-    // Make sure the file is open.
-    if (!_fd) {
-      throw Errors::NotOpen().Filename(_filename).Operation("read");
-    }
+  // Read the entire file as a vector of lines.
+  vector<string>& POSIXFile::read_all_lines (vector<string>& buffer) {
     
     // Work area.
-    static string buf         ;
-    static time_t bufmtime = 0;
-    static off_t  bufpos   = 0;
+    vector<string> retval;
     
-    // Clear the buffer and rewind the position if the buffer is not valid.
-    if (!buf.empty && mtime() > bufmtime) {
-      bufpos -= buf.length();
-      buf.clear();
+    // Make sure we're not trying to read from an empty file.
+    if (size() == 0) {
+      buffer.swap(retval);
+      return buffer;
     }
     
-    // If the line number requested is earlier in the file, clear the buffer
-    // and reset the buffer position.
-    if (linenum <= _recordnum) {
-      buf.clear();
-      bufpos   = 0;
-      bufmtime = 0;
+    // Get the current file open status.
+    bool fileopen = _fd;
+    
+    // Try block to ensure that any changes are undone.
+    try {
+      
+      // If the file is not open, open it.
+      if (!fileopen) {
+        open();
+      }
+      
+      // Fill the vector.
+      _seek(0);
+      while (!eof_line()) {
+        retval.push_back(read_line());
+      }
+      
+    // Restore the previous state and rethrow the error.
+    } catch (...) {
+      if (!fileopen) {
+        try { _fd = 0; } catch (...) {}
+      }
+      throw;
     }
     
-    // Fill buffer in recommended block size chunks.
-    for (;;) {
-      
-      
-      
+    // Close the file if it was not already open.
+    if (!fileopen) {
+      close();
     }
+    
+    // Done. Copy the result into place and return a reference for syntatic
+    // sugar.
+    buffer.swap(retval);
+    return buffer;
     
   }
   
@@ -704,15 +728,21 @@ namespace DAC {
     // Work area.
     ssize_t retval = 0;
     
+    // Make sure we are not attempting a read at end of file.
+    if (_eof) {
+      throw Errors::EoF().Operation("read");
+    }
+    
     // Read the file.
     if ((retval = ::read(_fd, buf, bufsize)) == -1) {
       s_throwSysCallError(errno, "read", _filename);
     }
     
+    // Update the current position.
+    _curpos += retval;
+    
     // Check for end of file.
-    if (!retval) {
-      throw Errors::EoF().Operation("read");
-    }
+    _eof = _curpos >= size();
     
     // Return the number of bytes read.
     return retval;
@@ -726,6 +756,16 @@ namespace DAC {
     if (lseek(_fd, offset, whence) == -1) {
       s_throwSysCallError(errno, "lseek", _filename);
     }
+    
+    // Update the current position.
+    switch (whence) {
+      case SM_SET: _curpos  = offset         ; break;
+      case SM_CUR: _curpos += offset         ; break;
+      case SM_END: _curpos  = size() + offset; break;
+    }
+    
+    // Update end of file status.
+    _eof = _curpos >= size();
     
   }
   

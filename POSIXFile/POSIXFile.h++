@@ -10,6 +10,7 @@
 
 // STL includes.
   #include <string>
+  #include <vector>
   #include <fstream>
   #include <cstring>
 
@@ -375,15 +376,37 @@ namespace DAC {
       // Seek to a particular location.
       void seek (off_t const offset, SeekMode const whence = SM_SET);
       
+      // Return the current read/write offset.
+      off_t tell () const;
+      
       // Read a particular number of bytes.
-      std::string read (size_t const bytes                    );
-      std::string read (size_t const bytes, off_t const offset);
+      std::string read (size_t const bytes);
       
       // Read a line.
-      std::string read_line (off_t const linenum = -1);
+      std::string read_line ();
+      
+      // Read the entire file as a vector of lines. Call like so to avoid a
+      // very expensive copy of the entire vector:
+      // POSIXFile           file ;
+      // std::vector<string> value;
+      // file.Filename("foo");
+      // value.swap(file.read_all_lines());
+      std::vector<std::string>& read_all_lines (std::vector<std::string>& buffer);
       
       // Read the entire file as a string.
       std::string read_file ();
+      
+      // Write.
+      void write (std::string const& data);
+      
+      // Detect EOF.
+      bool eof      () const;
+      bool eof_line () const;
+      
+      // Get the file descriptor.
+      int fd () const;
+      
+      // TODO: Implement fcntl or something like it.
       
       // File info.
       bool is_blockDev        () const;
@@ -510,11 +533,9 @@ namespace DAC {
       // The name of the file.
       std::string _filename;
       
-      // The record separator.
+      // Record info.
       std::string _recordsep;
-      
-      // The current record number we are reading.
-      off_t _recordnum;
+      off_t       _recordnum;
       
       // File descriptor. 0 if file is closed.
       _FD _fd;
@@ -530,6 +551,10 @@ namespace DAC {
       
       // Open flags.
       _OMFlagType _flags;
+      
+      // End of file.
+      bool _eof     ;
+      bool _eof_line;
       
       /***********************************************************************/
       // Function members.
@@ -665,21 +690,21 @@ namespace DAC {
   }
   
   // Get file modes.
-  inline bool POSIXFile::SetUID    () const { return Mode() & S_ISUID                      ; }
-  inline bool POSIXFile::SetGID    () const { return Mode() & S_ISGID                      ; }
-  inline bool POSIXFile::Sticky    () const { return Mode() & S_ISVTX                      ; }
-  inline bool POSIXFile::U_Read    () const { return Mode() & S_IRUSR                      ; }
-  inline bool POSIXFile::U_Write   () const { return Mode() & S_IWUSR                      ; }
-  inline bool POSIXFile::U_Execute () const { return Mode() & S_IXUSR                      ; }
-  inline bool POSIXFile::G_Read    () const { return Mode() & S_IRGRP                      ; }
-  inline bool POSIXFile::G_Write   () const { return Mode() & S_IWGRP                      ; }
-  inline bool POSIXFile::G_Execute () const { return Mode() & S_IXGRP                      ; }
-  inline bool POSIXFile::O_Read    () const { return Mode() & S_IROTH                      ; }
-  inline bool POSIXFile::O_Write   () const { return Mode() & S_IWOTH                      ; }
-  inline bool POSIXFile::O_Execute () const { return Mode() & S_IXOTH                      ; }
-  inline bool POSIXFile::A_Read    () const { return Mode() & (S_IRUSR | S_IRGRP | S_IROTH); }
-  inline bool POSIXFile::A_Write   () const { return Mode() & (S_IWUSR | S_IWGRP | S_IWOTH); }
-  inline bool POSIXFile::A_Execute () const { return Mode() & (S_IXUSR | S_IXGRP | S_IXOTH); }
+  inline bool POSIXFile::SetUID    () const { return Mode() & S_ISUID; }
+  inline bool POSIXFile::SetGID    () const { return Mode() & S_ISGID; }
+  inline bool POSIXFile::Sticky    () const { return Mode() & S_ISVTX; }
+  inline bool POSIXFile::U_Read    () const { return Mode() & S_IRUSR; }
+  inline bool POSIXFile::U_Write   () const { return Mode() & S_IWUSR; }
+  inline bool POSIXFile::U_Execute () const { return Mode() & S_IXUSR; }
+  inline bool POSIXFile::G_Read    () const { return Mode() & S_IRGRP; }
+  inline bool POSIXFile::G_Write   () const { return Mode() & S_IWGRP; }
+  inline bool POSIXFile::G_Execute () const { return Mode() & S_IXGRP; }
+  inline bool POSIXFile::O_Read    () const { return Mode() & S_IROTH; }
+  inline bool POSIXFile::O_Write   () const { return Mode() & S_IWOTH; }
+  inline bool POSIXFile::O_Execute () const { return Mode() & S_IXOTH; }
+  inline bool POSIXFile::A_Read    () const { mode_t tmp = Mode(); return tmp & S_IRUSR && tmp & S_IRGRP && tmp & S_IROTH; }
+  inline bool POSIXFile::A_Write   () const { mode_t tmp = Mode(); return tmp & S_IWUSR && tmp & S_IWGRP && tmp & S_IWOTH; }
+  inline bool POSIXFile::A_Execute () const { mode_t tmp = Mode(); return tmp & S_IXUSR && tmp & S_IXGRP && tmp & S_IXOTH; }
   inline mode_t POSIXFile::Mode () const {
     return mode() & _PERM_MASK;
   }
@@ -704,6 +729,16 @@ namespace DAC {
       default      : throw Errors::UnknownType().Type(type).Filename(_filename);
     };
   }
+  
+  // Return the current read/write position.
+  inline off_t POSIXFile::tell () const { return _curpos; }
+  
+  // End of file.
+  inline bool POSIXFile::eof      () const { return _eof             ; }
+  inline bool POSIXFile::eof_line () const { return _eof && _eof_line; }
+  
+  // Get the file descriptor.
+  inline int POSIXFile::fd () const { return _fd; }
   
   // File info.
   inline bool POSIXFile::is_blockDev   () const { return is_exist() && ((mode() & S_IFMT) & S_IFBLK ) == S_IFBLK ; }
@@ -783,16 +818,6 @@ namespace DAC {
   
   // Update cache if necessary.
   inline void POSIXFile::_check_cache () const { if (!_cache_valid) { _update_cache(); } }
-  
-  // Seek and update the current file position.
-  inline void POSIXFile::_seek_update_pos (off_t const offset, SeekMode const whence) {
-    _seek(offset, whence);
-    switch (whence) {
-      case SM_SET: _curpos  = offset         ; break;
-      case SM_CUR: _curpos += offset         ; break;
-      case SM_END: _curpos  = size() + offset; break;
-    };
-  }
   
   // _FD constructor.
   inline POSIXFile::_FD::_FD (_FDType const fd) { set(fd); }

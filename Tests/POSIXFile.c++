@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include "POSIXFile/POSIXFile.h++"
 
@@ -89,6 +90,20 @@ int main (int argc, char** argv) {
   
   cout << "  contents:\n"
        << test.read_file();
+  
+  cout << "  line by line contents:\n";
+  test.open();
+  while (!test.eof_line()) {
+    cout << "\"" << test.read_line() << "\"\n";
+  }
+  test.close();
+  
+  cout << "  line by line contents as vector:\n";
+  vector<string> temp;
+  test.read_all_lines(temp);
+  for (vector<string>::iterator i = temp.begin(); i != temp.end(); ++i) {
+    cout << "\"" << *i << "\"\n";
+  }
   
   return 0;
   
