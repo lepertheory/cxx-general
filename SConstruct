@@ -64,9 +64,9 @@ cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'        ) ; env
 SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile') ; env = tmpenv.Copy()
 
 # Determine the soname.
-cxxgeneral_name   = env['LIBPREFIX'] + 'cxx-general' + env['SHLIBSUFFIX']
-cxxgeneral_soname = cxxgeneral_name   + '.' + cxxgeneral_maj_version
-cxxgeneral_rname  = cxxgeneral_soname + '.' + cxxgeneral_min_version
+#cxxgeneral_name   = env['LIBPREFIX'] + 'cxx-general' + env['SHLIBSUFFIX']
+#cxxgeneral_soname = cxxgeneral_name   + '.' + cxxgeneral_maj_version
+#cxxgeneral_rname  = cxxgeneral_soname + '.' + cxxgeneral_min_version
 
 # The library
 cxxgeneral_objs = []
@@ -78,18 +78,19 @@ for obj in cTimestamp['own_sobj'] :
   cxxgeneral_objs += obj
 for obj in cPOSIXFile['own_sobj'] :
   cxxgeneral_objs += obj
-cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, source = cxxgeneral_objs, SHLINKFLAGS = '-shared -Wl,-soname,' + cxxgeneral_soname, SHLIBSUFFIX = '')
+#cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, source = cxxgeneral_objs, SHLINKFLAGS = '-shared -Wl,-soname,' + cxxgeneral_soname, SHLIBSUFFIX = '')
+cxxgeneral = env.SharedLibrary(target = 'libcxx-general.so', source = cxxgeneral_objs)
 
 # Make symlinks to the libray.
-try :
-  os.unlink(cxxgeneral_name)
-except : pass
-try :
-  os.unlink(cxxgeneral_soname)
-except : pass
-if not env.GetOption('clean') :
-  os.symlink(cxxgeneral_rname, cxxgeneral_name  )
-  os.symlink(cxxgeneral_rname, cxxgeneral_soname)
+#try :
+#  os.unlink(cxxgeneral_name)
+#except : pass
+#try :
+#  os.unlink(cxxgeneral_soname)
+#except : pass
+#if not env.GetOption('clean') :
+#  os.symlink(cxxgeneral_rname, cxxgeneral_name  )
+#  os.symlink(cxxgeneral_rname, cxxgeneral_soname)
 
 # Build the library by default.
 if env.GetOption('clean') :
@@ -134,5 +135,5 @@ Install(includedir + '/' + cArb      ['own_include'], cArb      ['own_headers'])
 Install(includedir + '/' + cTimestamp['own_include'], cTimestamp['own_headers'])
 Install(includedir + '/' + cPOSIXFile['own_include'], cPOSIXFile['own_headers'])
 Install(libdir                                      , cxxgeneral               )
-Install(libdir                                      , cxxgeneral_name          )
-Install(libdir                                      , cxxgeneral_soname        )
+#Install(libdir                                      , cxxgeneral_name          )
+#Install(libdir                                      , cxxgeneral_soname        )
