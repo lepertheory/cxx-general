@@ -104,16 +104,13 @@ for obj in cPOSIXFile['own_sobj'] :
   cxxgeneral_objs += obj
 cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, SHLIBSUFFIX = '', source = cxxgeneral_objs, SHLINKFLAGS = '-Wl,-soname,' + cxxgeneral_soname + env['SHLINKFLAGS'])
 
-# Symlink for linker name.
-cxxgeneral_link = env.Symlink(cxxgeneral_name, cxxgeneral_rname)
-
 # Install files.
 install = []
 install.append(env.Install(includedir, headers   ))
 for module in modules :
   install.append(env.Install(includedir + '/' + module['own_include'], module['own_headers']))
-install.append(env.Install(libdir                          , cxxgeneral))
-install.append(env.Symlink(libdir + '/' + cxxgeneral_soname, cxxgeneral))
+install.append(env.Install(libdir                        , cxxgeneral))
+install.append(env.Symlink(libdir + '/' + cxxgeneral_name, cxxgeneral))
 
 # Install alias.
 env.Alias('install', install)
@@ -122,4 +119,4 @@ env.Alias('install', install)
 if env.GetOption('clean') :
   env.Default('.')
 else :
-  env.Default(cxxgeneral, cxxgeneral_link)
+  env.Default(cxxgeneral)
