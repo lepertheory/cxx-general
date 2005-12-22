@@ -2,8 +2,8 @@
 project_name = 'cxx-general'
 
 # Version of the library.
-cxxgeneral_maj_version = '0'
-cxxgeneral_min_version = '1'
+cxxgeneral_maj_version = open('VER_MAJOR', 'r').read()
+cxxgeneral_min_version = open('VER_MINOR', 'r').read()
 
 # Imports.
 import os
