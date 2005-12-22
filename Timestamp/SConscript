@@ -96,6 +96,9 @@ for define in defines : env.Append(CPPDEFINES = [ define ])
 o_Timestamp = env.Object      (target = 'Timestamp', source = ['Timestamp.c++'])
 s_Timestamp = env.SharedObject(target = 'Timestamp', source = ['Timestamp.c++'])
 
+env.AddPreAction(o_Timestamp, Touch('fart'))
+env.AddPreAction(s_Timestamp, Touch('fart'))
+
 # Create a dictionary containing all necessary information and objects to
 # compile with Timestamp.
 cTimestamp = { 'obj'        : cArb['obj']     + [o_Timestamp]              ,
