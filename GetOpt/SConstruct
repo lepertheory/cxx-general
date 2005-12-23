@@ -1,0 +1,85 @@
+# Version of the library.
+GetOptCXX_maj_version = '0'
+GetOptCXX_min_version = '1'
+
+# Imports.
+import os
+
+# Create options.
+opts = Options('customopts')
+opts.Add(BoolOption('RELEASE', 'Set for a release build.', default = 0))
+
+# Create the environment.
+env = Environment(
+  options = opts,
+  ENV     = os.environ,
+  CPPPATH = ['.']
+)
+
+# Generate help text.
+Help(opts.GenerateHelpText(env))
+
+# Set compiler options.
+if env['CC'] == 'gcc' :
+  # -g enables debug mode.
+  # -O0 disables optimization.
+  # -ansi ensures this is strict ANSI code.
+  # -pedantic-errors enables additional error checking.
+  # -Wall enables all warnings.
+  # -Wextra enables even more warnings.
+  # -Wshadow warns when something is shadowed.
+  # -Wpointer-arith warns when using size of a function or void.
+  # -Wcast-qual warns when const is cast away.
+  # -Wwrite-strings protects strings.
+  # -Wconversion warns about unexpected conversions.
+  # -Waggregate-return returns if trying to return a non-integral type.
+  # -Wredundant-decls warns about redundant declarations.
+  # -Wunreachable-code warns if unreachable code exists.
+  # -Winline warns if a function declared inline cannot be inlined.
+  # -Werror turns all warnings into errors.
+  # -pipe communicates between CPP and compiler with a pipe instead of tmp files.
+  env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wshadow -Wpointer-arith -Wredundant-decls -Wunreachable-code -Winline -Werror -pipe')
+  env.Append(CPPDEFINES = 'CC_GCC')
+
+# Make a backup of env so SConscript files do not modify it.
+tmpenv = env.Copy()
+
+# Determine the soname.
+GetOptCXX_name   = env['LIBPREFIX'] + 'GetOptCXX' + env['SHLIBSUFFIX']
+GetOptCXX_soname = GetOptCXX_name   + '.' + GetOptCXX_maj_version
+GetOptCXX_rname  = GetOptCXX_soname + '.' + GetOptCXX_min_version
+
+# Headers.
+h_GetOptCXX = env.File('GetOptCXX.hxx')
+
+# Object files.
+o_GetOptCXX = env.SharedObject(target = 'GetOptCXX', source = ['GetOptCXX.cxx'],)
+
+# The library.
+GetOptCXX = env.SharedLibrary(target = GetOptCXX_rname, source = [o_GetOptCXX], SHLIBSUFFIX = '', SHLINKFLAGS = '-shared -Wl,-soname,' + GetOptCXX_soname)
+
+# Make symlinks within our own directory to the library.
+try:
+  os.unlink(GetOptCXX_name)
+except: pass
+try:
+  os.unlink(GetOptCXX_soname)
+except: pass
+if not env.GetOption('clean') :
+  os.symlink(GetOptCXX_rname, GetOptCXX_name  )
+  os.symlink(GetOptCXX_rname, GetOptCXX_soname)
+
+# Test program.
+test = env.Program('test.cxx', LIBS = ['GetOptCXX'], LIBPATH = ['.'])
+
+# Default is just the library.
+env.Default(GetOptCXX)
+
+# Alias for install location.
+env.Alias('install', ['/usr/lib', '/usr/include'])
+
+# Installation.
+env.Install('/usr/lib',     GetOptCXX       )
+env.Install('/usr/lib',     GetOptCXX_name  )
+env.Install('/usr/lib',     GetOptCXX_soname)
+env.Install('/usr/include', h_GetOptCXX     )
