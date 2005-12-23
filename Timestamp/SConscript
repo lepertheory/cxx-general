@@ -22,6 +22,7 @@ have_timezone     = 0
 have_gettimeofday = 0
 have_time_t       = 0
 have_tm           = 0
+have_time         = 0
 have_gmtime       = 0
 have_gmtime_r     = 0
 
@@ -69,6 +70,7 @@ if have_timezone     : defines += [ 'HAVE_TIMEZONE'     ]
 if have_gettimeofday : defines += [ 'HAVE_GETTIMEOFDAY' ]
 if have_time_t       : defines += [ 'HAVE_TIME_T'       ]
 if have_tm           : defines += [ 'HAVE_TM'           ]
+if have_time         : defines += [ 'HAVE_TIME'         ]
 if have_gmtime       : defines += [ 'HAVE_GMTIME'       ]
 if have_gmtime_r     : defines += [ 'HAVE_GMTIME_R'     ]
 

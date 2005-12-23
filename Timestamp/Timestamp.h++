@@ -354,7 +354,7 @@ namespace DAC {
             private:
               std::string _syscall;
           };
-  #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
+  #if defined(HAVE_WINDOWS_H)
           class SysCall_GetSystemTime : public SysCallError {
             public:
               SysCall_GetSystemTime () {
@@ -362,8 +362,7 @@ namespace DAC {
               };
           };
   #endif
-  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-      defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+  #if defined(HAVE_GETTIMEOFDAY)
           class SysCall_gettimeofday : public SysCallError {
             public:
               SysCall_gettimeofday () {
@@ -371,8 +370,7 @@ namespace DAC {
               };
           };
   #endif
-  #if defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
-      defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+  #if defined(HAVE_TIME)
           class SysCall_time : public SysCallError {
             public:
               SysCall_time () {
@@ -380,8 +378,7 @@ namespace DAC {
               };
           };
   #endif
-  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-      defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        )
+  #if defined(HAVE_GMTIME_R)
           class SysCall_gmtime_r : public SysCallError {
             public:
               SysCall_gmtime_r () {
@@ -389,8 +386,7 @@ namespace DAC {
               };
           };
   #endif
-  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \
-      defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
+  #if defined(HAVE_GMTIME)
           class SysCall_gmtime : public SysCallError {
             public:
               SysCall_gmtime () {

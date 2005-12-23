@@ -11,13 +11,10 @@
 // STL includes.
   #include <string>
   #include <vector>
-  #include <fstream>
-  #include <cstring>
 
 // System includes.
   #include <sys/types.h>
   #include <sys/stat.h>
-  #include <unistd.h>
   #include <fcntl.h>
   #include <cxx-general/Exception.h++>
   #include <cxx-general/toString.h++>
