@@ -240,9 +240,9 @@ namespace DAC {
         // Option is missing a required argument.
         if (static_cast<char>(opt) == ':') {
           if (optopt == 0) {
-            throw Errors::MissingArg().Option(_find_part_option(argv[optind - 1] + 2     ));
+            throw Errors::MissingArg().Option("--" + _find_part_option(argv[optind - 1] + 2     )->Long ());
           } else {
-            throw Errors::MissingArg().Option(_find_option     (static_cast<char>(optopt)));
+            throw Errors::MissingArg().Option("-"  + _find_option     (static_cast<char>(optopt))->Short());
           }
         }
         

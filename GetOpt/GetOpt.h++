@@ -39,10 +39,6 @@ namespace DAC {
       
       /***********************************************************************/
       // Errors.
-      
-      // Forward declarations for errors.
-      class Option;
-      
       class Errors {
         
         public:
@@ -158,15 +154,15 @@ namespace DAC {
               virtual ~MissingArg () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Option " + (_option->isLong() ? ("--" + _option->Long()) : ("-" + _option->Short())) + " is missing a required argument.").c_str();
+                  return ("Option " + _option + " is missing a required argument.").c_str();
                 } catch (...) {
                   return "Option is missing a required argument. Error creating message string.";
                 }
               };
-              MissingArg& Option (GetOpt::Option const* const option) throw() { _option = option; return *this; };
-              GetOpt::Option const* Option () const throw() { return _option; };
+              MissingArg& Option (std::string const& option) throw() { _option = option; return *this; };
+              std::string const Option () const throw() { return _option; };
             private:
-              GetOpt::Option const* _option;
+              std::string _option;
           };
         
         // No instances of this class allowed.
