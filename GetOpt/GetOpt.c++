@@ -1,5 +1,5 @@
 /*****************************************************************************
- * GetOptCXX
+ * GetOpt
  *****************************************************************************
  * This is a C++ wrapper class around the getopt and getoptlong functions.
  *****************************************************************************/
@@ -10,10 +10,10 @@
 // System includes.
 #include <unistd.h>
 #include <getopt.h>
-#include <cxx-general/AutoArray.hxx>
+#include <cxx-general/AutoArray.h++>
 
 // Class includes.
-#include "GetOptCXX.hxx"
+#include "GetOpt.h++"
 
 // Namespaces to use.
 using namespace std;
@@ -25,7 +25,7 @@ namespace DAC {
   // Function members.
   
   // argc & argv constructor.
-  GetOptCXX::GetOptCXX (int const argc, char const* const* const argv) {
+  GetOpt::GetOpt (int const argc, char const* const* const argv) {
     
     // Normal initialization.
     clear();
@@ -36,7 +36,7 @@ namespace DAC {
   }
   
   // Valid options constructor.
-  GetOptCXX::GetOptCXX (Options const& options) {
+  GetOpt::GetOpt (Options const& options) {
     
     // Normal initialization.
     clear();
@@ -47,7 +47,7 @@ namespace DAC {
   }
   
   // Reset to just-constructed state.
-  void GetOptCXX::clear () {
+  void GetOpt::clear () {
     
     // Just create a new _data and let the old one drop away. ReferencePointer
     // will take care of the rest.
@@ -55,8 +55,8 @@ namespace DAC {
     
   }
   
-  // Copy a given GetOptCXX. Can be called in place of clear().
-  void GetOptCXX::copy (GetOptCXX const& source, bool const deep) throw() {
+  // Copy a given GetOpt. Can be called in place of clear().
+  void GetOpt::copy (GetOpt const& source, bool const deep) throw() {
     
     // If deep copy, then copy the structure, otherwise just make another
     // reference to it.
@@ -69,10 +69,10 @@ namespace DAC {
   }
   
   // Set the command-line arguments.
-  GetOptCXX& GetOptCXX::set_cmdArgs (int const argc, char const* const* const argv) {
+  GetOpt& GetOpt::set_cmdArgs (int const argc, char const* const* const argv) {
     
     // Work area.
-    GetOptCXX tmp(*this, true);
+    GetOpt tmp(*this, true);
     
     // Clear the old argument array.
     tmp._data->modified = true;
@@ -91,10 +91,10 @@ namespace DAC {
   }
   
   // Set the valid options.
-  GetOptCXX& GetOptCXX::set_options (Options const& options) {
+  GetOpt& GetOpt::set_options (Options const& options) {
     
     // Work area.
-    GetOptCXX tmp(*this, true);
+    GetOpt tmp(*this, true);
     
     // Clear the old option list.
     tmp._data->modified = true;
@@ -113,10 +113,10 @@ namespace DAC {
   }
   
   // Add an option.
-  GetOptCXX& GetOptCXX::add_option (Option const& option) {
+  GetOpt& GetOpt::add_option (Option const& option) {
     
     // Work area.
-    GetOptCXX tmp(*this, true);
+    GetOpt tmp(*this, true);
     
     // Add the option.
     tmp._add_option(option);
@@ -128,7 +128,7 @@ namespace DAC {
   }
   
   // Scan the options.
-  void GetOptCXX::scan () const {
+  void GetOpt::scan () const {
     
     // Work area.
     int                      argc = 0;
@@ -288,7 +288,7 @@ namespace DAC {
   }
   
   // Add a valid option.
-  void GetOptCXX::_add_option (Option const& option) {
+  void GetOpt::_add_option (Option const& option) {
     
     // Verify that the given option does not exist.
     if (option.isShort() && isDefined(option.Short())) {
@@ -307,7 +307,7 @@ namespace DAC {
   }
   
   // Find the requested option.
-  GetOptCXX::_Option* GetOptCXX::_find_option (char const sopt) const {
+  GetOpt::_Option* GetOpt::_find_option (char const sopt) const {
     
     // Just iterate through the options and return.
     for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
@@ -320,7 +320,7 @@ namespace DAC {
     return 0;
     
   }
-  GetOptCXX::_Option* GetOptCXX::_find_option (string const& lopt) const {
+  GetOpt::_Option* GetOpt::_find_option (string const& lopt) const {
     
     // Iterate through the options and return.
     for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
@@ -335,7 +335,7 @@ namespace DAC {
   }
   
   // Find a partial option.
-  GetOptCXX::_Option* GetOptCXX::_find_part_option (string const& lopt) const {
+  GetOpt::_Option* GetOpt::_find_part_option (string const& lopt) const {
     
     // Work area.
     _Options::iterator retval    = _data->options.end();
@@ -369,7 +369,7 @@ namespace DAC {
   }
   
   // Find an option, scan if needed.
-  GetOptCXX::_Option* GetOptCXX::_scan_option (char const sopt) const {
+  GetOpt::_Option* GetOpt::_scan_option (char const sopt) const {
     
     // If the data structure was modified, we need to re-scan. Would probably
     // be better to only scan if we are checking for a valid option, but then
@@ -391,7 +391,7 @@ namespace DAC {
     return retval;
     
   }
-  GetOptCXX::_Option* GetOptCXX::_scan_option (string const& lopt) const {
+  GetOpt::_Option* GetOpt::_scan_option (string const& lopt) const {
     
     // If the data structure was modified, we need to re-scan.
     if (_data->modified) {
@@ -412,7 +412,7 @@ namespace DAC {
   }
   
   // Reset to just-constructed state.
-  GetOptCXX::_Data& GetOptCXX::_Data::clear () {
+  GetOpt::_Data& GetOpt::_Data::clear () {
     
     // Non-throwing ops.
     modified = true;
@@ -432,7 +432,7 @@ namespace DAC {
   }
   
   // Copy a given _Data.
-  GetOptCXX::_Data& GetOptCXX::_Data::copy (_Data const& source) {
+  GetOpt::_Data& GetOpt::_Data::copy (_Data const& source) {
     
     // Create deep copies of vectors. Do this in temp in case of any errors.
     _ArgList tmp_argv     (source.argv     );
@@ -458,7 +458,7 @@ namespace DAC {
   }
   
   // Translate to getopt's argument requirement.
-  int GetOptCXX::_Option::to_getoptArgReq () const {
+  int GetOpt::_Option::to_getoptArgReq () const {
     switch (ArgRequirement()) {
       case ARG_NONE    : return no_argument      ;
       case ARG_OPTIONAL: return optional_argument;

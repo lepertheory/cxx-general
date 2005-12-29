@@ -83,9 +83,10 @@ cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'        ) ; env
 cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt') ; env = tmpenv.Copy() ; modules.append(cArb      )
 cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'   ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
 cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'        ) ; env = tmpenv.Copy() ; modules.append(cPOSIXFile)
+cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env'        ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
 
 # Tests.
-SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile') ; env = tmpenv.Copy()
+SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile cGetOpt') ; env = tmpenv.Copy()
 
 # Shared library filenames.
 cxxgeneral_name   = env['LIBPREFIX'] + project_name + env['SHLIBSUFFIX']
@@ -94,14 +95,9 @@ cxxgeneral_rname  = cxxgeneral_soname + '.' + cxxgeneral_min_version
 
 # Create the shared library.
 cxxgeneral_objs = []
-for obj in cArbInt['own_sobj'] :
-  cxxgeneral_objs += obj
-for obj in cArb['own_sobj'] :
-  cxxgeneral_objs += obj
-for obj in cTimestamp['own_sobj'] :
-  cxxgeneral_objs += obj
-for obj in cPOSIXFile['own_sobj'] :
-  cxxgeneral_objs += obj
+for module in modules :
+  for obj in module['own_sobj'] :
+    cxxgeneral_objs += obj
 cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, SHLIBSUFFIX = '', source = cxxgeneral_objs, SHLINKFLAGS = '-Wl,-soname,' + cxxgeneral_soname + env['SHLINKFLAGS'])
 
 # Install files.

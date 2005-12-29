@@ -1,5 +1,5 @@
 /*****************************************************************************
- * GetOptCXX
+ * GetOpt
  *****************************************************************************
  * This is a C++ wrapper class around getopt and getoptlong.
  * 
@@ -10,27 +10,27 @@
  *****************************************************************************/
 
 // Include guard.
-#if !defined(GETOPTCXX_u3p2dg82u3pd8u28u278b)
-  #define GETOPTCXX_u3p2dg82u3pd8u28u278b
+#if !defined(GETOPT_u3p2dg82u3pd8u28u278b)
+  #define GETOPT_u3p2dg82u3pd8u28u278b
 
 // Standard includes.
-#include <string>
-#include <vector>
+  #include <string>
+  #include <vector>
 
 // System includes.
-#include <cxx-general/Exception.hxx>
-#include <cxx-general/ReferencePointer.hxx>
-#include <cxx-general/toString.hxx>
+  #include <cxx-general/Exception.h++>
+  #include <cxx-general/ReferencePointer.h++>
+  #include <cxx-general/toString.h++>
 
 // Namespace wrapping.
 namespace DAC {
   
   /***************************************************************************
-   * GetOptCXX
+   * GetOpt
    ***************************************************************************
    * This is the class.
    ***************************************************************************/
-  class GetOptCXX {
+  class GetOpt {
     
     /*
      * Public members.
@@ -47,11 +47,11 @@ namespace DAC {
         
         public:
           
-          // All GetOptCXX errors are based on this.
+          // All GetOpt errors are based on this.
           class Base : public Exception {
             public:
               virtual ~Base () throw() {};
-              virtual char const* what () const throw() { return "Undefined error in GetOptCXX."; };
+              virtual char const* what () const throw() { return "Undefined error in GetOpt."; };
           };
           
           // Undefined option was referenced.
@@ -163,10 +163,10 @@ namespace DAC {
                   return "Option is missing a required argument. Error creating message string.";
                 }
               };
-              MissingArg& Option (GetOptCXX::Option const* const option) throw() { _option = option; return *this; };
-              GetOptCXX::Option const* Option () const throw() { return _option; };
+              MissingArg& Option (GetOpt::Option const* const option) throw() { _option = option; return *this; };
+              GetOpt::Option const* Option () const throw() { return _option; };
             private:
-              GetOptCXX::Option const* _option;
+              GetOpt::Option const* _option;
           };
         
         // No instances of this class allowed.
@@ -215,24 +215,24 @@ namespace DAC {
       // Function members.
       
       // Default constructor.
-      GetOptCXX ();
+      GetOpt ();
       
       // Copy constructor.
-      GetOptCXX (GetOptCXX const& source, bool const deep = false);
+      GetOpt (GetOpt const& source, bool const deep = false);
       
       // argc & argv constructor.
-      GetOptCXX (int const argc, char const* const* const argv);
+      GetOpt (int const argc, char const* const* const argv);
       
       // Valid options constructor.
-      GetOptCXX (Options const& options);
+      GetOpt (Options const& options);
       
       // Assignment operator.
-      GetOptCXX& operator = (GetOptCXX const& right) throw();
+      GetOpt& operator = (GetOpt const& right) throw();
       
       // Properties.
-      GetOptCXX& CheckLong  (bool checklong );
-      GetOptCXX& CheckShort (bool checkshort);
-      GetOptCXX& POSIXCheck (bool posixcheck);
+      GetOpt& CheckLong  (bool checklong );
+      GetOpt& CheckShort (bool checkshort);
+      GetOpt& POSIXCheck (bool posixcheck);
       bool CheckLong  () const;
       bool CheckShort () const;
       bool POSIXCheck () const;
@@ -240,8 +240,8 @@ namespace DAC {
       // Reset to just-constructed state.
       void clear ();
       
-      // Copy a given GetOptCXX.
-      void copy (GetOptCXX const& source, bool const deep = false) throw();
+      // Copy a given GetOpt.
+      void copy (GetOpt const& source, bool const deep = false) throw();
       
       // See if a particular option has been defined.
       bool isDefined (char        const  sopt) const;
@@ -269,13 +269,13 @@ namespace DAC {
       std::vector<std::string> getOrdered () const;
       
       // Set the command-line arguments.
-      GetOptCXX& set_cmdArgs (int const argc, char const* const* const argv);
+      GetOpt& set_cmdArgs (int const argc, char const* const* const argv);
       
       // Set the valid options. This will overwrite any previous options.
-      GetOptCXX& set_options (Options const& options);
+      GetOpt& set_options (Options const& options);
       
       // Add a valid option.
-      GetOptCXX& add_option (Option const& option);
+      GetOpt& add_option (Option const& option);
       
       // Scan the options. You will probably never use this function.
       void scan () const;
@@ -363,116 +363,116 @@ namespace DAC {
   // Function members.
   
   // Default constructor.
-  inline GetOptCXX::GetOptCXX () { clear(); }
+  inline GetOpt::GetOpt () { clear(); }
   
   // Copy constructor.
-  inline GetOptCXX::GetOptCXX (GetOptCXX const& source, bool const deep) { copy(source, deep); }
+  inline GetOpt::GetOpt (GetOpt const& source, bool const deep) { copy(source, deep); }
   
   // Assignment operator.
-  inline GetOptCXX& GetOptCXX::operator = (GetOptCXX const& source) throw () { copy(source); return *this; }
+  inline GetOpt& GetOpt::operator = (GetOpt const& source) throw () { copy(source); return *this; }
   
   // Properties.
-  inline GetOptCXX& GetOptCXX::CheckLong (bool checklong ) {
+  inline GetOpt& GetOpt::CheckLong (bool checklong ) {
     if (checklong != _data->checklong ) {
-      GetOptCXX tmp(*this, true);
+      GetOpt tmp(*this, true);
       tmp._data->modified  = true;
       tmp._data->checklong = checklong;
       _data = tmp._data;
     }
     return *this;
   }
-  inline GetOptCXX& GetOptCXX::CheckShort (bool checkshort) {
+  inline GetOpt& GetOpt::CheckShort (bool checkshort) {
     if (checkshort != _data->checkshort) {
-      GetOptCXX tmp(*this, true);
+      GetOpt tmp(*this, true);
       tmp._data->modified   = true      ;
       tmp._data->checkshort = checkshort;
       _data = tmp._data;
     }
     return *this;
   }
-  inline GetOptCXX& GetOptCXX::POSIXCheck (bool posixcheck) {
+  inline GetOpt& GetOpt::POSIXCheck (bool posixcheck) {
     if (posixcheck != _data->posixcheck) {
-      GetOptCXX tmp(*this, true);
+      GetOpt tmp(*this, true);
       tmp._data->modified   = true      ;
       tmp._data->posixcheck = posixcheck;
       _data = tmp._data;
     }
     return *this;
   }
-  inline bool GetOptCXX::CheckLong  () const { return _data->checklong ; }
-  inline bool GetOptCXX::CheckShort () const { return _data->checkshort; }
-  inline bool GetOptCXX::POSIXCheck () const { return _data->posixcheck; }
+  inline bool GetOpt::CheckLong  () const { return _data->checklong ; }
+  inline bool GetOpt::CheckShort () const { return _data->checkshort; }
+  inline bool GetOpt::POSIXCheck () const { return _data->posixcheck; }
   
   // See if an option has been defined.
-  inline bool GetOptCXX::isDefined (char        const  sopt) const { return _find_option(sopt); }
-  inline bool GetOptCXX::isDefined (std::string const& lopt) const { return _find_option(lopt); }
+  inline bool GetOpt::isDefined (char        const  sopt) const { return _find_option(sopt); }
+  inline bool GetOpt::isDefined (std::string const& lopt) const { return _find_option(lopt); }
   
   // See if an option has been set.
-  inline bool GetOptCXX::isSet (char        const  sopt) const { return numSet(sopt); }
-  inline bool GetOptCXX::isSet (std::string const& lopt) const { return numSet(lopt); }
+  inline bool GetOpt::isSet (char        const  sopt) const { return numSet(sopt); }
+  inline bool GetOpt::isSet (std::string const& lopt) const { return numSet(lopt); }
   
   // See how many times an option has been set.
-  inline size_t GetOptCXX::numSet (char        const  sopt) const { return _scan_option(sopt)->numset; }
-  inline size_t GetOptCXX::numSet (std::string const& lopt) const { return _scan_option(lopt)->numset; }
+  inline size_t GetOpt::numSet (char        const  sopt) const { return _scan_option(sopt)->numset; }
+  inline size_t GetOpt::numSet (std::string const& lopt) const { return _scan_option(lopt)->numset; }
   
   // See how many arguments an option or the command-line has.
-  inline size_t GetOptCXX::numArgs (                       ) const { if (_data->modified) { scan(); } return _data->arguments.size(); }
-  inline size_t GetOptCXX::numArgs (char        const  sopt) const { return _scan_option(sopt)->args.size(); }
-  inline size_t GetOptCXX::numArgs (std::string const& lopt) const { return _scan_option(lopt)->args.size(); }
+  inline size_t GetOpt::numArgs (                       ) const { if (_data->modified) { scan(); } return _data->arguments.size(); }
+  inline size_t GetOpt::numArgs (char        const  sopt) const { return _scan_option(sopt)->args.size(); }
+  inline size_t GetOpt::numArgs (std::string const& lopt) const { return _scan_option(lopt)->args.size(); }
   
   // Get arguments.
-  inline std::vector<std::string> GetOptCXX::getArgs (                       ) const { if (_data->modified) { scan(); } return _data->arguments; }
-  inline std::vector<std::string> GetOptCXX::getArgs (char        const  sopt) const { return _scan_option(sopt)->args; }
-  inline std::vector<std::string> GetOptCXX::getArgs (std::string const& lopt) const { return _scan_option(lopt)->args; }
+  inline std::vector<std::string> GetOpt::getArgs (                       ) const { if (_data->modified) { scan(); } return _data->arguments; }
+  inline std::vector<std::string> GetOpt::getArgs (char        const  sopt) const { return _scan_option(sopt)->args; }
+  inline std::vector<std::string> GetOpt::getArgs (std::string const& lopt) const { return _scan_option(lopt)->args; }
   
   // Get ordered command-line arguments.
-  inline std::vector<std::string> GetOptCXX::getOrdered () const { if (_data->modified) { scan(); } return _data->ordered; }
+  inline std::vector<std::string> GetOpt::getOrdered () const { if (_data->modified) { scan(); } return _data->ordered; }
   
   // _Data default constructor.
-  inline GetOptCXX::_Data::_Data () { clear(); }
+  inline GetOpt::_Data::_Data () { clear(); }
   
   // _Data copy constructor.
-  inline GetOptCXX::_Data::_Data (_Data const& source) { copy(source); }
+  inline GetOpt::_Data::_Data (_Data const& source) { copy(source); }
   
   // _Data assignment operator.
-  inline GetOptCXX::_Data& GetOptCXX::_Data::operator = (_Data const& source) { return copy(source); }
+  inline GetOpt::_Data& GetOpt::_Data::operator = (_Data const& source) { return copy(source); }
   
   // Option constructor.
-  inline GetOptCXX::Option::Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq) :
+  inline GetOpt::Option::Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq) :
     _sopt(sopt), _lopt(lopt), _argreq(argreq), _optreq(optreq), _isset_sopt(true), _isset_lopt(true)
   {}
-  inline GetOptCXX::Option::Option (char const sopt, ArgReq const argreq, bool const optreq) :
+  inline GetOpt::Option::Option (char const sopt, ArgReq const argreq, bool const optreq) :
     _sopt(sopt), _argreq(argreq), _optreq(optreq), _isset_sopt(true), _isset_lopt(false)
   {}
-  inline GetOptCXX::Option::Option (std::string const& lopt, ArgReq const argreq, bool const optreq) :
+  inline GetOpt::Option::Option (std::string const& lopt, ArgReq const argreq, bool const optreq) :
     _lopt(lopt), _argreq(argreq), _optreq(optreq), _isset_sopt(false), _isset_lopt(true)
   {}
   
   // _Option constructor.
-  inline GetOptCXX::_Option::_Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq) :
+  inline GetOpt::_Option::_Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq) :
     Option(sopt, lopt, argreq, optreq), numset(0)
   {}
-  inline GetOptCXX::_Option::_Option (char const sopt, ArgReq const argreq, bool const optreq) :
+  inline GetOpt::_Option::_Option (char const sopt, ArgReq const argreq, bool const optreq) :
     Option(sopt, argreq, optreq), numset(0)
   {}
-  inline GetOptCXX::_Option::_Option (std::string const& lopt, ArgReq const argreq, bool const optreq) :
+  inline GetOpt::_Option::_Option (std::string const& lopt, ArgReq const argreq, bool const optreq) :
     Option(lopt, argreq, optreq), numset(0)
   {}
-  inline GetOptCXX::_Option::_Option (Option const& option) :
+  inline GetOpt::_Option::_Option (Option const& option) :
     Option(option), numset(0)
   {}
   
   // Option properties.
-  inline GetOptCXX::Option& GetOptCXX::Option::Short          (char        const  sopt  ) { _sopt   = sopt  ; _isset_sopt = sopt != '\0' ; return *this; }
-  inline GetOptCXX::Option& GetOptCXX::Option::Long           (std::string const& lopt  ) { _lopt   = lopt  ; _isset_lopt = !lopt.empty(); return *this; }
-  inline GetOptCXX::Option& GetOptCXX::Option::ArgRequirement (ArgReq      const  argreq) { _argreq = argreq;                              return *this; }
-  inline GetOptCXX::Option& GetOptCXX::Option::Required       (bool        const  optreq) { _optreq = optreq;                              return *this; }
-  inline char              GetOptCXX::Option::Short          () const { return _sopt      ; }
-  inline std::string       GetOptCXX::Option::Long           () const { return _lopt      ; }
-  inline GetOptCXX::ArgReq GetOptCXX::Option::ArgRequirement () const { return _argreq    ; }
-  inline bool              GetOptCXX::Option::Required       () const { return _optreq    ; }
-  inline bool              GetOptCXX::Option::isShort        () const { return _isset_sopt; }
-  inline bool              GetOptCXX::Option::isLong         () const { return _isset_lopt; }
+  inline GetOpt::Option& GetOpt::Option::Short          (char        const  sopt  ) { _sopt   = sopt  ; _isset_sopt = sopt != '\0' ; return *this; }
+  inline GetOpt::Option& GetOpt::Option::Long           (std::string const& lopt  ) { _lopt   = lopt  ; _isset_lopt = !lopt.empty(); return *this; }
+  inline GetOpt::Option& GetOpt::Option::ArgRequirement (ArgReq      const  argreq) { _argreq = argreq;                              return *this; }
+  inline GetOpt::Option& GetOpt::Option::Required       (bool        const  optreq) { _optreq = optreq;                              return *this; }
+  inline char            GetOpt::Option::Short          () const { return _sopt      ; }
+  inline std::string     GetOpt::Option::Long           () const { return _lopt      ; }
+  inline GetOpt::ArgReq  GetOpt::Option::ArgRequirement () const { return _argreq    ; }
+  inline bool            GetOpt::Option::Required       () const { return _optreq    ; }
+  inline bool            GetOpt::Option::isShort        () const { return _isset_sopt; }
+  inline bool            GetOpt::Option::isLong         () const { return _isset_lopt; }
 }
 
 #endif
