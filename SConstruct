@@ -79,14 +79,15 @@ h_toString         = env.File('toString.h++'        ) ; headers += [h_toString  
 
 # Modules.
 modules = []
-cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'        ) ; env = tmpenv.Copy() ; modules.append(cArbInt   )
-cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt') ; env = tmpenv.Copy() ; modules.append(cArb      )
-cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'   ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
-cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'        ) ; env = tmpenv.Copy() ; modules.append(cPOSIXFile)
-cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env'        ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
+cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'           ) ; env = tmpenv.Copy() ; modules.append(cArbInt   )
+cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt'   ) ; env = tmpenv.Copy() ; modules.append(cArb      )
+cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'      ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
+cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'           ) ; env = tmpenv.Copy() ; modules.append(cPOSIXFile)
+cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env'           ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
+cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cPOSIXFile') ; env = tmpenv.Copy() ; modules.append(cINIFile  )
 
 # Tests.
-SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile cGetOpt') ; env = tmpenv.Copy()
+SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile cGetOpt cINIFile') ; env = tmpenv.Copy()
 
 # Shared library filenames.
 cxxgeneral_name   = env['LIBPREFIX'] + project_name + env['SHLIBSUFFIX']
