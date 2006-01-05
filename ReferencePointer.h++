@@ -26,6 +26,7 @@ namespace DAC {
       
       // Typedefs.
       typedef int RefCountT;
+      typedef T   value_type;
       
       // Copy constructor.
       ReferencePointer (ReferencePointer<T> const& p) throw();

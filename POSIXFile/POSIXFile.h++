@@ -265,6 +265,7 @@ namespace DAC {
       // Properties.
       POSIXFile& Filename  (std::string const& filename );
       POSIXFile& RecordSep (std::string const& recordsep);
+      POSIXFile& OpenMode  (enum OpenMode    const  openmode );
       POSIXFile& Append    (bool        const  append   );
       POSIXFile& Create    (bool        const  create   );
       POSIXFile& Exclusive (bool        const  exclusive);
@@ -293,33 +294,34 @@ namespace DAC {
       POSIXFile& GID       (gid_t       const  new_gid  );
       std::string Filename  () const;
       std::string RecordSep () const;
-      bool        Append    () const;
-      bool        Create    () const;
-      bool        Exclusive () const;
-      bool        DoATime   () const;
-      bool        CanCTTY   () const;
-      bool        FollowSym () const;
-      bool        Synch     () const;
-      bool        Truncate  () const;
-      bool        SetUID    () const;
-      bool        SetGID    () const;
-      bool        Sticky    () const;
-      bool        U_Read    () const;
-      bool        U_Write   () const;
-      bool        U_Execute () const;
-      bool        G_Read    () const;
-      bool        G_Write   () const;
-      bool        G_Execute () const;
-      bool        O_Read    () const;
-      bool        O_Write   () const;
-      bool        O_Execute () const;
-      bool        A_Read    () const;
-      bool        A_Write   () const;
-      bool        A_Execute () const;
-      mode_t      Mode      () const;
-      uid_t       UID       () const;
-      gid_t       GID       () const;
-      FileType    Type      () const;
+      enum OpenMode OpenMode  () const;
+      bool          Append    () const;
+      bool          Create    () const;
+      bool          Exclusive () const;
+      bool          DoATime   () const;
+      bool          CanCTTY   () const;
+      bool          FollowSym () const;
+      bool          Synch     () const;
+      bool          Truncate  () const;
+      bool          SetUID    () const;
+      bool          SetGID    () const;
+      bool          Sticky    () const;
+      bool          U_Read    () const;
+      bool          U_Write   () const;
+      bool          U_Execute () const;
+      bool          G_Read    () const;
+      bool          G_Write   () const;
+      bool          G_Execute () const;
+      bool          O_Read    () const;
+      bool          O_Write   () const;
+      bool          O_Execute () const;
+      bool          A_Read    () const;
+      bool          A_Write   () const;
+      bool          A_Execute () const;
+      mode_t        Mode      () const;
+      uid_t         UID       () const;
+      gid_t         GID       () const;
+      FileType      Type      () const;
       
       // Reset to just-constructed defaults.
       void clear ();
@@ -380,7 +382,7 @@ namespace DAC {
       std::string read (size_t const bytes);
       
       // Read a line.
-      std::string read_line ();
+      std::string read_line (bool const trim = false);
       
       // Read the entire file as a vector of lines. Call like so to avoid a
       // very expensive copy of the entire vector:
@@ -548,7 +550,8 @@ namespace DAC {
       mutable bool _cache_valid;
       
       // Open flags.
-      _OMFlagType _flags;
+      _OMFlagType   _flags   ;
+      enum OpenMode _openmode;
       
       // End of file.
       bool _eof     ;
@@ -618,6 +621,7 @@ namespace DAC {
   inline std::string POSIXFile::RecordSep () const { return _recordsep; }
   
   // Set / get the open flags.
+  inline POSIXFile& POSIXFile::OpenMode (enum OpenMode const openmode) { _openmode = openmode; return *this; }
   inline POSIXFile& POSIXFile::Append    (bool const append   ) { if (append   ) { _flags |=  O_APPEND  ; } else { _flags &= ~O_APPEND  ; } return *this; }
   inline POSIXFile& POSIXFile::Create    (bool const create   ) { if (create   ) { _flags |=  O_CREAT   ; } else { _flags &= ~O_CREAT   ; } return *this; }
   inline POSIXFile& POSIXFile::Exclusive (bool const exclusive) { if (exclusive) { _flags |=  O_EXCL    ; } else { _flags &= ~O_EXCL    ; } return *this; }
@@ -636,6 +640,7 @@ namespace DAC {
   }
   inline POSIXFile& POSIXFile::Synch     (bool const synch    ) { if (synch    ) { _flags |=  O_SYNC    ; } else { _flags &= ~O_SYNC    ; } return *this; }
   inline POSIXFile& POSIXFile::Truncate  (bool const trunc    ) { if (trunc    ) { _flags |=  O_TRUNC   ; } else { _flags &= ~O_TRUNC   ; } return *this; }
+  inline enum POSIXFile::OpenMode POSIXFile::OpenMode () const { return _openmode; }
   inline bool POSIXFile::Append    () const { return   _flags & O_APPEND   ; }
   inline bool POSIXFile::Create    () const { return   _flags & O_CREAT    ; }
   inline bool POSIXFile::Exclusive () const { return   _flags & O_EXCL     ; }

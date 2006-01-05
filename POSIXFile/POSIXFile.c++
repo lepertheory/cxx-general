@@ -85,7 +85,8 @@ namespace DAC {
     _stat.st_mtime   = 0;
     _stat.st_ctime   = 0;
     
-    _flags = O_APPEND | O_CREAT;
+    _flags    = O_APPEND | O_CREAT;
+    _openmode = OM_READ           ;
     
     _eof      = true;
     _eof_line = true;
@@ -108,7 +109,8 @@ namespace DAC {
     _recordnum = source._recordnum;
     
     // Open flags.
-    _flags = source._flags;
+    _flags    = source._flags;
+    _openmode = source._openmode;
     
     // Transfer the current position. Will be overwritten unless saved before
     // open and restored after.
@@ -129,7 +131,7 @@ namespace DAC {
     }
     
     // Open the file.
-    if ((_fd = ::open(_filename.c_str(), _flags)) == -1) {
+    if ((_fd = ::open(_filename.c_str(), _openmode | _flags)) == -1) {
       s_throwSysCallError(errno, "open", _filename);
     }
     
@@ -562,7 +564,7 @@ namespace DAC {
   }
   
   // Read a single line.
-  string POSIXFile::read_line () {
+  string POSIXFile::read_line (bool const trim) {
     
     // Work area.
     static string            buf                   ;
@@ -589,6 +591,26 @@ namespace DAC {
       buf.erase(0, next_sep + 1);
     }
     
+    // Trim whitespace if requested. Ugly as hell, but whatever, it works and
+    // it's contained.
+    if (trim) {
+      string::size_type nowsbegin = 0;
+      string::size_type nowsend   = 0;
+      nowsbegin = retval.find_first_not_of(" \t");
+      if (nowsbegin == string::npos) {
+        retval.clear();
+      } else {
+        if (nowsbegin != 0) {
+          retval.erase(0, nowsbegin);
+        }
+        nowsend = retval.find_last_not_of(" \t");
+        if (nowsend != retval.size() - 1) {
+          retval.erase(nowsend + 1);
+        }
+      }
+    }
+    
+    // Done.
     return retval;
     
   }
