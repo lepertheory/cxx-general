@@ -451,6 +451,10 @@ namespace DAC {
     checklong  = true;
     checkshort = true;
     posixcheck = false;
+    programname.clear();
+    description.clear();
+    postinfo   .clear();
+    bugaddress .clear();
     
     // We done.
     return *this;
@@ -473,12 +477,16 @@ namespace DAC {
     options  .swap(tmp_options  );
     arguments.swap(tmp_arguments);
     ordered  .swap(tmp_ordered  );
-    numlong    = source.numlong;
-    numshort   = source.numshort;
-    checklong  = source.checklong;
-    checkshort = source.checkshort;
-    posixcheck = source.posixcheck;
-    modified   = source.modified;
+    numlong     = source.numlong    ;
+    numshort    = source.numshort   ;
+    checklong   = source.checklong  ;
+    checkshort  = source.checkshort ;
+    posixcheck  = source.posixcheck ;
+    modified    = source.modified   ;
+    programname = source.programname;
+    description = source.description;
+    postinfo    = source.postinfo   ;
+    bugaddress  = source.bugaddress ;
     
     // We done.
     return *this;

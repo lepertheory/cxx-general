@@ -66,8 +66,8 @@ namespace DAC {
                   return "Undefined short option was referenced. Error creating message string.";
                 }
               };
-              UndefinedShort& Option (char const option) throw() { _option = option; return *this; }
-              char const Option () const throw() { return _option; }
+              UndefinedShort& Option (char const option) throw() { _option = option; return *this; };
+              char const Option () const throw() { return _option; };
             private:
               char _option;
           };
@@ -81,8 +81,8 @@ namespace DAC {
                   return "Undefined long option was referenced. Error creating message string.";
                 }
               };
-              UndefinedLong& Option (std::string const& option) throw() { _option = option; return *this; }
-              std::string Option () const throw() { return _option; }
+              UndefinedLong& Option (std::string const& option) throw() { _option = option; return *this; };
+              std::string Option () const throw() { return _option; };
             private:
               std::string _option;
           };
@@ -103,7 +103,7 @@ namespace DAC {
                   return "Attempted to add a duplicate short option. Error creating message string.";
                 }
               };
-              DuplicateShortOption& Option (char const option) throw() { _option = option; return *this; }
+              DuplicateShortOption& Option (char const option) throw() { _option = option; return *this; };
               char const Option () const throw() { return _option; };
             private:
               char _option;
@@ -118,8 +118,8 @@ namespace DAC {
                   return "Attempted to add a duplicate long option. Error creating message string.";
                 }
               };
-              DuplicateLongOption& Option (std::string const& option) throw() { _option = option; return *this; }
-              std::string Option () const throw() { return _option; }
+              DuplicateLongOption& Option (std::string const& option) throw() { _option = option; return *this; };
+              std::string Option () const throw() { return _option; };
             private:
               std::string _option;
           };
@@ -142,7 +142,7 @@ namespace DAC {
                   return "Invalid option passed. Error creating message string.";
                 }
               };
-              InvalidOption& Option (std::string const& option) throw () { _option = option; return *this; }
+              InvalidOption& Option (std::string const& option) throw () { _option = option; return *this; };
               std::string Option () const throw() { return _option; };
             private:
               std::string _option;
@@ -179,29 +179,67 @@ namespace DAC {
       // Whether an option argument is required.
       enum ArgReq { ARG_NONE, ARG_OPTIONAL, ARG_REQUIRED };
       
-      // Describes an option.
+      // Argument list.
+      typedef std::vector<std::string> ArgListT;
+      
+      // Pointer to argument list.
+      typedef ReferencePointer<ArgList> ArgListPT;
+      
+      /***********************************************************************
+       * Option
+       ***********************************************************************
+       * Describes an option.
+       ***********************************************************************/
       class Option {
+        
+        /*
+         * Public members.
+         */
         public:
-          Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq);
-          Option (char const sopt,                          ArgReq const argreq, bool const optreq);
-          Option (                 std::string const& lopt, ArgReq const argreq, bool const optreq);
-          Option& Short          (char        const  sopt  );
-          Option& Long           (std::string const& lopt  );
-          Option& ArgRequirement (ArgReq      const  argreq);
-          Option& Required       (bool        const  optreq);
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Constructor.
+          Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname);
+          Option (char const sopt,                          ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname);
+          Option (                 std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname);
+          
+          // Properties.
+          Option& Short          (char        const  sopt   );
+          Option& Long           (std::string const& lopt   );
+          Option& ArgRequirement (ArgReq      const  argreq );
+          Option& Required       (bool        const  optreq );
+          Option& Help           (std::string const& help   );
+          Option& ArgName        (std::string const& argname);
           char        Short          () const;
           std::string Long           () const;
           ArgReq      ArgRequirement () const;
           bool        Required       () const;
-          bool        isShort        () const;
-          bool        isLong         () const;
+          std::string Help           () const;
+          std::string ArgName        () const;
+          
+          // Info.
+          bool isShort () const;
+          bool isLong  () const;
+          
+        /*
+         * Private members.
+         */
         private:
-          char        _sopt;
-          std::string _lopt;
-          ArgReq      _argreq;
-          bool        _optreq;
+          
+          /*******************************************************************/
+          // Data members.
+          
+          char        _sopt      ;
+          std::string _lopt      ;
+          ArgReq      _argreq    ;
+          bool        _optreq    ;
+          std::string _help      ;
+          std::string _argname   ;
           bool        _isset_sopt;
           bool        _isset_lopt;
+          
       };
       
       // List of options.
@@ -226,12 +264,20 @@ namespace DAC {
       GetOpt& operator = (GetOpt const& right) throw();
       
       // Properties.
-      GetOpt& CheckLong  (bool checklong );
-      GetOpt& CheckShort (bool checkshort);
-      GetOpt& POSIXCheck (bool posixcheck);
-      bool CheckLong  () const;
-      bool CheckShort () const;
-      bool POSIXCheck () const;
+      GetOpt& CheckLong   (bool        const  checklong  );
+      GetOpt& CheckShort  (bool        const  checkshort );
+      GetOpt& POSIXCheck  (bool        const  posixcheck );
+      GetOpt& ProgramName (std::string const& programname);
+      GetOpt& Description (std::string const& description);
+      GetOpt& PostInfo    (std::string const& postinfo   );
+      GetOpt& BugAddress  (std::string const& bugaddress );
+      bool        CheckLong   () const;
+      bool        CheckShort  () const;
+      bool        POSIXCheck  () const;
+      std::string ProgramName () const;
+      std::string Description () const;
+      std::string PostInfo    () const;
+      std::string BugAddress  () const;
       
       // Reset to just-constructed state.
       void clear ();
@@ -257,12 +303,12 @@ namespace DAC {
       size_t numArgs (std::string const& lopt) const;
       
       // Get the arguments. First form is for non-option args.
-      std::vector<std::string> getArgs (                       ) const;
-      std::vector<std::string> getArgs (char        const  sopt) const;
-      std::vector<std::string> getArgs (std::string const& lopt) const;
+      ArgListPT getArgs (                       ) const;
+      ArgListPT getArgs (char        const  sopt) const;
+      ArgListPT getArgs (std::string const& lopt) const;
       
       // Get command-line arguments in order.
-      std::vector<std::string> getOrdered () const;
+      ArgListPT getOrdered () const;
       
       // Set the command-line arguments.
       GetOpt& set_cmdArgs (int const argc, char const* const* const argv);
@@ -287,39 +333,110 @@ namespace DAC {
       // List of arguments.
       typedef std::vector<std::string> _ArgList;
       
-      // Internal options structure, with status.
+      /***********************************************************************
+       * _Option
+       ***********************************************************************
+       * Internal options structure, with status.
+       ***********************************************************************/
       class _Option : public Option {
+        
+        /*
+         * Public members.
+         */
         public:
-          _Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq);
-          _Option (char const sopt,                          ArgReq const argreq, bool const optreq);
-          _Option (                 std::string const& lopt, ArgReq const argreq, bool const optreq);
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Constructors.
+          _Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname);
+          _Option (char const sopt,                          ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname);
+          _Option (                 std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname);
           _Option (Option const& option);
+          
+          // Convert argument requirement to glibc's getopt arg requirement.
           int to_getoptArgReq () const;
-          size_t   numset;
+          
+          /*******************************************************************/
+          // Data members.
+          
+          // Number of times this option has been set.
+          size_t numset;
+          
+          // Arguments to this option.
           _ArgList args;
+          
       };
       
       // List of internal options.
       typedef std::vector<_Option> _Options;
       
-      // This is the data store type, wrapped in one class for easy COW.
+      /***********************************************************************
+       * _Data
+       ***********************************************************************
+       * This is the data store type, wrapped in one class for easy COW.
+       ***********************************************************************/
       class _Data {
+        
+        /*
+         * Public members.
+         */
         public:
+          
+          /*******************************************************************/
+          // Data members.
+          
+          // Command-line arguments.
           _ArgList argv;
+          
+          // Option info.
           _Options options;
+          
+          // Non-option command-line arguments.
           _ArgList arguments;
+          
+          // Command-line arguments in order.
           _ArgList ordered;
-          bool     modified;
-          size_t   numlong;
-          size_t   numshort;
-          bool     checklong;
-          bool     checkshort;
-          bool     posixcheck;
+          
+          // True if data has been modified in a way that requires re-process
+          // of arguments.
+          bool modified;
+          
+          // Number of long and short arguments.
+          size_t numlong ;
+          size_t numshort;
+          
+          // Check long and short options.
+          bool checklong ;
+          bool checkshort;
+          
+          // Strict POSIX checking.
+          bool posixcheck;
+          
+          // Help info.
+          std::string programname;
+          std::string description;
+          std::string postinfo   ;
+          std::string bugaddress ;
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Default constructor.
           _Data ();
+          
+          // Copy constructor.
           _Data (_Data const& source);
+          
+          // Assignment operator.
           _Data& operator = (_Data const& right);
+          
+          // Reset to just-constructed defaults.
           _Data& clear ();
+          
+          // Copy another _Data object.
           _Data& copy (_Data const& source);
+          
       };
       
       // Reference pointer to class data.
@@ -403,9 +520,45 @@ namespace DAC {
     }
     return *this;
   }
-  inline bool GetOpt::CheckLong  () const { return _data->checklong ; }
-  inline bool GetOpt::CheckShort () const { return _data->checkshort; }
-  inline bool GetOpt::POSIXCheck () const { return _data->posixcheck; }
+  inline GetOpt& GetOpt::ProgramName (std::string const& programname) {
+    if (programname != _data->programname) {
+      GetOpt tmp(*this, true);
+      tmp._data->programname = programname;
+      _data = tmp._data;
+    }
+    return *this;
+  }
+  inline GetOpt& GetOpt::Description (std::string const& description) {
+    if (description != _data->description) {
+      GetOpt tmp(*this, true);
+      tmp._data->description = description;
+      _data = tmp._data;
+    }
+    return *this;
+  }
+  inline GetOpt& GetOpt::PostInfo (std::string const& postinfo) {
+    if (postinfo != _data->postinfo) {
+      GetOpt tmp(*this, true);
+      tmp._data->postinfo = postinfo;
+      _data = tmp._data;
+    }
+    return *this;
+  }
+  inline GetOpt& GetOpt::BugAddress (std::string const& bugaddress ) {
+    if (bugaddress != _data->bugaddress) {
+      GetOpt tmp(*this, true);
+      tmp._data->bugaddress = bugaddress;
+      _data = tmp._data;
+    }
+    return *this;
+  }
+  inline bool        GetOpt::CheckLong   () const { return _data->checklong  ; }
+  inline bool        GetOpt::CheckShort  () const { return _data->checkshort ; }
+  inline bool        GetOpt::POSIXCheck  () const { return _data->posixcheck ; }
+  inline std::string GetOpt::ProgramName () const { return _data->programname; }
+  inline std::string GetOpt::Description () const { return _data->description; }
+  inline std::string GetOpt::PostInfo    () const { return _data->postinfo   ; }
+  inline std::string GetOpt::BugAddress  () const { return _data->bugaddress ; }
   
   /*
    * See if an option has been defined.
@@ -462,27 +615,27 @@ namespace DAC {
   /*
    * Option constructor.
    */
-  inline GetOpt::Option::Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq) :
-    _sopt(sopt), _lopt(lopt), _argreq(argreq), _optreq(optreq), _isset_sopt(true), _isset_lopt(true)
+  inline GetOpt::Option::Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname) :
+    _sopt(sopt), _lopt(lopt), _argreq(argreq), _optreq(optreq), _help(help), _argname(argname), _isset_sopt(true), _isset_lopt(true)
   {}
   inline GetOpt::Option::Option (char const sopt, ArgReq const argreq, bool const optreq) :
-    _sopt(sopt), _argreq(argreq), _optreq(optreq), _isset_sopt(true), _isset_lopt(false)
+    _sopt(sopt), _argreq(argreq), _optreq(optreq), _help(help), _argname(argname), _isset_sopt(true), _isset_lopt(false)
   {}
   inline GetOpt::Option::Option (std::string const& lopt, ArgReq const argreq, bool const optreq) :
-    _lopt(lopt), _argreq(argreq), _optreq(optreq), _isset_sopt(false), _isset_lopt(true)
+    _lopt(lopt), _argreq(argreq), _optreq(optreq), _help(help), _argname(argname), _isset_sopt(false), _isset_lopt(true)
   {}
   
   /*
    * _Option constructor.
    */
-  inline GetOpt::_Option::_Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq) :
-    Option(sopt, lopt, argreq, optreq), numset(0)
+  inline GetOpt::_Option::_Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname) :
+    Option(sopt, lopt, argreq, optreq, help, argname), numset(0)
   {}
-  inline GetOpt::_Option::_Option (char const sopt, ArgReq const argreq, bool const optreq) :
-    Option(sopt, argreq, optreq), numset(0)
+  inline GetOpt::_Option::_Option (char const sopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname) :
+    Option(sopt, argreq, optreq, help, argname), numset(0)
   {}
-  inline GetOpt::_Option::_Option (std::string const& lopt, ArgReq const argreq, bool const optreq) :
-    Option(lopt, argreq, optreq), numset(0)
+  inline GetOpt::_Option::_Option (std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname) :
+    Option(lopt, argreq, optreq, help, argname), numset(0)
   {}
   inline GetOpt::_Option::_Option (Option const& option) :
     Option(option), numset(0)
@@ -491,16 +644,20 @@ namespace DAC {
   /*
    * Option properties.
    */
-  inline GetOpt::Option& GetOpt::Option::Short          (char        const  sopt  ) { _sopt   = sopt  ; _isset_sopt = sopt != '\0' ; return *this; }
-  inline GetOpt::Option& GetOpt::Option::Long           (std::string const& lopt  ) { _lopt   = lopt  ; _isset_lopt = !lopt.empty(); return *this; }
-  inline GetOpt::Option& GetOpt::Option::ArgRequirement (ArgReq      const  argreq) { _argreq = argreq;                              return *this; }
-  inline GetOpt::Option& GetOpt::Option::Required       (bool        const  optreq) { _optreq = optreq;                              return *this; }
-  inline char            GetOpt::Option::Short          () const { return _sopt      ; }
-  inline std::string     GetOpt::Option::Long           () const { return _lopt      ; }
-  inline GetOpt::ArgReq  GetOpt::Option::ArgRequirement () const { return _argreq    ; }
-  inline bool            GetOpt::Option::Required       () const { return _optreq    ; }
-  inline bool            GetOpt::Option::isShort        () const { return _isset_sopt; }
-  inline bool            GetOpt::Option::isLong         () const { return _isset_lopt; }
+  inline GetOpt::Option& GetOpt::Option::Short          (char        const  sopt   ) { _sopt    = sopt   ; _isset_sopt = sopt != '\0' ; return *this; }
+  inline GetOpt::Option& GetOpt::Option::Long           (std::string const& lopt   ) { _lopt    = lopt   ; _isset_lopt = !lopt.empty(); return *this; }
+  inline GetOpt::Option& GetOpt::Option::ArgRequirement (ArgReq      const  argreq ) { _argreq  = argreq ;                              return *this; }
+  inline GetOpt::Option& GetOpt::Option::Required       (bool        const  optreq ) { _optreq  = optreq ;                              return *this; }
+  inline GetOpt::Option& GetOpt::Option::Help           (std::string const& help   ) { _help    = help   ;                              return *this; }
+  inline GetOpt::Option& GetOpt::Option::ArgName        (std::string const& argname) { _argname = argname;                              return *this; }
+  inline char           GetOpt::Option::Short          () const { return _sopt      ; }
+  inline std::string    GetOpt::Option::Long           () const { return _lopt      ; }
+  inline GetOpt::ArgReq GetOpt::Option::ArgRequirement () const { return _argreq    ; }
+  inline bool           GetOpt::Option::Required       () const { return _optreq    ; }
+  inline std::string    GetOpt::Option::Help           () const { return _help      ; }
+  inline std::string    GetOpt::Option::ArgName        () const { return _argname   ; }
+  inline bool           GetOpt::Option::isShort        () const { return _isset_sopt; }
+  inline bool           GetOpt::Option::isLong         () const { return _isset_lopt; }
 }
 
 #endif
