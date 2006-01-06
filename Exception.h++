@@ -51,20 +51,22 @@ namespace DAC {
     
   };
   
-}
-
 /*****************************************************************************
- * Global operators.
+ * Operators.
  *****************************************************************************/
+}
 
 // Stream output operator.
 std::ostream& operator << (std::ostream& left, DAC::Exception const& right);
-  
-/*****************************************************************************
- * Inline and template definitions.
- *****************************************************************************/
 
 namespace DAC {
+  
+  /***************************************************************************
+  * Inline and template definitions.
+  ****************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
   
   inline Exception::Exception () throw() { clear(); }
   
@@ -77,10 +79,6 @@ namespace DAC {
   inline Exception& Exception::clear() throw() { return *this; }
   
 }
-
-/***************************************************************************
- * Inline and template definitions.
- ***************************************************************************/
 
 // Stream output operator.
 inline std::ostream& operator << (std::ostream& left, DAC::Exception const& right) { left << right.what(); return left; }

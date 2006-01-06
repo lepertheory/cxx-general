@@ -358,16 +358,24 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  // Default constructor.
+  /*
+   * Default constructor.
+   */
   inline GetOpt::GetOpt () { clear(); }
   
-  // Copy constructor.
+  /*
+   * Copy constructor.
+   */
   inline GetOpt::GetOpt (GetOpt const& source, bool const deep) { copy(source, deep); }
   
-  // Assignment operator.
+  /*
+   * Assignment operator.
+   */
   inline GetOpt& GetOpt::operator = (GetOpt const& source) throw () { copy(source); return *this; }
   
-  // Properties.
+  /*
+   * Properties.
+   */
   inline GetOpt& GetOpt::CheckLong (bool checklong ) {
     if (checklong != _data->checklong ) {
       GetOpt tmp(*this, true);
@@ -399,41 +407,61 @@ namespace DAC {
   inline bool GetOpt::CheckShort () const { return _data->checkshort; }
   inline bool GetOpt::POSIXCheck () const { return _data->posixcheck; }
   
-  // See if an option has been defined.
+  /*
+   * See if an option has been defined.
+   */
   inline bool GetOpt::isDefined (char        const  sopt) const { return _find_option(sopt); }
   inline bool GetOpt::isDefined (std::string const& lopt) const { return _find_option(lopt); }
   
-  // See if an option has been set.
+  /*
+   * See if an option has been set.
+   */
   inline bool GetOpt::isSet (char        const  sopt) const { return numSet(sopt); }
   inline bool GetOpt::isSet (std::string const& lopt) const { return numSet(lopt); }
   
-  // See how many times an option has been set.
+  /*
+   * See how many times an option has been set.
+   */
   inline size_t GetOpt::numSet (char        const  sopt) const { return _scan_option(sopt)->numset; }
   inline size_t GetOpt::numSet (std::string const& lopt) const { return _scan_option(lopt)->numset; }
   
-  // See how many arguments an option or the command-line has.
+  /*
+   * See how many arguments an option or the command-line has.
+   */
   inline size_t GetOpt::numArgs (                       ) const { if (_data->modified) { scan(); } return _data->arguments.size(); }
   inline size_t GetOpt::numArgs (char        const  sopt) const { return _scan_option(sopt)->args.size(); }
   inline size_t GetOpt::numArgs (std::string const& lopt) const { return _scan_option(lopt)->args.size(); }
   
-  // Get arguments.
+  /*
+   * Get arguments.
+   */
   inline std::vector<std::string> GetOpt::getArgs (                       ) const { if (_data->modified) { scan(); } return _data->arguments; }
   inline std::vector<std::string> GetOpt::getArgs (char        const  sopt) const { return _scan_option(sopt)->args; }
   inline std::vector<std::string> GetOpt::getArgs (std::string const& lopt) const { return _scan_option(lopt)->args; }
   
-  // Get ordered command-line arguments.
+  /*
+   * Get ordered command-line arguments.
+   */
   inline std::vector<std::string> GetOpt::getOrdered () const { if (_data->modified) { scan(); } return _data->ordered; }
   
-  // _Data default constructor.
+  /*
+   * _Data default constructor.
+   */
   inline GetOpt::_Data::_Data () { clear(); }
   
-  // _Data copy constructor.
+  /*
+   * _Data copy constructor.
+   */
   inline GetOpt::_Data::_Data (_Data const& source) { copy(source); }
   
-  // _Data assignment operator.
+  /*
+   * _Data assignment operator.
+   */
   inline GetOpt::_Data& GetOpt::_Data::operator = (_Data const& source) { return copy(source); }
   
-  // Option constructor.
+  /*
+   * Option constructor.
+   */
   inline GetOpt::Option::Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq) :
     _sopt(sopt), _lopt(lopt), _argreq(argreq), _optreq(optreq), _isset_sopt(true), _isset_lopt(true)
   {}
@@ -444,7 +472,9 @@ namespace DAC {
     _lopt(lopt), _argreq(argreq), _optreq(optreq), _isset_sopt(false), _isset_lopt(true)
   {}
   
-  // _Option constructor.
+  /*
+   * _Option constructor.
+   */
   inline GetOpt::_Option::_Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq) :
     Option(sopt, lopt, argreq, optreq), numset(0)
   {}
@@ -458,7 +488,9 @@ namespace DAC {
     Option(option), numset(0)
   {}
   
-  // Option properties.
+  /*
+   * Option properties.
+   */
   inline GetOpt::Option& GetOpt::Option::Short          (char        const  sopt  ) { _sopt   = sopt  ; _isset_sopt = sopt != '\0' ; return *this; }
   inline GetOpt::Option& GetOpt::Option::Long           (std::string const& lopt  ) { _lopt   = lopt  ; _isset_lopt = !lopt.empty(); return *this; }
   inline GetOpt::Option& GetOpt::Option::ArgRequirement (ArgReq      const  argreq) { _argreq = argreq;                              return *this; }

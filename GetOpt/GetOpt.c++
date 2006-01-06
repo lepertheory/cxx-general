@@ -24,7 +24,9 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  // argc & argv constructor.
+  /*
+   * argc & argv constructor.
+   */
   GetOpt::GetOpt (int const argc, char const* const* const argv) {
     
     // Normal initialization.
@@ -35,7 +37,9 @@ namespace DAC {
     
   }
   
-  // Valid options constructor.
+  /*
+   * Valid options constructor.
+   */
   GetOpt::GetOpt (Options const& options) {
     
     // Normal initialization.
@@ -46,7 +50,9 @@ namespace DAC {
     
   }
   
-  // Reset to just-constructed state.
+  /*
+   * Reset to just-constructed state.
+   */
   void GetOpt::clear () {
     
     // Just create a new _data and let the old one drop away. ReferencePointer
@@ -55,7 +61,9 @@ namespace DAC {
     
   }
   
-  // Copy a given GetOpt. Can be called in place of clear().
+  /*
+   * Copy a given GetOpt. Can be called in place of clear().
+   */
   void GetOpt::copy (GetOpt const& source, bool const deep) throw() {
     
     // If deep copy, then copy the structure, otherwise just make another
@@ -68,7 +76,9 @@ namespace DAC {
     
   }
   
-  // Set the command-line arguments.
+  /*
+   * Set the command-line arguments.
+   */
   GetOpt& GetOpt::set_cmdArgs (int const argc, char const* const* const argv) {
     
     // Work area.
@@ -90,7 +100,9 @@ namespace DAC {
     
   }
   
-  // Set the valid options.
+  /*
+   * Set the valid options.
+   */
   GetOpt& GetOpt::set_options (Options const& options) {
     
     // Work area.
@@ -112,7 +124,9 @@ namespace DAC {
     
   }
   
-  // Add an option.
+  /*
+   * Add an option.
+   */
   GetOpt& GetOpt::add_option (Option const& option) {
     
     // Work area.
@@ -127,7 +141,9 @@ namespace DAC {
     
   }
   
-  // Scan the options.
+  /*
+   * Scan the options.
+   */
   void GetOpt::scan () const {
     
     // Work area.
@@ -287,7 +303,9 @@ namespace DAC {
     
   }
   
-  // Add a valid option.
+  /*
+   * Add a valid option.
+   */
   void GetOpt::_add_option (Option const& option) {
     
     // Verify that the given option does not exist.
@@ -306,7 +324,9 @@ namespace DAC {
     
   }
   
-  // Find the requested option.
+  /*
+   * Find the requested option.
+   */
   GetOpt::_Option* GetOpt::_find_option (char const sopt) const {
     
     // Just iterate through the options and return.
@@ -334,7 +354,9 @@ namespace DAC {
     
   }
   
-  // Find a partial option.
+  /*
+   * Find a partial option.
+   */
   GetOpt::_Option* GetOpt::_find_part_option (string const& lopt) const {
     
     // Work area.
@@ -368,7 +390,9 @@ namespace DAC {
     
   }
   
-  // Find an option, scan if needed.
+  /*
+   * Find an option, scan if needed.
+   */
   GetOpt::_Option* GetOpt::_scan_option (char const sopt) const {
     
     // If the data structure was modified, we need to re-scan. Would probably
@@ -411,7 +435,9 @@ namespace DAC {
     
   }
   
-  // Reset to just-constructed state.
+  /*
+   * Reset to just-constructed state.
+   */
   GetOpt::_Data& GetOpt::_Data::clear () {
     
     // Non-throwing ops.
@@ -431,7 +457,9 @@ namespace DAC {
     
   }
   
-  // Copy a given _Data.
+  /*
+   * Copy a given _Data.
+   */
   GetOpt::_Data& GetOpt::_Data::copy (_Data const& source) {
     
     // Create deep copies of vectors. Do this in temp in case of any errors.
@@ -457,7 +485,9 @@ namespace DAC {
     
   }
   
-  // Translate to getopt's argument requirement.
+  /*
+   * Translate to getopt's argument requirement.
+   */
   int GetOpt::_Option::to_getoptArgReq () const {
     switch (ArgRequirement()) {
       case ARG_NONE    : return no_argument      ;

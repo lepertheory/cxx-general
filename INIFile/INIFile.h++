@@ -49,12 +49,53 @@ namespace DAC {
       typedef std::vector<std::string> SectionListT;
       typedef std::vector<std::string> KeyListT    ;
       
-      // Pointers to 
+      // Pointers to lists of sections and keys.
       typedef ReferencePointer<SectionListT> SectionListPT;
       typedef ReferencePointer<KeyListT    > KeyListPT;
       
+      /***********************************************************************
+       * Section
+       ***********************************************************************
+       * Provides access to INI file sections.
+       ***********************************************************************/
       class Section {
+        
+        /*
+         * Public members.
+         */
         public:
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Constructs with a reference to a section.
+          Section (std::string const& section, _KeyT& keylist) :
+            _section(section),
+            _keys   (keylist)
+          {};
+          
+          // Provides access to key values.
+          std::string operator [] (std::string const& key) const;
+          
+          // Determine if a particular key is defined.
+          bool key_defined (std::string const& key) const;
+          
+          // Get a list of keys defined in this section.
+          KeyListPT get_keys () const;
+          
+        /*
+         * Private members.
+         */
+        private:
+          
+          /*******************************************************************/
+          // Data members.
+          
+          // The name of the section we are representing.
+          std::string _section;
+          
+          // Reference to the keys in this section.
+          _KeyT& _keys;
           
       };
       
@@ -68,6 +109,13 @@ namespace DAC {
             public:
               virtual ~Base () throw() {};
               virtual char const* what () const throw() { return "Undefined error in INIFile."; };
+          };
+          
+          // INI file has not been read.
+          class NotRead : public Base {
+            public:
+              virtual ~NotRead () throw() {};
+              virtual char const* what () const throw() { return "INI file has not yet been read."; };
           };
           
           // Filename was not specified.
@@ -231,6 +279,26 @@ namespace DAC {
               std::string _key    ;
           };
           
+          // Key is undefined.
+          class KeyUndefined : public Base {
+            public:
+              virtual ~KeyUndefined () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Key \"" + _key + "\" is undefined within section \"" + _section + "\".").c_str();
+                } catch (...) {
+                  return "Key is undefined within section. Error creating message string.";
+                }
+              };
+              KeyUndefined& Section (std::string const& section) { _section = section; return *this; };
+              KeyUndefined& Key     (std::string const& key    ) { _key     = key    ; return *this; };
+              std::string Section () const { return _section; };
+              std::string Key     () const { return _key    ; };
+            private:
+              std::string _section;
+              std::string _key    ;
+          };
+          
           // Unable to parse line.
           class ParseError : public Base {
             public:
@@ -263,7 +331,7 @@ namespace DAC {
       INIFile ();
       
       // Copy constructor.
-      INIFile (INIFile const& inifile);
+      INIFile (INIFile const& inifile, bool const copynow = false);
       
       // Filename constructor.
       INIFile (std::string const& filename);
@@ -271,7 +339,8 @@ namespace DAC {
       // Assignment operator.
       INIFile& operator = (INIFile const& inifile);
       
-      // Provide access to sections.
+      // Provide access to section keys.
+      Section operator [] (std::string const& section)     ;
       Section operator [] (std::string const& section) const;
       
       // Properties.
@@ -288,18 +357,28 @@ namespace DAC {
       void deepcopy (INIFile const& inifile);
       
       // Determine if a section is defined in this INI file.
+      bool section_defined (std::string const& section)      ;
       bool section_defined (std::string const& section) const;
       
+      // Determine if a key is defined in a given section.
+      bool key_defined (std::string const& section, std::string const& key)      ;
+      bool key_defined (std::string const& section, std::string const& key) const;
+      
       // Get a list of sections in this INI file.
+      SectionListPT get_sections ()      ;
       SectionListPT get_sections () const;
       
       // Get a list of keys in a given section.
+      KeyListPT get_keys (std::string const& section)      ;
       KeyListPT get_keys (std::string const& section) const;
       
       // Read the INI file. Not necessary to call this manually unless you
       // want the file read immedately. A good reason would be to catch any
       // errors that are thrown at a predictable time.
       void read ();
+      
+      // Reset file read status. Will make new calls re-read the file.
+      void reset ();
       
     /*
      * Private members.
@@ -333,6 +412,9 @@ namespace DAC {
           // Sections.
           _SectionT sections;
           
+          // Track whether INI file was read.
+          bool wasread;
+          
           /*******************************************************************/
           // Function members.
           
@@ -359,7 +441,14 @@ namespace DAC {
       /***********************************************************************/
       // Data members.
       
+      // All data for this object, to support copy-on-write.
       _DataPT _data;
+      
+      /***********************************************************************/
+      // Function members.
+      
+      // Reset file read status. No COW.
+      void _reset ();
     
   };
   
@@ -367,38 +456,76 @@ namespace DAC {
    * Inline and template definitions.
    ***************************************************************************/
   
+  /***************************************************************************
+   * Class INIFile.
+   ***************************************************************************/
+  
   /***************************************************************************/
   // Function members.
   
-  // Assignment operator.
+  /*
+   * Assignment operator.
+   */
   inline INIFile& INIFile::operator = (INIFile const& inifile) { copy(inifile); return *this; }
   
-  // Determine if a section is defined in this INI file.
-  inline bool INIFile::section_defined (std::string const& section) const { return _data->sections.count(section); }
-  
-  // Get a list of sections in this INI file.
-  inline INIFile::SectionListPT INIFile::get_sections () const {
-    SectionListPT retval(new SectionListT);
-    for (_SectionT::const_iterator i = _data->sections.begin(); i != _data->sections.end(); ++i) {
-      retval->push_back(i->first);
+  /*
+   * Determine if a section is defined in this INI file.
+   */
+  inline bool INIFile::section_defined (std::string const& section) {
+    if (!_data->wasread) {
+      read();
     }
-    return retval;
+    return const_cast<INIFile const*>(this)->section_defined(section);
+  }
+  inline bool INIFile::section_defined (std::string const& section) const {
+    if (!_data->wasread) {
+      throw Errors::NotRead();
+    }
+    return _data->sections.count(section);
   }
   
-  // Get a list of keys in a given section.
+  /*
+   * Determine if a key is defined in a given section.
+   */
+  inline bool INIFile::key_defined (std::string const& section, std::string const& key) {
+    if (!_data->wasread) {
+      read();
+    }
+    return const_cast<INIFile const*>(this)->key_defined(section, key);
+  }
+  inline bool INIFile::key_defined (std::string const& section, std::string const& key) const {
+    if (!_data->wasread) {
+      throw Errors::NotRead();
+    }
+    return (*this)[section].key_defined(key);
+  }
+  
+  /*
+   * Get a list of keys in a given section.
+   */
+  inline INIFile::KeyListPT INIFile::get_keys (std::string const& section) {
+    return (*this)[section].get_keys();
+  }
   inline INIFile::KeyListPT INIFile::get_keys (std::string const& section) const {
-    if (!section_defined(section)) {
-      throw Errors::SectionUndefined().Section(section);
-    }
-    KeyListPT retval(new KeyListT);
-    for (_KeyT::const_iterator i = _data->sections[section].begin(); i != _data->sections[section].end(); ++i) {
-      retval->push_back(i->first);
-    }
-    return retval;
+    return (*this)[section].get_keys();
   }
   
-  // Properties.
+  /*
+   * Properties.
+   */
   inline std::string INIFile::Filename () const { return _data->filename; }
+  
+  /***************************************************************************
+   * Class INIFile::Section.
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Verify that a key is defined.
+   */
+  inline bool INIFile::Section::key_defined (std::string const& key) const { return _keys.count(key); }
   
 }
 

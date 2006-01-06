@@ -14,14 +14,12 @@ int main (int argc, char** argv) {
   
   INIFile test(argv[1]);
   
-  test.read();
-  
   INIFile::SectionListPT sections(test.get_sections());
   for (INIFile::SectionListPT::value_type::iterator i = sections->begin(); i != sections->end(); ++i) {
     cout << "Section: \"" << *i << "\"\n";
-    INIFile::KeyListPT keys(test.get_keys(*i));
+    INIFile::KeyListPT keys(test[*i].get_keys());
     for (INIFile::KeyListPT::value_type::iterator j = keys->begin(); j != keys->end(); ++j) {
-      cout << "Key: \"" << *j << "\"\n";
+      cout << "Key: \"" << *j << "\"  Value: \"" << test[*i][*j] << "\"\n";
     }
   }
   

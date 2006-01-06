@@ -704,13 +704,17 @@ namespace DAC {
    * Class Timestamp.
    ***************************************************************************/
   
-  // Increment / decrement operators.
+  /*
+   * Increment / decrement operators.
+   */
   inline Timestamp& Timestamp::operator ++ ()    { return op_add(TimeVal(1));                                  }
   inline Timestamp  Timestamp::operator ++ (int) { Timestamp retval(*this); op_add(TimeVal(1)); return retval; }
   inline Timestamp& Timestamp::operator -- ()    { return op_sub(TimeVal(1));                                  }
   inline Timestamp  Timestamp::operator -- (int) { Timestamp retval(*this); op_sub(TimeVal(1)); return retval; }
   
-  // Casting operators.
+  /*
+   * Casting operators.
+   */
   inline Timestamp::operator bool               () const { return Julian(); }
   inline Timestamp::operator signed   char      () const { return Julian(); }
   inline Timestamp::operator unsigned char      () const { return Julian(); }
@@ -721,16 +725,22 @@ namespace DAC {
   inline Timestamp::operator signed   long int  () const { return Julian(); }
   inline Timestamp::operator unsigned long int  () const { return Julian(); }
   
-  // Assignment operator.
+  /*
+   * Assignment operator.
+   */
   inline Timestamp& Timestamp::operator = (Timestamp const& ts)   { return copy(ts);  }
   inline Timestamp& Timestamp::operator = (Interval  const& time) { return set(time); }
   inline Timestamp& Timestamp::operator = (TimeVal   const& jd)   { return set(jd);   }
   
-  // Arithmetic assignment operators.
+  /*
+   * Arithmetic assignment operators.
+   */
   inline Timestamp& Timestamp::operator += (TimeVal const& days) { return op_add(days); }
   inline Timestamp& Timestamp::operator -= (TimeVal const& days) { return op_sub(days); }
   
-  // Properties.
+  /*
+   * Properties.
+   */
   // TODO: See if there's a practical way to set this as a JD.
   inline Timestamp& Timestamp::LastJulianDate (YMD const& lastjulian) {
     Timestamp tmp;
@@ -768,27 +778,41 @@ namespace DAC {
   inline Timestamp&  Timestamp::TZName (char const* const name)       { _tzname = name; return *this; }
   inline char const* Timestamp::TZName ()                       const { return _tzname.c_str();       }
     
-  // Set the timestamp with an interval.
+  /*
+   * Set the timestamp with an interval.
+   */
   inline Timestamp& Timestamp::set (Interval const& time) { Timestamp newtime(*this); newtime._set(time); _cache_valid = false; _jd = newtime._jd - _offset; return *this; }
   
-  // Set the timestamp with a Julian Date.
+  /*
+   * Set the timestamp with a Julian Date.
+   */
   inline Timestamp& Timestamp::set (TimeVal const& jd) { return Julian(jd); }
   
-  // Set the timestamp with an interval, no GMT offset.
+  /*
+   * Set the timestamp with an interval, no GMT offset.
+   */
   inline Timestamp& Timestamp::setGMT (Interval const& time) { Timestamp newtime(*this); newtime._set(time); _cache_valid = false; _jd = newtime._jd; return *this; }
   
-  // Get the interval of the timestamp.
+  /*
+   * Get the interval of the timestamp.
+   */
   inline Timestamp::Interval Timestamp::get () const { return (*this + _offset)._get(); }
   
-  // Get the interval of the timestamp, no GMT offset.
+  /*
+   * Get the interval of the timestamp, no GMT offset.
+   */
   inline Timestamp::Interval Timestamp::getGMT () const { return _get(); }
   
-  // Arithmetic.
+  /*
+   * Arithmetic.
+   */
   inline Timestamp&         Timestamp::op_add (TimeVal   const& tv)       { _cache_valid = false; _jd += tv; return *this;  }
   inline Timestamp&         Timestamp::op_sub (TimeVal   const& tv)       { return op_add(-tv);                             }
   inline Timestamp::TimeVal Timestamp::op_sub (Timestamp const& ts) const { return (_jd + _offset) - (ts._jd + ts._offset); }
   
-  // Comparison operator backends.
+  /*
+   * Comparison operator backends.
+   */
   inline bool Timestamp::op_gt (Timestamp const& ts) const { return (_jd + _offset) >  (ts._jd + ts._offset); }
   inline bool Timestamp::op_ge (Timestamp const& ts) const { return (_jd + _offset) >= (ts._jd + ts._offset); }
   inline bool Timestamp::op_lt (Timestamp const& ts) const { return (_jd + _offset) <  (ts._jd + ts._offset); }
@@ -796,25 +820,39 @@ namespace DAC {
   inline bool Timestamp::op_eq (Timestamp const& ts) const { return (_jd + _offset) == (ts._jd + ts._offset); }
   inline bool Timestamp::op_ne (Timestamp const& ts) const { return (_jd + _offset) != (ts._jd + ts._offset); }
   
-  // Get the day only JD.
+  /*
+   * Get the day only JD.
+   */
   inline Timestamp::TimeVal Timestamp::jdday () const { TimeVal retval; retval.set((_jd + 0.5).floor()); return retval; }
   
-  // Get whether or not this is a leap year.
+  /*
+   * Get whether or not this is a leap year.
+   */
   inline bool Timestamp::isLeapYear () const { return _isLeapYear(Year()); }
   
-  // Get the leap second for this day, 1, -1, or 0.
+  /*
+   * Get the leap second for this day, 1, -1, or 0.
+   */
   inline Timestamp::TimeVal Timestamp::leapSecond () const { return (Hour() == 23 && Minute() == 59) ? _leapSecond(Year(), Month(), Day()) : TimeVal(0); }
   
-  // Get the number of days in this year.
+  /*
+   * Get the number of days in this year.
+   */
   inline Timestamp::TimeVal Timestamp::daysInYear () const { return TimeVal(isLeapYear() ? 366 : 365); }
   
-  // Get the number of days in this month.
+  /*
+   * Get the number of days in this month.
+   */
   inline Timestamp::TimeVal Timestamp::daysInMonth () const { return _daysInMonth(Year(), Month()); }
   
-  // Get the number of seconds in this minute.
+  /*
+   * Get the number of seconds in this minute.
+   */
   inline Timestamp::TimeVal Timestamp::secondsInMinute () const { return 60 + leapSecond(); }
   
-  // Return true if the given date is Gregorian.
+  /*
+   * Return true if the given date is Gregorian.
+   */
   inline bool Timestamp::_isGregorian (TimeVal const& year, TimeVal const& month, TimeVal const& day) const {
     return year >  _lastjulianymd.Year || (
            year == _lastjulianymd.Year && (month >  _lastjulianymd.Month || (
@@ -824,8 +862,10 @@ namespace DAC {
   }
   inline bool Timestamp::_isGregorian (TimeVal const& jd) const { return jd > _lastjulianjd; }
   
-  // Get the calendar type. _isLeapYear depends on this function counting 3/0
-  // as 2/28 or 2/29.
+  /*
+   * Get the calendar type. _isLeapYear depends on this function counting 3/0
+   * as 2/28 or 2/29.
+   */
   inline Timestamp::CalendarType Timestamp::_getCalendarType (TimeVal const& year, TimeVal const& month, TimeVal const& day) const { return (_caltype == CT_DEFAULT) ? (_isGregorian(year, month, day) ? CT_GREGORIAN : CT_JULIAN) : _caltype; }
   inline Timestamp::CalendarType Timestamp::_getCalendarType (TimeVal const& jd                                            ) const { return (_caltype == CT_DEFAULT) ? (_isGregorian(jd)               ? CT_GREGORIAN : CT_JULIAN) : _caltype; }
   
@@ -833,7 +873,9 @@ namespace DAC {
    * Class Timestamp::Interval.
    ***************************************************************************/
   
-  // Default constructor.
+  /*
+   * Default constructor.
+   */
   inline Timestamp::Interval::Interval () :
     _set_millisecond(false),
     _set_second     (false),
@@ -844,7 +886,9 @@ namespace DAC {
     _set_year       (false)
   {}
   
-  // Set properties.
+  /*
+   * Set properties.
+   */
   inline Timestamp::Interval& Timestamp::Interval::Millisecond (TimeVal const& millisecond) { _millisecond = millisecond; _set_millisecond = true; return *this; }
   inline Timestamp::Interval& Timestamp::Interval::Second      (TimeVal const& second     ) { _second      = second;      _set_second      = true; return *this; }
   inline Timestamp::Interval& Timestamp::Interval::Minute      (TimeVal const& minute     ) { _minute      = minute;      _set_minute      = true; return *this; }
@@ -853,7 +897,9 @@ namespace DAC {
   inline Timestamp::Interval& Timestamp::Interval::Month       (TimeVal const& month      ) { _month       = month;       _set_month       = true; return *this; }
   inline Timestamp::Interval& Timestamp::Interval::Year        (TimeVal const& year       ) { _year        = year;        _set_year        = true; return *this; }
   
-  // Get properties.
+  /*
+   * Get properties.
+   */
   inline Timestamp::TimeVal Timestamp::Interval::Millisecond () const { return _millisecond; }
   inline Timestamp::TimeVal Timestamp::Interval::Second      () const { return _second;      }
   inline Timestamp::TimeVal Timestamp::Interval::Minute      () const { return _minute;      }
@@ -862,7 +908,9 @@ namespace DAC {
   inline Timestamp::TimeVal Timestamp::Interval::Month       () const { return _month;       }
   inline Timestamp::TimeVal Timestamp::Interval::Year        () const { return _year;        }
   
-  // Check if properties are set.
+  /*
+   * Check if properties are set.
+   */
   inline bool Timestamp::Interval::isSet_Millisecond () const { return _set_millisecond; }
   inline bool Timestamp::Interval::isSet_Second      () const { return _set_second;      }
   inline bool Timestamp::Interval::isSet_Minute      () const { return _set_minute;      }
@@ -871,16 +919,22 @@ namespace DAC {
   inline bool Timestamp::Interval::isSet_Month       () const { return _set_month;       }
   inline bool Timestamp::Interval::isSet_Year        () const { return _set_year;        }
   
-  // Stream I/O operators.
+  /*
+   * Stream I/O operators.
+   */
   inline std::ostream& operator << (std::ostream& l, Timestamp const& r) { l << r.toString(); return l; }
   
-  // Arithmetic operators.
+  /*
+   * Arithmetic operators.
+   */
   inline Timestamp          operator + (Timestamp          const& l, Timestamp::TimeVal const& r) { return Timestamp(l).op_add(r); }
   inline Timestamp          operator + (Timestamp::TimeVal const& l, Timestamp          const& r) { return Timestamp(r).op_add(l); }
   inline Timestamp          operator - (Timestamp          const& l, Timestamp::TimeVal const& r) { return Timestamp(l).op_sub(r); }
   inline Timestamp::TimeVal operator - (Timestamp          const& l, Timestamp          const& r) { return l.op_sub(r);                 }
   
-  // Comparison operators.
+  /*
+   * Comparison operators.
+   */
   inline bool operator >  (Timestamp const& l, Timestamp const& r) { return l.op_gt(r); }
   inline bool operator >= (Timestamp const& l, Timestamp const& r) { return l.op_ge(r); }
   inline bool operator <  (Timestamp const& l, Timestamp const& r) { return l.op_lt(r); }

@@ -17,7 +17,12 @@ namespace DAC {
    * Class INIFile.
    ***************************************************************************/
   
-  // Default constructor.
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Default constructor.
+   */
   INIFile::INIFile () {
     
     // Initialize.
@@ -25,15 +30,23 @@ namespace DAC {
     
   }
   
-  // Copy constructor.
-  INIFile::INIFile (INIFile const& inifile) {
+  /*
+   * Copy constructor.
+   */
+  INIFile::INIFile (INIFile const& inifile, bool const copynow) {
     
     // Copy the given data. No need to init, copy does everything.
-    copy(inifile);
+    if (copynow) {
+      deepcopy(inifile);
+    } else {
+      copy(inifile);
+    }
     
   }
   
-  // Filename constructor.
+  /*
+   * Filename constructor.
+   */
   INIFile::INIFile (string const& filename) {
     
     // Initialize.
@@ -44,7 +57,40 @@ namespace DAC {
     
   }
   
-  // Set the name of the INI file.
+  /*
+   * Provide access to sections.
+   */
+  INIFile::Section INIFile::operator [] (string const& section) {
+    
+    // Read INI file if necessary.
+    if (!_data->wasread) {
+      read();
+    }
+    
+    // Call const version.
+    return (*const_cast<INIFile const*>(this))[section];
+    
+  } 
+  INIFile::Section INIFile::operator [] (string const& section) const {
+    
+    // Ensure that the INI file has been read.
+    if (!_data->wasread) {
+      throw Errors::NotRead();
+    }
+    
+    // Ensure that this section is defined.
+    if (!section_defined(section)) {
+      throw Errors::SectionUndefined().Section(section);
+    }
+    
+    // Return a Section object pointing to this section.
+    return Section(section, _data->sections[section]);
+    
+  }
+  
+  /*
+   * Set the name of the INI file.
+   */
   INIFile& INIFile::Filename (string const& filename) {
     
     // Create a new INIFile with the given filename.
@@ -56,7 +102,9 @@ namespace DAC {
     
   }
   
-  // Reset to just-constructed state.
+  /*
+   * Reset to just-constructed state.
+   */
   void INIFile::clear () {
     
     // Create new data.
@@ -64,7 +112,9 @@ namespace DAC {
     
   }
   
-  // Copy a given INIFile.
+  /*
+   * Copy a given INIFile.
+   */
   void INIFile::copy (INIFile const& inifile) {
     
     // Copy.
@@ -72,7 +122,9 @@ namespace DAC {
     
   }
   
-  // Deep copy, do not wait for COW.
+  /*
+   * Deep copy, do not wait for COW.
+   */
   void INIFile::deepcopy (INIFile const& inifile) {
     
     // Create new data.
@@ -80,7 +132,43 @@ namespace DAC {
     
   }
   
-  // Read the INI file.
+  /*
+   * Get a list of sections in this INI file.
+   */
+  INIFile::SectionListPT INIFile::get_sections () {
+    
+    // Read data if needed.
+    if (!_data->wasread) {
+      read();
+    }
+    
+    // Call const function.
+    return const_cast<INIFile const*>(this)->get_sections();
+
+  }
+  INIFile::SectionListPT INIFile::get_sections () const {
+    
+    // Make sure data has been read.
+    if (!_data->wasread) {
+      throw Errors::NotRead();
+    }
+    
+    // Work area.
+    SectionListPT retval(new SectionListT);
+    
+    // Push section names into the section list.
+    for (_SectionT::const_iterator i = _data->sections.begin(); i != _data->sections.end(); ++i) {
+      retval->push_back(i->first);
+    }
+    
+    // Done.
+    return retval;
+    
+  }
+  
+  /*
+   * Read the INI file.
+   */
   void INIFile::read () {
     
     // Make sure that the filename is set.
@@ -182,8 +270,80 @@ namespace DAC {
     }
     file.close();
     
+    // File was successfully read.
+    retval->wasread = true;
+    
     // Move the new data into place and return.
     _data = retval;
+    
+  }
+  
+  /*
+   * Reset file read status.
+   */
+  void INIFile::reset () {
+    
+    // Work area.
+    INIFile retval(*this, true);
+    
+    // Reset.
+    retval._reset();
+    
+    // Move data into place.
+    _data = retval._data;
+    
+  }
+  
+  /*
+   * Reset file read status. No COW.
+   */
+  void INIFile::_reset () {
+    
+    // Turn off wasread flag.
+    _data->wasread = false;
+    
+    // Clear data.
+    _data->sections.clear();
+    
+  }
+  
+  /***************************************************************************
+   * Class INIFile::Section.
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Return a key's value.
+   */
+  string INIFile::Section::operator [] (string const& key) const {
+    
+    // Make sure the key is defined.
+    if (!key_defined(key)) {
+      throw Errors::KeyUndefined().Section(_section).Key(key);
+    }
+    
+    // Return the value.
+    return _keys[key];
+    
+  }
+  
+  /*
+   * Get a list of keys in this section.
+   */
+  INIFile::KeyListPT INIFile::Section::get_keys () const {
+    
+    // Work area.
+    KeyListPT retval(new KeyListT);
+    
+    // Push key names into the key list.
+    for (_KeyT::const_iterator i = _keys.begin(); i != _keys.end(); ++i) {
+      retval->push_back(i->first);
+    }
+    
+    // Done.
+    return retval;
     
   }
   
@@ -191,7 +351,12 @@ namespace DAC {
    * Class INIFile::_Data.
    ***************************************************************************/
   
-  // Default constructor.
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Default constructor.
+   */
   INIFile::_Data::_Data () {
     
     // Init.
@@ -199,7 +364,9 @@ namespace DAC {
     
   }
   
-  // Copy constructor.
+  /*
+   * Copy constructor.
+   */
   INIFile::_Data::_Data (_Data const& data) {
     
     // Copy the given data. No need to init, copy does everything.
@@ -207,8 +374,13 @@ namespace DAC {
     
   }
   
-  // Reset to just constructed state.
+  /*
+   * Reset to just constructed state.
+   */
   void INIFile::_Data::clear () {
+    
+    // Not read.
+    wasread = false;
     
     // Clear.
     filename.clear();
@@ -216,8 +388,12 @@ namespace DAC {
     
   }
   
-  // Copy a given _Data object.
+  /*
+   * Copy a given _Data object.
+   */
   void INIFile::_Data::copy (_Data const& data) {
+    
+    wasread = data.wasread;
     
     filename = data.filename;
     sections = data.sections;

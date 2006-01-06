@@ -43,7 +43,9 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  // Default constructor.
+  /*
+   * Default constructor.
+   */
   Arb::Arb () {
     
     // Call common init.
@@ -51,7 +53,9 @@ namespace DAC {
     
   }
   
-  // Copy constructor.
+  /*
+   * Copy constructor.
+   */
   Arb::Arb (Arb const& number, bool const copynow) {
     
     // Call common init.
@@ -66,7 +70,9 @@ namespace DAC {
     
   }
   
-  // Conversion constructor.
+  /*
+   * Conversion constructor.
+   */
   Arb::Arb (std::string const& number) {
     
     // Call common init.
@@ -86,7 +92,9 @@ namespace DAC {
     
   }
   
-  // Accessors.
+  /*
+   * Accessors.
+   */
   Arb& Arb::Base (BaseT const base) {
     if (base != _data->base) {
       _data = new _Data(*_data);
@@ -147,7 +155,9 @@ namespace DAC {
     return *this;
   }
   
-  // Reset to just-constructed state.
+  /*
+   * Reset to just-constructed state.
+   */
   Arb& Arb::clear () {
     
     // Clear this number's data. Instead of calling the clear() method of
@@ -166,7 +176,9 @@ namespace DAC {
     
   }
   
-  // Copy another number.
+  /*
+   * Copy another number.
+   */
   Arb& Arb::copy (Arb const& number) throw() {
     
     // Copy. Easy.
@@ -180,7 +192,9 @@ namespace DAC {
     
   }
   
-  // Perform a deep copy of another number, do not wait for COW.
+  /*
+   * Perform a deep copy of another number, do not wait for COW.
+   */
   Arb& Arb::deepcopy (Arb const& number) {
     
     // Set the new data. This is the deep copy.
@@ -197,7 +211,9 @@ namespace DAC {
     
   }
   
-  // Convert this number to a string.
+  /*
+   * Convert this number to a string.
+   */
   string Arb::toString (OutputFormat const format) const {
     
     // This is the string we will be returning.
@@ -351,7 +367,9 @@ namespace DAC {
     
   }
   
-  // Set the number from a string.
+  /*
+   * Set the number from a string.
+   */
   Arb& Arb::set (string const& number) {
     
     // Load the number into this for exception safety.
@@ -576,7 +594,9 @@ namespace DAC {
     
   }
   
-  // Set the number from another Arb.
+  /*
+   * Set the number from another Arb.
+   */
   Arb& Arb::set (Arb const& number) {
     
     // Work area.
@@ -596,7 +616,9 @@ namespace DAC {
     
   }
   
-  // Set from an ArbInt.
+  /*
+   * Set from an ArbInt.
+   */
   Arb& Arb::set (ArbInt const& number) {
     
     // Work area.
@@ -616,7 +638,9 @@ namespace DAC {
     
   }
   
-  // Multiplication operator backend.
+  /*
+   * Multiplication operator backend.
+   */
   Arb& Arb::op_mul (Arb const& number) {
     
     // Work area.
@@ -654,7 +678,9 @@ namespace DAC {
     
   }
   
-  // Division operator backend.
+  /*
+   * Division operator backend.
+   */
   Arb& Arb::op_div (Arb const& number) {
     
     // Throw an error on divide by zero.
@@ -702,7 +728,9 @@ namespace DAC {
     
   }
   
-  // Modulo division operator backend.
+  /*
+   * Modulo division operator backend.
+   */
   Arb& Arb::op_mod (Arb const& number) {
     
     // Throw an error on divide by zero.
@@ -750,7 +778,9 @@ namespace DAC {
     
   }
   
-  // Addition operator backend.
+  /*
+   * Addition operator backend.
+   */
   Arb& Arb::op_add (Arb const& number) {
     
     // Work area.
@@ -810,7 +840,9 @@ namespace DAC {
     
   }
   
-  // Subtraction operator backend.
+  /*
+   * Subtraction operator backend.
+   */
   Arb& Arb::op_sub (Arb const& number) {
     
     // Work area.
@@ -870,7 +902,9 @@ namespace DAC {
     
   }
   
-  // Greater-than operator backend.
+  /*
+   * Greater-than operator backend.
+   */
   bool Arb::op_gt (Arb const& number) const {
     
     // If one or both numbers are zero, compare is easy.
@@ -935,7 +969,9 @@ namespace DAC {
     
   }
   
-  // Less-than operator backend.
+  /*
+   * Less-than operator backend.
+   */
   bool Arb::op_lt (Arb const& number) const {
     
     // If one or both numbers are zero, compare is easy.
@@ -999,7 +1035,9 @@ namespace DAC {
     
   }
   
-  // Equal-to operator backend.
+  /*
+   * Equal-to operator backend.
+   */
   bool Arb::op_eq (Arb const& number) const {
     
     // Check for 0.
@@ -1039,7 +1077,9 @@ namespace DAC {
     
   }
   
-  // Get the ceiling of this fractional number.
+  /*
+   * Get the ceiling of this fractional number.
+   */
   Arb Arb::ceil () const {
     
     // Work area.
@@ -1066,7 +1106,9 @@ namespace DAC {
     
   }
   
-  // Get the floor of this fractional number.
+  /*
+   * Get the floor of this fractional number.
+   */
   Arb Arb::floor () const {
     
     // Work area.
@@ -1093,7 +1135,9 @@ namespace DAC {
     
   }
   
-  // Truncate to just the integer portion.
+  /*
+   * Truncate to just the integer portion.
+   */
   Arb Arb::truncate () const {
     
     // Work area.
@@ -1113,7 +1157,9 @@ namespace DAC {
     
   }
   
-  // Raise this number to a power.
+  /*
+   * Raise this number to a power.
+   */
   Arb Arb::pow (Arb const& exp) const {
     
     // Work area.
@@ -1180,7 +1226,9 @@ namespace DAC {
     
   }
   
-  // Find the nth root of this number.
+  /*
+   * Find the nth root of this number.
+   */
   Arb Arb::root (Arb const& n) const {
     
     // No divide by zero.
@@ -1248,7 +1296,9 @@ namespace DAC {
     
   }
   
-  // Common initialization tasks.
+  /*
+   * Common initialization tasks.
+   */
   void Arb::_init () {
     
     // Construct this object fully. By definition of the clear() function,
@@ -1257,7 +1307,9 @@ namespace DAC {
     
   }
   
-  // Reduce the number to its most compact representation.
+  /*
+   * Reduce the number to its most compact representation.
+   */
   Arb& Arb::_reduce () {
     
     // Fixed-point numbers are forced to their dividend.
@@ -1274,7 +1326,9 @@ namespace DAC {
     
   }
   
-  // Bitwise shift this number.
+  /*
+   * Bitwise shift this number.
+   */
   Arb& Arb::_shift (Arb const& bits, _Dir const dir) {
     
     // Only work if necessary.
@@ -1328,7 +1382,9 @@ namespace DAC {
     
   }
   
-  // Reduce the number to a specific q.
+  /*
+   * Reduce the number to a specific q.
+   */
   Arb& Arb::_forcereduce (_DigsT const& q) {
     
     // Only work if we have to.
@@ -1385,7 +1441,9 @@ namespace DAC {
     
   }
   
-  // Normalize two numbers.
+  /*
+   * Normalize two numbers.
+   */
   Arb& Arb::_normalize (Arb& number) {
     
     // Only work if necessary.
@@ -1406,7 +1464,9 @@ namespace DAC {
     
   }
   
-  // Set from a float.
+  /*
+   * Set from a float.
+   */
   template <> void Arb::_Set<float, Arb::_NUM_FLPT>::op (Arb& l, float const r) {
     
     // Work area.
@@ -1488,7 +1548,9 @@ namespace DAC {
     
   }
   
-  // Set from a double.
+  /*
+   * Set from a double.
+   */
   template <> void Arb::_Set<double, Arb::_NUM_FLPT>::op (Arb& l, double const r) {
     
     // Work area.
@@ -1570,7 +1632,9 @@ namespace DAC {
     
   }
   
-  // Set from a long double.
+  /*
+   * Set from a long double.
+   */
   template <> void Arb::_Set<long double, Arb::_NUM_FLPT>::op (Arb& l, long double const r) {
     
     // Work area.
@@ -1644,7 +1708,9 @@ namespace DAC {
     
   }
   
-  // Get as a float.
+  /*
+   * Get as a float.
+   */
   template <> void Arb::_Get<float, Arb::_NUM_FLPT>::op (float& l, Arb const& r) {
     
     // Work area.
@@ -1669,7 +1735,9 @@ namespace DAC {
     
   }
   
-  // Get as a double.
+  /*
+   * Get as a double.
+   */
   template <> void Arb::_Get<double, Arb::_NUM_FLPT>::op (double& l, Arb const& r) {
     
     // Work area.
@@ -1695,7 +1763,9 @@ namespace DAC {
     
   }
   
-  // Get as a long double.
+  /*
+   * Get as a long double.
+   */
   template <> void Arb::_Get<long double, Arb::_NUM_FLPT>::op (long double& l, Arb const& r) {
     
     // Work area.
@@ -1720,7 +1790,12 @@ namespace DAC {
    * Class Arb::_Data.
    ***************************************************************************/
   
-  // Default constructor.
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Default constructor.
+   */
   Arb::_Data::_Data () {
     
     // Call common init.
@@ -1728,7 +1803,9 @@ namespace DAC {
 
   }
   
-  // Copy constructor.
+  /*
+   * Copy constructor.
+   */
   Arb::_Data::_Data (_Data const& data) {
     
     // Call common init.
@@ -1739,7 +1816,9 @@ namespace DAC {
     
   }
   
-  // Reset to just constructed state.
+  /*
+   * Reset to just constructed state.
+   */
   Arb::_Data& Arb::_Data::clear () {
     
     // These operations may throw, do them first so any error will be thrown
@@ -1766,7 +1845,9 @@ namespace DAC {
     
   }
   
-  // Copy a given _Data object.
+  /*
+   * Copy a given _Data object.
+   */
   Arb::_Data& Arb::_Data::copy (_Data const& data) {
     
     // Copy the given data.
@@ -1785,7 +1866,9 @@ namespace DAC {
     
   }
   
-  // Common initialization tasks.
+  /*
+   * Common initialization tasks.
+   */
   void Arb::_Data::_init () {
     
     // Construct this object fully. By definition of the clear() function, the

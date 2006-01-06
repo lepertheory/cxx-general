@@ -591,16 +591,24 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
 
-  // Default constructor.
+  /*
+   * Default constructor.
+   */
   inline POSIXFile::POSIXFile () { clear(); }
   
-  // Copy constructor.
+  /*
+   * Copy constructor.
+   */
   inline POSIXFile::POSIXFile (POSIXFile const& source) { copy(source); }
   
-  // Assignment operator.
+  /*
+   * Assignment operator.
+   */
   inline POSIXFile& POSIXFile::operator = (POSIXFile const& right) { copy(right); return *this; }
   
-  // Set / get the filename.
+  /*
+   * Set / get the filename.
+   */
   inline POSIXFile& POSIXFile::Filename (std::string const& filename) {
     if (filename != _filename) {
       clear();
@@ -610,7 +618,9 @@ namespace DAC {
   }
   inline std::string POSIXFile::Filename () const { return _filename; }
   
-  // Set / get the record separator.
+  /*
+   * Set / get the record separator.
+   */
   inline POSIXFile& POSIXFile::RecordSep (std::string const& recordsep) {
     if (recordsep != _recordsep) {
       _recordnum = 0;
@@ -620,7 +630,9 @@ namespace DAC {
   }
   inline std::string POSIXFile::RecordSep () const { return _recordsep; }
   
-  // Set / get the open flags.
+  /*
+   * Set / get the open flags.
+   */
   inline POSIXFile& POSIXFile::OpenMode (enum OpenMode const openmode) { _openmode = openmode; return *this; }
   inline POSIXFile& POSIXFile::Append    (bool const append   ) { if (append   ) { _flags |=  O_APPEND  ; } else { _flags &= ~O_APPEND  ; } return *this; }
   inline POSIXFile& POSIXFile::Create    (bool const create   ) { if (create   ) { _flags |=  O_CREAT   ; } else { _flags &= ~O_CREAT   ; } return *this; }
@@ -650,7 +662,9 @@ namespace DAC {
   inline bool POSIXFile::Synch     () const { return   _flags & O_SYNC     ; }
   inline bool POSIXFile::Truncate  () const { return   _flags & O_TRUNC    ; }
   
-  // Set file modes.
+  /*
+   * Set file modes.
+   */
   inline POSIXFile& POSIXFile::SetUID    (bool   const setuid   ) { if (setuid   ) { Mode(Mode() | S_ISUID); } else { Mode(Mode() & ~S_ISUID); } return *this; }
   inline POSIXFile& POSIXFile::SetGID    (bool   const setgid   ) { if (setgid   ) { Mode(Mode() | S_ISGID); } else { Mode(Mode() & ~S_ISGID); } return *this; }
   inline POSIXFile& POSIXFile::Sticky    (bool   const sticky   ) { if (sticky   ) { Mode(Mode() | S_ISVTX); } else { Mode(Mode() & ~S_ISVTX); } return *this; }
@@ -692,7 +706,9 @@ namespace DAC {
     return *this;
   }
   
-  // Get file modes.
+  /*
+   * Get file modes.
+   */
   inline bool POSIXFile::SetUID    () const { return Mode() & S_ISUID; }
   inline bool POSIXFile::SetGID    () const { return Mode() & S_ISGID; }
   inline bool POSIXFile::Sticky    () const { return Mode() & S_ISVTX; }
@@ -712,13 +728,17 @@ namespace DAC {
     return mode() & _PERM_MASK;
   }
   
-  // Set/get file owner & group.
+  /*
+   * Set/get file owner & group.
+   */
   inline POSIXFile& POSIXFile::UID (uid_t const new_uid) { chown(new_uid     , GID_NOCHANGE); return *this; }
   inline POSIXFile& POSIXFile::GID (gid_t const new_gid) { chown(UID_NOCHANGE, new_gid     ); return *this; }
   inline uid_t POSIXFile::UID () const { return uid(); }
   inline gid_t POSIXFile::GID () const { return gid(); }
   
-  // Get the file type.
+  /*
+   * Get the file type.
+   */
   inline POSIXFile::FileType POSIXFile::Type () const {
     mode_t type(mode() & S_IFMT);
     switch (type) {
@@ -733,20 +753,30 @@ namespace DAC {
     };
   }
   
-  // Return the current read/write position.
+  /*
+   * Return the current read/write position.
+   */
   inline off_t POSIXFile::tell () const { return _curpos; }
   
-  // Write.
+  /*
+   * Write.
+   */
   inline ssize_t POSIXFile::write (std::string const& data) { return write(data.data(), data.length()); }
   
-  // End of file.
+  /*
+   * End of file.
+   */
   inline bool POSIXFile::eof      () const { return _eof             ; }
   inline bool POSIXFile::eof_line () const { return _eof && _eof_line; }
   
-  // Get the file descriptor.
+  /*
+   * Get the file descriptor.
+   */
   inline int POSIXFile::fd () const { return _fd; }
   
-  // File info.
+  /*
+   * File info.
+   */
   inline bool POSIXFile::is_blockDev   () const { return is_exist() && ((mode() & S_IFMT) & S_IFBLK ) == S_IFBLK ; }
   inline bool POSIXFile::is_charDev    () const { return is_exist() && ((mode() & S_IFMT) & S_IFCHR ) == S_IFCHR ; }
   inline bool POSIXFile::is_dir        () const { return is_exist() && ((mode() & S_IFMT) & S_IFDIR ) == S_IFDIR ; }
@@ -803,7 +833,9 @@ namespace DAC {
   }
   inline bool POSIXFile::is_zero () const { return is_exist() && size() == 0; }
   
-  // stat() info.
+  /*
+   * stat() info.
+   */
   inline dev_t     POSIXFile::device    () const { _check_cache(); return _stat.st_dev    ; }
   inline ino_t     POSIXFile::inode     () const { _check_cache(); return _stat.st_ino    ; }
   inline mode_t    POSIXFile::mode      () const { _check_cache(); return _stat.st_mode   ; }
@@ -818,26 +850,40 @@ namespace DAC {
   inline time_t    POSIXFile::mtime     () const { _check_cache(); return _stat.st_mtime  ; }
   inline time_t    POSIXFile::ctime     () const { _check_cache(); return _stat.st_ctime  ; }
   
-  // Delete the file.
+  /*
+   * Delete the file.
+   */
   inline void POSIXFile::rm  () { unlink(); }
   inline void POSIXFile::del () { unlink(); }
   
-  // Update cache if necessary.
+  /*
+   * Update cache if necessary.
+   */
   inline void POSIXFile::_check_cache () const { if (!_cache_valid) { _update_cache(); } }
   
-  // _FD constructor.
+  /*
+   * _FD constructor.
+   */
   inline POSIXFile::_FD::_FD (_FDType const fd) { set(fd); }
   
-  // _FD destructor.
+  /*
+   * _FD destructor.
+   */
   inline POSIXFile::_FD::~_FD () { set(0); }
   
-  // _FD assignment operator.
+  /*
+   * _FD assignment operator.
+   */
   inline POSIXFile::_FD& POSIXFile::_FD::operator = (_FDType const right) { set(right); return *this; }
   
-  // _FD cast operator.
+  /*
+   * _FD cast operator.
+   */
   inline POSIXFile::_FD::operator _FDType () const { return _fd; }
   
-  // Set a new fd.
+  /*
+   * Set a new fd.
+   */
   inline int POSIXFile::_FD::set (_FDType const fd) {
     int retval = 0;
     if (fd != _fd) {

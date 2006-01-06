@@ -34,9 +34,7 @@ namespace DAC {
       
       /***********************************************************************/
       // Errors.
-      
       class Errors {
-        
         public:
           
           // All SafeInt errors are based off of this.
@@ -739,33 +737,49 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  // Default constructor.
+  /*
+   * Default constructor.
+   */
   template <class T> inline SafeInt<T>::SafeInt (T const value) { _value = value; }
   
-  // Copy constructor.
+  /*
+   * Copy constructor.
+   */
   template <class T> inline SafeInt<T>::SafeInt (SafeInt<T> const& value) { _value = value._value; }
   
-  // Conversion constructor.
+  /*
+   * Conversion constructor.
+   */
   template <class T> template <class U> inline SafeInt<T>::SafeInt (U          const value) { _value = SafeIntUtil::SafeCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(value); }
   template <class T> template <class U> inline SafeInt<T>::SafeInt (SafeInt<U> const value) { _value = static_cast<T>(value);                                                          }
   
-  // Increment / decrement operators.
+  /*
+   * Increment / decrement operators.
+   */
   template <class T> inline SafeInt<T>& SafeInt<T>::operator ++ ()    { return op_add(1);                                   }
   template <class T> inline SafeInt<T>  SafeInt<T>::operator ++ (int) { SafeInt<T> retval(*this); op_add(1); return retval; }
   template <class T> inline SafeInt<T>& SafeInt<T>::operator -- ()    { return op_sub(1);                                   }
   template <class T> inline SafeInt<T>  SafeInt<T>::operator -- (int) { SafeInt<T> retval(*this); op_sub(1); return retval; }
   
-  // Sign operators.
+  /*
+   * Sign operators.
+   */
   template <class T> inline SafeInt<T> SafeInt<T>::operator + () const { return *this;                                                                                      }
   template <class T> inline SafeInt<T> SafeInt<T>::operator - () const { return SafeInt<T>(SafeIntUtil::SafeNegate<T, SafeIntUtil::Relationship<T, T>::value>::op(_value)); }
   
-  // Not operator.
+  /*
+   * Not operator.
+   */
   template <class T> inline bool SafeInt<T>::operator ! () const { return !_value; }
   
-  // Bitwise compliment.
+  /*
+   * Bitwise compliment.
+   */
   template <class T> inline SafeInt<T> SafeInt<T>::operator ~ () const { return SafeInt<T>(*this).op_bit_cpm(); }
   
-  // Casting operators.
+  /*
+   * Casting operators.
+   */
   template <class T> inline SafeInt<T>::operator bool               () const { return _value != static_cast<T>(0);                                                                                       }
   template <class T> inline SafeInt<T>::operator signed   char      () const { return SafeIntUtil::SafeCast<T, signed   char,      SafeIntUtil::Relationship<T, signed   char     >::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator unsigned char      () const { return SafeIntUtil::SafeCast<T, unsigned char,      SafeIntUtil::Relationship<T, unsigned char     >::value>::op(_value); }
@@ -776,21 +790,29 @@ namespace DAC {
   template <class T> inline SafeInt<T>::operator signed   long int  () const { return SafeIntUtil::SafeCast<T, signed   long int,  SafeIntUtil::Relationship<T, signed   long int >::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator unsigned long int  () const { return SafeIntUtil::SafeCast<T, unsigned long int,  SafeIntUtil::Relationship<T, unsigned long int >::value>::op(_value); }
   
-  // Assignment operator.
+  /*
+   * Assignment operator.
+   */
   template <class T>                    inline SafeInt<T>& SafeInt<T>::operator = (SafeInt<T> const value) { _value = value._value;                                                                   return *this; }
   template <class T>                    inline SafeInt<T>& SafeInt<T>::operator = (T          const value) { _value = value;                                                                          return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator = (SafeInt<U> const value) { _value = static_cast<T>(value);                                                          return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::operator = (U          const value) { _value = SafeIntUtil::SafeCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(value); return *this; }
   
-  // Accessors.
+  /*
+   * Accessors.
+   */
   template <class T> inline SafeInt<T>& SafeInt<T>::Value (T const value)       { _value = value; return *this; }
   template <class T> inline T           SafeInt<T>::Value ()              const { return _value;                }
   
-  // Make an exact bitwise copy.
+  /*
+   * Make an exact bitwise copy.
+   */
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::setBitwise (SafeInt<U> const value) { _value = SafeIntUtil::RawCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::setBitwise (U          const value) { _value = SafeIntUtil::RawCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(value);                 return *this; }
   
-  // Arithmetic operator backends.
+  /*
+   * Arithmetic operator backends.
+   */
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_mul (SafeInt<U> const value) { _value = SafeIntUtil::SafeMul<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_mul (U          const value) { _value = SafeIntUtil::SafeMul<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_div (SafeInt<U> const value) { _value = SafeIntUtil::SafeDiv<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
@@ -802,13 +824,17 @@ namespace DAC {
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_sub (SafeInt<U> const value) { _value = SafeIntUtil::SafeSub<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_sub (U          const value) { _value = SafeIntUtil::SafeSub<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   
-  // Bit shift operator backends.
+  /*
+   * Bit shift operator backends.
+   */
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_shl (SafeInt<U> const value) { _value = SafeIntUtil::SafeShL<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_shl (U          const value) { _value = SafeIntUtil::SafeShL<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_shr (SafeInt<U> const value) { _value = SafeIntUtil::SafeShR<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_shr (U          const value) { _value = SafeIntUtil::SafeShR<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   
-  // Comparison operator backends.
+  /*
+   * Comparison operator backends.
+   */
   template <class T> template <class U> inline bool SafeInt<T>::op_gt (SafeInt<U> const value) const { return SafeIntUtil::SafeGT<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); }
   template <class T> template <class U> inline bool SafeInt<T>::op_gt (U          const value) const { return SafeIntUtil::SafeGT<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 }
   template <class T> template <class U> inline bool SafeInt<T>::op_ge (SafeInt<U> const value) const { return SafeIntUtil::SafeGE<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); }
@@ -822,7 +848,9 @@ namespace DAC {
   template <class T> template <class U> inline bool SafeInt<T>::op_ne (SafeInt<U> const value) const { return SafeIntUtil::SafeNE<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); }
   template <class T> template <class U> inline bool SafeInt<T>::op_ne (U          const value) const { return SafeIntUtil::SafeNE<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 }
   
-  // Bitwise operator backends.
+  /*
+   * Bitwise operator backends.
+   */
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_and (SafeInt<U> const value) { _value = SafeIntUtil::SafeBitAnd<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_and (U          const value) { _value = SafeIntUtil::SafeBitAnd<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_ior (SafeInt<U> const value) { _value = SafeIntUtil::SafeBitIOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, static_cast<U>(value)); return *this; }
@@ -831,10 +859,14 @@ namespace DAC {
   template <class T> template <class U> inline SafeInt<T>& SafeInt<T>::op_bit_xor (U          const value) { _value = SafeIntUtil::SafeBitXOr<T, U, SafeIntUtil::Relationship<T, U>::value>::op(_value, value);                 return *this; }
   template <class T>                    inline SafeInt<T>& SafeInt<T>::op_bit_cpm ()                       { _value = SafeIntUtil::SafeBitCpm<T,    SafeIntUtil::Relationship<T, T>::value>::op(_value);                        return *this; }
   
-  // Get the absolute value.
+  /*
+   * Get the absolute value.
+   */
   template <class T> inline SafeInt<T> SafeInt<T>::abs () const { return SafeInt<T>(SafeIntUtil::SafeAbs<T, SafeIntUtil::Relationship<T, T>::value>::op(_value)); }
   
-  // Get the number of bits in this number.
+  /*
+   * Get the number of bits in this number.
+   */
   template <class T> inline unsigned int SafeInt<T>::bitsInNumber () const {
     
     // Make a bitmask of the highest order digit. Using a SafeInt for its
@@ -856,7 +888,9 @@ namespace DAC {
    ***************************************************************************/
   namespace SafeIntUtil {
     
-    // Cast.
+    /*
+     * Cast.
+     */
     template <class T, class U> inline U SafeCast<T, U, SE_SE>::op (T const value) {
       return static_cast<U>(value);
     }
@@ -921,7 +955,9 @@ namespace DAC {
       return static_cast<U>(value);
     }
     
-    // Raw cast.
+    /*
+     * Raw cast.
+     */
     template <class T, class U> U RawCast<T, U, SE_SE>::op (T const value) {
       return static_cast<U>(value);
     }
@@ -967,7 +1003,9 @@ namespace DAC {
       return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max()));
     }
     
-    // Multiply.
+    /*
+     * Multiply.
+     */
     template <class T, class U> T SafeMul<T, U, SE_SE>::op (T const l, U const r) {
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(0))) {
         return static_cast<T>(0);
@@ -1296,7 +1334,9 @@ namespace DAC {
       return (l * static_cast<T>(r));
     }
     
-    // Divide.
+    /*
+     * Divide.
+     */
     template <class T, class U> T SafeDiv<T, U, SE_SE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
         throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
@@ -1464,7 +1504,9 @@ namespace DAC {
       return (l / static_cast<T>(r));
     }
     
-    // Modulo divide
+    /*
+     * Modulo divide
+     */
     template <class T, class U> T SafeMod<T, U, SE_SE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
         throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
@@ -1586,7 +1628,9 @@ namespace DAC {
       return (l % static_cast<T>(r));
     }
     
-    // Add.
+    /*
+     * Add.
+     */
     template <class T, class U> T SafeAdd<T, U, SE_SE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
         return l;
@@ -1834,7 +1878,9 @@ namespace DAC {
       return (l + static_cast<T>(r));
     }
     
-    // Subtract.
+    /*
+     * Subtract.
+     */
     template <class T, class U> T SafeSub<T, U, SE_SE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
         return l;
@@ -2176,7 +2222,9 @@ namespace DAC {
       return l << r;
     }
     
-    // Shift right.
+    /*
+     * Shift right.
+     */
     template <class T, class U> T SafeShR<T, U, SE_SE>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
         throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
@@ -2310,7 +2358,9 @@ namespace DAC {
       return l >> r;
     }
     
-    // Test for greater than.
+    /*
+     * Test for greater than.
+     */
     template <class T, class U> inline bool SafeGT<T, U, SE_SE>::op (T const l, U const r) {
       return l > static_cast<T>(r);
     }
@@ -2356,7 +2406,9 @@ namespace DAC {
       return l > static_cast<T>(r);
     }
     
-    // Test for greater than or equal to.
+    /*
+     * Test for greater than or equal to.
+     */
     template <class T, class U> inline bool SafeGE<T, U, SE_SE>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeGE<T, U, SE_UE>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeGE<T, U, SS_SL>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
@@ -2370,7 +2422,9 @@ namespace DAC {
     template <class T, class U> inline bool SafeGE<T, U, UL_SS>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeGE<T, U, UL_US>::op (T const l, U const r) { return !SafeLT<T, U, Relationship<T, U>::value>::op(l, r); }
     
-    // Test for less than.
+    /*
+     * Test for less than.
+     */
     template <class T, class U> inline bool SafeLT<T, U, SE_SE>::op (T const l, U const r) {
       return l < static_cast<T>(r);
     }
@@ -2416,7 +2470,9 @@ namespace DAC {
       return l < static_cast<T>(r);
     }
     
-    // Test for less than or equal to.
+    /*
+     * Test for less than or equal to.
+     */
     template <class T, class U> inline bool SafeLE<T, U, SE_SE>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeLE<T, U, SE_UE>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeLE<T, U, SS_SL>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
@@ -2430,7 +2486,9 @@ namespace DAC {
     template <class T, class U> inline bool SafeLE<T, U, UL_SS>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeLE<T, U, UL_US>::op (T const l, U const r) { return !SafeGT<T, U, Relationship<T, U>::value>::op(l, r); }
     
-    // Test for equal to.
+    /*
+     * Test for equal to.
+     */
     template <class T, class U> inline bool SafeEQ<T, U, SE_SE>::op (T const l, U const r) {
       return l == static_cast<T>(r);
     }
@@ -2476,7 +2534,9 @@ namespace DAC {
       return l == static_cast<T>(r);
     }
     
-    // Test for not equal.
+    /*
+     * Test for not equal.
+     */
     template <class T, class U> inline bool SafeNE<T, U, SE_SE>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeNE<T, U, SE_UE>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeNE<T, U, SS_SL>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
@@ -2490,7 +2550,9 @@ namespace DAC {
     template <class T, class U> inline bool SafeNE<T, U, UL_SS>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
     template <class T, class U> inline bool SafeNE<T, U, UL_US>::op (T const l, U const r) { return !SafeEQ<T, U, Relationship<T, U>::value>::op(l, r); }
     
-    // Bitwise AND.
+    /*
+     * Bitwise AND.
+     */
     template <class T, class U> inline T SafeBitAnd<T, U, SE_SE>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
     template <class T, class U> inline T SafeBitAnd<T, U, SE_UE>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
     template <class T, class U> inline T SafeBitAnd<T, U, SS_SL>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
@@ -2504,7 +2566,9 @@ namespace DAC {
     template <class T, class U> inline T SafeBitAnd<T, U, UL_SS>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
     template <class T, class U> inline T SafeBitAnd<T, U, UL_US>::op (T const l, U const r) { return l & RawCast<U, T, Relationship<U, T>::value>::op(r); }
     
-    // Bitwise inclusive OR.
+    /*
+     * Bitwise inclusive OR.
+     */
     template <class T, class U> inline T SafeBitIOr<T, U, SE_SE>::op (T const l, U const r) {
       return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
@@ -2557,7 +2621,9 @@ namespace DAC {
       return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
     
-    // Bitwise exclusive OR.
+    /*
+     * Bitwise exclusive OR.
+     */
     template <class T, class U> inline T SafeBitXOr<T, U, SE_SE>::op (T const l, U const r) {
       return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
@@ -2610,7 +2676,9 @@ namespace DAC {
       return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
     
-    // Bitwise compliment.
+    /*
+     * Bitwise compliment.
+     */
     template <class T> inline T SafeBitCpm<T, SE_SE>::op (T const value) {
       return ~value;
     }
@@ -2618,7 +2686,9 @@ namespace DAC {
       return ~value;
     }
     
-    // Negate.
+    /*
+     * Negate.
+     */
     template <class T> inline T SafeNegate<T, SE_SE>::op (T const value) {
       if (value == std::numeric_limits<T>::min()) {
         throw typename SafeInt<T>::Errors::UnOpOverflow().Number(value).Operator("-").Prefix(true).Limit(std::numeric_limits<T>::max());
@@ -2632,7 +2702,9 @@ namespace DAC {
       throw typename SafeInt<T>::Errors::UnOpOverflow().Number(value).Operator("-").Prefix(true).Limit(0);
     }
     
-    // Absolute value.
+    /*
+     * Absolute value.
+     */
     template <class T> inline T SafeAbs<T, SE_SE>::op (T const value) { return (value < 0) ? SafeNegate<T, Relationship<T, T>::value>::op(value) : value; }
     template <class T> inline T SafeAbs<T, UE_UE>::op (T const value) { return value;                                                                     }
     
@@ -2702,12 +2774,16 @@ namespace DAC {
    * Operators.
    ***************************************************************************/
   
-  // Stream I/O operators.
+  /*
+   * Stream I/O operators.
+   */
   template <class T> inline std::ostream&       operator << (std::ostream&       l, SafeInt<T>  r) { l << DAC::toString(static_cast<T>(r)); return l; }
   template <class T> inline std::ostringstream& operator << (std::ostringstream& l, SafeInt<T>  r) { l << DAC::toString(static_cast<T>(r)); return l; }
   template <class T> inline std::istream&       operator >> (std::istream&       l, SafeInt<T>& r) { T input; l >> input; r = input; return l;        }
   
-  // Arithmetic operators.
+  /*
+   * Arithmetic operators.
+   */
   template <class T, class U> inline SafeInt<T> operator * (SafeInt<T> const l, SafeInt<U> const r) { return SafeInt<T>(l).op_mul(r); }
   template <class T, class U> inline SafeInt<T> operator * (SafeInt<T> const l, U          const r) { return SafeInt<T>(l).op_mul(r); }
   template <class T, class U> inline SafeInt<T> operator * (T          const l, SafeInt<U> const r) { return SafeInt<T>(l).op_mul(r); }
@@ -2724,7 +2800,9 @@ namespace DAC {
   template <class T, class U> inline SafeInt<T> operator - (SafeInt<T> const l, U          const r) { return SafeInt<T>(l).op_sub(r); }
   template <class T, class U> inline SafeInt<T> operator - (T          const l, SafeInt<U> const r) { return SafeInt<T>(l).op_sub(r); }
   
-  // Bit shift operators.
+  /*
+   * Bit shift operators.
+   */
   template <class T, class U> inline SafeInt<T> operator << (SafeInt<T> const l, SafeInt<U> const r) { return SafeInt<T>(l).op_shl(r); }
   template <class T, class U> inline SafeInt<T> operator << (SafeInt<T> const l, U          const r) { return SafeInt<T>(l).op_shl(r); }
   template <class T, class U> inline SafeInt<T> operator << (T          const l, SafeInt<U> const r) { return SafeInt<T>(l).op_shl(r); }
@@ -2732,7 +2810,9 @@ namespace DAC {
   template <class T, class U> inline SafeInt<T> operator >> (SafeInt<T> const l, U          const r) { return SafeInt<T>(l).op_shr(r); }
   template <class T, class U> inline SafeInt<T> operator >> (T          const l, SafeInt<U> const r) { return SafeInt<T>(l).op_shr(r); }
   
-  // Comparison operators.
+  /*
+   * Comparison operators.
+   */
   template <class T, class U> inline bool operator >  (SafeInt<T> const l, SafeInt<U> const r) { return  l.op_gt(r); }
   template <class T, class U> inline bool operator >  (SafeInt<T> const l, U          const r) { return  l.op_gt(r); }
   template <class T, class U> inline bool operator >  (T          const l, SafeInt<U> const r) { return !r.op_ge(l); }
@@ -2752,7 +2832,9 @@ namespace DAC {
   template <class T, class U> inline bool operator != (SafeInt<T> const l, U          const r) { return  l.op_ne(r); }
   template <class T, class U> inline bool operator != (T          const l, SafeInt<U> const r) { return  r.op_ne(l); }
   
-  // Bitwise operators.
+  /*
+   * Bitwise operators.
+   */
   template <class T, class U> inline SafeInt<T> operator & (SafeInt<T> const l, SafeInt<U> const r) { return SafeInt<T>(l).op_bit_and(r); }
   template <class T, class U> inline SafeInt<T> operator & (SafeInt<T> const l, U          const r) { return SafeInt<T>(l).op_bit_and(r); }
   template <class T, class U> inline SafeInt<T> operator & (T          const l, SafeInt<U> const r) { return SafeInt<T>(l).op_bit_and(r); }
@@ -2763,7 +2845,9 @@ namespace DAC {
   template <class T, class U> inline SafeInt<T> operator ^ (SafeInt<T> const l, U          const r) { return SafeInt<T>(l).op_bit_xor(r); }
   template <class T, class U> inline SafeInt<T> operator ^ (T          const l, SafeInt<U> const r) { return SafeInt<T>(l).op_bit_xor(r); }
   
-  // Arithmetic assignment operators.
+  /*
+   * Arithmetic assignment operators.
+   */
   template <class T, class U> inline SafeInt<T>& operator *= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_mul(r);                    }
   template <class T, class U> inline SafeInt<T>& operator *= (SafeInt<T>& l, U          const r) { return l.op_mul(r);                    }
   template <class T, class U> inline T&          operator *= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_mul(r); return l; }
@@ -2780,7 +2864,9 @@ namespace DAC {
   template <class T, class U> inline SafeInt<T>& operator -= (SafeInt<T>& l, U          const r) { return l.op_sub(r);                    }
   template <class T, class U> inline T&          operator -= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_sub(r); return l; }
   
-  // Bit shift assignment operators.
+  /*
+   * Bit shift assignment operators.
+   */
   template <class T, class U> inline SafeInt<T>& operator <<= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_shl(r);                    }
   template <class T, class U> inline SafeInt<T>& operator <<= (SafeInt<T>& l, U          const r) { return l.op_shl(r);                    }
   template <class T, class U> inline T&          operator <<= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_shl(r); return l; }
@@ -2788,7 +2874,9 @@ namespace DAC {
   template <class T, class U> inline SafeInt<T>& operator >>= (SafeInt<T>& l, U          const r) { return l.op_shr(r);                    }
   template <class T, class U> inline T&          operator >>= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_shr(r); return l; }
   
-  // Bitwise assignment operators.
+  /*
+   * Bitwise assignment operators.
+   */
   template <class T, class U> inline SafeInt<T>& operator &= (SafeInt<T>& l, SafeInt<U> const r) { return l.op_bit_and(r);                    }
   template <class T, class U> inline SafeInt<T>& operator &= (SafeInt<T>& l, U          const r) { return l.op_bit_and(r);                    }
   template <class T, class U> inline T&          operator &= (T&          l, SafeInt<U> const r) { l = SafeInt<T>(l).op_bit_and(r); return l; }

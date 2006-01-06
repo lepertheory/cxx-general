@@ -48,7 +48,9 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  // Constructor names the file.
+  /*
+   * Constructor names the file.
+   */
   POSIXFile::POSIXFile (string const& filename) {
     
     // Do standard init.
@@ -59,7 +61,9 @@ namespace DAC {
     
   }
   
-  // Reset to just-constructed defaults.
+  /*
+   * Reset to just-constructed defaults.
+   */
   void POSIXFile::clear () {
     
     _cache_valid = false;
@@ -93,7 +97,9 @@ namespace DAC {
     
   }
   
-  // Copy.
+  /*
+   * Copy.
+   */
   void POSIXFile::copy (POSIXFile const& source) {
     
     // Remove any info from the old data.
@@ -122,7 +128,9 @@ namespace DAC {
     
   }
   
-  // Open the file.
+  /*
+   * Open the file.
+   */
   void POSIXFile::open () {
     
     // Make sure the file is not already open.
@@ -145,7 +153,9 @@ namespace DAC {
     
   }
   
-  // Lock the file.
+  /*
+   * Lock the file.
+   */
   void POSIXFile::flock (LockMode const lockmode) {
     
     // Make sure the file is open.
@@ -179,7 +189,9 @@ namespace DAC {
     
   }
   
-  // Close the file.
+  /*
+   * Close the file.
+   */
   void POSIXFile::close () {
     
     // Make sure the file is open.
@@ -194,7 +206,9 @@ namespace DAC {
     
   }
   
-  // Create a hard link.
+  /*
+   * Create a hard link.
+   */
   void POSIXFile::link (string const& filename) {
     
     // Work area.
@@ -219,7 +233,9 @@ namespace DAC {
     
   }
   
-  // Create a symbolic link.
+  /*
+   * Create a symbolic link.
+   */
   void POSIXFile::symlink (string const& filename) const {
     
     // Create symlink.
@@ -229,7 +245,9 @@ namespace DAC {
     
   }
   
-  // Rename the file.
+  /*
+   * Rename the file.
+   */
   void POSIXFile::rename (string const& filename) {
     
     // Invalidate the cache.
@@ -242,7 +260,9 @@ namespace DAC {
     
   }
   
-  // Delete the file.
+  /*
+   * Delete the file.
+   */
   void POSIXFile::unlink () {
     
     // Make sure we do not have the file open.
@@ -260,7 +280,9 @@ namespace DAC {
     
   }
   
-  // Change the mode.
+  /*
+   * Change the mode.
+   */
   void POSIXFile::chmod (mode_t const new_mode) {
     
     // Make sure the stat cache is updated.
@@ -278,7 +300,9 @@ namespace DAC {
     
   }
   
-  // Change file owner/group.
+  /*
+   * Change file owner/group.
+   */
   void POSIXFile::chown (uid_t const owner, gid_t const group) {
     
     // Don't waste time if there's nothing to do.
@@ -310,7 +334,9 @@ namespace DAC {
     
   }
   
-  // Truncate or expand to an exact length.
+  /*
+   * Truncate or expand to an exact length.
+   */
   void POSIXFile::truncate (off_t const length) {
     
     // Invalidate the cache.
@@ -325,7 +351,9 @@ namespace DAC {
     
   }
   
-  // Get the file part of the filename.
+  /*
+   * Get the file part of the filename.
+   */
   string POSIXFile::basename () const {
     
     // Work area.
@@ -362,8 +390,10 @@ namespace DAC {
     return _filename.substr(pos + 1, lastchar - pos);
     
   }
-
-  // Get the directory part of the filename.
+  
+  /*
+   * Get the directory part of the filename.
+   */
   string POSIXFile::dirname () const {
     
     // Work area.
@@ -396,8 +426,10 @@ namespace DAC {
     
   }
   
-  // Convert to an absolute path. Home directory interpretation is not
-  // supported.
+  /*
+   * Convert to an absolute path. Home directory interpretation is not
+   * supported.
+   */
   string POSIXFile::expand_path () const {
     
     // Constants.
@@ -467,7 +499,9 @@ namespace DAC {
     
   }
   
-  // Read the target of a symbolic link.
+  /*
+   * Read the target of a symbolic link.
+   */
   string POSIXFile::readlink () const {
     
     // Work area. SafeInt for the signed/unsigned comparison.
@@ -502,7 +536,9 @@ namespace DAC {
     
   }
   
-  // Seek to a particular offset.
+  /*
+   * Seek to a particular offset.
+   */
   void POSIXFile::seek (off_t const offset, SeekMode const whence) {
     
     // Make sure the file is open.
@@ -515,7 +551,9 @@ namespace DAC {
     
   }
   
-  // Read a particular number of bytes.
+  /*
+   * Read a particular number of bytes.
+   */
   string POSIXFile::read (size_t const bytes) {
     
     // Make sure the file is open.
@@ -535,7 +573,9 @@ namespace DAC {
     
   }
   
-  // Write.
+  /*
+   * Write.
+   */
   ssize_t POSIXFile::write (void const* const data, size_t const bytes) {
     
     // Make sure the file is open.
@@ -563,7 +603,9 @@ namespace DAC {
     
   }
   
-  // Read a single line.
+  /*
+   * Read a single line.
+   */
   string POSIXFile::read_line (bool const trim) {
     
     // Work area.
@@ -615,7 +657,9 @@ namespace DAC {
     
   }
   
-  // Read the entire file as a vector of lines.
+  /*
+   * Read the entire file as a vector of lines.
+   */
   vector<string>& POSIXFile::read_all_lines (vector<string>& buffer) {
     
     // Work area.
@@ -664,7 +708,9 @@ namespace DAC {
     
   }
   
-  // Read the entire file as a string.
+  /*
+   * Read the entire file as a string.
+   */
   string POSIXFile::read_file () {
     
     // Work area.
@@ -716,7 +762,9 @@ namespace DAC {
     
   }
   
-  // Get the current working directory.
+  /*
+   * Get the current working directory.
+   */
   string POSIXFile::getCWD () {
     
     // Work area.
@@ -745,7 +793,9 @@ namespace DAC {
     
   }
   
-  // Update the cache.
+  /*
+   * Update the cache.
+   */
   void POSIXFile::_update_cache () const {
     
     // Call stat or lstat depending on whether we are following symlinks or
@@ -771,7 +821,9 @@ namespace DAC {
     
   }
   
-  // Read from the file.
+  /*
+   * Read from the file.
+   */
   ssize_t POSIXFile::_read (void* const buf, off_t const bufsize) {
     
     // Work area.
@@ -798,7 +850,9 @@ namespace DAC {
     
   }
   
-  // Seek to a particular offset.
+  /*
+   * Seek to a particular offset.
+   */
   void POSIXFile::_seek (off_t const offset, SeekMode const whence) {
     
     // Do the seek.
@@ -818,7 +872,9 @@ namespace DAC {
     
   }
   
-  // Handle and throw a system call error.
+  /*
+   * Handle and throw a system call error.
+   */
   void POSIXFile::s_throwSysCallError (int const errnum, std::string const& syscall, std::string const& filename) {
     
     // Throw the appropriate error.
@@ -849,7 +905,9 @@ namespace DAC {
     
   }
   
-  // Compress redundant directory separators.
+  /*
+   * Compress redundant directory separators.
+   */
   void POSIXFile::s_compress_dirSep (string& path) {
     
     // Work area.

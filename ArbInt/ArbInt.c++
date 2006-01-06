@@ -51,7 +51,9 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  // Default constructor.
+  /*
+   * Default constructor.
+   */
   ArbInt::ArbInt () {
     
     // Call common init.
@@ -59,7 +61,9 @@ namespace DAC {
     
   }
   
-  // Copy constructor.
+  /*
+   * Copy constructor.
+   */
   ArbInt::ArbInt (ArbInt const& number, bool const copynow) {
     
     // Call common init.
@@ -70,7 +74,9 @@ namespace DAC {
     
   }
   
-  // Conversion constructor.
+  /*
+   * Conversion constructor.
+   */
   ArbInt::ArbInt (string const& number) {
     
     // Call common init.
@@ -81,7 +87,9 @@ namespace DAC {
     
   }
   
-  // Reset to just-constructed state.
+  /*
+   * Reset to just-constructed state.
+   */
   ArbInt& ArbInt::clear () {
     
     // Create a new vector, this preserves COW behavior.
@@ -95,7 +103,9 @@ namespace DAC {
     
   }
   
-  // Make a copy of another number.
+  /*
+   * Make a copy of another number.
+   */
   ArbInt& ArbInt::copy (ArbInt const& number, bool const copynow) {
     
     // Set the new digits. Make a copy if instructed to do so, otherwise
@@ -118,7 +128,9 @@ namespace DAC {
     
   }
   
-  // Set this number with a string.
+  /*
+   * Set this number with a string.
+   */
   ArbInt& ArbInt::set (string const& number) {
     
     // Load the number into this for exception safety and COW.
@@ -160,7 +172,9 @@ namespace DAC {
     
   }
   
-  // Push a string onto the back of this number.
+  /*
+   * Push a string onto the back of this number.
+   */
   ArbInt& ArbInt::push_back (string const& number) {
     
     // Work area.
@@ -182,7 +196,9 @@ namespace DAC {
     
   }
   
-  // Return a string of this number.
+  /*
+   * Return a string of this number.
+   */
   string ArbInt::toString () const {
     
     // This is the string we will return.
@@ -222,7 +238,9 @@ namespace DAC {
     
   }
   
-  // Multiply.
+  /*
+   * Multiply.
+   */
   ArbInt& ArbInt::op_mul (ArbInt const& number) {
     
     // Work area.
@@ -267,7 +285,9 @@ namespace DAC {
     
   }
   
-  // Divide.
+  /*
+   * Divide.
+   */
   ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* const remainder) {
     
     // If number is zero, throw error.
@@ -406,7 +426,9 @@ namespace DAC {
     
   }
   
-  // Modulo division.
+  /*
+   * Modulo division.
+   */
   ArbInt& ArbInt::op_mod (ArbInt const& number) {
     
     // Cannot divide by zero. check is redundant, but needed for exception to
@@ -426,7 +448,9 @@ namespace DAC {
     
   }
   
-  // Add.
+  /*
+   * Add.
+   */
   ArbInt& ArbInt::op_add (ArbInt const& number) {
     
     // Work area.
@@ -452,7 +476,9 @@ namespace DAC {
     
   }
   
-  // Subtract.
+  /*
+   * Subtract.
+   */
   ArbInt& ArbInt::op_sub (ArbInt const& number) {
     
     // Work area.
@@ -483,7 +509,9 @@ namespace DAC {
     
   }
   
-  // Greater than.
+  /*
+   * Greater than.
+   */
   bool ArbInt::op_gt (ArbInt const& number) const {
     
     // Check zeros.
@@ -520,7 +548,9 @@ namespace DAC {
     
   }
   
-  // Less than.
+  /*
+   * Less than.
+   */
   bool ArbInt::op_lt (ArbInt const& number) const {
     
     // Check zeros.
@@ -557,6 +587,9 @@ namespace DAC {
     
   }
   
+  /*
+   * Equal to.
+   */
   bool ArbInt::op_eq (ArbInt const& number) const {
     
     // Check zeros.
@@ -586,7 +619,9 @@ namespace DAC {
     
   }
   
-  // Bitwise AND.
+  /*
+   * Bitwise AND.
+   */
   ArbInt& ArbInt::op_bit_and (ArbInt const& number) {
     
     // Work area.
@@ -611,7 +646,9 @@ namespace DAC {
     
   }
   
-  // Bitwise inclusive OR.
+  /*
+   * Bitwise inclusive OR.
+   */
   ArbInt& ArbInt::op_bit_ior (ArbInt const& number) {
     
     // Work area.
@@ -638,7 +675,9 @@ namespace DAC {
     
   }
   
-  // Bitwise exclusive OR.
+  /*
+   * Bitwise exclusive OR.
+   */
   ArbInt& ArbInt::op_bit_xor (ArbInt const& number) {
     
     // Work area.
@@ -667,7 +706,9 @@ namespace DAC {
     
   }
   
-  // Bitwise compliment.
+  /*
+   * Bitwise compliment.
+   */
   ArbInt& ArbInt::op_bit_cpm () {
     
     // Work area.
@@ -687,7 +728,9 @@ namespace DAC {
     
   }
   
-  // Raise this number to a power.
+  /*
+   * Raise this number to a power.
+   */
   ArbInt ArbInt::pow (ArbInt const& exp) {
     
     // Work area.
@@ -710,7 +753,9 @@ namespace DAC {
     
   }
   
-  // Common initialization tasks.
+  /*
+   * Common initialization tasks.
+   */
   void ArbInt::_init () {
     
     // Check that the class constructor was successfully called.
@@ -723,8 +768,10 @@ namespace DAC {
     
   }
   
-  // Perform carry. Only call this on temporary objects that are not copied.
-  // Copy on write is not preserved for this function.
+  /*
+   * Perform carry. Only call this on temporary objects that are not copied.
+   * Copy on write is not preserved for this function.
+   */
   ArbInt& ArbInt::_carry (_DigsT::size_type start) {
     
     // Ensure that the start is not beyond the end of the container.
@@ -766,8 +813,10 @@ namespace DAC {
     
   }
   
-  // Perform borrow. Only call this on temporary objects that are not
-  // copied. Copy on write is not preserved for this function.
+  /*
+   * Perform borrow. Only call this on temporary objects that are not
+   * copied. Copy on write is not preserved for this function.
+   */
   ArbInt& ArbInt::_borrow (_DigsT::size_type start) {
     
     // Ensure that the start is not beyond the end of the container.
@@ -801,7 +850,9 @@ namespace DAC {
     
   }
   
-  // Bitwise shift by ArbInt.
+  /*
+   * Bitwise shift by ArbInt.
+   */
   ArbInt& ArbInt::_shift (ArbInt const& bits, _Dir const dir) {
     
     // Only shift if it is needed.
@@ -833,7 +884,9 @@ namespace DAC {
     
   }
   
-  // Bitwise shift.
+  /*
+   * Bitwise shift.
+   */
   ArbInt& ArbInt::_shift (SafeInt<_DigsT::size_type> const digits, SafeInt<unsigned int> const bits, _Dir const dir) {
     
     // Only shift if it is needed.
@@ -861,7 +914,9 @@ namespace DAC {
     
   }
   
-  // Bitwise shift entire digits.
+  /*
+   * Bitwise shift entire digits.
+   */
   ArbInt& ArbInt::_shiftDigits (SafeInt<_DigsT::size_type> const digits, _Dir const dir) {
     
     // Only shift if it is needed.
@@ -897,7 +952,9 @@ namespace DAC {
     
   }
   
-  // Bitwise shift by bits.
+  /*
+   * Bitwise shift by bits.
+   */
   ArbInt& ArbInt::_shiftBits (SafeInt<unsigned int> const bits, _Dir const dir) {
     
     // Only shift if it is needed.
@@ -950,7 +1007,9 @@ namespace DAC {
     
   }
   
-  // Class constructor.
+  /*
+   * Class constructor.
+   */
   void ArbInt::s_classInit () {
     
     // Get the input digits. If this changes, you need to update s_numidigits!

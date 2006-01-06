@@ -76,7 +76,9 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  // Default constructor.
+  /*
+   * Default constructor.
+   */
   Timestamp::Timestamp () {
     
     // Call common init.
@@ -84,7 +86,9 @@ namespace DAC {
     
   }
   
-  // Copy constructor.
+  /*
+   * Copy constructor.
+   */
   Timestamp::Timestamp (Timestamp const& ts) {
     
     // Call common init.
@@ -95,7 +99,9 @@ namespace DAC {
     
   }
   
-  // Conversion constructor.
+  /*
+   * Conversion constructor.
+   */
   Timestamp::Timestamp (Interval const& time) {
     
     // Call common init.
@@ -106,7 +112,9 @@ namespace DAC {
     
   }
   
-  // Conversion constructor.
+  /*
+   * Conversion constructor.
+   */
   Timestamp::Timestamp (TimeVal const& jd) {
     
     // Call common init.
@@ -117,7 +125,9 @@ namespace DAC {
     
   }
   
-  // Accessors.
+  /*
+   * Accessors.
+   */
   Timestamp& Timestamp::MJD (unsigned int const mjd) {
     if (mjd > 99999) { throw Errors::MJDMax().MJD(mjd); }
     _cache_valid = false;
@@ -132,7 +142,9 @@ namespace DAC {
     return *this;
   }
   
-  // Get the current system time.
+  /*
+   * Get the current system time.
+   */
   Timestamp& Timestamp::getSystemTime () {
     
     // Disable this function if system support is missing.
@@ -234,7 +246,9 @@ namespace DAC {
     
   }
   
-  // Reset to just-constructed state.
+  /*
+   * Reset to just-constructed state.
+   */
   Timestamp& Timestamp::clear () {
     
     // Make a new jd.
@@ -273,7 +287,9 @@ namespace DAC {
     
   }
   
-  // Copy another timestamp.
+  /*
+   * Copy another timestamp.
+   */
   Timestamp& Timestamp::copy (Timestamp const& ts) {
     
     // Set the last julian date.
@@ -313,7 +329,9 @@ namespace DAC {
     
   }
   
-  // Convert this timestamp to a string.
+  /*
+   * Convert this timestamp to a string.
+   */
   string Timestamp::toString (string const& format) const {
     
     // This is the string we will be returning.
@@ -626,7 +644,9 @@ namespace DAC {
     
   }
   
-  // Get the day of the week.
+  /*
+   * Get the day of the week.
+   */
   Timestamp::TimeVal Timestamp::dow () const {
     
     // Day of week is simply the JD modulo 7 rot 1.
@@ -636,7 +656,9 @@ namespace DAC {
     
   }
   
-  // Get the ISO day of the week.
+  /*
+   * Get the ISO day of the week.
+   */
   Timestamp::TimeVal Timestamp::dowISO () const {
     
     // ISO day of the week is 1 = Monday through 7 = Sunday.
@@ -648,7 +670,9 @@ namespace DAC {
     
   }
   
-  // Get the day of the year.
+  /*
+   * Get the day of the year.
+   */
   Timestamp::TimeVal Timestamp::doy () const {
     
     // This is it.
@@ -656,7 +680,9 @@ namespace DAC {
     
   }
   
-  // Get the week of the year.
+  /*
+   * Get the week of the year.
+   */
   Timestamp::TimeVal Timestamp::woy (DayOfWeek const base) const {
     
     // Get the first day of this year.
@@ -677,7 +703,9 @@ namespace DAC {
     
   }
   
-  // Get the ISO week.
+  /*
+   * Get the ISO week.
+   */
   Timestamp::TimeVal Timestamp::woyISO () const {
     
     // Get the ISO year so we know what year to calculate from.
@@ -698,7 +726,9 @@ namespace DAC {
     
   }
   
-  // Get the ISO year.
+  /*
+   * Get the ISO year.
+   */
   Timestamp::TimeVal Timestamp::getISOYear () const {
     
     // If it is before January 4th and this week did not contain a Thursday,
@@ -718,7 +748,9 @@ namespace DAC {
     
   }
   
-  // Common initialization tasks.
+  /*
+   * Common initialization tasks.
+   */
   void Timestamp::_init () {
     
     // Perform class initialization.
@@ -731,7 +763,9 @@ namespace DAC {
     
   }
   
-  // Set this timestamp.
+  /*
+   * Set this timestamp.
+   */
   Timestamp& Timestamp::_set (Interval const& time) {
     
     // Work area.
@@ -798,7 +832,9 @@ namespace DAC {
     
   }
   
-  // Get the individual values of this timestamp.
+  /*
+   * Get the individual values of this timestamp.
+   */
   Timestamp::Interval Timestamp::_get () const {
     
     // Return value.
@@ -871,7 +907,9 @@ namespace DAC {
     
   }
   
-  // Get whether a given year is a leap year.
+  /*
+   * Get whether a given year is a leap year.
+   */
   bool Timestamp::_isLeapYear (TimeVal const& year) const {
     
     // Work area.
@@ -911,7 +949,9 @@ namespace DAC {
     
   }
   
-  // Load the cache.
+  /*
+   * Load the cache.
+   */
   void Timestamp::_loadCache () const {
     
     // Work area.
@@ -934,7 +974,9 @@ namespace DAC {
     
   }
   
-  // Get the number of days in this month.
+  /*
+   * Get the number of days in this month.
+   */
   Timestamp::TimeVal Timestamp::_daysInMonth (TimeVal const& year, TimeVal const& month) const {
     
     // Work area.
@@ -979,7 +1021,9 @@ namespace DAC {
     
   }
   
-  // Return the leap seconds of a given day.
+  /*
+   * Return the leap seconds of a given day.
+   */
   Timestamp::TimeVal Timestamp::_leapSecond (TimeVal const& year, TimeVal const& month, TimeVal const& day) const {
     
     // Work area.
@@ -1004,7 +1048,9 @@ namespace DAC {
     
   }
   
-  // Class initialization.
+  /*
+   * Class initialization.
+   */
   void Timestamp::s_classInit () {
     
     // Set the default leap seconds.
