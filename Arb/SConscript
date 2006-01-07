@@ -14,16 +14,18 @@ s_Arb = env.SharedObject(target = 'Arb', source = ['Arb.c++'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with Arb.
-cArb = { 'obj'        : cArbInt['obj']     + [o_Arb]        ,
-         'sobj'       : cArbInt['sobj']    + [s_Arb]        ,
-         'include'    : cArbInt['include'] + ['Arb']        ,
-         'headers'    : cArbInt['headers'] + ['Arb/Arb.h++'],
-         'defines'    : cArbInt['defines']                  ,
-         'own_obj'    : [o_Arb]                             ,
-         'own_sobj'   : [s_Arb]                             ,
-         'own_include': 'Arb'                               ,
-         'own_headers': ['Arb/Arb.h++']                     ,
-         'own_defines': []                                    }
+cArb = {
+  'obj'        : cArbInt['obj']     + [o_Arb]        ,
+  'sobj'       : cArbInt['sobj']    + [s_Arb]        ,
+  'include'    : cArbInt['include'] + ['Arb']        ,
+  'headers'    : cArbInt['headers'] + ['Arb/Arb.h++'],
+  'defines'    : cArbInt['defines']                  ,
+  'own_obj'    : [o_Arb]                             ,
+  'own_sobj'   : [s_Arb]                             ,
+  'own_include': 'Arb'                               ,
+  'own_headers': ['Arb/Arb.h++']                     ,
+  'own_defines': []
+}
 
 # Return.
 Return('cArb')

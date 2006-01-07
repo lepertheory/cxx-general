@@ -1,8 +1,12 @@
-# Imports from caller.
+# Imports from the caller.
 Import('*')
 
 # Include the parent directory.
 env.Append(CPPPATH = ['..'])
+
+# Include dependency directories.
+for incdir in cPOSIXFile['include']:
+  env.Append(CPPPATH = ['#' + incdir])
 
 # Object files.
 o_INIFile = env.Object      (target = 'INIFile', source = ['INIFile.c++'])
@@ -10,16 +14,18 @@ s_INIFile = env.SharedObject(target = 'INIFile', source = ['INIFile.c++'])
 
 # Create a dictionary containing all necessary information and objects to
 # compile with INIFile.
-cINIFile = { 'obj'        : cPOSIXFile['obj']     + [o_INIFile]            ,
-             'sobj'       : cPOSIXFile['sobj']    + [s_INIFile]            ,
-             'include'    : cPOSIXFile['include'] + ['INIFile']            ,
-             'headers'    : cPOSIXFile['headers'] + ['INIFile/INIFile.h++'],
-             'defines'    : cPOSIXFile['defines']                          ,
-             'own_obj'    : [o_INIFile]                                    ,
-             'own_sobj'   : [s_INIFile]                                    ,
-             'own_include': 'INIFile'                                      ,
-             'own_headers': ['INIFile/INIFile.h++']                        ,
-             'own_defines': []                                               }
+cINIFile = {
+  'obj'         : cPOSIXFile['obj']     + [o_INIFile]            ,
+  'sobj'        : cPOSIXFile['sobj']    + [s_INIFile]            ,
+  'include'     : cPOSIXFile['include'] + ['INIFile']            ,
+  'headers'     : cPOSIXFile['headers'] + ['INIFile/INIFile.h++'],
+  'defines'     : cPOSIXFile['defines']                          ,
+  'own_obj'     : [o_INIFile]                                    ,
+  'own_sobj'    : [s_INIFile]                                    ,
+  'own_include' : 'INIFile'                                      ,
+  'own_headers' : ['INIFile/INIFile.h++']                        ,
+  'own_defines' : []
+}
 
 # Return.
 Return('cINIFile')

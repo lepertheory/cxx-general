@@ -77,7 +77,6 @@ h_reduce           = env.File('reduce.h++'          ) ; headers += [h_reduce    
 h_rppower          = env.File('rppower.h++'         ) ; headers += [h_rppower         ]
 h_toString         = env.File('toString.h++'        ) ; headers += [h_toString        ]
 h_getErrorText     = env.File('getErrorText.h++'    ) ; headers += [h_getErrorText    ]
-h_wrapText         = env.File('wrapText.h++'        ) ; headers += [h_wrapText        ]
 
 # Modules.
 modules = []
@@ -85,7 +84,8 @@ cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'           ) ; 
 cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt'   ) ; env = tmpenv.Copy() ; modules.append(cArb      )
 cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'      ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
 cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'           ) ; env = tmpenv.Copy() ; modules.append(cPOSIXFile)
-cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env'           ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
+cwrapText  = SConscript(['wrapText/SConscript' ], exports = 'env'           ) ; env = tmpenv.Copy() ; modules.append(cwrapText )
+cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env wrapText'  ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
 cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cPOSIXFile') ; env = tmpenv.Copy() ; modules.append(cINIFile  )
 
 # Tests.
