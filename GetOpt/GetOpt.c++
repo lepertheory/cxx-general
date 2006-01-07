@@ -21,6 +21,10 @@ using namespace std;
 // Namespace wrapper.
 namespace DAC {
   
+  /***************************************************************************
+   * GetOpt
+   ***************************************************************************/
+  
   /***************************************************************************/
   // Function members.
   
@@ -138,6 +142,36 @@ namespace DAC {
     // Swap in new data and return.
     _data = tmp._data;
     return *this;
+    
+  }
+  
+  /*
+   * Get the short help for this program.
+   */
+  string GetOpt::getShortHelp () const {
+    
+    // Not much to it.
+    return "Usage: " + _data->programname + " " + _data->usage + "\n";
+    
+  }
+  
+  /*
+   * Get the help screen for these options.
+   */
+  string GetOpt::getHelp () const {
+    
+    // Work area.
+    string retval;
+    
+    // All start with this.
+    retval = getShortHelp();
+    
+    // Blank line, then description. Wrap description to the terminal length.
+    // Break at whitespace and soft hyphens.
+    retval += "\n" + _wrap_text(_data->description, _data->helpwidth) + "\n";
+    
+    // Done.
+    return retval;
     
   }
   
@@ -435,6 +469,114 @@ namespace DAC {
     
   }
   
+  /***************************************************************************/
+  // Static function members.
+
+  /*
+   * Wrap text to the given width.
+   */
+  string GetOpt::_wrap_text (string const& text, size_t const width) {
+    
+    // Static data.
+    static char const* const BREAK = "% \t";
+    
+    // Work area.
+    string retval;
+    
+    cout << "text: \"" << text << "\"\n"
+         << "width: " << width << "\n";
+    // Step through text looking for breaking characters. %h is a soft hyphen.
+    string::size_type pos      = 0;
+    string::size_type oldpos   = 0;
+    string::size_type savepos  = 0;
+    string::size_type curwidth = 0;
+    string            ws;
+    for (pos = text.find_first_of(BREAK); ; pos = text.find_first_of(BREAK, oldpos)) {
+      
+      cout << "pos: " << pos << endl;
+      // Handle control character.
+      if (pos != string::npos && text[pos] == '%') {
+        
+        // Make sure we have more characters. If not, we have an error.
+        if (text.length() <= pos + 1) {
+          throw Errors::UnmatchedControlChar().Position(pos + 1).Text(text);
+        }
+        
+        // Blah.
+        switch (text[pos + 1]) {
+          
+          // Literal '%'.
+          case '%': {
+            
+          } break;
+          
+          // Unrecognized control char.
+          default: {
+            throw Errors::UnmatchedControlChar().Position(pos + 1).Text(text);
+          }
+          
+        };
+        
+      }
+      
+      // Set pos to proper place.
+      if (pos == string::npos) {
+        pos = text.length() - 1;
+      } else {
+        --pos;
+      }
+      
+      // Get the width of this block of text.
+      string::size_type blockwidth = pos - oldpos + 1;
+      string::size_type wslen      = ws.empty() ? 0 : (ws == " " ? 1 : 8 - (curwidth % 8));
+      
+      // Try to fit the current block of text on this line.
+      cout << "oldpos1: " << oldpos << "  pos1: " << pos << "  blockwidth1: " << blockwidth << "  curwidth1: " << curwidth << endl;
+      if (curwidth + wslen + blockwidth < width) {
+        
+        // Add last whitespace plus text.
+        retval   += ws + text.substr(oldpos, blockwidth);
+        curwidth += wslen + blockwidth;
+        
+      } else {
+        
+        // Move text down to its own line, split there if necessary.
+        retval += "\n";
+        while (blockwidth >= width) {
+          retval     += text.substr(oldpos, width - 1) + "\n";
+          oldpos     += width - 1;
+          blockwidth  = pos - oldpos + 1;
+        }
+        retval   += text.substr(oldpos, blockwidth);
+        curwidth  = blockwidth;
+        
+      }
+      
+      // End processing if at end of string.
+      if (pos == text.size() - 1) {
+        break;
+      }
+      
+      // Update whitespace and position.
+      ws     = text.substr(pos + 1, 1);
+      oldpos = pos + 2;
+      
+      cout << "retval: " << retval << endl;
+      
+    }
+    
+    // Done, return.
+    return retval;
+    
+  }
+  
+  /***************************************************************************
+   * GetOpt::_Data
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
   /*
    * Reset to just-constructed state.
    */
@@ -446,12 +588,14 @@ namespace DAC {
     options  .clear();
     arguments.clear();
     ordered  .clear();
-    numlong    = 0;
-    numshort   = 0;
+    numlong    =  0;
+    numshort   =  0;
+    helpwidth  = 80;
     checklong  = true;
     checkshort = true;
     posixcheck = false;
     programname.clear();
+    usage      .clear();
     description.clear();
     postinfo   .clear();
     bugaddress .clear();
@@ -484,9 +628,11 @@ namespace DAC {
     posixcheck  = source.posixcheck ;
     modified    = source.modified   ;
     programname = source.programname;
+    usage       = source.usage      ;
     description = source.description;
     postinfo    = source.postinfo   ;
     bugaddress  = source.bugaddress ;
+    helpwidth   = source.helpwidth  ;
     
     // We done.
     return *this;

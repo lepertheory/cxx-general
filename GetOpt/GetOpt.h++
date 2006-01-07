@@ -164,6 +164,26 @@ namespace DAC {
             private:
               std::string _option;
           };
+          
+          // Unmatched control error.
+          class UnmatchedControlChar : public UserError {
+            public:
+              virtual ~UnmatchedControlChar () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Unmatched control character at position " + DAC::toString(_pos) + " in string \"" + _text + "\".").c_str();
+                } catch (...) {
+                  return "Unmatched control character in string. Error creating message string.";
+                }
+              };
+              UnmatchedControlChar& Position (std::string::size_type const  pos ) { _pos  = pos ; return *this; };
+              UnmatchedControlChar& Text     (std::string            const& text) { _text = text; return *this; };
+              std::string::size_type Position () const { return _pos ; };
+              std::string            Text     () const { return _text; };
+            private:
+              std::string::size_type _pos ;
+              std::string            _text;
+          };
         
         // No instances of this class allowed.
         private:
@@ -183,7 +203,7 @@ namespace DAC {
       typedef std::vector<std::string> ArgListT;
       
       // Pointer to argument list.
-      typedef ReferencePointer<ArgList> ArgListPT;
+      typedef ReferencePointer<ArgListT> ArgListPT;
       
       /***********************************************************************
        * Option
@@ -268,16 +288,20 @@ namespace DAC {
       GetOpt& CheckShort  (bool        const  checkshort );
       GetOpt& POSIXCheck  (bool        const  posixcheck );
       GetOpt& ProgramName (std::string const& programname);
+      GetOpt& Usage       (std::string const& usage      );
       GetOpt& Description (std::string const& description);
       GetOpt& PostInfo    (std::string const& postinfo   );
       GetOpt& BugAddress  (std::string const& bugaddress );
+      GetOpt& HelpWidth   (size_t      const  helpwidth  );
       bool        CheckLong   () const;
       bool        CheckShort  () const;
       bool        POSIXCheck  () const;
       std::string ProgramName () const;
+      std::string Usage       () const;
       std::string Description () const;
       std::string PostInfo    () const;
       std::string BugAddress  () const;
+      size_t      HelpWidth   () const;
       
       // Reset to just-constructed state.
       void clear ();
@@ -318,6 +342,10 @@ namespace DAC {
       
       // Add a valid option.
       GetOpt& add_option (Option const& option);
+      
+      // Get help string.
+      std::string getShortHelp () const;
+      std::string getHelp      () const;
       
       // Scan the options. You will probably never use this function.
       void scan () const;
@@ -415,9 +443,11 @@ namespace DAC {
           
           // Help info.
           std::string programname;
+          std::string usage      ;
           std::string description;
           std::string postinfo   ;
           std::string bugaddress ;
+          size_t      helpwidth  ;
           
           /*******************************************************************/
           // Function members.
@@ -465,6 +495,13 @@ namespace DAC {
       // Find a given option, scan args if needed.
       _Option* _scan_option (char        const  sopt) const;
       _Option* _scan_option (std::string const& lopt) const;
+      
+      /***********************************************************************/
+      // Static function members.
+
+      // Wrap text to the given width. %h in the text is a soft hypen. %% is a
+      // literal '%'.
+      static std::string _wrap_text (std::string const& text, size_t const width);
     
   };
   
@@ -528,6 +565,14 @@ namespace DAC {
     }
     return *this;
   }
+  inline GetOpt& GetOpt::Usage (std::string const& usage) {
+    if (usage != _data->usage) {
+      GetOpt tmp(*this, true);
+      tmp._data->usage = usage;
+      _data = tmp._data;
+    }
+    return *this;
+  }
   inline GetOpt& GetOpt::Description (std::string const& description) {
     if (description != _data->description) {
       GetOpt tmp(*this, true);
@@ -544,10 +589,18 @@ namespace DAC {
     }
     return *this;
   }
-  inline GetOpt& GetOpt::BugAddress (std::string const& bugaddress ) {
+  inline GetOpt& GetOpt::BugAddress (std::string const& bugaddress) {
     if (bugaddress != _data->bugaddress) {
       GetOpt tmp(*this, true);
       tmp._data->bugaddress = bugaddress;
+      _data = tmp._data;
+    }
+    return *this;
+  }
+  inline GetOpt& GetOpt::HelpWidth (size_t const helpwidth) {
+    if (helpwidth != _data->helpwidth) {
+      GetOpt tmp(*this, true);
+      tmp._data->helpwidth = helpwidth;
       _data = tmp._data;
     }
     return *this;
@@ -556,9 +609,11 @@ namespace DAC {
   inline bool        GetOpt::CheckShort  () const { return _data->checkshort ; }
   inline bool        GetOpt::POSIXCheck  () const { return _data->posixcheck ; }
   inline std::string GetOpt::ProgramName () const { return _data->programname; }
+  inline std::string GetOpt::Usage       () const { return _data->usage      ; }
   inline std::string GetOpt::Description () const { return _data->description; }
   inline std::string GetOpt::PostInfo    () const { return _data->postinfo   ; }
   inline std::string GetOpt::BugAddress  () const { return _data->bugaddress ; }
+  inline size_t      GetOpt::HelpWidth   () const { return _data->helpwidth  ; }
   
   /*
    * See if an option has been defined.
@@ -588,14 +643,14 @@ namespace DAC {
   /*
    * Get arguments.
    */
-  inline std::vector<std::string> GetOpt::getArgs (                       ) const { if (_data->modified) { scan(); } return _data->arguments; }
-  inline std::vector<std::string> GetOpt::getArgs (char        const  sopt) const { return _scan_option(sopt)->args; }
-  inline std::vector<std::string> GetOpt::getArgs (std::string const& lopt) const { return _scan_option(lopt)->args; }
+  inline GetOpt::ArgListPT GetOpt::getArgs (                       ) const { if (_data->modified) { scan(); } return ArgListPT(new ArgListT(_data->arguments)); }
+  inline GetOpt::ArgListPT GetOpt::getArgs (char        const  sopt) const { return ArgListPT(new ArgListT(_scan_option(sopt)->args)); }
+  inline GetOpt::ArgListPT GetOpt::getArgs (std::string const& lopt) const { return ArgListPT(new ArgListT(_scan_option(lopt)->args)); }
   
   /*
    * Get ordered command-line arguments.
    */
-  inline std::vector<std::string> GetOpt::getOrdered () const { if (_data->modified) { scan(); } return _data->ordered; }
+  inline GetOpt::ArgListPT GetOpt::getOrdered () const { if (_data->modified) { scan(); } return ArgListPT(new ArgListT(_data->ordered)); }
   
   /*
    * _Data default constructor.
@@ -618,10 +673,10 @@ namespace DAC {
   inline GetOpt::Option::Option (char const sopt, std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname) :
     _sopt(sopt), _lopt(lopt), _argreq(argreq), _optreq(optreq), _help(help), _argname(argname), _isset_sopt(true), _isset_lopt(true)
   {}
-  inline GetOpt::Option::Option (char const sopt, ArgReq const argreq, bool const optreq) :
+  inline GetOpt::Option::Option (char const sopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname) :
     _sopt(sopt), _argreq(argreq), _optreq(optreq), _help(help), _argname(argname), _isset_sopt(true), _isset_lopt(false)
   {}
-  inline GetOpt::Option::Option (std::string const& lopt, ArgReq const argreq, bool const optreq) :
+  inline GetOpt::Option::Option (std::string const& lopt, ArgReq const argreq, bool const optreq, std::string const& help, std::string const& argname) :
     _lopt(lopt), _argreq(argreq), _optreq(optreq), _help(help), _argname(argname), _isset_sopt(false), _isset_lopt(true)
   {}
   

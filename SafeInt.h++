@@ -958,48 +958,48 @@ namespace DAC {
     /*
      * Raw cast.
      */
-    template <class T, class U> U RawCast<T, U, SE_SE>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, SE_SE>::op (T const value) {
       return static_cast<U>(value);
     }
-    template <class T, class U> U RawCast<T, U, SE_UE>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, SE_UE>::op (T const value) {
       return static_cast<U>(value & std::numeric_limits<T>::max());
     }
-    template <class T, class U> U RawCast<T, U, SS_SL>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, SS_SL>::op (T const value) {
       if (value < static_cast<T>(0)) {
         return static_cast<U>(value & std::numeric_limits<T>::max()) | static_cast<U>(1) << std::numeric_limits<T>::digits;
       } else {
         return static_cast<U>(value);
       }
     }
-    template <class T, class U> U RawCast<T, U, SS_UL>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, SS_UL>::op (T const value) {
       if (value < static_cast<T>(0)) {
         return static_cast<U>(value & std::numeric_limits<T>::max()) | static_cast<U>(1) << std::numeric_limits<T>::digits;
       } else {
         return static_cast<U>(value);
       }
     }
-    template <class T, class U> U RawCast<T, U, SL_SS>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, SL_SS>::op (T const value) {
       return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max())) | static_cast<U>(static_cast<T>(1) << std::numeric_limits<U>::digits & value);
     }
-    template <class T, class U> U RawCast<T, U, SL_US>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, SL_US>::op (T const value) {
       return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max()));
     }
-    template <class T, class U> U RawCast<T, U, UE_UE>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, UE_UE>::op (T const value) {
       return static_cast<U>(value);
     }
-    template <class T, class U> U RawCast<T, U, UE_SE>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, UE_SE>::op (T const value) {
       return static_cast<U>(value);
     }
-    template <class T, class U> U RawCast<T, U, US_SL>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, US_SL>::op (T const value) {
       return static_cast<U>(value);
     }
-    template <class T, class U> U RawCast<T, U, US_UL>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, US_UL>::op (T const value) {
       return static_cast<U>(value);
     }
-    template <class T, class U> U RawCast<T, U, UL_SS>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, UL_SS>::op (T const value) {
       return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max())) | static_cast<U>(static_cast<T>(1) << std::numeric_limits<U>::digits & value);
     }
-    template <class T, class U> U RawCast<T, U, UL_US>::op (T const value) {
+    template <class T, class U> inline U RawCast<T, U, UL_US>::op (T const value) {
       return static_cast<U>(value & static_cast<T>(std::numeric_limits<U>::max()));
     }
     

@@ -77,6 +77,7 @@ h_reduce           = env.File('reduce.h++'          ) ; headers += [h_reduce    
 h_rppower          = env.File('rppower.h++'         ) ; headers += [h_rppower         ]
 h_toString         = env.File('toString.h++'        ) ; headers += [h_toString        ]
 h_getErrorText     = env.File('getErrorText.h++'    ) ; headers += [h_getErrorText    ]
+h_wrapText         = env.File('wrapText.h++'        ) ; headers += [h_wrapText        ]
 
 # Modules.
 modules = []
