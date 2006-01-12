@@ -1,0 +1,27 @@
+# Imports from caller.
+Import('*')
+
+# Include the parent directory.
+env.Append(CPPPATH = ['..'])
+
+# Object files.
+o_wrapText = env.Object      (target = 'wrapText', source = ['wrapText.c++'])
+s_wrapText = env.SharedObject(target = 'wrapText', source = ['wrapText.c++'])
+
+# Create a dictionary containing all necessary information and objects to
+# compile with INIFile.
+cwrapText = {
+  'obj'        : [o_wrapText]             ,
+  'sobj'       : [s_wrapText]             ,
+  'include'    : ['wrapText']             ,
+  'headers'    : ['wrapText/wrapText.h++'],
+  'defines'    : []                       ,
+  'own_obj'    : [o_wrapText]             ,
+  'own_sobj'   : [s_wrapText]             ,
+  'own_include': 'wrapText'               ,
+  'own_headers': ['wrapText/wrapText.h++'],
+  'own_defines': []
+}
+
+# Return.
+Return('cwrapText')
