@@ -5,7 +5,7 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Include dependancy directories.
-for incdir in cwrapText['include']
+for incdir in cwrapText['include'] :
   env.Append(CPPPATH = ['#' + incdir])
 
 # Object files.

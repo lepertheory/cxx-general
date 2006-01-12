@@ -496,13 +496,6 @@ namespace DAC {
       _Option* _scan_option (char        const  sopt) const;
       _Option* _scan_option (std::string const& lopt) const;
       
-      /***********************************************************************/
-      // Static function members.
-
-      // Wrap text to the given width. %h in the text is a soft hypen. %% is a
-      // literal '%'.
-      static std::string _wrap_text (std::string const& text, size_t const width);
-    
   };
   
   /***************************************************************************

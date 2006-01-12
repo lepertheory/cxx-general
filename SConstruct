@@ -85,7 +85,7 @@ cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt'   ) ; 
 cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'      ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
 cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'           ) ; env = tmpenv.Copy() ; modules.append(cPOSIXFile)
 cwrapText  = SConscript(['wrapText/SConscript' ], exports = 'env'           ) ; env = tmpenv.Copy() ; modules.append(cwrapText )
-cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env wrapText'  ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
+cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env cwrapText' ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
 cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cPOSIXFile') ; env = tmpenv.Copy() ; modules.append(cINIFile  )
 
 # Tests.
