@@ -14,209 +14,121 @@
 namespace DAC {
   
   // Namespaces to use.
-  using namespace std        ;
-  using namespace ns_wrapText;
+  using namespace std;
+  
+  /***************************************************************************
+   * wrapText
+   ***************************************************************************/
   
   /***************************************************************************/
-  // Functions.
-
+  // Function members.
+  
   /*
-   * Wrap text, yo.
+   * Reset to just-constructed defaults.
    */
-  string wrapText (string const& text, size_t const width) {
+  void wrapText::clear () {
     
-    // Control character and points of interest. If you change CC, make sure
-    // to change the first character of POI.
-    static char        const CC  = '%';
-    static char const* const POI = "% \t\n";
+    _textptr = 0;
     
-    // Work area.
-    _PosArrT positions;
-    string   retval   ;
+    _shypos = 0;
+    _nspos  = 0;
+    _zwspos = 0;
     
-    // Find and mark all control characters.
-    for (std::string::size_type pos = 0; (pos = text.find_first_of(POI, pos)) != std::string::npos; ) {
-      
-      // Process this POI.
-      _Position newpos(pos, CT_END);
-      switch (text[pos]) {
-        
-        // Control character.
-        case CC:
-          
-          // Unmatched control characters are not allowed.
-          if (text.length() <= pos + 1) {
-            throw Errors::UnmatchedControlChar().Position(pos + 1).Text(text);
-          }
-          
-          // Process our control character.
-          switch (text[pos + 1]) {
-            case CC : newpos.type = _CT_CC  ; break;
-            case 'z': newpos.type = _CT_ZWSP; break;
-            case 'n': newpos.type = _CT_NBSP; break;
-            case 'h': newpos.type = _CT_SHY ; break;
-            default: {
-              throw Errors::UnrecognizedControlChar().Position(pos + 1).Text(text);
-            }
-          };
-          positions.push_back(newpos);
-          
-        break;
-        
-        // Normal characters.
-        case ' ' : newpos.type = _CC_SPACE  ; break;
-        case '\t': newpos.type = _CC_TAB    ; break;
-        case '\n': newpos.type = _CC_NEWLINE; break;
-        
-      };
-      positions.push_back(newpos);
-      
-    }
-    positions.push_back(text.length(), _CT_END);
+  }
+  
+  /*
+   * Wrap text.
+   */
+  string wrapText::wrap (string const* const text) {
     
-    // Wrap the text.
-    std::string            segment    ;
-    std::string::size_type lastpos = 0;
-    std::string::size_type linepos = 0;
-    for (_PosArrT::iterator i = positions.begin(); i != positions.end(); ++i) {
-      
-      // Add the text only to this segment.
-      segment += text.substr(lastpos, i->pos - lastpos);
-      
-      // Wrap character.
-      switch (i->type) {
-        case _CT_SPACE: {
-          if (linepos + segment.length() > width) {
-            retval += wrap_text;
-          } else {
-            retval      += nowrap_text + segment;
-            linepos     += segment.length() + nowrap_text.length();
-            wrap_text    = "" ;
-            nowrap_text  = " ";
-          }
-        }
-      };
-      
+    // Check for no text.
+    if (text == 0 && _text == 0) {
+      throw Errors::NullText();
     }
     
-    // Done.
-    return retval;
-    
-    /*
     // Work area.
-    PosArrT positions;
-    string  retval   ;
+    string   const& work      = text ? &*text : &*_text;
+    string          retval                             ;
+    POIContainer    wordstart                          ;
+    POIContainer    wordend                            ;
+    _POIList        poi                                ;
     
-    // Find all control characters and whitespace.
-    std::string::size_type pos    = 0;
-    std::string::size_type oldpos = 0;
-    do {
-      
-      // Find the next point of interest.
-      pos = text.find_first_of("% \t\n");
-      
-      // Get just the text length.
-      std::string::size_type textlen = (pos == std::string::npos ? text.length() : pos) - oldpos;
-      
-      // Get this character's post-processing position.
-      std::string::size_type postpos = (positions.empty() ? 0 : positions.back().postpos + positions.back().size) + textlen;
-      
-      // Get the previous character's line position.
-      std::string::size_type lastlinepos = positions.empty() ? 0 : positions.back().linepos;
-      
-      // Get the previous full text length.
-      std::string::size_type lasttextlen = positions.empty() ? 0 : positions.back().grouplen;
-      
-      // Get the potential starting character.
-      std::string::size_type startchr = lastlinepos + lasttextlen;
-      
-      // Get whether or not to join the previous group.
-      bool joingroup = !positions.empty() && positions.back().type == CT_CT;
-      
-      // Interrupt processing at end.
-      if (pos == string::npos) {
-        positions.push_back(Position(pos, postpos, , CT_END));
-        break;
+    // Add points of interest.
+    if (_shypos) {
+      for (POIContainer::const_iterator i = _shypos->begin(); i != _shypos->end(); ++i) {
+        poi[i - _shypos->begin()] = _CT_SHY;
       }
-      
-      // Process the character.
-      switch (text[pos]) {
-        
-        // Control character.
-        case '%': {
-
-          // Make sure we have a matching control character.
-          if (pos + 1 >= text.size()) {
-            throw Errors::UnmatchedControlChar().Position(pos + 1).Text(text);
-          }
-          
-          // Only recognized control character so far.
-          if (text[pos + 1] != 'h') {
-            throw Errors::UnrecognizedControlChar().Position(pos + 1).Text(text);
-          }
-          
-          // Set position info. Wrap if necessary.
-          if (startchr + textlen + 1 > width) {
-            positions.push_back(
-              Position(
-                pos,
-                postpos,
-                startchr + textlen,
-                textlen,
-                textlen + 1,
-                (joingroup ? lasttextlen + textlen : 0) + textlen + 1,
-                joingroup ? positions.back().groupsize + 1 : 0,
-                CT_CT
-              )
-            );
-          } else {
-            if (joingroup) {
-              PosArrT::iterator i = positions.end() - (positions.back().groupsize + 1);
-              if (i->linepos != 0) {
-                positions.insert(i, Position(
-                  i->prepos,
-                  i->postpos,
-                  i->linepos,
-                  0, 0, 0, 0,
-                  CT_CR
-                ));
-                i = positions.end() - (positions.back().groupsize + 1);
-                i->linepos = 0;
-                for (PosArrT::iterator i = positions.end() - positions.back().groupsize; i != positions.end() ++i) {
-                  i->linepos = (i - 1)->linepos + (i - 1)->fulllen;
-                }
-              }
-              if (positions.back().linepos + positions.back().fulllen + textlen > width) {
-                positions.push_back(
-                  Position(
-                    pos,
-                    
-            }
-          }
-          
-        } break;
-        
-        // Space.
-        case ' ': {
-          positions.push_back(Position(pos, positions.back().postpos + positions.back().size + (pos - oldpos), 1, CT_SHY));
-        } break;
-        
-        // Tab.
-        case ' ': {
-        } break;
-        
-        // Newline. {
-        case '\n': {
-        } break;
-        
+    }
+    if (_nbpos) {
+      for (POIContainer::const_iterator i = _nbpos->begin(); i != _nbpos->end(); ++i) {
+        poi[i - _nbpos->begin()] = _CT_NB;
+      }
+    }
+    if (_zwspos) {
+      for (POIContainer::const_iterator i = _zwspos->begin(); i != _zwspos->end(); ++i) {
+        poi[i - _zwspos->begin()] = _CT_ZWS;
+      }
+    }
+    for (string::size_type pos = 0; (pos = work.find_first_of(" \t\n")) != string::npos; ) {
+      switch (work[pos]) {
+        case ' ' : poi[pos] = _CT_SPACE  ; break;
+        case '\t': poi[pos] = _CT_TAB    ; break;
+        case '\n': poi[pos] = _CT_NEWLINE; break;
       };
+    }
+    poi[work.length()] = _CT_END;
+    
+    // Find word boundaries.
+    string::size_type start = 0;
+    for (_POIList::iterator i = poi.begin(); i != poi.end(); ++i) {
+      switch (i->second) {
+        case _CT_ZWS    :
+        case _CT_SHY    :
+          wordstart.push_back(start       );
+          wordend  .push_back(i->first - 1);
+          start = i->first;
+        break;
+        case _CT_SPACE  :
+        case _CT_TAB    :
+        case _CT_NEWLINE:
+          wordstart.push_back(start);
+          wordend  .push_back(i->first - 1);
+          start = i->first + 1;
+        break;
+        case _CT_NB     :
+        break;
+      };
+    }
+    
+    // Wrap.
+    string::size_type linepos = 0;
+    for (POIContainer::size_type word = 0; word != wordstart.size(); ++word) {
       
-    // Search until string not found.
-    };
+      /* HAY DAVE
+       * The soft hypen doesn't matter. Just test for the length of this block
+       * plus 1 unless the next block is a zero-width line break.
+       */
+      
+      // Determine the wrapped and non-wrapped widths of this text block.
+      string::size_type wrapwidth   = 0;
+      string::size_type nowrapwidth = 0;
+      if (wordend[word] - wordstart[word]) {
+        switch (poi.lower_bound(wordstart[word])->second) {
+          case _CT_SHY
+          case _CT_NB
+          case _CT_ZWS
+          case _CT_END
+          case _CT_SPACE
+          case _CT_TAB
+          case _CT_NEWLINE
+      
+      // Try to fit the current word on the current line.
+      //if (linepos + 
+      
+    }
     
     // Done.
     return retval;
-    */
     
   }
   

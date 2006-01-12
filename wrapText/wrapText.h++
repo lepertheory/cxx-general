@@ -11,10 +11,10 @@
 // Standard includes.
   #include <string>
   #include <vector>
+  #include <map>
 
 // System includes.
   #include <cxx-general/Exception.h++>
-  #include <cxx-general/toString.h++>
 
 // Namespace wrapper.
 namespace DAC {
@@ -22,7 +22,7 @@ namespace DAC {
   /***************************************************************************
    * wrapText
    ***************************************************************************
-   * Function object that wraps a text string.
+   * Function object to wrap text to a given width.
    ***************************************************************************/
   class wrapText {
     
@@ -32,141 +32,141 @@ namespace DAC {
     public:
       
       /***********************************************************************/
+      // Types.
+      
+      // Points of interest.
+      typedef std::string::size_type POI;
+      
+      // Container of points of interest.
+      typedef std::vector<POI> POIContainer;
+      
+      /***********************************************************************/
       // Errors.
       class Errors {
         public:
           
-          // All wrapText errors are based off of this.
+          // All errors are based off this.
           class Base : public Exception {
             public:
               virtual ~Base () throw() {};
               virtual char const* what () const throw() { return "Unknown error in wrapText()."; };
           };
           
-          // Unmatched control character.
-          class UnmatchedControlChar : public ns_wrapText::Errors::Base {
+          // No pointer to text to wrap was provided.
+          class NullText : public Base {
             public:
-              virtual ~UnmatchedControlChar () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Unmatched control character at position" + DAC::toString(_pos) + " in text \"" + _text + "\".").c_str();
-                } catch (...) {
-                  return "Unmatched control character. Error creating message string.";
-                }
-              };
-              UnmatchedControlChar& Position (std::string::size_type const  pos ) { _pos  = pos ; return *this; };
-              UnmatchedControlChar& Text     (std::string            const& text) { _text = text; return *this; };
-              std::string::size_type Position () const { return _pos ; };
-              std::string            Text     () const { return _text; };
-            private:
-              std::string::size_type _pos ;
-              std::string            _text;
+              virtual ~NullText () throw() {};
+              virtual char const* what () const throw() { return "No pointer to text to wrap was provided."; };
           };
           
-          // Unrecognized control character.
-          class UnrecognizedControlChar : public ns_wrapText::Errors::Base {
-            public:
-              virtual ~UnrecognizedControlChar : () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Unrecognized control character at position" + DAC::toString(_pos) + " in text \"" _text + "\".").c_str();
-                } catch (...) {
-                  return "Unrecognized control character. Error creating message string.";
-                }
-              };
-              UnrecognizedControlChar& Position (std::string::size_type const  pos ) { _pos  = pos ; return *this; };
-              UnrecognizedControlChar& Text     (std::string            const& text) { _text = text; return *this; };
-              std::string::size_type Position () const { return _pos ; };
-              std::string            Text     () const { return _text; };
-            private:
-              std::string::size_type _pos ;
-              std::string            _text;
-          };
-          
-        // Instantiation of this class is not allowed.
+        // No instances of this class are allowed.
         private:
           Errors ();
           Errors (Errors const&);
           Errors& operator = (Errors const&);
-      };
         
+      };
+      
+      /***********************************************************************/
+      // Function members.
+      
+      // Default constructor.
+      wrapText ();
+      
+      // Reset to just constructed defaults.
+      void clear ();
+      
+      // Function call operator.
+      std::string operator () const;
+      
+      // Wrap text.
+      std::string wrap (std::string const* const text = 0) const;
+      
+    /*
+     * Private members.
+     */
+    private:
+      
+      /***********************************************************************/
+      // Types.
+      
+      // Type of special character.
+      enum _CharType {
+        _CT_SHY    ,
+        _CT_NB     ,
+        _CT_ZWS    ,
+        _CT_END    ,
+        _CT_SPACE  ,
+        _CT_TAB    ,
+        _CT_NEWLINE
+      };
+      
+      /***********************************************************************
+       * _POI
+       ***********************************************************************
+       * Point of interest.
+       ***********************************************************************/
+      /*
+      class _POI {
+        
+        / *
+         * Public members.
+         * /
+        public:
+          
+          / ******************************************************************* /
+          // Data members.
+          
+          // Position.
+          std::string::size_type pos;
+          
+          // Character type.
+          _CharType type;
+          
+          / ******************************************************************* /
+          // Function members.
+          
+          // Default constructor.
+          _POI ();
+        
+      };
+      */
+      
+      // Processed point of interest list.
+      //typedef std::map<std::string::size_type, _POI> _POIList;
+      typedef std::map<std::string::size_type, _CharType> _POIList;
+      
+      /***********************************************************************/
+      // Data members.
+      
+      // Pointer to the text to wrap.
+      std::string const* _textptr;
+      
+      // Pointers to lists of special character positions.
+      POIContainer const* _shypos;
+      POIContainer const* _nbspos;
+      POIContainer const* _zwspos;
+      
   };
   
+  /***************************************************************************
+   * Inline and template definitions.
+   ***************************************************************************/
+  
+  /***************************************************************************
+   * wrapText::_POI
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+
   /*
-  // wrapText utils.
-  namespace ns_wrapText {
-    
-    / ************************************************************************* /
-    // Types.
-    
-    // Types of characters at given positions.
-    enum _CharType {
-      _CT_SPACE  ,
-      _CT_TAB    ,
-      _CT_CC     ,
-      _CT_ZWSP   ,
-      _CT_NBSP   ,
-      _CT_SHY    ,
-      _CT_NEWLINE,
-      _CT_END
-    };
-    
-    // Info about positions in the string.
-    class _Position {
-      public:
-        Position (std::string::size_type const new_pos  = 0
-                  CharType               const new_type = CT_END) :
-          pos (new_pos ),
-          type(new_type)
-        {};
-        std::string::size_type pos ;
-        CharType               type;
-    };
-    
-    // Points of interest.
-    typedef std::vector<Position> _PosArrT;
-    
-    / *
-    // Info about positions in the target string.
-    class Position {
-      public:
-        Position(std::string::size_type const newprepos    = 0,
-                 std::string::size_type const newpostpos   = 0,
-                 std::string::size_type const newlinepos   = 0,
-                 std::string::size_type const newtextlen   = 0,
-                 std::string::size_type const newfulllen   = 0,
-                 std::string::size_type const newgrouplen  = 0,
-                 size_t                 const newgroupsize = 0,
-                 CharType               const newtype      = CT_END) :
-          prepos   (newprepos   ),
-          postpos  (newpostpos  ),
-          linepos  (newlinepos  ),
-          textlen  (newtextlen  ),
-          fulllen  (newfulllen  ),
-          grouplen (newgrouplen ),
-          groupsize(newgroupsize),
-          type     (newtype     )
-        {};
-        std::string::size_type prepos   ;
-        std::string::size_type postpos  ;
-        std::string::size_type linepos  ;
-        std::string::size_type textlen  ;
-        std::string::size_type fulllen  ;
-        std::string::size_type grouplen ;
-        size_t                 groupsize;
-        CharType               type     ;
-    };
-    
-    // Noteworthy positions.
-    typedef std::vector<Position> PosArrT;
-    * /
-    
-    // Errors.
-    class Errors {
-    };
-    
-  }
-  */
+   * Default constructor.
+   */
+  inline wrapText::_POI () :
+    _pos (std::string::npos),
+    _type(_CT_END          )
+  {};
   
 }
 
