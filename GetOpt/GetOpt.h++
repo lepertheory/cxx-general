@@ -21,6 +21,7 @@
   #include <cxx-general/Exception.h++>
   #include <cxx-general/ReferencePointer.h++>
   #include <cxx-general/toString.h++>
+  #include <cxx-general/wrapText/wrapText.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -165,19 +166,39 @@ namespace DAC {
               std::string _option;
           };
           
-          // Unmatched control error.
-          class UnmatchedControlChar : public UserError {
+          // Unmatched escape character.
+          class UnmatchedEscape : public Base {
             public:
-              virtual ~UnmatchedControlChar () throw() {};
+              virtual ~UnmatchedEscape () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Unmatched control character at position " + DAC::toString(_pos) + " in string \"" + _text + "\".").c_str();
+                  return ("Unmatched escape character at position " + DAC::toString(_pos) + " in string \"" + _text + "\".").c_str();
                 } catch (...) {
-                  return "Unmatched control character in string. Error creating message string.";
+                  return "Unmatched escape character in string. Error creating message string.";
                 }
               };
-              UnmatchedControlChar& Position (std::string::size_type const  pos ) { _pos  = pos ; return *this; };
-              UnmatchedControlChar& Text     (std::string            const& text) { _text = text; return *this; };
+              UnmatchedEscape& Position (std::string::size_type const  pos ) { _pos  = pos ; return *this; };
+              UnmatchedEscape& Text     (std::string            const& text) { _text = text; return *this; };
+              std::string::size_type Position () const { return _pos ; };
+              std::string            Text     () const { return _text; };
+            private:
+              std::string::size_type _pos ;
+              std::string            _text;
+          };
+          
+          // Unknown escape character.
+          class UnknownEscape : public Base {
+            public:
+              virtual ~UnknownEscape () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Unknown escape character at position " + DAC::toString(_pos) + " in string \"" + _text + "\".").c_str();
+                } catch (...) {
+                  return "Unknown escape character in string. Error creating message string.";
+                }
+              };
+              UnknownEscape& Position (std::string::size_type const  pos ) { _pos  = pos ; return *this; };
+              UnknownEscape& Text     (std::string            const& text) { _text = text; return *this; };
               std::string::size_type Position () const { return _pos ; };
               std::string            Text     () const { return _text; };
             private:
@@ -495,6 +516,16 @@ namespace DAC {
       // Find a given option, scan args if needed.
       _Option* _scan_option (char        const  sopt) const;
       _Option* _scan_option (std::string const& lopt) const;
+      
+      /***********************************************************************/
+      // Static function members.
+      
+      // Process text for soft hyphens (%h), non-breaking characters (%n),
+      // zero-width spaces (%z), and replace %s with a second passed string.
+      static std::string _procText (std::string const& text, std::string const& replace,
+                                    wrapText::POIContainer& shy,
+                                    wrapText::POIContainer& nb ,
+                                    wrapText::POIContainer& zws );
       
   };
   

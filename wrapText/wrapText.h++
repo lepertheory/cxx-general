@@ -77,7 +77,17 @@ namespace DAC {
       void clear ();
       
       // Function call operator.
-      std::string operator () const;
+      std::string operator () (std::string const* const text = 0) const;
+      
+      // Properties.
+      wrapText& Width  (std::string::size_type const width );
+      wrapText& ShyPos (POIContainer const*    const shypos);
+      wrapText& NBPos  (POIContainer const*    const nbpos );
+      wrapText& ZWSPos (POIContainer const*    const zwspos);
+      std::string::size_type Width  () const;
+      POIContainer const*    ShyPos () const;
+      POIContainer const*    NBPos  () const;
+      POIContainer const*    ZWSPos () const;
       
       // Wrap text.
       std::string wrap (std::string const* const text = 0) const;
@@ -142,9 +152,12 @@ namespace DAC {
       // Pointer to the text to wrap.
       std::string const* _textptr;
       
+      // Width to wrap text to.
+      std::string::size_type _width;
+      
       // Pointers to lists of special character positions.
       POIContainer const* _shypos;
-      POIContainer const* _nbspos;
+      POIContainer const* _nbpos ;
       POIContainer const* _zwspos;
       
   };
@@ -152,6 +165,35 @@ namespace DAC {
   /***************************************************************************
    * Inline and template definitions.
    ***************************************************************************/
+  
+  /***************************************************************************
+   * wrapText
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Default constructor.
+   */
+  inline wrapText::wrapText () { clear(); }
+  
+  /*
+   * Function call operator.
+   */
+  inline std::string wrapText::operator () (std::string const* const text) const { return wrap(text); }
+  
+  /*
+   * Properties.
+   */
+  inline wrapText& wrapText::Width  (std::string::size_type const width ) { _width  = width ; return *this; }
+  inline wrapText& wrapText::ShyPos (POIContainer const*    const shypos) { _shypos = shypos; return *this; }
+  inline wrapText& wrapText::NBPos  (POIContainer const*    const nbpos ) { _nbpos  = nbpos ; return *this; }
+  inline wrapText& wrapText::ZWSPos (POIContainer const*    const zwspos) { _zwspos = zwspos; return *this; }
+  inline std::string::size_type        wrapText::Width  () const { return _width ; }
+  inline wrapText::POIContainer const* wrapText::ShyPos () const { return _shypos; }
+  inline wrapText::POIContainer const* wrapText::NBPos  () const { return _nbpos ; }
+  inline wrapText::POIContainer const* wrapText::ZWSPos () const { return _zwspos; }
   
   /***************************************************************************
    * wrapText::_POI
@@ -163,10 +205,12 @@ namespace DAC {
   /*
    * Default constructor.
    */
-  inline wrapText::_POI () :
+  /*
+  inline wrapText::_POI::_POI () :
     _pos (std::string::npos),
     _type(_CT_END          )
   {};
+  */
   
 }
 

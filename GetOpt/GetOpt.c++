@@ -162,14 +162,24 @@ namespace DAC {
   string GetOpt::getHelp () const {
     
     // Work area.
-    string retval;
+    string                 retval;
+    wrapText::POIContainer shypos;
+    wrapText::POIContainer nbpos ;
+    wrapText::POIContainer zwspos;
+    string                 work  ;
     
     // All start with this.
     retval = getShortHelp();
     
     // Blank line, then description. Wrap description to the terminal length.
     // Break at whitespace and soft hyphens.
-    retval += "\n" + wrapText(_data->description, _data->helpwidth) + "\n";
+    work = _procText(_data->description, _data->programname, shypos, nbpos, zwspos);
+    retval += "\n"
+            + wrapText().Width (_data->helpwidth)
+                        .ShyPos(&shypos         )
+                        .NBPos (&nbpos          )
+                        .ZWSPos(&zwspos         ).wrap(&work)
+            + "\n";
     
     // Done.
     return retval;
@@ -466,6 +476,65 @@ namespace DAC {
     }
     
     // Return the result.
+    return retval;
+    
+  }
+  
+  /*
+   * Process text for passing to wrapText.
+   */
+  string GetOpt::_procText (string const& text, string const& replace,
+                            wrapText::POIContainer& shy,
+                            wrapText::POIContainer& nb ,
+                            wrapText::POIContainer& zws ) {
+    
+    // Work area.
+    string retval;
+    
+    // Process special characters in text.
+    string::size_type pos    = 0;
+    string::size_type oldpos = 0;
+    for (;;) {
+      
+      // Find the next escape character.
+      pos = text.find('%', oldpos);
+      
+      // No unmatched escape.
+      if (pos + 1 > text.length()) {
+        throw Errors::UnmatchedEscape().Position(pos + 1).Text(text);
+      }
+      
+      // End processing if we are at the end of the string. Grab the rest of
+      // the text.
+      if (pos == string::npos) {
+        if (oldpos < text.length()) {
+          retval += text.substr(oldpos);
+        }
+        break;
+      }
+      
+      // Push text up to this point into the return if there is text to push.
+      if (pos > oldpos) {
+        retval += text.substr(oldpos, pos - 1 - oldpos);
+      }
+      
+      // Process option.
+      switch (text[pos + 1]) {
+        case 'h': shy.push_back(pos); break;
+        case 'n': nb .push_back(pos); break;
+        case 'z': zws.push_back(pos); break;
+        case 's': retval += replace ; break;
+        default: {
+          throw Errors::UnknownEscape().Position(pos + 1).Text(text);
+        }
+      };
+      
+      // Set the next position.
+      oldpos = pos + 2;
+      
+    }
+    
+    // Done.
     return retval;
     
   }
