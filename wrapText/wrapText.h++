@@ -80,14 +80,16 @@ namespace DAC {
       std::string operator () (std::string const* const text = 0) const;
       
       // Properties.
-      wrapText& Width  (std::string::size_type const width );
-      wrapText& ShyPos (POIContainer const*    const shypos);
-      wrapText& NBPos  (POIContainer const*    const nbpos );
-      wrapText& ZWSPos (POIContainer const*    const zwspos);
-      std::string::size_type Width  () const;
-      POIContainer const*    ShyPos () const;
-      POIContainer const*    NBPos  () const;
-      POIContainer const*    ZWSPos () const;
+      wrapText& Width    (std::string::size_type const width   );
+      wrapText& TabWidth (std::string::size_type const tabwidth);
+      wrapText& ShyPos   (POIContainer const*    const shypos  );
+      wrapText& NBPos    (POIContainer const*    const nbpos   );
+      wrapText& ZWSPos   (POIContainer const*    const zwspos  );
+      std::string::size_type Width    () const;
+      std::string::size_type TabWidth () const;
+      POIContainer const*    ShyPos   () const;
+      POIContainer const*    NBPos    () const;
+      POIContainer const*    ZWSPos   () const;
       
       // Wrap text.
       std::string wrap (std::string const* const text = 0) const;
@@ -155,10 +157,22 @@ namespace DAC {
       // Width to wrap text to.
       std::string::size_type _width;
       
+      // Number of spaces in a tab.
+      std::string::size_type _tabwidth;
+      
       // Pointers to lists of special character positions.
       POIContainer const* _shypos;
       POIContainer const* _nbpos ;
       POIContainer const* _zwspos;
+      
+      /***********************************************************************/
+      // Static function members.
+      
+      // Decide if a given block of text should be wrapped.
+      /*
+      static bool _shouldWrap (std::string::size_type const linepos  ,
+                               std::string::size_type const textwidth );
+      */
       
   };
   
@@ -186,14 +200,16 @@ namespace DAC {
   /*
    * Properties.
    */
-  inline wrapText& wrapText::Width  (std::string::size_type const width ) { _width  = width ; return *this; }
-  inline wrapText& wrapText::ShyPos (POIContainer const*    const shypos) { _shypos = shypos; return *this; }
-  inline wrapText& wrapText::NBPos  (POIContainer const*    const nbpos ) { _nbpos  = nbpos ; return *this; }
-  inline wrapText& wrapText::ZWSPos (POIContainer const*    const zwspos) { _zwspos = zwspos; return *this; }
-  inline std::string::size_type        wrapText::Width  () const { return _width ; }
-  inline wrapText::POIContainer const* wrapText::ShyPos () const { return _shypos; }
-  inline wrapText::POIContainer const* wrapText::NBPos  () const { return _nbpos ; }
-  inline wrapText::POIContainer const* wrapText::ZWSPos () const { return _zwspos; }
+  inline wrapText& wrapText::Width    (std::string::size_type const width   ) { _width    = width   ; return *this; }
+  inline wrapText& wrapText::TabWidth (std::string::size_type const tabwidth) { _tabwidth = tabwidth; return *this; }
+  inline wrapText& wrapText::ShyPos   (POIContainer const*    const shypos  ) { _shypos   = shypos  ; return *this; }
+  inline wrapText& wrapText::NBPos    (POIContainer const*    const nbpos   ) { _nbpos    = nbpos   ; return *this; }
+  inline wrapText& wrapText::ZWSPos   (POIContainer const*    const zwspos  ) { _zwspos   = zwspos  ; return *this; }
+  inline std::string::size_type        wrapText::Width    () const { return _width   ; }
+  inline std::string::size_type        wrapText::TabWidth () const { return _tabwidth; }
+  inline wrapText::POIContainer const* wrapText::ShyPos   () const { return _shypos  ; }
+  inline wrapText::POIContainer const* wrapText::NBPos    () const { return _nbpos   ; }
+  inline wrapText::POIContainer const* wrapText::ZWSPos   () const { return _zwspos  ; }
   
   /***************************************************************************
    * wrapText::_POI

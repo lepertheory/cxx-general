@@ -22,6 +22,7 @@
   #include <cxx-general/ReferencePointer.h++>
   #include <cxx-general/toString.h++>
   #include <cxx-general/wrapText/wrapText.h++>
+  #include <cxx-general/Arb/Arb.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -348,9 +349,14 @@ namespace DAC {
       size_t numArgs (std::string const& lopt) const;
       
       // Get the arguments. First form is for non-option args.
+      /*
       ArgListPT getArgs (                       ) const;
       ArgListPT getArgs (char        const  sopt) const;
       ArgListPT getArgs (std::string const& lopt) const;
+      */
+      template <class T> ReferencePointer< std::vector<T> > getArgs (                       ) const;
+      template <class T> ReferencePointer< std::vector<T> > getArgs (char        const  sopt) const;
+      template <class T> ReferencePointer< std::vector<T> > getArgs (std::string const& lopt) const;
       
       // Get command-line arguments in order.
       ArgListPT getOrdered () const;
@@ -667,9 +673,51 @@ namespace DAC {
   /*
    * Get arguments.
    */
+  /*
   inline GetOpt::ArgListPT GetOpt::getArgs (                       ) const { if (_data->modified) { scan(); } return ArgListPT(new ArgListT(_data->arguments)); }
   inline GetOpt::ArgListPT GetOpt::getArgs (char        const  sopt) const { return ArgListPT(new ArgListT(_scan_option(sopt)->args)); }
   inline GetOpt::ArgListPT GetOpt::getArgs (std::string const& lopt) const { return ArgListPT(new ArgListT(_scan_option(lopt)->args)); }
+  */
+  
+  // std::string.
+  template <> inline ReferencePointer< std::vector<std::string> > GetOpt::getArgs<std::string> () const {
+    if (_data->modified) {
+      scan();
+    }
+    return ReferencePointer< std::vector<std::string> >(new std::vector<std::string>(_data->arguments));
+  }
+  template <> inline ReferencePointer< std::vector<std::string> > GetOpt::getArgs<std::string> (char const sopt) const {
+    return ReferencePointer< std::vector<std::string> >(new std::vector<std::string>(_scan_option(sopt)->args));
+  }
+  template <> inline ReferencePointer< std::vector<std::string> > GetOpt::getArgs<std::string> (std::string const& lopt) const {
+    return ReferencePointer< std::vector<std::string> >(new std::vector<std::string>(_scan_option(lopt)->args));
+  }
+  
+  // bool.
+  template <> ReferencePointer< std::vector<bool> > GetOpt::getArgs<bool> () const {
+    
+    // Work area.
+    ReferencePointer< std::vector<bool> > retval;
+    
+    // Scan options if necessary.
+    if (_data->modified) {
+      scan();
+    }
+    
+    // Convert each argument to boolean.
+    for (_ArgList::iterator i = _data->arguments.begin(); i != _data->arguments.end(); ++i) {
+      retval->push_back(_toBool(
+  
+  template <class T> ReferencePointer< std::vector<T> > GetOpt::getArgs () const {
+    if (_data->modified) {
+      scan();
+    }
+    ReferencePointer< std::vector<T> > retval;
+    for (_ArgList::iterator i = _data->arguments.begin(); i != _data->arguments.end(); ++i) {
+      retval->push_back(Arb(*i));
+    }
+    return retval;
+  }
   
   /*
    * Get ordered command-line arguments.

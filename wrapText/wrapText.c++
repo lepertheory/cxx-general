@@ -30,7 +30,8 @@ namespace DAC {
     
     _textptr = 0;
     
-    _width = 0;
+    _width    = 0;
+    _tabwidth = 8;
     
     _shypos = 0;
     _nbpos  = 0;
@@ -108,6 +109,7 @@ namespace DAC {
     
     // Wrap.
     string::size_type linepos = 0;
+    string::size_type nbwidth = 0;
     string            nbtext     ;
     string            btext      ;
     for (POIContainer::size_type word = 0; word != wordstart.size(); ++word) {
@@ -134,34 +136,58 @@ namespace DAC {
       // Determine the length of this block of text.
       string::size_type textwidth = wordend[word] - wordstart[word] + 1;
       
-      cout << "linepos: " << linepos << "  textwidth: " << textwidth << endl;
+      // Get the width of the non-breaking text.
+      /*
+      string::size_type nbwidth = 0;
+      string::size_type tabs    = 0;
+      for (string::size_type pos = 0; (pos = nbtext.find('\t', pos)) != string::npos; ++pos) { ++tabs; }
+      if (tabs) {
+        nbwidth = linepos % _tabwidth + _tabwidth * (tabs - 1);
+      } else {
+        nbwidth = nbtext.length();
+      }
+      */
+      
+      cout << "linepos: " << linepos << "  textwidth: " << textwidth << "  nbwidth: " << nbwidth << "  text: " << work.substr(wordstart[word], textwidth) << endl;
       
       // Try to fit this block on the current line.
+      if (linepos + nbwidth + textwidth > _width) {
+        retval += btext;
+        if (textwidth > _width) {
+          cout << "wordstart: " << wordstart[word] << "  wordend: " << wordend[word] << endl;
+          for (string::size_type pos = wordstart[word]; pos <= wordend[word]; pos += _width) {
+            cout << "pos: " << pos << endl;
+            retval += "\n" + work.substr(pos, min(wordend[word] - pos + 1, _width));
+          }
+        } else {
+          retval += "\n" + work.substr(wordstart[word], textwidth);
+        }
+        linepos = (textwidth - 1) % _width + 1;
+      } else {
+        retval  += nbtext + work.substr(wordstart[word], textwidth);
+        linepos += nbwidth + textwidth;
+      }
+      
       switch (poi[wordend[word] + 1]) {
         case _CT_END:
-        case _CT_SHY:
         case _CT_NB:
         case _CT_ZWS:
+        break;
+        case _CT_SHY:
+          btext = "-";
+          nbtext.clear();
+          nbwidth = 0;
+        break;
         case _CT_SPACE:
-          if (linepos + nbtext.length() + textwidth > _width) {
-            retval += btext + "\n";
-            if (textwidth > _width) {
-              for (string::size_type pos = wordstart[word]; pos + _width <= wordend[word]; pos += _width) {
-                retval += work.substr(pos, min(wordend[word] - pos, _width - 1));
-              }
-              linepos = textwidth % _width;
-            } else {
-              retval += work.substr(wordstart[word], textwidth);
-              linepos = textwidth;
-            }
-          } else {
-            retval += nbtext + work.substr(wordstart[word], textwidth);
-            linepos += nbtext.length() + textwidth;
-          }
           btext.clear();
-          nbtext = " ";
+          nbtext  = " ";
+          nbwidth =   1;
         break;
         case _CT_TAB:
+          btext.clear();
+          nbtext = "\t";
+          nbwidth = _tabwidth + 1 - linepos % _tabwidth;
+        break;
         case _CT_NEWLINE:
         break;
       };
@@ -173,5 +199,17 @@ namespace DAC {
     
   }
   
+  /*
+  * Determine if a block of text should wrap.
+  */
+  /*
+  bool wrapText::_shouldWrap (string::size_type const linepos  ,
+                              string::size_type const textwidth ) {
+    
+    
+    
+  }
+  */
+
 }
 
