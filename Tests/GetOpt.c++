@@ -23,8 +23,8 @@ int main (int argc, char** argv) {
       .Usage      ("[OPTION]...")
       .Description("This is the description. It has a really long line to test out my text wrapping function. Woo. Here tab\tlet's see if it gets this right. I be surprised if it does. Now let's try out some really long words. 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 How about that? Rock on brother beavis, I kick ass. This isn't long enough yet, let's make it longer. The program name is %s, I'll bet you didn't know that.")
       .PostInfo   ("I guess this goes at the end.")
-      .BugAddress ("cxxgeneral@lepertheory.net");
-      .HelpWidth  (test.isSet('w') ? test.getArg;
+      .BugAddress ("cxxgeneral@lepertheory.net")
+      .HelpWidth  (test.isSet('w') ? test['w'][0] : 80);
   
   cout << "Help:\n" << test.getHelp();
   

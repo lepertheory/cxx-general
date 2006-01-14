@@ -14,8 +14,12 @@
   #define GETOPT_u3p2dg82u3pd8u28u278b
 
 // Standard includes.
+  #include <cctype>
+
+// STL includes.
   #include <string>
   #include <vector>
+  #include <algorithm>
 
 // System includes.
   #include <cxx-general/Exception.h++>
@@ -23,6 +27,7 @@
   #include <cxx-general/toString.h++>
   #include <cxx-general/wrapText/wrapText.h++>
   #include <cxx-general/Arb/Arb.h++>
+  #include <cxx-general/demangle.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -35,9 +40,27 @@ namespace DAC {
   class GetOpt {
     
     /*
+     * Private members.
+     */
+    private:
+      
+      /***********************************************************************/
+      // Forward declarations.
+      
+      // Internal option representation.
+      class _Option;
+    
+    /*
      * Public members.
      */
     public:
+      
+      /***********************************************************************/
+      // Forward declarations.
+      
+      // Option readers.
+      class ShortOptReader;
+      class LongOptReader ;
       
       /***********************************************************************/
       // Errors.
@@ -162,9 +185,29 @@ namespace DAC {
                 }
               };
               MissingArg& Option (std::string const& option) throw() { _option = option; return *this; };
-              std::string const Option () const throw() { return _option; };
+              std::string Option () const throw() { return _option; };
             private:
               std::string _option;
+          };
+          
+          // Error converting number.
+          class BadNum : public UserError {
+            public:
+              virtual ~BadNum () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Could not convert option to \"" + _type + "\", lower-level error message is: \"" + _errtext + "\".").c_str();
+                } catch (...) {
+                  return "Could not convert option to requested type. Error creating message string.";
+                }
+              };
+              BadNum& Type    (std::string const& totype ) throw() { _type    = totype ; return *this; };
+              BadNum& ErrText (std::string const& errtext) throw() { _errtext = errtext; return *this; };
+              std::string Type    () const throw() { return _type   ; };
+              std::string ErrText () const throw() { return _errtext; };
+            private:
+              std::string _type   ;
+              std::string _errtext;
           };
           
           // Unmatched escape character.
@@ -206,6 +249,66 @@ namespace DAC {
               std::string::size_type _pos ;
               std::string            _text;
           };
+          
+          class ArgOOB : public Base {
+            public:
+              virtual ~ArgOOB () throw () {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Requested argument number " + DAC::toString(_argnum) + " exceeds argument list of " + DAC::toString(_size) + " arguments.").c_str();
+                } catch (...) {
+                  return "Requested argument number exceeds argument list size. Error creating message string.";
+                }
+              };
+              virtual ArgOOB& ArgNum (size_t const argnum) { _argnum = argnum; return *this; };
+              virtual ArgOOB& Size   (size_t const size  ) { _size   = size  ; return *this; };
+              virtual size_t ArgNum () const { return _argnum; };
+              virtual size_t Size   () const { return _size  ; };
+            private:
+              size_t _argnum;
+              size_t _size  ;
+          };
+          class ArgOOBCmdLine : public ArgOOB {
+            
+          };
+          class ArgOOBShort : public ArgOOB {
+            public:
+              virtual ~ArgOOBShort () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Requested argument number " + DAC::toString(ArgNum()) + " exceeds -" + DAC::toStringChr(_sopt) + " argument list of " + DAC::toString(Size()) + " arguments.").c_str();
+                } catch (...) {
+                  return "Requested short option argument number exceeds argument list size. Error creating message string.";
+                }
+              };
+              virtual ArgOOBShort& ArgNum (size_t const argnum) { return reinterpret_cast<ArgOOBShort&>(ArgOOB::ArgNum(argnum)); };
+              virtual ArgOOBShort& Size   (size_t const size  ) { return reinterpret_cast<ArgOOBShort&>(ArgOOB::Size  (size  )); };
+                      ArgOOBShort& Option (char   const sopt  ) { _sopt = sopt; return *this;                                    };
+              virtual size_t ArgNum () const { return ArgOOB::ArgNum(); };
+              virtual size_t Size   () const { return ArgOOB::Size  (); };
+                      char   Option () const { return _sopt           ; };
+            private:
+              char _sopt;
+          };
+          class ArgOOBLong : public ArgOOB {
+            public:
+              virtual ~ArgOOBLong () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Requested argument number " + DAC::toString(ArgNum()) + " exceeds --" + _lopt + " argument list of " + DAC::toString(Size()) + " arguments.").c_str();
+                } catch (...) {
+                  return "Requested long option argument number exceeds argument list size. Error creating message string.";
+                }
+              };
+              virtual ArgOOBLong& ArgNum (size_t      const  argnum) { return reinterpret_cast<ArgOOBLong&>(ArgOOB::ArgNum(argnum)); };
+              virtual ArgOOBLong& Size   (size_t      const  size  ) { return reinterpret_cast<ArgOOBLong&>(ArgOOB::Size  (size  )); };
+                      ArgOOBLong& Option (std::string const& lopt  ) { _lopt = lopt; return *this;                                   };
+              virtual size_t      ArgNum () const { return ArgOOB::ArgNum(); };
+              virtual size_t      Size   () const { return ArgOOB::Size  (); };
+                      std::string Option () const { return _lopt           ; };
+            private:
+              std::string _lopt;
+          };
         
         // No instances of this class allowed.
         private:
@@ -238,6 +341,13 @@ namespace DAC {
          * Public members.
          */
         public:
+          
+          /*******************************************************************/
+          // Friends.
+          
+          // Option readers.
+          friend class ShortOptReader;
+          friend class LongOptReader ;
           
           /*******************************************************************/
           // Function members.
@@ -284,6 +394,114 @@ namespace DAC {
           
       };
       
+      /***********************************************************************
+       * ArgReader
+       ***********************************************************************
+       * Reads an argument. Mostly used for operator access.
+       ***********************************************************************/
+      class ArgReader {
+        
+        /*
+         * Public members.
+         */
+        public:
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Constructor.
+          ArgReader (std::string const& arg);
+          
+          // Conversion operator.
+          template <class T> operator T () const;
+          
+        /*
+         * Private members.
+         */
+        private:
+          
+          /*******************************************************************/
+          // Data members.
+          
+          // The argument.
+          std::string const& _arg;
+        
+      };
+      
+      /***********************************************************************
+       * ShortOptReader
+       ***********************************************************************
+       * Reads a short option. Mostly used for operator access.
+       ***********************************************************************/
+      class ShortOptReader {
+        
+        /*
+         * Public members.
+         */
+        public:
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Constructor.
+          ShortOptReader (_Option const& opt);
+          
+          // Conversion operator. Returns whether this option is set.
+          operator bool () const;
+          
+          // Element access operator, read option argument.
+          ArgReader operator [] (size_t const argnum) const;
+          
+        /*
+         * Private members.
+         */
+        private:
+          
+          /*******************************************************************/
+          // Data members.
+          
+          // The option.
+          _Option const& _opt;
+        
+      };
+      
+      /***********************************************************************
+       * LongOptReader
+       ***********************************************************************
+       * Reads a long option. Mostly used for operator access.
+       ***********************************************************************/
+      class LongOptReader {
+        
+        /*
+         * Public members.
+         */
+        public:
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Constructor.
+          LongOptReader (_Option const& opt);
+          
+          // Conversion operator. Returns whether this option is set.
+          operator bool () const;
+          
+          // Element access operator, read option argument.
+          ArgReader operator [] (size_t const argnum) const;
+          
+        /*
+         * Private members.
+         */
+        private:
+          
+          /*******************************************************************/
+          // Data members.
+
+          // The option.
+          _Option const& _opt;
+          
+      };
+      
       // List of options.
       typedef std::vector<Option> Options;
       
@@ -301,6 +519,13 @@ namespace DAC {
       
       // Valid options constructor.
       GetOpt (Options const& options);
+      
+      // Element access operator, read command line argument.
+      ArgReader operator [] (size_t const element) const;
+      
+      // Element access operator, read option.
+      ShortOptReader operator [] (char        const  sopt) const;
+      LongOptReader  operator [] (std::string const& lopt) const;
       
       // Assignment operator.
       GetOpt& operator = (GetOpt const& right) throw();
@@ -348,12 +573,12 @@ namespace DAC {
       size_t numArgs (char        const  sopt) const;
       size_t numArgs (std::string const& lopt) const;
       
-      // Get the arguments. First form is for non-option args.
-      /*
-      ArgListPT getArgs (                       ) const;
-      ArgListPT getArgs (char        const  sopt) const;
-      ArgListPT getArgs (std::string const& lopt) const;
-      */
+      // Get arguments. First form is for non-option args.
+      template <class T> T getArg (                         size_t const argnum) const;
+      template <class T> T getArg (char const sopt        , size_t const argnum) const;
+      template <class T> T getArg (std::string const& lopt, size_t const argnum) const;
+      
+      // Get all arguments as a list.
       template <class T> ReferencePointer< std::vector<T> > getArgs (                       ) const;
       template <class T> ReferencePointer< std::vector<T> > getArgs (char        const  sopt) const;
       template <class T> ReferencePointer< std::vector<T> > getArgs (std::string const& lopt) const;
@@ -533,10 +758,38 @@ namespace DAC {
                                     wrapText::POIContainer& nb ,
                                     wrapText::POIContainer& zws );
       
+      // Convert a given string to bool.
+      static bool _toBool (std::string const& text);
+      
+      // Convert a string to uppercase.
+      static std::string _uppercase (std::string const& text);
+      
+      // Convert a string to a given type.
+      template <class T> static T _convert (std::string const& text);
+      
+      // Convert a list of arguments to a given type.
+      template <class T> static ReferencePointer< std::vector<T> > _convert_ArgList (_ArgList const& args);
+      
   };
   
   /***************************************************************************
+   * Explicit template instantiations.
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+
+  // Get arguments.
+  template <> std::string GetOpt::getArg<std::string> (                         size_t const argnum) const;
+  template <> std::string GetOpt::getArg<std::string> (char        const  sopt, size_t const argnum) const;
+  template <> std::string GetOpt::getArg<std::string> (std::string const& lopt, size_t const argnum) const;
+  
+  /***************************************************************************
    * Inline and template definitions.
+   ***************************************************************************/
+  
+  /***************************************************************************
+   * GetOpt
    ***************************************************************************/
   
   /***************************************************************************/
@@ -551,6 +804,17 @@ namespace DAC {
    * Copy constructor.
    */
   inline GetOpt::GetOpt (GetOpt const& source, bool const deep) { copy(source, deep); }
+  
+  /*
+   * Element access operator, read command line argument.
+   */
+  inline GetOpt::ArgReader GetOpt::operator [] (size_t const element) const { return getArg<std::string>(element); }
+  
+  /*
+   * Element access operator, read option.
+   */
+  inline GetOpt::ShortOptReader GetOpt::operator [] (char        const  sopt) const { return *_scan_option(sopt); }
+  inline GetOpt::LongOptReader  GetOpt::operator [] (std::string const& lopt) const { return *_scan_option(lopt); }
   
   /*
    * Assignment operator.
@@ -671,13 +935,35 @@ namespace DAC {
   inline size_t GetOpt::numArgs (std::string const& lopt) const { return _scan_option(lopt)->args.size(); }
   
   /*
-   * Get arguments.
+   * Get arguments. First form is for non-option args.
    */
+  template <class T> T GetOpt::getArg (size_t const argnum) const {
+    if (_data->modified) {
+      scan();
+    }
+    if (argnum >= _data->arguments.size()) {
+      throw Errors::ArgOOBCmdLine().ArgNum(argnum).Size(_data->arguments.size());
+    }
+    return _convert<T>(_data->arguments[argnum]);
+  }
+  template <class T> T GetOpt::getArg (char const sopt, size_t const argnum) const {
+    _ArgList const& work = _scan_option(sopt)->args;
+    if (argnum >= work.size()) {
+      throw Errors::ArgOOBShort().ArgNum(argnum).Size(work.size()).Option(sopt);
+    }
+    return _convert<T>(work[argnum]);
+  }
+  template <class T> T GetOpt::getArg (std::string const& lopt, size_t const argnum) const {
+    _ArgList const& work = _scan_option(lopt)->args;
+    if (argnum >= work.size()) {
+      throw Errors::ArgOOBLong().ArgNum(argnum).Size(work.size()).Option(lopt);
+    }
+    return _convert<T>(work[argnum]);
+  }
+      
   /*
-  inline GetOpt::ArgListPT GetOpt::getArgs (                       ) const { if (_data->modified) { scan(); } return ArgListPT(new ArgListT(_data->arguments)); }
-  inline GetOpt::ArgListPT GetOpt::getArgs (char        const  sopt) const { return ArgListPT(new ArgListT(_scan_option(sopt)->args)); }
-  inline GetOpt::ArgListPT GetOpt::getArgs (std::string const& lopt) const { return ArgListPT(new ArgListT(_scan_option(lopt)->args)); }
-  */
+   * Get all arguments as a list.
+   */
   
   // std::string.
   template <> inline ReferencePointer< std::vector<std::string> > GetOpt::getArgs<std::string> () const {
@@ -693,36 +979,148 @@ namespace DAC {
     return ReferencePointer< std::vector<std::string> >(new std::vector<std::string>(_scan_option(lopt)->args));
   }
   
-  // bool.
-  template <> ReferencePointer< std::vector<bool> > GetOpt::getArgs<bool> () const {
-    
-    // Work area.
-    ReferencePointer< std::vector<bool> > retval;
-    
-    // Scan options if necessary.
+  // Other.
+  template <class T> inline ReferencePointer< std::vector<T> > GetOpt::getArgs () const {
     if (_data->modified) {
       scan();
     }
-    
-    // Convert each argument to boolean.
-    for (_ArgList::iterator i = _data->arguments.begin(); i != _data->arguments.end(); ++i) {
-      retval->push_back(_toBool(
-  
-  template <class T> ReferencePointer< std::vector<T> > GetOpt::getArgs () const {
-    if (_data->modified) {
-      scan();
-    }
-    ReferencePointer< std::vector<T> > retval;
-    for (_ArgList::iterator i = _data->arguments.begin(); i != _data->arguments.end(); ++i) {
-      retval->push_back(Arb(*i));
-    }
-    return retval;
+    return _convert_ArgList<T>(_data->arguments);
+  }
+  template <class T> inline ReferencePointer< std::vector<T> > GetOpt::getArgs (char const sopt) const {
+    return _convert_ArgList<T>(_scan_option(sopt)->args);
+  }
+  template <class T> inline ReferencePointer< std::vector<T> > GetOpt::getArgs (std::string const& lopt) const {
+    return _convert_ArgList<T>(_scan_option(lopt)->args);
   }
   
   /*
    * Get ordered command-line arguments.
    */
   inline GetOpt::ArgListPT GetOpt::getOrdered () const { if (_data->modified) { scan(); } return ArgListPT(new ArgListT(_data->ordered)); }
+  
+  /*
+   * Convert a string to uppercase.
+   */
+  inline std::string GetOpt::_uppercase (std::string const& text) {
+    std::string retval;
+    retval.reserve(text.length());
+    transform(text.begin(), text.end(), retval.begin(), toupper);
+    return retval;
+  }
+  
+  /*
+   * Convert a string to a given type.
+   */
+  // bool.
+  template <> inline bool GetOpt::_convert (std::string const& text) { return _toBool(text); }
+  
+  // Numeric type.
+  template <class T> T GetOpt::_convert (std::string const& text) {
+    T retval;
+    try {
+      retval = Arb(text);
+    } catch (Arb::Errors::Base& e) {
+      throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
+    }
+    return retval;
+  }
+  
+  /*
+   * Convert a list of arguments to a given type.
+   */
+  template <class T> ReferencePointer< std::vector<T> > GetOpt::_convert_ArgList (_ArgList const& args) {
+    
+    // Work area.
+    ReferencePointer< std::vector<T> > retval;
+    
+    // Attempt to convert to a numeric type.
+    for (_ArgList::iterator i = args.begin(); i != args.end(); ++i) {
+      retval->push_back(_convert<T>(*i));
+    }
+    
+    // Done.
+    return retval;
+    
+  }
+  
+  /***************************************************************************
+   * GetOpt::ArgReader
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Constructor.
+   */
+  inline GetOpt::ArgReader::ArgReader (std::string const& arg) : _arg(arg) {}
+  
+  /*
+   * Conversion operator.
+   */
+  template <> inline GetOpt::ArgReader::operator std::string () const { return _arg; }
+  template <class T> inline GetOpt::ArgReader::operator T () const { return _convert<T>(_arg); }
+  
+  /***************************************************************************
+   * GetOpt::ShortOptReader
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Constructor.
+   */
+  inline GetOpt::ShortOptReader::ShortOptReader (_Option const& opt) : _opt(opt) {}
+  
+  /*
+   * Conversion operator. Returns whether this option is set.
+   */
+  inline GetOpt::ShortOptReader::operator bool () const { return _opt.numset; }
+  
+  /*
+   * Element access operator, read option argument.
+   */
+  inline GetOpt::ArgReader GetOpt::ShortOptReader::operator [] (size_t const argnum) const { 
+    if (argnum >= _opt.args.size()) {
+      throw Errors::ArgOOBShort().ArgNum(argnum).Size(_opt.args.size()).Option(_opt._sopt);
+    }
+    return _opt.args[argnum];
+  }
+  
+  /***************************************************************************
+   * GetOpt::LongOptReader
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+
+  /*
+   * Constructor.
+   */
+  inline GetOpt::LongOptReader::LongOptReader (_Option const& opt) : _opt(opt) {}
+  
+  /*
+   * Conversion operator. Returns whether this option is set.
+   */
+  inline GetOpt::LongOptReader::operator bool () const { return _opt.numset; }
+  
+  /*
+   * Element access operator, read option argument.
+   */
+  inline GetOpt::ArgReader GetOpt::LongOptReader::operator [] (size_t const argnum) const {
+    if (argnum >= _opt.args.size()) {
+      throw Errors::ArgOOBLong().ArgNum(argnum).Size(_opt.args.size()).Option(_opt._lopt);
+    }
+    return _opt.args[argnum];
+  }
+  
+  /***************************************************************************
+   * GetOpt::_Data
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
   
   /*
    * _Data default constructor.

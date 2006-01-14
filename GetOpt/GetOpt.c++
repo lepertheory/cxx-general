@@ -82,6 +82,33 @@ namespace DAC {
   }
   
   /*
+   * Get arguments.
+   */
+  template <> std::string GetOpt::getArg<std::string> (size_t const argnum) const {
+    if (_data->modified) {
+      scan();
+    }
+    if (argnum >= _data->arguments.size()) {
+      throw Errors::ArgOOBCmdLine().ArgNum(argnum).Size(_data->arguments.size());
+    }
+    return _data->arguments[argnum];
+  }
+  template <> std::string GetOpt::getArg<std::string> (char const sopt, size_t const argnum) const {
+    _ArgList const& work = _scan_option(sopt)->args;
+    if (argnum >= work.size()) {
+      throw Errors::ArgOOBShort().ArgNum(argnum).Size(work.size()).Option(sopt);
+    }
+    return work[argnum];
+  }
+  template <> std::string GetOpt::getArg<std::string> (std::string const& lopt, size_t const argnum) const {
+    _ArgList const& work = _scan_option(lopt)->args;
+    if (argnum >= work.size()) {
+      throw Errors::ArgOOBLong().ArgNum(argnum).Size(work.size()).Option(lopt);
+    }
+    return work[argnum];
+  }
+  
+  /*
    * Set the command-line arguments.
    */
   GetOpt& GetOpt::set_cmdArgs (int const argc, char const* const* const argv) {
@@ -536,6 +563,39 @@ namespace DAC {
     
     // Done.
     return retval;
+    
+  }
+  
+  /*
+   * Convert a string to bool.
+   */
+  bool GetOpt::_toBool (string const& text) {
+    
+    // An empty string is false.
+    if (text.empty()) {
+      return false;
+    }
+    
+    // Work area.
+    string work(_uppercase(text));
+    
+    // Check for negative text.
+    if (work == "F" || work == "N" || work == "FALSE" || work == "NO" || work == "OFF") {
+      return false;
+    }
+    
+    // Check for positive text.
+    if (work == "T" || work == "Y" || work == "TRUE" || work == "YES" || work == "ON") {
+      return true;
+    }
+    
+    // Check for 0 numeric. If text can't be converted to number, any old text
+    // is true, just like any old number other than zero.
+    try {
+      return Arb(work);
+    } catch (Arb::Errors::Base&) {
+      return true;
+    }
     
   }
   

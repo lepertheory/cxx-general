@@ -7,6 +7,8 @@ env.Append(CPPPATH = ['..'])
 # Include dependancy directories.
 for incdir in cwrapText['include'] :
   env.Append(CPPPATH = ['#' + incdir])
+for incdir in cArb['include'] :
+  env.Append(CPPPATH = ['#' + incdir])
 
 # Object files.
 o_GetOpt = env.Object      (target = 'GetOpt', source = ['GetOpt.c++'])
@@ -15,15 +17,15 @@ s_GetOpt = env.SharedObject(target = 'GetOpt', source = ['GetOpt.c++'])
 # Create a dictionary containing all necessary information and objects to
 # compile with GetOpt.
 cGetOpt = {
-  'obj'         : cwrapText['obj']     + [o_GetOpt]           ,
-  'sobj'        : cwrapText['sobj']    + [s_GetOpt]           ,
-  'include'     : cwrapText['include'] + ['GetOpt']           ,
-  'headers'     : cwrapText['headers'] + ['GetOpt/GetOpt.h++'],
-  'defines'     : cwrapText['defines']                        ,
-  'own_obj'     : [o_GetOpt]                                  ,
-  'own_sobj'    : [s_GetOpt]                                  ,
-  'own_include' : 'GetOpt'                                    ,
-  'own_headers' : ['GetOpt/GetOpt.h++']                       ,
+  'obj'         : cwrapText['obj']     + cArb['obj']     + [o_GetOpt]           ,
+  'sobj'        : cwrapText['sobj']    + cArb['sobj']    + [s_GetOpt]           ,
+  'include'     : cwrapText['include'] + cArb['include'] + ['GetOpt']           ,
+  'headers'     : cwrapText['headers'] + cArb['headers'] + ['GetOpt/GetOpt.h++'],
+  'defines'     : cwrapText['defines'] + cArb['defines']                        ,
+  'own_obj'     : [o_GetOpt]                                                    ,
+  'own_sobj'    : [s_GetOpt]                                                    ,
+  'own_include' : 'GetOpt'                                                      ,
+  'own_headers' : ['GetOpt/GetOpt.h++']                                         ,
   'own_defines' : []
 }
 
