@@ -109,6 +109,11 @@ namespace DAC {
   }
   
   /*
+   * Get all arguments as a list.
+   */
+  //template <> 
+  
+  /*
    * Set the command-line arguments.
    */
   GetOpt& GetOpt::set_cmdArgs (int const argc, char const* const* const argv) {
@@ -542,14 +547,14 @@ namespace DAC {
       
       // Push text up to this point into the return if there is text to push.
       if (pos > oldpos) {
-        retval += text.substr(oldpos, pos - 1 - oldpos);
+        retval += text.substr(oldpos, pos - oldpos);
       }
       
       // Process option.
       switch (text[pos + 1]) {
-        case 'h': shy.push_back(pos); break;
-        case 'n': nb .push_back(pos); break;
-        case 'z': zws.push_back(pos); break;
+        case 'h': shy.push_back(retval.length()); break;
+        case 'n': nb .push_back(retval.length()); break;
+        case 'z': zws.push_back(retval.length()); break;
         case 's': retval += replace ; break;
         default: {
           throw Errors::UnknownEscape().Position(pos + 1).Text(text);

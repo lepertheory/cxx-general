@@ -59,6 +59,13 @@ namespace DAC {
               virtual char const* what () const throw() { return "No pointer to text to wrap was provided."; };
           };
           
+          // Cannot wrap to zero width.
+          class ZeroWidth : public Base {
+            public:
+              virtual ~ZeroWidth () throw() {};
+              virtual char const* what () const throw() { return "Cannot wrap to zero width."; };
+          };
+          
         // No instances of this class are allowed.
         private:
           Errors ();
