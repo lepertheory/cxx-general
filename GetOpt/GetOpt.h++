@@ -343,13 +343,6 @@ namespace DAC {
         public:
           
           /*******************************************************************/
-          // Friends.
-          
-          // Option readers.
-          friend class ShortOptReader;
-          friend class LongOptReader ;
-          
-          /*******************************************************************/
           // Function members.
           
           // Constructor.
@@ -1083,7 +1076,7 @@ namespace DAC {
    */
   inline GetOpt::ArgReader GetOpt::ShortOptReader::operator [] (size_t const argnum) const { 
     if (argnum >= _opt.args.size()) {
-      throw Errors::ArgOOBShort().ArgNum(argnum).Size(_opt.args.size()).Option(_opt._sopt);
+      throw Errors::ArgOOBShort().ArgNum(argnum).Size(_opt.args.size()).Option(_opt.Short());
     }
     return _opt.args[argnum];
   }
@@ -1110,7 +1103,7 @@ namespace DAC {
    */
   inline GetOpt::ArgReader GetOpt::LongOptReader::operator [] (size_t const argnum) const {
     if (argnum >= _opt.args.size()) {
-      throw Errors::ArgOOBLong().ArgNum(argnum).Size(_opt.args.size()).Option(_opt._lopt);
+      throw Errors::ArgOOBLong().ArgNum(argnum).Size(_opt.args.size()).Option(_opt.Long());
     }
     return _opt.args[argnum];
   }

@@ -61,9 +61,15 @@ namespace DAC {
     POIContainer    wordend                              ;
     _POIList        poi                                  ;
     
-    cout << "text: " << work << endl;
-    
-    // Add points of interest.
+    // Add points of interest. Passed POI's are done second so that they
+    // overwrite any that are automatically found.
+    for (string::size_type pos = 0; (pos = work.find_first_of(" \t\n", pos + 1)) != string::npos; ) {
+      switch (work[pos]) {
+        case ' ' : poi[pos] = _CT_SPACE  ; break;
+        case '\t': poi[pos] = _CT_TAB    ; break;
+        case '\n': poi[pos] = _CT_NEWLINE; break;
+      };
+    }
     if (_shypos) {
       for (POIContainer::const_iterator i = _shypos->begin(); i != _shypos->end(); ++i) {
         poi[*i] = _CT_SHY;
@@ -79,23 +85,14 @@ namespace DAC {
         poi[*i] = _CT_ZWS;
       }
     }
-    for (string::size_type pos = 0; (pos = work.find_first_of(" \t\n", pos + 1)) != string::npos; ) {
-      switch (work[pos]) {
-        case ' ' : poi[pos] = _CT_SPACE  ; break;
-        case '\t': poi[pos] = _CT_TAB    ; break;
-        case '\n': poi[pos] = _CT_NEWLINE; break;
-      };
-    }
     poi[work.length()] = _CT_END;
     
     // Find word boundaries.
     string::size_type start = 0;
     for (_POIList::iterator i = poi.begin(); i != poi.end(); ++i) {
-      cout << "position: " << i->first << "  item: " << i->second << endl;
       switch (i->second) {
         case _CT_ZWS    :
         case _CT_SHY    :
-          cout << "FUCKFARTY" << endl;
           wordstart.push_back(start       );
           wordend  .push_back(i->first - 1);
           start = i->first;
@@ -117,30 +114,80 @@ namespace DAC {
     }
     
     // Wrap.
-    string::size_type linepos = 0;
-    string::size_type nbwidth = 0;
-    string            nbtext     ;
-    string            btext      ;
+    string::size_type linepos      = 0;
+    string::size_type nbwidth      = 0;
+    string::size_type next_nbwidth = 0;
+    string            nbtext          ;
+    string            next_nbtext     ;
+    string            btext           ;
+    string            next_btext      ;
     for (POIContainer::size_type word = 0; word != wordstart.size(); ++word) {
       
       // Determine the length of this block of text.
       string::size_type textwidth = wordend[word] - wordstart[word] + 1;
       
-      cout << "linepos: " << linepos << "  textwidth: " << textwidth << "  nbwidth: " << nbwidth << "  type: " << poi[wordend[word] + 1] << "  text: " << work.substr(wordstart[word], textwidth) << endl;
+      // Set the current break and non-break text.
+      nbwidth = next_nbwidth  ;
+      nbtext.swap(next_nbtext);
+      btext .swap(next_btext );
+      
+      // Calculate width of non-break text.
+      if (nbtext == "\t") {
+        nbwidth = _tabwidth + 1 - (linepos % _tabwidth + 1);
+      } else if (nbtext == "\n") {
+        linepos = 0;
+        nbwidth = 0;
+      } else {
+        nbwidth = nbtext.length();
+      }
+      
+      // Determine break and non-break text for the next block.
+      switch (poi[wordend[word] + 1]) {
+        
+        // These will not appear in the list, only here to avoid compiler
+        // warnings.
+        case _CT_NB:
+        case _CT_END:
+        break;
+        
+        // Zero-width space.
+        case _CT_ZWS:
+          next_btext .clear();
+          next_nbtext.clear();
+        break;
+        
+        // Soft hyphen.
+        case _CT_SHY:
+          next_btext = "-";
+          next_nbtext.clear();
+        break;
+        
+        // Space.
+        case _CT_SPACE:
+          next_btext.clear();
+          next_nbtext  = " ";
+        break;
+        
+        // Tab. Yes, that width calculation is correct.
+        case _CT_TAB:
+          next_btext.clear();
+          next_nbtext = "\t";
+        break;
+        
+        // Newline. 
+        case _CT_NEWLINE:
+          next_btext.clear();
+          next_nbtext  = '\n';
+        break;
+        
+      };
       
       // Try to fit this block on the current line.
-      if (linepos + nbwidth + textwidth + btext.length() > _width) {
-        
-        /*
-         * HEY!
-         * Need to check if *this* block of text is a soft hyphen, and if so
-         * add 1 to text width for at least part of the calculation. May be
-         * cleaner if there's a nice way to move the (n)btext processing above
-         * the wrapping.
-         */
+      if (linepos + nbwidth + textwidth + next_btext.length() > _width) {
         
         // Add break text. This assumes that btext is never more than 1
-        // character. Probably will never matter, but if you make a btext that
+        // character. Probably will never matter, and everything except for
+        // this one little part should be OK, but if you make a btext that
         // is longer, have fun with this.
         if (!btext.empty()) {
           if (linepos + btext.length() > _width) {
@@ -152,17 +199,14 @@ namespace DAC {
         
         // Hard break any text longer than the requested width.
         if (textwidth > _width) {
-          cout << "wordstart: " << wordstart[word] << "  wordend: " << wordend[word] << endl;
           
           // Fill each line as much as possible.
           for (string::size_type pos = wordstart[word]; pos <= wordend[word]; pos += _width) {
-            cout << "pos: " << pos << endl;
             retval += "\n" + work.substr(pos, min(wordend[word] - pos + 1, _width));
           }
           
         // Text is less or equal to line length, output normally.
         } else {
-          cout << "fart!" << endl;
           retval += "\n" + work.substr(wordstart[word], textwidth);
         }
         
@@ -175,54 +219,6 @@ namespace DAC {
         linepos += nbwidth + textwidth;
       }
       
-      // Determine break and non-break text and its width.
-      switch (poi[wordend[word] + 1]) {
-        
-        // These will not appear in the list, only here to avoid compiler
-        // warnings.
-        case _CT_END:
-        case _CT_NB:
-        break;
-        
-        // Zero-width space.
-        case _CT_ZWS:
-          cout << "FARTY!" << endl;
-          btext .clear();
-          nbtext.clear();
-          nbwidth = 0;
-        break;
-        
-        // Soft hyphen.
-        case _CT_SHY:
-          btext = "-";
-          nbtext.clear();
-          nbwidth = 0;
-        break;
-        
-        // Space.
-        case _CT_SPACE:
-          btext.clear();
-          nbtext  = " ";
-          nbwidth =   1;
-        break;
-        
-        // Tab. Yes, that width calculation is correct.
-        case _CT_TAB:
-          btext.clear();
-          nbtext = "\t";
-          nbwidth = _tabwidth + 1 - (linepos % _tabwidth + 1);
-        break;
-        
-        // Newline. 
-        case _CT_NEWLINE:
-          btext.clear();
-          nbtext  = '\n';
-          nbwidth =    0;
-          linepos =    0;
-        break;
-        
-      };
-      
     }
     
     // Done.
@@ -230,17 +226,5 @@ namespace DAC {
     
   }
   
-  /*
-  * Determine if a block of text should wrap.
-  */
-  /*
-  bool wrapText::_shouldWrap (string::size_type const linepos  ,
-                              string::size_type const textwidth ) {
-    
-    
-    
-  }
-  */
-
 }
 

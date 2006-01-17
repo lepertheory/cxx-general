@@ -12,6 +12,7 @@
 #include <getopt.h>
 #include <cxx-general/AutoArray.h++>
 #include <cxx-general/wrapText/wrapText.h++>
+#include <cxx-general/toString.h++>
 
 // Class includes.
 #include "GetOpt.h++"
@@ -212,6 +213,42 @@ namespace DAC {
                         .NBPos (&nbpos          )
                         .ZWSPos(&zwspos         ).wrap(&work)
             + "\n";
+    
+    // See if there are any short or long options.
+    bool has_short = false;
+    bool has_long  = false;
+    for (_Options::iterator i = _data->options.begin(); !(has_short && has_long) && i != _data->options.end(); ++i) {
+      if (i->isShort()) { has_short = true; }
+      if (i->isLong ()) { has_long  = true; }
+    }
+    
+    // Blank line, then output the option help.
+    retval += "\n";
+    for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
+      
+      // Option indent.
+      retval += "  ";
+      
+      // Short option.
+      if (has_short) {
+        if (i->isShort()) {
+          retval += "-" + DAC::toStringChr(i->Short());
+          if (has_long) {
+            retval += ",";
+          }
+        } else {
+          retval += "  ";
+          if (has_long) {
+            retval += " ";
+          }
+        }
+        retval += " "
+      }
+      
+      // Newline at end of option.
+      retval += "\n";
+      
+    }
     
     // Done.
     return retval;
