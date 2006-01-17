@@ -4,8 +4,9 @@
  * This is a C++ wrapper class around the getopt and getoptlong functions.
  *****************************************************************************/
 
-// Standard includes.
+// STL includes.
 #include <string.h>
+#include <algorithm>
 
 // System includes.
 #include <unistd.h>
@@ -214,13 +215,39 @@ namespace DAC {
                         .ZWSPos(&zwspos         ).wrap(&work)
             + "\n";
     
-    // See if there are any short or long options.
-    bool has_short = false;
-    bool has_long  = false;
-    for (_Options::iterator i = _data->options.begin(); !(has_short && has_long) && i != _data->options.end(); ++i) {
-      if (i->isShort()) { has_short = true; }
-      if (i->isLong ()) { has_long  = true; }
+    // Gather option data.
+    bool              has_short = false;
+    bool              has_long  = false;
+    string::size_type max_long  = 0;
+    string::size_type softwidth = 0;
+    string::size_type hardwidth = 0;
+    vector<string::size_type> widths;
+    for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
+      
+      // Width of this option.
+      string::size_type width = 2;
+      
+      // See if there are any short or long options.
+      if (i->isShort()) {
+        has_short = true;
+      }
+      if (i->isLong ()) {
+        has_long = true;
+        max_long = max(max_long, i->Long().length());
+        widths.push_back(i->Long().length());
+      }
+      
     }
+    
+    // Get the top 80% width of options for the soft limit. This could
+    // theoretically overflow, but not before chewing up sizeof(_Option) / 4
+    // gigs of RAM first. Also, I don't see any particular harm in this
+    // overflowing, other than screwed up widths.
+    vector<string::size_type>::iterator nth;
+    nth = widths.begin() + widths.length() * 4 / 5;
+    nth_element(widths.begin(), nth, widths.end());
+    softwidth = *nth;
+    hardwidth = _data->helpwidth / 5;
     
     // Blank line, then output the option help.
     retval += "\n";
@@ -233,16 +260,31 @@ namespace DAC {
       if (has_short) {
         if (i->isShort()) {
           retval += "-" + DAC::toStringChr(i->Short());
-          if (has_long) {
+          if (i->isLong()) {
             retval += ",";
           }
         } else {
           retval += "  ";
-          if (has_long) {
+          if (i->isLong()) {
             retval += " ";
           }
         }
-        retval += " "
+        retval += " ";
+      }
+      
+      // Long option.
+      if (has_long) {
+        if (i->isLong()) {
+          retval += "--" + i->Long();
+          if (i->Long().length() < max_long) {
+            retval += string(max_long - i->Long().length(), ' ');
+          }
+        } else {
+          retval += string(max_long, ' ');
+        }
+        retval += "  ";
+      } else {
+        retval += " ";
       }
       
       // Newline at end of option.
