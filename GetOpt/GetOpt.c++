@@ -196,18 +196,26 @@ namespace DAC {
   string GetOpt::getHelp () const {
     
     // Work area.
-    string                 retval;
-    wrapText::POIContainer shypos;
-    wrapText::POIContainer nbpos ;
-    wrapText::POIContainer zwspos;
-    string                 work  ;
+    string retval;
+    bool has_short = false;
+    bool has_long  = false;
+    string::size_type opt_softwidth  = 0;
+    string::size_type opt_hardwidth  = 0;
+    string::size_type desc_softwidth = 0;
+    string::size_type desc_hardwidth = 0;
+    vector<_FmtOpt> options;
+    vector<string::size_type> opt_widths ;
+    vector<string::size_type> desc_widths;
     
     // All start with this.
     retval = getShortHelp();
     
     // Blank line, then description. Wrap description to the terminal length.
     // Break at whitespace and soft hyphens.
-    work = _procText(_data->description, _data->programname, shypos, nbpos, zwspos);
+    wrapText::POIContainer shypos;
+    wrapText::POIContainer nbpos ;
+    wrapText::POIContainer zwspos;
+    string work = _procText(_data->description, _data->programname, shypos, nbpos, zwspos);
     retval += "\n"
             + wrapText().Width (_data->helpwidth)
                         .ShyPos(&shypos         )
@@ -216,16 +224,13 @@ namespace DAC {
             + "\n";
     
     // Gather option data.
-    bool              has_short = false;
-    bool              has_long  = false;
-    string::size_type max_long  = 0;
-    string::size_type softwidth = 0;
-    string::size_type hardwidth = 0;
-    vector<string::size_type> widths;
+    options    .resize(_data->options.size());
+    opt_widths .resize(_data->options.size());
+    desc_widths.resize(_data->options.size());
     for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
       
-      // Width of this option.
-      string::size_type width = 2;
+      // Get option offset.
+      size_t opt = i - _data->options.begin();
       
       // See if there are any short or long options.
       if (i->isShort()) {
@@ -233,9 +238,12 @@ namespace DAC {
       }
       if (i->isLong ()) {
         has_long = true;
-        max_long = max(max_long, i->Long().length());
-        widths.push_back(i->Long().length());
+        opt_widths[opt] = i->Long().length();
       }
+      
+      // Process description.
+      options    [opt].desc = _procText(i->Help(), i->ArgName(), options[opt].shypos, options[opt].nbpos, options[opt].zwspos);
+      desc_widths[opt]      = options[opt].desc.length();
       
     }
     
@@ -244,10 +252,10 @@ namespace DAC {
     // gigs of RAM first. Also, I don't see any particular harm in this
     // overflowing, other than screwed up widths.
     vector<string::size_type>::iterator nth;
-    nth = widths.begin() + widths.length() * 4 / 5;
-    nth_element(widths.begin(), nth, widths.end());
-    softwidth = *nth;
-    hardwidth = _data->helpwidth / 5;
+    nth = opt_widths.begin() + opt_widths.size() * 4 / 5;
+    nth_element(opt_widths.begin(), nth, opt_widths.end());
+    opt_softwidth = *nth;
+    opt_hardwidth = _data->helpwidth / 5;
     
     // Blank line, then output the option help.
     retval += "\n";

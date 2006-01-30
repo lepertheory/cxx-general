@@ -28,6 +28,7 @@
   #include <cxx-general/wrapText/wrapText.h++>
   #include <cxx-general/Arb/Arb.h++>
   #include <cxx-general/demangle.h++>
+  #include <cxx-general/wrapText/wrapText.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -714,6 +715,40 @@ namespace DAC {
           
       };
       
+      /***********************************************************************
+       * _FmtOpt
+       ***********************************************************************
+       * Used internally by getHelp() to keep track of option data.
+       ***********************************************************************/
+      class _FmtOpt {
+        
+        /*
+         * Public members.
+         */
+        public:
+          
+          /*******************************************************************/
+          // Data members.
+          
+          // Pointer to the option being described.
+          _Option const* option;
+          
+          // The description.
+          std::string desc;
+          
+          // Control character positions.
+          wrapText::POIContainer shypos;
+          wrapText::POIContainer nbpos ;
+          wrapText::POIContainer zwspos;
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Default constructor.
+          _FmtOpt ();
+        
+      };
+      
       // Reference pointer to class data.
       typedef ReferencePointer<_Data> _DataPT;
       
@@ -1176,6 +1211,21 @@ namespace DAC {
   inline std::string    GetOpt::Option::ArgName        () const { return _argname   ; }
   inline bool           GetOpt::Option::isShort        () const { return _isset_sopt; }
   inline bool           GetOpt::Option::isLong         () const { return _isset_lopt; }
+  
+  /***************************************************************************
+   * GetOpt::_FmtOpt
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Default constructor.
+   */
+  inline GetOpt::_FmtOpt::_FmtOpt () :
+    option(0)
+  {}
+  
 }
 
 #endif
