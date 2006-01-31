@@ -37,6 +37,9 @@ namespace DAC {
     _nbpos  = 0;
     _zwspos = 0;
     
+    _indent  =     0;
+    _hanging = false;
+    
   }
   
   /*
@@ -122,14 +125,19 @@ namespace DAC {
       };
     }
     
-    // Wrap.
+    // Wrap. Do normal indent if called for.
     string::size_type linepos      = 0;
     string::size_type nbwidth      = 0;
     string::size_type next_nbwidth = 0;
-    string            nbtext          ;
-    string            next_nbtext     ;
-    string            btext           ;
-    string            next_btext      ;
+    string nbtext     ;
+    string next_nbtext;
+    string btext      ;
+    string next_btext ;
+    bool firstline = true;
+    if (!_hanging && _indent) {
+      retval  += string(_indent, ' ');
+      linepos  = _indent;
+    }
     for (POIContainer::size_type word = 0; word != wordstart.size(); ++word) {
       
       // Determine the length of this block of text.

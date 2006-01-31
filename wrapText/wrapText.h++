@@ -158,11 +158,15 @@ namespace DAC {
       wrapText& ShyPos   (POIContainer const*    const shypos  );
       wrapText& NBPos    (POIContainer const*    const nbpos   );
       wrapText& ZWSPos   (POIContainer const*    const zwspos  );
+      wrapText& Indent   (std::string::size_type const indent  );
+      wrapText& Hanging  (bool                   const hanging );
       std::string::size_type Width    () const;
       std::string::size_type TabWidth () const;
       POIContainer const*    ShyPos   () const;
       POIContainer const*    NBPos    () const;
       POIContainer const*    ZWSPos   () const;
+      std::string::size_type Indent   () const;
+      bool                   Hanging  () const;
       
       // Wrap text.
       std::string wrap (std::string const* const text = 0) const;
@@ -186,37 +190,6 @@ namespace DAC {
         _CT_NEWLINE
       };
       
-      /***********************************************************************
-       * _POI
-       ***********************************************************************
-       * Point of interest.
-       ***********************************************************************/
-      /*
-      class _POI {
-        
-        / *
-         * Public members.
-         * /
-        public:
-          
-          / ******************************************************************* /
-          // Data members.
-          
-          // Position.
-          std::string::size_type pos;
-          
-          // Character type.
-          _CharType type;
-          
-          / ******************************************************************* /
-          // Function members.
-          
-          // Default constructor.
-          _POI ();
-        
-      };
-      */
-      
       // Processed point of interest list.
       typedef std::map<std::string::size_type, _CharType> _POIList;
       
@@ -237,14 +210,9 @@ namespace DAC {
       POIContainer const* _nbpos ;
       POIContainer const* _zwspos;
       
-      /***********************************************************************/
-      // Static function members.
-      
-      // Decide if a given block of text should be wrapped.
-      /*
-      static bool _shouldWrap (std::string::size_type const linepos  ,
-                               std::string::size_type const textwidth );
-      */
+      // Indent.
+      std::string::size_type _indent ;
+      bool                   _hanging;
       
   };
   
@@ -277,28 +245,15 @@ namespace DAC {
   inline wrapText& wrapText::ShyPos   (POIContainer const*    const shypos  ) { _shypos   = shypos  ; return *this; }
   inline wrapText& wrapText::NBPos    (POIContainer const*    const nbpos   ) { _nbpos    = nbpos   ; return *this; }
   inline wrapText& wrapText::ZWSPos   (POIContainer const*    const zwspos  ) { _zwspos   = zwspos  ; return *this; }
+  inline wrapText& wrapText::Indent   (std::string::size_type const indent  ) { _indent   = indent  ; return *this; }
+  inline wrapText& wrapText::Hanging  (bool                   const hanging ) { _hanging  = hanging ; return *this; }
   inline std::string::size_type        wrapText::Width    () const { return _width   ; }
   inline std::string::size_type        wrapText::TabWidth () const { return _tabwidth; }
   inline wrapText::POIContainer const* wrapText::ShyPos   () const { return _shypos  ; }
   inline wrapText::POIContainer const* wrapText::NBPos    () const { return _nbpos   ; }
   inline wrapText::POIContainer const* wrapText::ZWSPos   () const { return _zwspos  ; }
-  
-  /***************************************************************************
-   * wrapText::_POI
-   ***************************************************************************/
-  
-  /***************************************************************************/
-  // Function members.
-
-  /*
-   * Default constructor.
-   */
-  /*
-  inline wrapText::_POI::_POI () :
-    _pos (std::string::npos),
-    _type(_CT_END          )
-  {};
-  */
+  inline std::string::size_type        wrapText::Indent   () const { return _indent  ; }
+  inline bool                          wrapText::Hanging  () const { return _hanging ; }
   
 }
 
