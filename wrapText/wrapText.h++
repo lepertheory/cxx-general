@@ -15,6 +15,7 @@
 
 // System includes.
   #include <cxx-general/Exception.h++>
+  #include <cxx-general/toString.h++>
 
 // Namespace wrapper.
 namespace DAC {
@@ -64,6 +65,71 @@ namespace DAC {
             public:
               virtual ~ZeroWidth () throw() {};
               virtual char const* what () const throw() { return "Cannot wrap to zero width."; };
+          };
+          
+          // POI past end of string.
+          class POIOverrun : public Base {
+            public:
+              virtual ~POIOverrun () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Point of interest position " + DAC::toString(_poi) + " overruns end of string \"" + _text + "\".").c_str();
+                } catch (...) {
+                  return "Point of interest overruns text. Error creating message string.";
+                }
+              };
+              virtual POIOverrun& POI  (std::string::size_type const  poi ) { _poi  = poi ; return *this; };
+              virtual POIOverrun& Text (std::string            const& text) { _text = text; return *this; };
+              virtual std::string::size_type POI  () const { return _poi ; };
+              virtual std::string            Text () const { return _text; };
+            private:
+              std::string::size_type _poi ;
+              std::string            _text;
+          };
+          class POIShyOverrun : public POIOverrun {
+            public:
+              virtual ~POIShyOverrun () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Soft hyphen position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".").c_str();
+                } catch (...) {
+                  return "Soft hyphen position overruns text. Error creating message string.";
+                }
+              };
+              virtual POIShyOverrun& POI  (std::string::size_type const  poi ) { return reinterpret_cast<POIShyOverrun&>(POIOverrun::POI (poi )); };
+              virtual POIShyOverrun& Text (std::string            const& text) { return reinterpret_cast<POIShyOverrun&>(POIOverrun::Text(text)); };
+              virtual std::string::size_type POI  () const { return POIOverrun::POI (); };
+              virtual std::string            Text () const { return POIOverrun::Text(); };
+          };
+          class POINBOverrun : public POIOverrun {
+            public:
+              virtual ~POINBOverrun () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Non-break position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".").c_str();
+                } catch (...) {
+                  return "Non-break position overruns text. Error creating message string.";
+                }
+              };
+              virtual POINBOverrun& POI  (std::string::size_type const  poi ) { return reinterpret_cast<POINBOverrun&>(POIOverrun::POI (poi )); };
+              virtual POINBOverrun& Text (std::string            const& text) { return reinterpret_cast<POINBOverrun&>(POIOverrun::Text(text)); };
+              virtual std::string::size_type POI  () const { return POIOverrun::POI (); };
+              virtual std::string            Text () const { return POIOverrun::Text(); };
+          };
+          class POIZWSOverrun : public POIOverrun {
+            public:
+              virtual ~POIZWSOverrun () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Zero width space position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".").c_str();
+                } catch (...) {
+                  return "Zero width space position overruns text. Error creating message string.";
+                }
+              };
+              virtual POIZWSOverrun& POI  (std::string::size_type const  poi ) { return reinterpret_cast<POIZWSOverrun&>(POIOverrun::POI (poi )); };
+              virtual POIZWSOverrun& Text (std::string            const& text) { return reinterpret_cast<POIZWSOverrun&>(POIOverrun::Text(text)); };
+              virtual std::string::size_type POI  () const { return POIOverrun::POI (); };
+              virtual std::string            Text () const { return POIOverrun::Text(); };
           };
           
         // No instances of this class are allowed.
@@ -152,7 +218,6 @@ namespace DAC {
       */
       
       // Processed point of interest list.
-      //typedef std::map<std::string::size_type, _POI> _POIList;
       typedef std::map<std::string::size_type, _CharType> _POIList;
       
       /***********************************************************************/

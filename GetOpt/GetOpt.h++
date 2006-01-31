@@ -798,6 +798,9 @@ namespace DAC {
       // Convert a list of arguments to a given type.
       template <class T> static ReferencePointer< std::vector<T> > _convert_ArgList (_ArgList const& args);
       
+      // Give text a hanging indent.
+      static std::string _hanging_indent (std::string const& text, std::string::size_type const indent);
+      
   };
   
   /***************************************************************************

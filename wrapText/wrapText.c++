@@ -72,16 +72,25 @@ namespace DAC {
     }
     if (_shypos) {
       for (POIContainer::const_iterator i = _shypos->begin(); i != _shypos->end(); ++i) {
+        if (*i >= work.length()) {
+          throw Errors::POIShyOverrun().POI(*i).Text(work);
+        }
         poi[*i] = _CT_SHY;
       }
     }
     if (_nbpos) {
       for (POIContainer::const_iterator i = _nbpos->begin(); i != _nbpos->end(); ++i) {
+        if (*i >= work.length()) {
+          throw Errors::POINBOverrun().POI(*i).Text(work);
+        }
         poi[*i] = _CT_NB;
       }
     }
     if (_zwspos) {
       for (POIContainer::const_iterator i = _zwspos->begin(); i != _zwspos->end(); ++i) {
+        if (*i >= work.length()) {
+          throw Errors::POIZWSOverrun().POI(*i).Text(work);
+        }
         poi[*i] = _CT_ZWS;
       }
     }

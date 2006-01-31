@@ -197,15 +197,6 @@ namespace DAC {
     
     // Work area.
     string retval;
-    bool has_short = false;
-    bool has_long  = false;
-    string::size_type opt_softwidth  = 0;
-    string::size_type opt_hardwidth  = 0;
-    string::size_type desc_softwidth = 0;
-    string::size_type desc_hardwidth = 0;
-    vector<_FmtOpt> options;
-    vector<string::size_type> opt_widths ;
-    vector<string::size_type> desc_widths;
     
     // All start with this.
     retval = getShortHelp();
@@ -223,82 +214,191 @@ namespace DAC {
                         .ZWSPos(&zwspos         ).wrap(&work)
             + "\n";
     
-    // Gather option data.
-    options    .resize(_data->options.size());
-    opt_widths .resize(_data->options.size());
-    desc_widths.resize(_data->options.size());
-    for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
+    // Output options if there are any.
+    if (!_data->options.empty()) {
       
-      // Get option offset.
-      size_t opt = i - _data->options.begin();
+      // Constants.
+      static string::size_type const PREOPT  = 2; // "  "
+      static string::size_type const SHOPT   = 2; // "-a"
+      static string::size_type const SH_LSEP = 2; // ", "
+      static string::size_type const LSEP    = 2; // "  "
+      static string::size_type const LPRE    = 2; // "--"
       
-      // See if there are any short or long options.
-      if (i->isShort()) {
-        has_short = true;
-      }
-      if (i->isLong ()) {
-        has_long = true;
-        opt_widths[opt] = i->Long().length();
-      }
+      // Work area.
+      bool has_short = false;
+      bool has_long  = false;
+      string::size_type overhead  = 0;
+      string::size_type max_width = 0;
+      string::size_type real_max  = 0;
       
-      // Process description.
-      options    [opt].desc = _procText(i->Help(), i->ArgName(), options[opt].shypos, options[opt].nbpos, options[opt].zwspos);
-      desc_widths[opt]      = options[opt].desc.length();
-      
-    }
-    
-    // Get the top 80% width of options for the soft limit. This could
-    // theoretically overflow, but not before chewing up sizeof(_Option) / 4
-    // gigs of RAM first. Also, I don't see any particular harm in this
-    // overflowing, other than screwed up widths.
-    vector<string::size_type>::iterator nth;
-    nth = opt_widths.begin() + opt_widths.size() * 4 / 5;
-    nth_element(opt_widths.begin(), nth, opt_widths.end());
-    opt_softwidth = *nth;
-    opt_hardwidth = _data->helpwidth / 5;
-    
-    // Blank line, then output the option help.
-    retval += "\n";
-    for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
-      
-      // Option indent.
-      retval += "  ";
-      
-      // Short option.
-      if (has_short) {
-        if (i->isShort()) {
-          retval += "-" + DAC::toStringChr(i->Short());
-          if (i->isLong()) {
-            retval += ",";
-          }
-        } else {
-          retval += "  ";
-          if (i->isLong()) {
-            retval += " ";
-          }
-        }
-        retval += " ";
-      }
-      
-      // Long option.
-      if (has_long) {
-        if (i->isLong()) {
-          retval += "--" + i->Long();
-          if (i->Long().length() < max_long) {
-            retval += string(max_long - i->Long().length(), ' ');
-          }
-        } else {
-          retval += string(max_long, ' ');
-        }
-        retval += "  ";
-      } else {
-        retval += " ";
-      }
-      
-      // Newline at end of option.
+      // Blank line first.
       retval += "\n";
       
+      // Gather option data.
+      vector<string::size_type> widths;
+      for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
+        if (i->isShort()) {
+          has_short = true;
+        }
+        if (i->isLong()) {
+          has_long = true;
+          widths.push_back(i->Long().length());
+          max_width = max(max_width, i->Long().length());
+        }
+      }
+      overhead = PREOPT + (has_short ? SHOPT + (has_long ? SH_LSEP : 0) : 0) + (has_long ? LPRE + LSEP : 0);
+      real_max = overhead + max_width;
+      
+      // Get the top 80% width of options for the target width. This could
+      // theoretically overflow, but not before chewing up sizeof(_Option) / 4
+      // gigs of RAM first. Also, I don't see any particular harm in this
+      // overflowing, other than screwed up widths.
+      string::size_type loptwidth = 0;
+      string::size_type optwidth  = 0;
+      {
+        
+        // Hard limits on sizes.
+        string::size_type hardmin = _data->helpwidth     / 5;
+        string::size_type hardmax = _data->helpwidth * 2 / 5;
+        
+        // See if we don't need to do any squeezing.
+        if (real_max <= hardmin) {
+          loptwidth = max_width;
+          optwidth  = real_max ;
+        } else {
+          
+          // Different processing if there are very few options.
+          if (widths.size() > 2) {
+            
+            // Get the top 80% of widths.
+            vector<string::size_type>::iterator nth;
+            nth = widths.begin() + widths.size() * 4 / 5;
+            nth_element(widths.begin(), nth, widths.end());
+            loptwidth = *nth;
+            optwidth  = loptwidth + overhead;
+            
+            // Clamp to hard limits.
+            if (optwidth > hardmax) {
+              optwidth = hardmax;
+            } else if (optwidth < hardmin) {
+              optwidth = hardmin;
+            }
+            
+          // Just clamp max width to hard limits.
+          } else if (!widths.empty()) {
+            
+            // Take max width and clamp it.
+            loptwidth = max_width;
+            optwidth  = max_width + overhead;
+            if (optwidth > hardmax) {
+              optwidth = hardmax;
+            } else if (optwidth < hardmin) {
+              optwidth = hardmin;
+            }
+            
+          // No long options were defined.
+          } else {
+            
+            // Short option width.
+            loptwidth = 0;
+            optwidth  = overhead;
+            real_max  = overhead;
+            
+          }
+          
+        }
+          
+      }
+      
+      // Create wrapping function object.
+      wrapText wrap;
+      wrap.Width(_data->helpwidth - optwidth);
+      
+      // Output options.
+      for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
+        
+        // Option indent.
+        retval += "  ";
+        
+        // Short option.
+        if (has_short) {
+          if (i->isShort()) {
+            retval += "-" + DAC::toStringChr(i->Short());
+            if (i->isLong()) {
+              retval += ",";
+            }
+          } else {
+            retval += "  ";
+            if (i->isLong()) {
+              retval += " ";
+            }
+          }
+          retval += " ";
+        }
+        
+        // Long option.
+        if (has_long) {
+          if (i->isLong()) {
+            retval += "--" + i->Long();
+            cout << "loptwidth: " << loptwidth << endl;
+            if (i->Long().length() > loptwidth) {
+              retval += "\n" + string(optwidth, ' ');
+            } else {
+              if (i->Long().length() < loptwidth) {
+                cout << "fart!" << endl;
+                retval += string(loptwidth - i->Long().length(), ' ');
+              }
+              retval += "  ";
+            }
+          } else {
+            retval += string(optwidth, ' ');
+          }
+        } else {
+          retval += " ";
+        }
+        
+        // Description.
+        {
+          work    = _procText(i->Help(), i->ArgName(), shypos, nbpos, zwspos);
+          work    = wrap.ShyPos(&shypos).NBPos(&nbpos).ZWSPos(&zwspos).wrap(&work);
+          retval += _hanging_indent(work, optwidth);
+        }
+        
+        // Newline at end of option.
+        retval += "\n";
+        
+      }
+      
     }
+    
+    // Done.
+    return retval;
+    
+  }
+  
+  need a hanging indent for wrap also. check out -s
+  
+  /*
+   * Apply a hanging indent.
+   */
+  string GetOpt::_hanging_indent (string const& text, string::size_type const indent) {
+    
+    // Work area.
+    string retval;
+    
+    string::size_type oldpos = 0;
+    string::size_type pos    = 0;
+    for (; (pos = text.find('\n', oldpos)) != string::npos; ) {
+      if (oldpos) {
+        retval += string(indent, ' ');
+      }
+      retval += text.substr(oldpos, pos - oldpos + 1);
+      oldpos  = pos + 1;
+    }
+    if (oldpos) {
+      retval += string(indent, ' ');
+    }
+    retval += text.substr(oldpos);
     
     // Done.
     return retval;
@@ -610,6 +710,11 @@ namespace DAC {
     // Work area.
     string retval;
     
+    // Clear return values.
+    shy.clear();
+    nb .clear();
+    zws.clear();
+    
     // Process special characters in text.
     string::size_type pos    = 0;
     string::size_type oldpos = 0;
@@ -639,10 +744,11 @@ namespace DAC {
       
       // Process option.
       switch (text[pos + 1]) {
+        case '%': retval += "%"; break;
         case 'h': shy.push_back(retval.length()); break;
         case 'n': nb .push_back(retval.length()); break;
         case 'z': zws.push_back(retval.length()); break;
-        case 's': retval += replace ; break;
+        case 's': retval += replace; break;
         default: {
           throw Errors::UnknownEscape().Position(pos + 1).Text(text);
         }
