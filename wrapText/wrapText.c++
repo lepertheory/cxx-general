@@ -57,6 +57,11 @@ namespace DAC {
       throw Errors::ZeroWidth();
     }
     
+    // Do not allow indent wider than wrap width - 1.
+    if (_indent >= _width) {
+      throw Errors::IndentOverrun().Indent(_indent).Width(_width);
+    }
+    
     // Work area.
     string   const& work      = *(text ? text : _textptr);
     string          retval                               ;
@@ -133,7 +138,6 @@ namespace DAC {
     string next_nbtext;
     string btext      ;
     string next_btext ;
-    bool firstline = true;
     if (!_hanging && _indent) {
       retval  += string(_indent, ' ');
       linepos  = _indent;
@@ -209,26 +213,40 @@ namespace DAC {
         if (!btext.empty()) {
           if (linepos + btext.length() > _width) {
             retval += "\n";
-            linepos = 1;
+            if (_indent && _hanging) {
+              retval += string(_indent, ' ');
+              linepos = _indent;
+            }
+            linepos += 1;
           }
           retval += btext;
         }
         
         // Hard break any text longer than the requested width.
-        if (textwidth > _width) {
+        if (textwidth > _width - (_hanging ? _indent : 0)) {
           
           // Fill each line as much as possible.
-          for (string::size_type pos = wordstart[word]; pos <= wordend[word]; pos += _width) {
-            retval += "\n" + work.substr(pos, min(wordend[word] - pos + 1, _width));
+          if (_hanging && _indent) {
+            for (string::size_type pos = wordstart[word]; pos <= wordend[word]; pos += _width - _hanging) {
+              retval += "\n" + string(_indent, ' ') + work.substr(pos, min(wordend[word] - pos + 1, _width - _indent));
+            }
+          } else {
+            for (string::size_type pos = wordstart[word]; pos <= wordend[word]; pos += _width) {
+              retval += "\n" + work.substr(pos, min(wordend[word] - pos + 1, _width));
+            }
           }
           
         // Text is less or equal to line length, output normally.
         } else {
-          retval += "\n" + work.substr(wordstart[word], textwidth);
+          if (_hanging && _indent) {
+            retval += "\n" + string(_indent, ' ') + work.substr(wordstart[word], textwidth);
+          } else {
+            retval += "\n" + work.substr(wordstart[word], textwidth);
+          }
         }
         
         // Line position is one after the last character of the last group.
-        linepos = (textwidth - 1) % _width + 1;
+        linepos = _indent + (textwidth - 1) % (_width - (_hanging ? _indent : 0)) + 1;
         
       // Add text to the line and increment line position.
       } else {

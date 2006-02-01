@@ -7,6 +7,7 @@
 // STL includes.
 #include <string.h>
 #include <algorithm>
+#include <map>
 
 // System includes.
 #include <unistd.h>
@@ -223,6 +224,8 @@ namespace DAC {
       static string::size_type const SH_LSEP = 2; // ", "
       static string::size_type const LSEP    = 2; // "  "
       static string::size_type const LPRE    = 2; // "--"
+      static string::size_type const ARGFIX  = 1; // "=" or " "
+      static string::size_type const ARGOPT  = 2; // "[]"
       
       // Work area.
       bool has_short = false;
@@ -230,20 +233,30 @@ namespace DAC {
       string::size_type overhead  = 0;
       string::size_type max_width = 0;
       string::size_type real_max  = 0;
+      string::size_type loptwidth = 0;
+      string::size_type optwidth  = 0;
+      map<_Options::size_type, string::size_type> widths;
       
       // Blank line first.
       retval += "\n";
       
       // Gather option data.
-      vector<string::size_type> widths;
       for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
         if (i->isShort()) {
           has_short = true;
         }
         if (i->isLong()) {
           has_long = true;
-          widths.push_back(i->Long().length());
-          max_width = max(max_width, i->Long().length());
+          std::string::size_type width = i->Long().length();
+          if (i->ArgRequirement()) {
+            width += ARGFIX + i->ArgName().length();
+            if (i->ArgRequirement() == ARG_OPTIONAL) {
+              width += ARGOPT;
+            }
+          }
+          cout << "width: " << width << endl;
+          widths[i - _data->options.begin()] = width;
+          max_width = max(max_width, width);
         }
       }
       overhead = PREOPT + (has_short ? SHOPT + (has_long ? SH_LSEP : 0) : 0) + (has_long ? LPRE + LSEP : 0);
@@ -253,13 +266,11 @@ namespace DAC {
       // theoretically overflow, but not before chewing up sizeof(_Option) / 4
       // gigs of RAM first. Also, I don't see any particular harm in this
       // overflowing, other than screwed up widths.
-      string::size_type loptwidth = 0;
-      string::size_type optwidth  = 0;
       {
         
         // Hard limits on sizes.
-        string::size_type hardmin = _data->helpwidth     / 5;
-        string::size_type hardmax = _data->helpwidth * 2 / 5;
+        string::size_type hardmin = max(overhead, _data->helpwidth     / 5);
+        string::size_type hardmax = max(overhead, _data->helpwidth * 2 / 5);
         
         // See if we don't need to do any squeezing.
         if (real_max <= hardmin) {
@@ -271,17 +282,18 @@ namespace DAC {
           if (widths.size() > 2) {
             
             // Get the top 80% of widths.
-            vector<string::size_type>::iterator nth;
-            nth = widths.begin() + widths.size() * 4 / 5;
-            nth_element(widths.begin(), nth, widths.end());
-            loptwidth = *nth;
+            loptwidth = widths[widths.size() * 4 / 5];
             optwidth  = loptwidth + overhead;
+            
+            cout << "loptwidth: " << loptwidth << "  optwidth: " << optwidth << "  overhead: " << overhead << endl;
             
             // Clamp to hard limits.
             if (optwidth > hardmax) {
-              optwidth = hardmax;
+              optwidth  = hardmax;
+              loptwidth = optwidth - overhead;
             } else if (optwidth < hardmin) {
-              optwidth = hardmin;
+              optwidth  = hardmin;
+              loptwidth = optwidth - overhead;
             }
             
           // Just clamp max width to hard limits.
@@ -291,9 +303,11 @@ namespace DAC {
             loptwidth = max_width;
             optwidth  = max_width + overhead;
             if (optwidth > hardmax) {
-              optwidth = hardmax;
+              optwidth  = hardmax;
+              loptwidth = optwidth - overhead;
             } else if (optwidth < hardmin) {
-              optwidth = hardmin;
+              optwidth  = hardmin;
+              loptwidth = optwidth - overhead;
             }
             
           // No long options were defined.
@@ -312,7 +326,7 @@ namespace DAC {
       
       // Create wrapping function object.
       wrapText wrap;
-      wrap.Width(_data->helpwidth - optwidth);
+      wrap.Width(_data->helpwidth - optwidth).Indent(2).Hanging(true);
       
       // Output options.
       for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
@@ -325,33 +339,39 @@ namespace DAC {
           if (i->isShort()) {
             retval += "-" + DAC::toStringChr(i->Short());
             if (i->isLong()) {
-              retval += ",";
+              retval += ", ";
+            } else {
+              retval += "  ";
             }
           } else {
-            retval += "  ";
-            if (i->isLong()) {
-              retval += " ";
-            }
+            retval += "    ";
           }
-          retval += " ";
         }
         
         // Long option.
         if (has_long) {
           if (i->isLong()) {
             retval += "--" + i->Long();
+            if (i->ArgRequirement()) {
+              retval += "=";
+              if (i->ArgRequirement() == ARG_OPTIONAL) {
+                retval += "[" + i->ArgName() + "]";
+              } else {
+                retval += i->ArgName();
+              }
+            }
             cout << "loptwidth: " << loptwidth << endl;
-            if (i->Long().length() > loptwidth) {
+            if (widths[_data->options.begin() - i] > loptwidth) {
               retval += "\n" + string(optwidth, ' ');
             } else {
-              if (i->Long().length() < loptwidth) {
+              if (widths[_data->options.begin() - i] < loptwidth) {
                 cout << "fart!" << endl;
-                retval += string(loptwidth - i->Long().length(), ' ');
+                retval += string(loptwidth - widths[_data->options.begin() - i], ' ');
               }
               retval += "  ";
             }
           } else {
-            retval += string(optwidth, ' ');
+            retval += string(LPRE + loptwidth + LSEP, ' ');
           }
         } else {
           retval += " ";
@@ -361,6 +381,7 @@ namespace DAC {
         {
           work    = _procText(i->Help(), i->ArgName(), shypos, nbpos, zwspos);
           work    = wrap.ShyPos(&shypos).NBPos(&nbpos).ZWSPos(&zwspos).wrap(&work);
+          cout << "optwidth: " << optwidth << endl;
           retval += _hanging_indent(work, optwidth);
         }
         
@@ -370,35 +391,6 @@ namespace DAC {
       }
       
     }
-    
-    // Done.
-    return retval;
-    
-  }
-  
-  need a hanging indent for wrap also. check out -s
-  
-  /*
-   * Apply a hanging indent.
-   */
-  string GetOpt::_hanging_indent (string const& text, string::size_type const indent) {
-    
-    // Work area.
-    string retval;
-    
-    string::size_type oldpos = 0;
-    string::size_type pos    = 0;
-    for (; (pos = text.find('\n', oldpos)) != string::npos; ) {
-      if (oldpos) {
-        retval += string(indent, ' ');
-      }
-      retval += text.substr(oldpos, pos - oldpos + 1);
-      oldpos  = pos + 1;
-    }
-    if (oldpos) {
-      retval += string(indent, ' ');
-    }
-    retval += text.substr(oldpos);
     
     // Done.
     return retval;
@@ -794,6 +786,33 @@ namespace DAC {
     } catch (Arb::Errors::Base&) {
       return true;
     }
+    
+  }
+  
+  /*
+   * Apply a hanging indent.
+   */
+  string GetOpt::_hanging_indent (string const& text, string::size_type const indent) {
+    
+    // Work area.
+    string retval;
+    
+    string::size_type oldpos = 0;
+    string::size_type pos    = 0;
+    for (; (pos = text.find('\n', oldpos)) != string::npos; ) {
+      if (oldpos) {
+        retval += string(indent, ' ');
+      }
+      retval += text.substr(oldpos, pos - oldpos + 1);
+      oldpos  = pos + 1;
+    }
+    if (oldpos) {
+      retval += string(indent, ' ');
+    }
+    retval += text.substr(oldpos);
+    
+    // Done.
+    return retval;
     
   }
   

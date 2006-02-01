@@ -67,6 +67,26 @@ namespace DAC {
               virtual char const* what () const throw() { return "Cannot wrap to zero width."; };
           };
           
+          // Indent greater than wrap width.
+          class IndentOverrun : public Base {
+            public:
+              virtual ~IndentOverrun () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Indent of " + DAC::toString(_indent) + " leaves no room for wrap width of " + DAC::toString(_width) + " characters.").c_str();
+                } catch (...) {
+                  return "Indent leaves no room for text. Error creating message string.";
+                }
+              };
+              IndentOverrun& Indent (std::string::size_type const indent) { _indent = indent; return *this; };
+              IndentOverrun& Width  (std::string::size_type const width ) { _width  = width ; return *this; };
+              std::string::size_type Indent () const { return _indent; };
+              std::string::size_type Width  () const { return _width ; };
+            private:
+              std::string::size_type _indent;
+              std::string::size_type _width ;
+          };
+          
           // POI past end of string.
           class POIOverrun : public Base {
             public:
