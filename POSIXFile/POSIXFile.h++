@@ -2,6 +2,7 @@
  * POSIXFile.h++
  *****************************************************************************
  * Interface for class POSIXFile.
+ * FIXME: Update to use the POSIX versions of dirname and basename. man 3.
  *****************************************************************************/
 
 // Include guard.
