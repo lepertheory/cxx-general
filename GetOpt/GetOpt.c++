@@ -8,6 +8,7 @@
 #include <string.h>
 #include <algorithm>
 #include <map>
+#include <vector>
 
 // System includes.
 #include <unistd.h>
@@ -198,22 +199,28 @@ namespace DAC {
     
     // Work area.
     string retval;
+    string work  ;
+    wrapText::POIContainer shypos;
+    wrapText::POIContainer nbpos ;
+    wrapText::POIContainer zwspos;
     
     // All start with this.
     retval = getShortHelp();
     
     // Blank line, then description. Wrap description to the terminal length.
-    // Break at whitespace and soft hyphens.
-    wrapText::POIContainer shypos;
-    wrapText::POIContainer nbpos ;
-    wrapText::POIContainer zwspos;
-    string work = _procText(_data->description, _data->programname, shypos, nbpos, zwspos);
-    retval += "\n"
-            + wrapText().Width (_data->helpwidth)
-                        .ShyPos(&shypos         )
-                        .NBPos (&nbpos          )
-                        .ZWSPos(&zwspos         ).wrap(&work)
-            + "\n";
+    // Break at whitespace and soft hyphens. Output nothing if there is no
+    // description.
+    if (!_data->description.empty()) {
+      work    = _procText(_data->description, _data->programname, shypos, nbpos, zwspos);
+      retval += "\n"
+              + wrapText().Width (_data->helpwidth)
+                          .ShyPos(&shypos         )
+                          .NBPos (&nbpos          )
+                          .ZWSPos(&zwspos         ).wrap(&work)
+              + "\n";
+    }
+    
+    // FIXME: Does not output option arguments if there is no long option.
     
     // Output options if there are any.
     if (!_data->options.empty()) {
@@ -254,7 +261,6 @@ namespace DAC {
               width += ARGOPT;
             }
           }
-          cout << "width: " << width << endl;
           widths[i - _data->options.begin()] = width;
           max_width = max(max_width, width);
         }
@@ -282,10 +288,15 @@ namespace DAC {
           if (widths.size() > 2) {
             
             // Get the top 80% of widths.
-            loptwidth = widths[widths.size() * 4 / 5];
+            vector<string::size_type>           sortwidths;
+            vector<string::size_type>::iterator nth       ;
+            for (map<_Options::size_type, string::size_type>::iterator i = widths.begin(); i != widths.end(); ++i) {
+              sortwidths.push_back(i->second);
+            }
+            nth = sortwidths.begin() + sortwidths.size() * 4 / 5;
+            nth_element(sortwidths.begin(), nth, sortwidths.end());
+            loptwidth = *nth;
             optwidth  = loptwidth + overhead;
-            
-            cout << "loptwidth: " << loptwidth << "  optwidth: " << optwidth << "  overhead: " << overhead << endl;
             
             // Clamp to hard limits.
             if (optwidth > hardmax) {
@@ -324,6 +335,18 @@ namespace DAC {
           
       }
       
+      // One last hard clamp, make sure we don't get errors from text wrapping.
+      // If this kicks in, output will be ugly but everything will be there,
+      // and is better than making user of this lib deal with yet another error
+      // to handle. This should be taken care of in a cleaner way in the
+      // future. I'm sick of working on it now though, and this is an edge
+      // case that shouldn't cause problems (who's working on a 20-column
+      // display) so I'll stick a TODO here and call it handled for now.
+      if (_data->helpwidth - optwidth < 3) {
+        optwidth  = _data->helpwidth;
+        loptwidth = optwidth - overhead;
+      }
+      
       // Create wrapping function object.
       wrapText wrap;
       wrap.Width(_data->helpwidth - optwidth).Indent(2).Hanging(true);
@@ -353,20 +376,17 @@ namespace DAC {
           if (i->isLong()) {
             retval += "--" + i->Long();
             if (i->ArgRequirement()) {
-              retval += "=";
               if (i->ArgRequirement() == ARG_OPTIONAL) {
-                retval += "[" + i->ArgName() + "]";
+                retval += "[=" + i->ArgName() + "]";
               } else {
-                retval += i->ArgName();
+                retval += "=" + i->ArgName();
               }
             }
-            cout << "loptwidth: " << loptwidth << endl;
-            if (widths[_data->options.begin() - i] > loptwidth) {
+            if (widths[i - _data->options.begin()] > loptwidth) {
               retval += "\n" + string(optwidth, ' ');
             } else {
-              if (widths[_data->options.begin() - i] < loptwidth) {
-                cout << "fart!" << endl;
-                retval += string(loptwidth - widths[_data->options.begin() - i], ' ');
+              if (widths[i - _data->options.begin()] < loptwidth) {
+                retval += string(loptwidth - widths[i - _data->options.begin()], ' ');
               }
               retval += "  ";
             }
@@ -381,7 +401,6 @@ namespace DAC {
         {
           work    = _procText(i->Help(), i->ArgName(), shypos, nbpos, zwspos);
           work    = wrap.ShyPos(&shypos).NBPos(&nbpos).ZWSPos(&zwspos).wrap(&work);
-          cout << "optwidth: " << optwidth << endl;
           retval += _hanging_indent(work, optwidth);
         }
         
@@ -390,6 +409,26 @@ namespace DAC {
         
       }
       
+    }
+    
+    // Finally, output the postinfo and bug e-mail address.
+    if (!_data->postinfo.empty()) {
+      work    = _procText(_data->postinfo, "", shypos, nbpos, zwspos);
+      retval += "\n"
+              + wrapText().Width (_data->helpwidth)
+                          .ShyPos(&shypos         )
+                          .NBPos (&nbpos          )
+                          .ZWSPos(&zwspos         ).wrap(&work)
+              + "\n";
+    }
+    if (!_data->bugaddress.empty()) {
+      work    = _procText("Report bugs to <" + _data->bugaddress + ">.", "", shypos, nbpos, zwspos);
+      retval += "\n"
+              + wrapText().Width (_data->helpwidth)
+                          .ShyPos(&shypos         )
+                          .NBPos (&nbpos          )
+                          .ZWSPos(&zwspos         ).wrap(&work)
+              + "\n";
     }
     
     // Done.
