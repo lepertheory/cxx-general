@@ -7,6 +7,9 @@
  * in error conditions. Since I want to pick up any quirks of getopt, we're
  * pretty much stuck with the nasty hacks. I believe I've caught at least 98%
  * of the error conditions and will report them correctly.
+ * 
+ * FIXME: Automatic conversion of arguments is terrible. Implement integer(),
+ *        string(), etc. methods or something like it.
  *****************************************************************************/
 
 // Include guard.
@@ -826,7 +829,7 @@ namespace DAC {
   
   /***************************************************************************/
   // Function members.
-
+  
   // Get arguments.
   template <> std::string GetOpt::getArg<std::string> (                         size_t const argnum) const;
   template <> std::string GetOpt::getArg<std::string> (char        const  sopt, size_t const argnum) const;

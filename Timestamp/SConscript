@@ -29,7 +29,7 @@ have_gmtime_r     = 0
 # Configure without CCFLAGS, or configure will fail with all the extra
 # warnings that are turned on.
 if not env.GetOption('clean') :
-  tmpccflags = env['CCFLAGS']
+  tmpccflags     = env['CCFLAGS']
   env['CCFLAGS'] = []
   
   conf = Configure(env)
