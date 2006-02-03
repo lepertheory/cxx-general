@@ -2,6 +2,7 @@
  * INIFile
  *****************************************************************************
  * Facilitates reading from an INI file.
+ * TODO: Provide automatic data-type conversion as in GetOpt.
  *****************************************************************************/
 
 // Include guard.
