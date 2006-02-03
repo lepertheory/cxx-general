@@ -12,12 +12,13 @@ using namespace DAC;
 int main (int argc, char** argv) {
   
   GetOpt test(argc, argv);
-  test.add_option(GetOpt::Option('h' , "help"  , GetOpt::ARG_NONE    , false, "Show this help screen.", ""));
-  test.add_option(GetOpt::Option('o' , "output", GetOpt::ARG_REQUIRED, false, "Some output option. This is a really long description, it just goes on and on forever, like it doesn't know how to shut up. The argument name is \"%s\". Here's a %%s.", "FARTY"));
-  test.add_option(GetOpt::Option('b' , "bling" , GetOpt::ARG_OPTIONAL, false, "Bling it out, yo. %s is optional, dog.", "HIZZLE"));
-  test.add_option(GetOpt::Option('w' , "width" , GetOpt::ARG_REQUIRED, false, "This one is for real. %s is the width of the help text to output. Defaults to 80.", "WIDTH"));
-  test.add_option(GetOpt::Option('s' ,           GetOpt::ARG_OPTIONAL, false, "This is a short-only option. Like what, bitches.", "SHORTY"));
-  test.add_option(GetOpt::Option(      "long"  , GetOpt::ARG_NONE    , false, "This is a long-only option. It is only long, not short. How do you like my hoopde?", ""));
+  test.add_option(GetOpt::Option('h', "help"   , GetOpt::ARG_NONE    , false, "Show this help screen.", ""));
+  test.add_option(GetOpt::Option('o', "output" , GetOpt::ARG_REQUIRED, false, "Some output option. This is a really long description, it just goes on and on forever, like it doesn't know how to shut up. The argument name is \"%s\". Here's a %%s.", "FARTY"));
+  test.add_option(GetOpt::Option('b', "bling"  , GetOpt::ARG_OPTIONAL, false, "Bling it out, yo. %s is optional, dog.", "HIZZLE"));
+  test.add_option(GetOpt::Option('w', "width"  , GetOpt::ARG_REQUIRED, false, "This one is for real. %s is the width of the help text to output. Defaults to 80.", "WIDTH"));
+  test.add_option(GetOpt::Option('s',            GetOpt::ARG_OPTIONAL, false, "This is a short-only option. Like what, bitches.", "SHORTY"));
+  test.add_option(GetOpt::Option(     "long"   , GetOpt::ARG_NONE    , false, "This is a long-only option. It is only long, not short. How do you like my hoopde?", ""));
+  test.add_option(GetOpt::Option('t', "tabtest", GetOpt::ARG_NONE    , false, "This\texists\tto\ttest\ttabs\tin\toption\tdescriptions.\tIt\thas\tno\tother\tpurpose\tat\tall.", ""));
   
   cout << "set: " << test.isSet('o') << endl;
   

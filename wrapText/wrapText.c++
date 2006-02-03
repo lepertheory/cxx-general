@@ -40,6 +40,8 @@ namespace DAC {
     _indent  =     0;
     _hanging = false;
     
+    _startcol = 0;
+    
   }
   
   /*
@@ -154,7 +156,7 @@ namespace DAC {
       
       // Calculate width of non-break text.
       if (nbtext == "\t") {
-        nbwidth = _tabwidth + 1 - (linepos % _tabwidth + 1);
+        nbwidth = _tabwidth + 1 - ((_startcol + linepos) % _tabwidth + 1);
       } else if (nbtext == "\n") {
         linepos = 0;
         nbwidth = 0;

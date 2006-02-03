@@ -220,8 +220,6 @@ namespace DAC {
               + "\n";
     }
     
-    // FIXME: Does not output option arguments if there is no long option.
-    
     // Output options if there are any.
     if (!_data->options.empty()) {
       
@@ -237,36 +235,57 @@ namespace DAC {
       // Work area.
       bool has_short = false;
       bool has_long  = false;
-      string::size_type overhead  = 0;
       string::size_type max_width = 0;
-      string::size_type real_max  = 0;
-      string::size_type loptwidth = 0;
       string::size_type optwidth  = 0;
+      string::size_type overhead  = 0;
       map<_Options::size_type, string::size_type> widths;
       
       // Blank line first.
       retval += "\n";
       
-      // Gather option data.
+      // Gather option data. First pass checks if there are short and long
+      // options, second pass calculates widths.
       for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
-        if (i->isShort()) {
-          has_short = true;
+        if (i->isShort()) { has_short = true; }
+        if (i->isLong ()) { has_long  = true; }
+      }
+      for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
+        
+        // Work area.
+        std::string::size_type width = PREOPT;
+        
+        // Short option processing.
+        if (has_short) {
+          width += SHOPT;
+          if (has_long) {
+            width += SH_LSEP;
+          }
         }
+        
+        // Long option processing.
         if (i->isLong()) {
-          has_long = true;
-          std::string::size_type width = i->Long().length();
+          width += LPRE + i->Long().length();
           if (i->ArgRequirement()) {
             width += ARGFIX + i->ArgName().length();
             if (i->ArgRequirement() == ARG_OPTIONAL) {
               width += ARGOPT;
             }
           }
-          widths[i - _data->options.begin()] = width;
-          max_width = max(max_width, width);
+        } else {
+          if (i->ArgRequirement()) {
+            width += i->ArgName().length();
+            if (i->ArgRequirement() == ARG_OPTIONAL) {
+              width += ARGOPT;
+            }
+          }
         }
+        width += LSEP;
+        
+        // Add width.
+        widths[i - _data->options.begin()] = width;
+        max_width = max(max_width, width);
+        
       }
-      overhead = PREOPT + (has_short ? SHOPT + (has_long ? SH_LSEP : 0) : 0) + (has_long ? LPRE + LSEP : 0);
-      real_max = overhead + max_width;
       
       // Get the top 80% width of options for the target width. This could
       // theoretically overflow, but not before chewing up sizeof(_Option) / 4
@@ -275,13 +294,23 @@ namespace DAC {
       {
         
         // Hard limits on sizes.
+        overhead = SHOPT;
+        if (has_short) {
+          overhead += SHOPT;
+          if (has_long) {
+            overhead += SH_LSEP;
+          }
+        }
+        if (has_long) {
+          overhead += LPRE;
+        }
+        overhead += LSEP;
         string::size_type hardmin = max(overhead, _data->helpwidth     / 5);
         string::size_type hardmax = max(overhead, _data->helpwidth * 2 / 5);
         
         // See if we don't need to do any squeezing.
-        if (real_max <= hardmin) {
-          loptwidth = max_width;
-          optwidth  = real_max ;
+        if (max_width <= hardmin) {
+          optwidth = max_width ;
         } else {
           
           // Different processing if there are very few options.
@@ -295,39 +324,31 @@ namespace DAC {
             }
             nth = sortwidths.begin() + sortwidths.size() * 4 / 5;
             nth_element(sortwidths.begin(), nth, sortwidths.end());
-            loptwidth = *nth;
-            optwidth  = loptwidth + overhead;
+            optwidth = *nth;
             
             // Clamp to hard limits.
             if (optwidth > hardmax) {
-              optwidth  = hardmax;
-              loptwidth = optwidth - overhead;
+              optwidth = hardmax;
             } else if (optwidth < hardmin) {
-              optwidth  = hardmin;
-              loptwidth = optwidth - overhead;
+              optwidth = hardmin;
             }
             
           // Just clamp max width to hard limits.
           } else if (!widths.empty()) {
             
             // Take max width and clamp it.
-            loptwidth = max_width;
-            optwidth  = max_width + overhead;
+            optwidth = max_width;
             if (optwidth > hardmax) {
-              optwidth  = hardmax;
-              loptwidth = optwidth - overhead;
+              optwidth = hardmax;
             } else if (optwidth < hardmin) {
-              optwidth  = hardmin;
-              loptwidth = optwidth - overhead;
+              optwidth = hardmin;
             }
             
           // No long options were defined.
           } else {
             
             // Short option width.
-            loptwidth = 0;
-            optwidth  = overhead;
-            real_max  = overhead;
+            optwidth = overhead;
             
           }
           
@@ -335,39 +356,54 @@ namespace DAC {
           
       }
       
-      // One last hard clamp, make sure we don't get errors from text wrapping.
-      // If this kicks in, output will be ugly but everything will be there,
-      // and is better than making user of this lib deal with yet another error
-      // to handle. This should be taken care of in a cleaner way in the
-      // future. I'm sick of working on it now though, and this is an edge
-      // case that shouldn't cause problems (who's working on a 20-column
-      // display) so I'll stick a TODO here and call it handled for now.
-      if (_data->helpwidth - optwidth < 3) {
-        optwidth  = _data->helpwidth;
-        loptwidth = optwidth - overhead;
+      // One last hard clamp, we can't continue past this problem. If your
+      // display is this narrow, you won't be able to read the help anyway.
+      if (optwidth + 3 > _data->helpwidth) {
+        throw Errors::TooNarrow().Width(_data->helpwidth);
       }
       
       // Create wrapping function object.
       wrapText wrap;
-      wrap.Width(_data->helpwidth - optwidth).Indent(2).Hanging(true);
+      wrap.Width   (_data->helpwidth - optwidth)
+          .Indent  (2)
+          .Hanging (true)
+          .StartCol(optwidth);
       
       // Output options.
       for (_Options::iterator i = _data->options.begin(); i != _data->options.end(); ++i) {
         
+        // Work area.
+        string::size_type width = 0;
+        
         // Option indent.
         retval += "  ";
+        width  += PREOPT;
         
         // Short option.
         if (has_short) {
           if (i->isShort()) {
             retval += "-" + DAC::toStringChr(i->Short());
+            width  += SHOPT;
             if (i->isLong()) {
               retval += ", ";
+              width  += SH_LSEP;
             } else {
-              retval += "  ";
+              if (i->ArgRequirement()) {
+                if (i->ArgRequirement() == ARG_OPTIONAL) {
+                  retval += "[" + i->ArgName() + "]";
+                  width  += ARGOPT + i->ArgName().length();
+                } else {
+                  retval += i->ArgName();
+                  width  += i->ArgName().length();
+                }
+              } else {
+                retval += "  ";
+                width  += LSEP;
+              }
             }
           } else {
             retval += "    ";
+            width  += SHOPT + SH_LSEP;
           }
         }
         
@@ -375,26 +411,24 @@ namespace DAC {
         if (has_long) {
           if (i->isLong()) {
             retval += "--" + i->Long();
+            width  += LPRE + i->Long().length();
             if (i->ArgRequirement()) {
               if (i->ArgRequirement() == ARG_OPTIONAL) {
                 retval += "[=" + i->ArgName() + "]";
+                width  += ARGOPT + ARGFIX + i->ArgName().length();
               } else {
                 retval += "=" + i->ArgName();
+                width  += ARGFIX + i->ArgName().length();
               }
             }
-            if (widths[i - _data->options.begin()] > loptwidth) {
-              retval += "\n" + string(optwidth, ' ');
-            } else {
-              if (widths[i - _data->options.begin()] < loptwidth) {
-                retval += string(loptwidth - widths[i - _data->options.begin()], ' ');
-              }
-              retval += "  ";
-            }
-          } else {
-            retval += string(LPRE + loptwidth + LSEP, ' ');
           }
+        }
+        
+        // Pad width the rest of the way.
+        if (width + LSEP > optwidth) {
+          retval += "\n" + string(optwidth, ' ');
         } else {
-          retval += " ";
+          retval += string(optwidth - width, ' ');
         }
         
         // Description.

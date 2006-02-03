@@ -310,6 +310,23 @@ namespace DAC {
             private:
               std::string _lopt;
           };
+          
+          // Help display is too narrow to show help on.
+          class TooNarrow : public Base {
+            public:
+              virtual ~TooNarrow () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  return ("Display width of " + DAC::toString(_width) + " characters is too narrow to show help.").c_str();
+                } catch (...) {
+                  return "Display is too narrow to show help. Error creating message string.";
+                }
+              };
+              TooNarrow& Width (std::string::size_type const width) { _width = width; return *this; };
+              std::string::size_type Width () const { return _width; };
+            private:
+              std::string::size_type _width;
+          };
         
         // No instances of this class allowed.
         private:

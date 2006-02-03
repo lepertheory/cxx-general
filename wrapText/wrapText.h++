@@ -180,12 +180,14 @@ namespace DAC {
       wrapText& ZWSPos   (POIContainer const*    const zwspos  );
       wrapText& Indent   (std::string::size_type const indent  );
       wrapText& Hanging  (bool                   const hanging );
+      wrapText& StartCol (std::string::size_type const startcol);
       std::string::size_type Width    () const;
       std::string::size_type TabWidth () const;
       POIContainer const*    ShyPos   () const;
       POIContainer const*    NBPos    () const;
       POIContainer const*    ZWSPos   () const;
       std::string::size_type Indent   () const;
+      std::string::size_type StartCol () const;
       bool                   Hanging  () const;
       
       // Wrap text.
@@ -234,6 +236,9 @@ namespace DAC {
       std::string::size_type _indent ;
       bool                   _hanging;
       
+      // Begin text at this column. Used to determine tab widths.
+      std::string::size_type _startcol;
+      
   };
   
   /***************************************************************************
@@ -267,6 +272,7 @@ namespace DAC {
   inline wrapText& wrapText::ZWSPos   (POIContainer const*    const zwspos  ) { _zwspos   = zwspos  ; return *this; }
   inline wrapText& wrapText::Indent   (std::string::size_type const indent  ) { _indent   = indent  ; return *this; }
   inline wrapText& wrapText::Hanging  (bool                   const hanging ) { _hanging  = hanging ; return *this; }
+  inline wrapText& wrapText::StartCol (std::string::size_type const startcol) { _startcol = startcol; return *this; }
   inline std::string::size_type        wrapText::Width    () const { return _width   ; }
   inline std::string::size_type        wrapText::TabWidth () const { return _tabwidth; }
   inline wrapText::POIContainer const* wrapText::ShyPos   () const { return _shypos  ; }
@@ -274,6 +280,7 @@ namespace DAC {
   inline wrapText::POIContainer const* wrapText::ZWSPos   () const { return _zwspos  ; }
   inline std::string::size_type        wrapText::Indent   () const { return _indent  ; }
   inline bool                          wrapText::Hanging  () const { return _hanging ; }
+  inline std::string::size_type        wrapText::StartCol () const { return _startcol; }
   
 }
 
