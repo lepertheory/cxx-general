@@ -7,9 +7,6 @@
  * in error conditions. Since I want to pick up any quirks of getopt, we're
  * pretty much stuck with the nasty hacks. I believe I've caught at least 98%
  * of the error conditions and will report them correctly.
- * 
- * FIXME: Automatic conversion of arguments is terrible. Implement integer(),
- *        string(), etc. methods or something like it.
  *****************************************************************************/
 
 // Include guard.
@@ -29,6 +26,7 @@
   #include <cxx-general/ReferencePointer.h++>
   #include <cxx-general/toString.h++>
   #include <cxx-general/wrapText/wrapText.h++>
+  #include <cxx-general/ArbInt/ArbInt.h++>
   #include <cxx-general/Arb/Arb.h++>
   #include <cxx-general/demangle.h++>
   #include <cxx-general/wrapText/wrapText.h++>
@@ -424,10 +422,19 @@ namespace DAC {
           // Function members.
           
           // Constructor.
-          ArgReader (std::string const& arg);
+          ArgReader (std::string const& arg = _BLANK);
           
-          // Conversion operator.
-          template <class T> operator T () const;
+          // Get value.
+          operator std::string () const;
+          
+          // Get value as a bool.
+          bool to_boolean () const;
+          
+          // Get value as an integer type.
+          template <class T> T to_integer () const;
+          
+          // Get value as a floating-point type.
+          template <class T> T to_float () const;
           
         /*
          * Private members.
@@ -435,10 +442,22 @@ namespace DAC {
         private:
           
           /*******************************************************************/
+          // Constants.
+          
+          // Blank string, in case somebody wants it.
+          static std::string const _BLANK;
+          
+          /*******************************************************************/
           // Data members.
           
           // The argument.
           std::string const& _arg;
+          
+          /*******************************************************************/
+          // Function members.
+          
+          // Convert a string to uppercase.
+          std::string _uppercase () const;
         
       };
       
@@ -463,8 +482,23 @@ namespace DAC {
           // Conversion operator. Returns whether this option is set.
           operator bool () const;
           
+          // Conversion operator. Same as to_string().
+          operator std::string () const;
+          
           // Element access operator, read option argument.
           ArgReader operator [] (size_t const argnum) const;
+          
+          // Return argument directly, or blank string if not set.
+          std::string to_string () const;
+          
+          // Same, get value as bool. False if not set.
+          bool to_boolean () const;
+          
+          // Get value as integer type. 0 if not set.
+          template <class T> T to_integer () const;
+          
+          // Get value as integer type. 0.0 if not set.
+          template <class T> T to_float () const;
           
         /*
          * Private members.
@@ -500,8 +534,23 @@ namespace DAC {
           // Conversion operator. Returns whether this option is set.
           operator bool () const;
           
+          // Conversion operator. Same as to_string().
+          operator std::string () const;
+          
           // Element access operator, read option argument.
           ArgReader operator [] (size_t const argnum) const;
+          
+          // Return argument directly, or blank string if not set.
+          std::string to_string () const;
+          
+          // Same, get value as bool. False if not set.
+          bool to_boolean () const;
+          
+          // Get value as integer type. 0 if not set.
+          template <class T> T to_integer () const;
+          
+          // Get value as integer type. 0.0 if not set.
+          template <class T> T to_float () const;
           
         /*
          * Private members.
@@ -588,14 +637,12 @@ namespace DAC {
       size_t numArgs (std::string const& lopt) const;
       
       // Get arguments. First form is for non-option args.
-      template <class T> T getArg (                         size_t const argnum) const;
-      template <class T> T getArg (char const sopt        , size_t const argnum) const;
-      template <class T> T getArg (std::string const& lopt, size_t const argnum) const;
-      
-      // Get all arguments as a list.
-      template <class T> ReferencePointer< std::vector<T> > getArgs (                       ) const;
-      template <class T> ReferencePointer< std::vector<T> > getArgs (char        const  sopt) const;
-      template <class T> ReferencePointer< std::vector<T> > getArgs (std::string const& lopt) const;
+      ArgReader getArg (                                            ) const;
+      ArgReader getArg (                         size_t const argnum) const;
+      ArgReader getArg (char const sopt                             ) const;
+      ArgReader getArg (char const sopt        , size_t const argnum) const;
+      ArgReader getArg (std::string const& lopt                     ) const;
+      ArgReader getArg (std::string const& lopt, size_t const argnum) const;
       
       // Get command-line arguments in order.
       ArgListPT getOrdered () const;
@@ -781,6 +828,9 @@ namespace DAC {
       /***********************************************************************/
       // Function members.
       
+      // Scan options if needed.
+      void _check_scan () const;
+      
       // Add a valid option.
       void _add_option (Option const& option);
       
@@ -806,34 +856,10 @@ namespace DAC {
                                     wrapText::POIContainer& nb ,
                                     wrapText::POIContainer& zws );
       
-      // Convert a given string to bool.
-      static bool _toBool (std::string const& text);
-      
-      // Convert a string to uppercase.
-      static std::string _uppercase (std::string const& text);
-      
-      // Convert a string to a given type.
-      template <class T> static T _convert (std::string const& text);
-      
-      // Convert a list of arguments to a given type.
-      template <class T> static ReferencePointer< std::vector<T> > _convert_ArgList (_ArgList const& args);
-      
       // Give text a hanging indent.
       static std::string _hanging_indent (std::string const& text, std::string::size_type const indent);
       
   };
-  
-  /***************************************************************************
-   * Explicit template instantiations.
-   ***************************************************************************/
-  
-  /***************************************************************************/
-  // Function members.
-  
-  // Get arguments.
-  template <> std::string GetOpt::getArg<std::string> (                         size_t const argnum) const;
-  template <> std::string GetOpt::getArg<std::string> (char        const  sopt, size_t const argnum) const;
-  template <> std::string GetOpt::getArg<std::string> (std::string const& lopt, size_t const argnum) const;
   
   /***************************************************************************
    * Inline and template definitions.
@@ -859,7 +885,7 @@ namespace DAC {
   /*
    * Element access operator, read command line argument.
    */
-  inline GetOpt::ArgReader GetOpt::operator [] (size_t const element) const { return getArg<std::string>(element); }
+  inline GetOpt::ArgReader GetOpt::operator [] (size_t const element) const { return getArg(element); }
   
   /*
    * Element access operator, read option.
@@ -981,118 +1007,24 @@ namespace DAC {
   /*
    * See how many arguments an option or the command-line has.
    */
-  inline size_t GetOpt::numArgs (                       ) const { if (_data->modified) { scan(); } return _data->arguments.size(); }
+  inline size_t GetOpt::numArgs (                       ) const { _check_scan(); return _data->arguments.size(); }
   inline size_t GetOpt::numArgs (char        const  sopt) const { return _scan_option(sopt)->args.size(); }
   inline size_t GetOpt::numArgs (std::string const& lopt) const { return _scan_option(lopt)->args.size(); }
   
   /*
    * Get arguments. First form is for non-option args.
    */
-  template <class T> T GetOpt::getArg (size_t const argnum) const {
-    if (_data->modified) {
-      scan();
-    }
-    if (argnum >= _data->arguments.size()) {
-      throw Errors::ArgOOBCmdLine().ArgNum(argnum).Size(_data->arguments.size());
-    }
-    return _convert<T>(_data->arguments[argnum]);
-  }
-  template <class T> T GetOpt::getArg (char const sopt, size_t const argnum) const {
-    _ArgList const& work = _scan_option(sopt)->args;
-    if (argnum >= work.size()) {
-      throw Errors::ArgOOBShort().ArgNum(argnum).Size(work.size()).Option(sopt);
-    }
-    return _convert<T>(work[argnum]);
-  }
-  template <class T> T GetOpt::getArg (std::string const& lopt, size_t const argnum) const {
-    _ArgList const& work = _scan_option(lopt)->args;
-    if (argnum >= work.size()) {
-      throw Errors::ArgOOBLong().ArgNum(argnum).Size(work.size()).Option(lopt);
-    }
-    return _convert<T>(work[argnum]);
-  }
-      
-  /*
-   * Get all arguments as a list.
-   */
-  
-  // std::string.
-  template <> inline ReferencePointer< std::vector<std::string> > GetOpt::getArgs<std::string> () const {
-    if (_data->modified) {
-      scan();
-    }
-    return ReferencePointer< std::vector<std::string> >(new std::vector<std::string>(_data->arguments));
-  }
-  template <> inline ReferencePointer< std::vector<std::string> > GetOpt::getArgs<std::string> (char const sopt) const {
-    return ReferencePointer< std::vector<std::string> >(new std::vector<std::string>(_scan_option(sopt)->args));
-  }
-  template <> inline ReferencePointer< std::vector<std::string> > GetOpt::getArgs<std::string> (std::string const& lopt) const {
-    return ReferencePointer< std::vector<std::string> >(new std::vector<std::string>(_scan_option(lopt)->args));
-  }
-  
-  // Other.
-  template <class T> inline ReferencePointer< std::vector<T> > GetOpt::getArgs () const {
-    if (_data->modified) {
-      scan();
-    }
-    return _convert_ArgList<T>(_data->arguments);
-  }
-  template <class T> inline ReferencePointer< std::vector<T> > GetOpt::getArgs (char const sopt) const {
-    return _convert_ArgList<T>(_scan_option(sopt)->args);
-  }
-  template <class T> inline ReferencePointer< std::vector<T> > GetOpt::getArgs (std::string const& lopt) const {
-    return _convert_ArgList<T>(_scan_option(lopt)->args);
-  }
+  inline GetOpt::ArgReader GetOpt::getArg () const { return g
   
   /*
    * Get ordered command-line arguments.
    */
-  inline GetOpt::ArgListPT GetOpt::getOrdered () const { if (_data->modified) { scan(); } return ArgListPT(new ArgListT(_data->ordered)); }
+  inline GetOpt::ArgListPT GetOpt::getOrdered () const { _check_scan(); return ArgListPT(new ArgListT(_data->ordered)); }
   
   /*
-   * Convert a string to uppercase.
+   * Scan options if needed.
    */
-  inline std::string GetOpt::_uppercase (std::string const& text) {
-    std::string retval;
-    retval.reserve(text.length());
-    transform(text.begin(), text.end(), retval.begin(), toupper);
-    return retval;
-  }
-  
-  /*
-   * Convert a string to a given type.
-   */
-  // bool.
-  template <> inline bool GetOpt::_convert (std::string const& text) { return _toBool(text); }
-  
-  // Numeric type.
-  template <class T> T GetOpt::_convert (std::string const& text) {
-    T retval;
-    try {
-      retval = Arb(text);
-    } catch (Arb::Errors::Base& e) {
-      throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
-    }
-    return retval;
-  }
-  
-  /*
-   * Convert a list of arguments to a given type.
-   */
-  template <class T> ReferencePointer< std::vector<T> > GetOpt::_convert_ArgList (_ArgList const& args) {
-    
-    // Work area.
-    ReferencePointer< std::vector<T> > retval;
-    
-    // Attempt to convert to a numeric type.
-    for (_ArgList::iterator i = args.begin(); i != args.end(); ++i) {
-      retval->push_back(_convert<T>(*i));
-    }
-    
-    // Done.
-    return retval;
-    
-  }
+  inline void GetOpt::_check_scan () const { if (_data->modified) { scan(); } }
   
   /***************************************************************************
    * GetOpt::ArgReader
@@ -1107,10 +1039,43 @@ namespace DAC {
   inline GetOpt::ArgReader::ArgReader (std::string const& arg) : _arg(arg) {}
   
   /*
-   * Conversion operator.
+   * Get value.
    */
-  template <> inline GetOpt::ArgReader::operator std::string () const { return _arg; }
-  template <class T> inline GetOpt::ArgReader::operator T () const { return _convert<T>(_arg); }
+  inline GetOpt::ArgReader::operator std::string () const { return _arg; }
+  
+  /*
+   * Get value as an integer type.
+   */
+  template <class T> T GetOpt::ArgReader::to_integer () const {
+    T retval;
+    try {
+      retval = ArbInt(_arg);
+    } catch (ArbInt::Errors::Base& e) {
+      throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
+    }
+    return retval;
+  }
+  
+  // Get value as a floating-point type.
+  template <class T> T GetOpt::ArgReader::to_float () const {
+    T retval;
+    try {
+      retval = Arb(_arg);
+    } catch (Arb::Errors::Base& e) {
+      throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
+    }
+    return retval;
+  }
+  
+  /*
+   * Convert a string to uppercase.
+   */
+  inline std::string GetOpt::ArgReader::_uppercase () const {
+    std::string retval;
+    retval.reserve(_arg.length());
+    transform(_arg.begin(), _arg.end(), retval.begin(), toupper);
+    return retval;
+  }
   
   /***************************************************************************
    * GetOpt::ShortOptReader
@@ -1129,6 +1094,10 @@ namespace DAC {
    */
   inline GetOpt::ShortOptReader::operator bool () const { return _opt.numset; }
   
+  // Conversion operator. Returns first argument or blank if option is
+  // not set.
+  inline GetOpt::ShortOptReader::operator std::string () const { return to_string(); }
+  
   /*
    * Element access operator, read option argument.
    */
@@ -1138,6 +1107,24 @@ namespace DAC {
     }
     return _opt.args[argnum];
   }
+  
+  // Returns first argument or blank if option is not set.
+  inline std::string GetOpt::ShortOptReader::to_string () const {
+    if (_opt.args.empty()) {
+      return std::string();
+    } else {
+      return _opt.args[_opt.args.size() - 1];
+    }
+  }
+  
+  // Same, get value as bool. False if not set.
+  inline bool GetOpt::ShortOptReader::to_boolean () const { return ArgReader(to_string()).to_boolean(); }
+  
+  // Get value as integer type. 0 if not set.
+  template <class T> inline T GetOpt::ShortOptReader::to_integer () const { return ArgReader(to_string()).to_integer<T>(); }
+  
+  // Get value as integer type. 0.0 if not set.
+  template <class T> inline T GetOpt::ShortOptReader::to_float () const { return ArgReader(to_string()).to_float<T>(); }
   
   /***************************************************************************
    * GetOpt::LongOptReader
@@ -1165,6 +1152,24 @@ namespace DAC {
     }
     return _opt.args[argnum];
   }
+  
+  // Returns first argument or blank if option is not set.
+  inline std::string GetOpt::LongOptReader::to_string () const {
+    if (_opt.args.empty()) {
+      return std::string();
+    } else {
+      return _opt.args[_opt.args.size() - 1];
+    }
+  }
+  
+  // Same, get value as bool. False if not set.
+  inline bool GetOpt::LongOptReader::to_boolean () const { return ArgReader(to_string()).to_boolean(); }
+  
+  // Get value as integer type. 0 if not set.
+  template <class T> inline T GetOpt::LongOptReader::to_integer () const { return ArgReader(to_string()).to_integer<T>(); }
+  
+  // Get value as integer type. 0.0 if not set.
+  template <class T> inline T GetOpt::LongOptReader::to_float () const { return ArgReader(to_string()).to_float<T>(); }
   
   /***************************************************************************
    * GetOpt::_Data

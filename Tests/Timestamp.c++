@@ -56,7 +56,7 @@ int main () {
       }
       
     }
-    //*/
+    // */
     
     /**/
     Timestamp test1;
@@ -93,6 +93,8 @@ int main () {
     cout << "Millisecond: "; cin >> ms;
     
     test2.setGMT(Timestamp::Interval().Year(y).Month(m).Day(d).Hour(h).Minute(n).Second(s).Millisecond(ms));
+    
+    cout << "In POSIX: " << test2.POSIXDate() << "\n";
     
     cout << "POSIX: "; cin >> ms;
     test2.POSIXDate(ms);

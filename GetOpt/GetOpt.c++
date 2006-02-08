@@ -16,6 +16,7 @@
 #include <cxx-general/AutoArray.h++>
 #include <cxx-general/wrapText/wrapText.h++>
 #include <cxx-general/toString.h++>
+#include <cxx-general/Arb/Arb.h++>
 
 // Class includes.
 #include "GetOpt.h++"
@@ -86,36 +87,29 @@ namespace DAC {
   }
   
   /*
-   * Get arguments.
+   * Get arguments. First form is for non-option args.
    */
-  template <> std::string GetOpt::getArg<std::string> (size_t const argnum) const {
-    if (_data->modified) {
-      scan();
-    }
+  GetOpt::ArgReader GetOpt::getArg (size_t const argnum) const {
+    _check_scan();
     if (argnum >= _data->arguments.size()) {
       throw Errors::ArgOOBCmdLine().ArgNum(argnum).Size(_data->arguments.size());
     }
     return _data->arguments[argnum];
   }
-  template <> std::string GetOpt::getArg<std::string> (char const sopt, size_t const argnum) const {
+  GetOpt::ArgReader GetOpt::getArg (char const sopt, size_t const argnum) const {
     _ArgList const& work = _scan_option(sopt)->args;
     if (argnum >= work.size()) {
       throw Errors::ArgOOBShort().ArgNum(argnum).Size(work.size()).Option(sopt);
     }
     return work[argnum];
   }
-  template <> std::string GetOpt::getArg<std::string> (std::string const& lopt, size_t const argnum) const {
+  GetOpt::ArgReader GetOpt::getArg (std::string const& lopt, size_t const argnum) const {
     _ArgList const& work = _scan_option(lopt)->args;
     if (argnum >= work.size()) {
       throw Errors::ArgOOBLong().ArgNum(argnum).Size(work.size()).Option(lopt);
     }
     return work[argnum];
   }
-  
-  /*
-   * Get all arguments as a list.
-   */
-  //template <> 
   
   /*
    * Set the command-line arguments.
@@ -728,9 +722,7 @@ namespace DAC {
     // be better to only scan if we are checking for a valid option, but then
     // we would have to search the option list twice, and we're going to have
     // to do this eventually anyway.
-    if (_data->modified) {
-      scan();
-    }
+    _check_scan();
     
     // Find the option.
     _Option* retval = _find_option(sopt);
@@ -747,9 +739,7 @@ namespace DAC {
   GetOpt::_Option* GetOpt::_scan_option (string const& lopt) const {
     
     // If the data structure was modified, we need to re-scan.
-    if (_data->modified) {
-      scan();
-    }
+    _check_scan();
     
     // Find the option.
     _Option* retval = _find_option(lopt);
@@ -830,39 +820,6 @@ namespace DAC {
   }
   
   /*
-   * Convert a string to bool.
-   */
-  bool GetOpt::_toBool (string const& text) {
-    
-    // An empty string is false.
-    if (text.empty()) {
-      return false;
-    }
-    
-    // Work area.
-    string work(_uppercase(text));
-    
-    // Check for negative text.
-    if (work == "F" || work == "N" || work == "FALSE" || work == "NO" || work == "OFF") {
-      return false;
-    }
-    
-    // Check for positive text.
-    if (work == "T" || work == "Y" || work == "TRUE" || work == "YES" || work == "ON") {
-      return true;
-    }
-    
-    // Check for 0 numeric. If text can't be converted to number, any old text
-    // is true, just like any old number other than zero.
-    try {
-      return Arb(work);
-    } catch (Arb::Errors::Base&) {
-      return true;
-    }
-    
-  }
-  
-  /*
    * Apply a hanging indent.
    */
   string GetOpt::_hanging_indent (string const& text, string::size_type const indent) {
@@ -886,6 +843,46 @@ namespace DAC {
     
     // Done.
     return retval;
+    
+  }
+  
+  /***************************************************************************
+   * GetOpt::ArgReader
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
+  /*
+   * Convert argument to bool.
+   */
+  bool GetOpt::ArgReader::to_boolean () const {
+    
+    // An empty string is false.
+    if (_arg.empty()) {
+      return false;
+    }
+    
+    // Work area.
+    string work(_uppercase());
+    
+    // Check for negative text.
+    if (work == "F" || work == "N" || work == "FALSE" || work == "NO" || work == "OFF") {
+      return false;
+    }
+    
+    // Check for positive text.
+    if (work == "T" || work == "Y" || work == "TRUE" || work == "YES" || work == "ON") {
+      return true;
+    }
+    
+    // Check for 0 numeric. If text can't be converted to number, any old text
+    // is true, just like any old number other than zero.
+    try {
+      return Arb(work);
+    } catch (Arb::Errors::Base&) {
+      return true;
+    }
     
   }
   

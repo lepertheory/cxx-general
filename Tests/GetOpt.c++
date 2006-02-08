@@ -27,7 +27,7 @@ int main (int argc, char** argv) {
       .Description("New%hline then really long text test:\n1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 This is the descri%hption. It has a really long line to test out my text wrap%hping function. Woo. Here tab\tlet's see if it gets this right. I be sur%hprised if it does. Now let's try out some really long words. 12345678901234567890%z12345678901234567890%z12345678901234567890%z12345678901234567890%z12345678901234567890%z12345678901234567890%z12345678901234567890%z12345678901234567890 How about that? Rock on brot%hher beavis, I kick ass. This isn't long enough yet, let's make it longer. The prog%hram name is %s, I'll bet you didn't know that. Let's see how this thing han%hdles newlines; I'll put one right here:\nThis should wrap prop%herly now. How much do you want to bet it doesn't the first time around? This%n line%n is%n nothing%n but%n non-breaking%n spaces.%n It%n shouldn't%n break%n at%n all.")
       .PostInfo   ("I guess this goes at the end.")
       .BugAddress ("cxxgeneral@lepertheory.net")
-      .HelpWidth  (test.isSet('w') ? test['w'][0] : 80);
+      .HelpWidth  (test.isSet('w') ? test['w'].to_integer<size_t>() : 80);
   
   cout << "Help:\n" << test.getHelp();
   
