@@ -427,6 +427,9 @@ namespace DAC {
           // Get value.
           operator std::string () const;
           
+          // Get value as string.
+          std::string to_string () const;
+          
           // Get value as a bool.
           bool to_boolean () const;
           
@@ -482,9 +485,6 @@ namespace DAC {
           // Conversion operator. Returns whether this option is set.
           operator bool () const;
           
-          // Conversion operator. Same as to_string().
-          operator std::string () const;
-          
           // Element access operator, read option argument.
           ArgReader operator [] (size_t const argnum) const;
           
@@ -533,9 +533,6 @@ namespace DAC {
           
           // Conversion operator. Returns whether this option is set.
           operator bool () const;
-          
-          // Conversion operator. Same as to_string().
-          operator std::string () const;
           
           // Element access operator, read option argument.
           ArgReader operator [] (size_t const argnum) const;
@@ -1012,11 +1009,6 @@ namespace DAC {
   inline size_t GetOpt::numArgs (std::string const& lopt) const { return _scan_option(lopt)->args.size(); }
   
   /*
-   * Get arguments. First form is for non-option args.
-   */
-  inline GetOpt::ArgReader GetOpt::getArg () const { return g
-  
-  /*
    * Get ordered command-line arguments.
    */
   inline GetOpt::ArgListPT GetOpt::getOrdered () const { _check_scan(); return ArgListPT(new ArgListT(_data->ordered)); }
@@ -1042,6 +1034,11 @@ namespace DAC {
    * Get value.
    */
   inline GetOpt::ArgReader::operator std::string () const { return _arg; }
+  
+  /*
+   * Get value as string.
+   */
+  inline std::string GetOpt::ArgReader::to_string () const { return _arg; }
   
   /*
    * Get value as an integer type.
@@ -1094,10 +1091,6 @@ namespace DAC {
    */
   inline GetOpt::ShortOptReader::operator bool () const { return _opt.numset; }
   
-  // Conversion operator. Returns first argument or blank if option is
-  // not set.
-  inline GetOpt::ShortOptReader::operator std::string () const { return to_string(); }
-  
   /*
    * Element access operator, read option argument.
    */
@@ -1113,7 +1106,7 @@ namespace DAC {
     if (_opt.args.empty()) {
       return std::string();
     } else {
-      return _opt.args[_opt.args.size() - 1];
+      return _opt.args.back();
     }
   }
   
@@ -1158,7 +1151,7 @@ namespace DAC {
     if (_opt.args.empty()) {
       return std::string();
     } else {
-      return _opt.args[_opt.args.size() - 1];
+      return _opt.args.back();
     }
   }
   

@@ -31,6 +31,8 @@ int main (int argc, char** argv) {
   
   cout << "Help:\n" << test.getHelp();
   
+  cout << "What's the bling, bitch? It's \"" << test["bling"].to_string() << "\"\n";
+  
   return 0;
   
 }

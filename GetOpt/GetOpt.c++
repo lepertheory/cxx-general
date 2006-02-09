@@ -89,6 +89,14 @@ namespace DAC {
   /*
    * Get arguments. First form is for non-option args.
    */
+  GetOpt::ArgReader GetOpt::getArg () const {
+    _check_scan();
+    if (_data->arguments.empty()) {
+      return ArgReader();
+    } else {
+      return _data->arguments.back();
+    }
+  }
   GetOpt::ArgReader GetOpt::getArg (size_t const argnum) const {
     _check_scan();
     if (argnum >= _data->arguments.size()) {
@@ -96,12 +104,28 @@ namespace DAC {
     }
     return _data->arguments[argnum];
   }
+  GetOpt::ArgReader GetOpt::getArg (char const sopt) const {
+    _ArgList const& work = _scan_option(sopt)->args;
+    if (work.empty()) {
+      return ArgReader();
+    } else {
+      return work.back();
+    }
+  }
   GetOpt::ArgReader GetOpt::getArg (char const sopt, size_t const argnum) const {
     _ArgList const& work = _scan_option(sopt)->args;
     if (argnum >= work.size()) {
       throw Errors::ArgOOBShort().ArgNum(argnum).Size(work.size()).Option(sopt);
     }
     return work[argnum];
+  }
+  GetOpt::ArgReader GetOpt::getArg (std::string const& lopt) const {
+    _ArgList const& work = _scan_option(lopt)->args;
+    if (work.empty()) {
+      return ArgReader();
+    } else {
+      return work.back();
+    }
   }
   GetOpt::ArgReader GetOpt::getArg (std::string const& lopt, size_t const argnum) const {
     _ArgList const& work = _scan_option(lopt)->args;
@@ -849,6 +873,12 @@ namespace DAC {
   /***************************************************************************
    * GetOpt::ArgReader
    ***************************************************************************/
+  
+  /***************************************************************************/
+  // Constants.
+  
+  // Empty string.
+  string const GetOpt::ArgReader::_BLANK;
   
   /***************************************************************************/
   // Function members.
