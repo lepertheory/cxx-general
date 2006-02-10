@@ -498,6 +498,9 @@ namespace DAC {
     if (!_data->wasread) {
       throw Errors::NotRead();
     }
+    if (!section_defined(section)) {
+      return false;
+    }
     return (*this)[section].key_defined(key);
   }
   
