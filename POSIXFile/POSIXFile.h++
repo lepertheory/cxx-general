@@ -793,40 +793,50 @@ namespace DAC {
   inline bool POSIXFile::is_sticky     () const { return is_exist() && Sticky(); }
   
   inline bool POSIXFile::is_executable () const {
-    return (is_userOwned () && U_Execute()) ||
-           (is_groupOwned() && G_Execute()) ||
-           (is_exist     () && O_Execute());
+    return (geteuid() == 0) ? (
+      is_exist() && (U_Execute() || G_Execute() || O_Execute())
+    ) : (
+      (is_userOwned () && U_Execute()) ||
+      (is_groupOwned() && G_Execute()) ||
+      (is_exist     () && O_Execute())
+    );
   }
   inline bool POSIXFile::is_executable_real () const {
-    return is_exist() && (
-             (uid() == getuid() && U_Execute()) ||
-             (gid() == getgid() && G_Execute()) ||
-                                   O_Execute()
-           );
+    return is_exist() && ((getuid() == 0) ? (
+      U_Execute() || G_Execute() || O_Execute()
+    ) : (
+      (uid() == getuid() && U_Execute()) ||
+      (gid() == getgid() && G_Execute()) ||
+                            O_Execute()
+    ));
   }
   inline bool POSIXFile::is_readable () const {
-    return (is_userOwned () && U_Read()) ||
+    return (geteuid() == 0 && is_exist()) ||
+           (is_userOwned () && U_Read()) ||
            (is_groupOwned() && G_Read()) ||
            (is_exist     () && O_Read());
   }
   inline bool POSIXFile::is_readable_real () const {
     return is_exist() && (
-             (uid() == getuid() && U_Read()) ||
-             (gid() == getgid() && G_Read()) ||
-                                   O_Read()
-           );
+      (getuid() == 0                ) ||
+      (uid() == getuid() && U_Read()) ||
+      (gid() == getgid() && G_Read()) ||
+                            O_Read()
+    );
   }
   inline bool POSIXFile::is_writable () const {
-    return (is_userOwned () && U_Write()) ||
+    return (geteuid() == 0 && is_exist()) ||
+           (is_userOwned () && U_Write()) ||
            (is_groupOwned() && G_Write()) ||
            (is_exist     () && O_Write());
   }
   inline bool POSIXFile::is_writable_real () const {
     return is_exist() && (
-             (uid() == getuid() && U_Write()) ||
-             (gid() == getgid() && G_Write()) ||
-                                   O_Write()
-           );
+      (getuid == 0                   ) ||
+      (uid() == getuid() && U_Write()) ||
+      (gid() == getgid() && G_Write()) ||
+                            O_Write()
+    );
   }
   
   inline bool POSIXFile::is_exist () const {
