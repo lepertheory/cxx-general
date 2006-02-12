@@ -812,9 +812,9 @@ namespace DAC {
   }
   inline bool POSIXFile::is_readable () const {
     return (geteuid() == 0 && is_exist()) ||
-           (is_userOwned () && U_Read()) ||
-           (is_groupOwned() && G_Read()) ||
-           (is_exist     () && O_Read());
+           (is_userOwned () && U_Read() ) ||
+           (is_groupOwned() && G_Read() ) ||
+           (is_exist     () && O_Read() );
   }
   inline bool POSIXFile::is_readable_real () const {
     return is_exist() && (
