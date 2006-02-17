@@ -50,7 +50,7 @@ namespace DAC {
   void Syslog::clear () {
     
     // Sensible default options.
-    _options = LO_CONSOLE;
+    _options = LO_CONSOLE | LO_WITHPID;
     
     // Default facility is USER.
     _facility = LF_USER;

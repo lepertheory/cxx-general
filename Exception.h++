@@ -3,7 +3,7 @@
  *****************************************************************************
  * Base class for all exceptions thrown by me, DAC.
  *****************************************************************************/
- 
+
 // Include guard.
 #if !defined(EXCEPTION_tubu848xo9i)
   #define EXCEPTION_tubu848xo9i
