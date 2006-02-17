@@ -1,0 +1,61 @@
+# Imports from caller.
+Import ('*')
+
+# Include the parent directory.
+env.Append(CPPPATH = ['..'])
+
+# Configure without CFLAGS to avoid errors from extra warnings.
+if not env.GetOption('clean') :
+  tmpccflags = env['CCFLAGS']
+  env['CCFLAGS'] = []
+  
+  checkheaders = [
+    'syslog.h'
+  ]
+  checktypes = []
+  checkfunctions = [
+    'openlog'   ,
+    'syslog'    ,
+    'closelog'  ,
+    'setlogmask'
+  ]
+  
+  conf = Configure(env)
+  
+  for header in checkheaders :
+    if not conf.CheckHeader(header = header, language = 'C++') :
+      print 'Header ' + header + ' is required.'
+      Exit(1)
+  for type in checktypes :
+    if not conf.CheckType(type_name = type[0], includes = '#include <' + type[1] + '>', language = 'C++') :
+      print 'Type ' + type[0] + ' is required.'
+      Exit(1)
+  for function in checkfunctions :
+    if not conf.CheckFunc(function_name = function, language = 'C++') :
+      print 'Function ' + function + '() is required.'
+      Exit(1)
+  
+  env = conf.Finish()
+  
+  # Restore CFLAGS.
+  env['CCFLAGS'] = tmpccflags
+
+# Object files.
+o_Syslog = env.Object      (target = 'Syslog', source = ['Syslog.c++'])
+s_Syslog = env.SharedObject(target = 'Syslog', source = ['Syslog.c++'])
+
+# Create a dictionary containing all necessary information and objects to
+# compile with Syslog.
+cSyslog = { 'obj'         : [o_Syslog]           ,
+            'sobj'        : [s_Syslog]           ,
+            'include'     : ['Syslog']           ,
+            'headers'     : ['Syslog/Syslog.h++'],
+            'defines'     : []                   ,
+            'own_obj'     : [o_Syslog]           ,
+            'own_sobj'    : [s_Syslog]           ,
+            'own_include' : 'Syslog'             ,
+            'own_headers' : ['Syslog/Syslog.h++'],
+            'own_defines' : []                     }
+
+# Return.
+Return('cSyslog')

@@ -4,25 +4,6 @@ Import('*')
 # Include the parent directory.
 env.Append(CPPPATH = ['..'])
 
-# Create a list of defines.
-defines = []
-have_sys_types_h = 0
-have_sys_stat_h  = 0
-have_unistd_h    = 0
-have_errno_h     = 0
-have_dev_t       = 0
-have_ino_t       = 0
-have_mode_t      = 0
-have_nlink_t     = 0
-have_uid_t       = 0
-have_gid_t       = 0
-have_off_t       = 0
-have_blksize_t   = 0
-have_blkcnt_t    = 0
-have_time_t      = 0
-have_struct_stat = 0
-have_stat        = 0
-
 # Configure without CFLAGS to avoid errors from extra warnings.
 if not env.GetOption('clean') :
   tmpccflags = env['CCFLAGS']

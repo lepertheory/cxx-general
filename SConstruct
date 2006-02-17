@@ -87,9 +87,10 @@ cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'               
 cwrapText  = SConscript(['wrapText/SConscript' ], exports = 'env'                ) ; env = tmpenv.Copy() ; modules.append(cwrapText )
 cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env cwrapText cArb' ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
 cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cPOSIXFile'     ) ; env = tmpenv.Copy() ; modules.append(cINIFile  )
+cSyslog    = SConscript(['Syslog/SConscript'   ], exports = 'env'                ) ; env = tmpenv.Copy() ; modules.append(cSyslog   )
 
 # Tests.
-SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile cGetOpt cINIFile') ; env = tmpenv.Copy()
+SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile cGetOpt cINIFile cSyslog') ; env = tmpenv.Copy()
 
 # Shared library filenames.
 cxxgeneral_name   = env['LIBPREFIX'] + project_name + env['SHLIBSUFFIX']
