@@ -8,8 +8,12 @@
 #if !defined(SYSLOG_7hb7hu2879)
   #define SYSLOG_7hp7hu2879
 
-// STL includes.
+// Standard includes.
   #include <string>
+  #include <cstring>
+
+// System includes.
+  #include <cxx-general/AutoArray.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -145,7 +149,7 @@ namespace DAC {
       mutable bool _is_open;
       
       // Ident string at beginning of each log message.
-      std::string _ident;
+      AutoArray<char> _ident;
       
       /***********************************************************************/
       // Function members.
@@ -196,7 +200,12 @@ namespace DAC {
   inline Syslog& Syslog::WithPID  (bool         const  withPID ) { if (withPID ) { _options |= LO_WITHPID  ; } else { _options &= ~LO_WITHPID  ; } reopen()  ; return *this; }
   inline Syslog& Syslog::Facility (Log_Facility const  facility) { _facility = facility;                                                           reopen()  ; return *this; }
   inline Syslog& Syslog::Mask     (int          const  mask    ) { _mask     = mask    ;                                                           _setMask(); return *this; }
-  inline Syslog& Syslog::Ident    (std::string  const& ident   ) { _ident    = ident   ;                                                           reopen()  ; return *this; }
+  inline Syslog& Syslog::Ident    (std::string  const& ident   ) {
+    _ident = new char[ident.length() + 1];
+    strncpy(_ident.get(), ident.c_str(), ident.length() + 1);
+    reopen();
+    return *this;
+  }
   inline Syslog& Syslog::DefLevel (Log_Level    const  deflevel) { _level    = deflevel;                                                                       return *this; }
   inline bool                 Syslog::Console  () const { return _options & LO_CONSOLE  ; }
   inline bool                 Syslog::Wait     () const { return _options & LO_WAITCHILD; }
@@ -204,7 +213,7 @@ namespace DAC {
   inline bool                 Syslog::WithPID  () const { return _options & LO_WITHPID  ; }
   inline Syslog::Log_Facility Syslog::Facility () const { return _facility              ; }
   inline int                  Syslog::Mask     () const { return _mask                  ; }
-  inline std::string          Syslog::Ident    () const { return _ident                 ; }
+  inline std::string          Syslog::Ident    () const { return _ident.get()           ; }
   inline Syslog::Log_Level    Syslog::DefLevel () const { return _level                 ; }
   
   /*

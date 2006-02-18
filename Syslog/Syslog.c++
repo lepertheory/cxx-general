@@ -65,7 +65,7 @@ namespace DAC {
     _is_open = false;
     
     // No default ident.
-    _ident.clear();
+    _ident = 0;
     
   }
   
@@ -108,7 +108,7 @@ namespace DAC {
   void Syslog::open () const {
     
     // Simple system call. Appearantly this stuff can't fail.
-    openlog(_ident.c_str(), _loToOption(_options), _lfToFacility(_facility));
+    openlog(_ident.get(), _loToOption(_options), _lfToFacility(_facility));
     _setMask();
     _is_open = true;
     
