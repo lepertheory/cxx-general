@@ -16,8 +16,8 @@
   #include <vector>
 
 // System includes.
-  #include <cxx-general/ReferencePointer.h++>
-  #include <cxx-general/Exception.h++>
+  #include <ReferencePointer.h++>
+  #include <Exception.h++>
 
 // Namespace wrapping.
 namespace DAC {

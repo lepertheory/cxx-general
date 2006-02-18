@@ -17,11 +17,11 @@
   #include <cmath>
   
 // System includes.
-  #include <cxx-general/SafeInt.h++>
-  #include <cxx-general/ReferencePointer.h++>
-  #include <cxx-general/toString.h++>
-  #include <cxx-general/rppower.h++>
-  #include <cxx-general/Exception.h++>
+  #include <SafeInt.h++>
+  #include <ReferencePointer.h++>
+  #include <toString.h++>
+  #include <rppower.h++>
+  #include <Exception.h++>
 
 // Namespace wrapping.
 namespace DAC {

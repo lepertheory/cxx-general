@@ -17,10 +17,10 @@
   #include <sys/types.h>
   #include <sys/stat.h>
   #include <fcntl.h>
-  #include <cxx-general/Exception.h++>
-  #include <cxx-general/toString.h++>
-  #include <cxx-general/AutoArray.h++>
-  #include <cxx-general/getErrorText.h++>
+  #include <Exception.h++>
+  #include <toString.h++>
+  #include <AutoArray.h++>
+  #include <getErrorText.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -63,13 +63,6 @@ namespace DAC {
         FT_DIRECTORY = S_IFDIR ,
         FT_CHARDEV   = S_IFCHR ,
         FT_FIFO      = S_IFIFO
-      };
-      
-      // Lock modes.
-      enum LockMode {
-        LM_SHARED    = LOCK_SH,
-        LM_EXCLUSIVE = LOCK_EX,
-        LM_UNLOCK    = LOCK_UN
       };
       
       /***********************************************************************/
@@ -200,6 +193,7 @@ namespace DAC {
           class AccessDenied  : public SysCallError {};
           class BadDescriptor : public SysCallError {};
           class CannotSeek    : public SysCallError {};
+          class Deadlock      : public SysCallError {};
           class FileBusy      : public SysCallError {};
           class FileExists    : public SysCallError {};
           class FileOverflow  : public SysCallError {};
@@ -207,6 +201,7 @@ namespace DAC {
           class Interrupted   : public SysCallError {};
           class Invalid       : public SysCallError {};
           class IsDirectory   : public SysCallError {};
+          class LockTableFull : public SysCallError {};
           class NameTooLong   : public SysCallError {};
           class NotPermitted  : public SysCallError {};
           class NoSpace       : public SysCallError {};
@@ -334,8 +329,13 @@ namespace DAC {
       void open ();
       
       // Lock the file.
-      void flock    (LockMode const lockmode);
-      bool flock_nb (LockMode const lockmode);
+      bool lock (bool const shared, bool const wait = true, off_t const start = 0, off_t const len = 0);
+      
+      // Unlock the file.
+      void unlock (off_t const start = 0, off_t const len = 0);
+      
+      // Test for a file lock.
+      bool is_locked (bool const shared = true, off_t const start = 0, off_t const len = 0);
       
       // Close the file.
       void close ();
@@ -406,8 +406,6 @@ namespace DAC {
       
       // Get the file descriptor.
       int fd () const;
-      
-      // TODO: Implement fcntl or something like it.
       
       // File info.
       bool is_blockDev        () const;

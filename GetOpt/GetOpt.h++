@@ -22,14 +22,13 @@
   #include <algorithm>
 
 // System includes.
-  #include <cxx-general/Exception.h++>
-  #include <cxx-general/ReferencePointer.h++>
-  #include <cxx-general/toString.h++>
-  #include <cxx-general/wrapText/wrapText.h++>
-  #include <cxx-general/ArbInt/ArbInt.h++>
-  #include <cxx-general/Arb/Arb.h++>
-  #include <cxx-general/demangle.h++>
-  #include <cxx-general/wrapText/wrapText.h++>
+  #include <Exception.h++>
+  #include <ReferencePointer.h++>
+  #include <toString.h++>
+  #include <wrapText.h++>
+  #include <ArbInt.h++>
+  #include <Arb.h++>
+  #include <demangle.h++>
 
 // Namespace wrapping.
 namespace DAC {

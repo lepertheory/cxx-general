@@ -9,9 +9,9 @@
   #include <algorithm>
 
 // System includes.
-  #include <cxx-general/rppower.h++>
-  #include <cxx-general/toString.h++>
-  #include <cxx-general/reduce.h++>
+  #include <rppower.h++>
+  #include <toString.h++>
+  #include <reduce.h++>
 
 // Class include.
   #include "Arb.h++"

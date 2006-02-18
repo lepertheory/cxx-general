@@ -4,8 +4,8 @@
  * Reduce a fraction.
  *****************************************************************************/
 
-// Internal includes.
-#include "cxx-general/gcd.h++"
+// System includes.
+#include <gcd.h++>
 
 // Include guard.
 #if !defined(REDUCE_ykbf73k3ub834b)

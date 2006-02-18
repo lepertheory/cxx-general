@@ -12,7 +12,7 @@
   #include <cerrno>
 
 // System includes.
-  #include <cxx-general/AutoArray.h++>
+  #include <AutoArray.h++>
 
 // Namespace wrapping.
 namespace DAC {

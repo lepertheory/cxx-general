@@ -15,9 +15,9 @@
   #include <map>
 
 // System includes.
-  #include <cxx-general/Exception.h++>
-  #include <cxx-general/Arb/Arb.h++>
-  #include <cxx-general/ReferencePointer.h++>
+  #include <Exception.h++>
+  #include <Arb.h++>
+  #include <ReferencePointer.h++>
 
 // Namespace wrapping.
 namespace DAC {

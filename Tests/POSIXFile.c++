@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "POSIXFile/POSIXFile.h++"
+#include "POSIXFile.h++"
 
 using namespace std;
 using namespace DAC;

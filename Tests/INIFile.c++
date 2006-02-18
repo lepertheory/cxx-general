@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "INIFile/INIFile.h++"
+#include "INIFile.h++"
 
 using namespace std;
 using namespace DAC;

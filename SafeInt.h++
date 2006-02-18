@@ -14,8 +14,8 @@
   #include <sstream>
 
 // System includes.
-  #include <cxx-general/toString.h++>
-  #include <cxx-general/Exception.h++>
+  #include <toString.h++>
+  #include <Exception.h++>
 
 // Namespace wrapper.
 namespace DAC {

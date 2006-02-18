@@ -2,6 +2,9 @@
  * POSIXFile.c++
  *****************************************************************************
  * Implementation of class POSIXFile.
+ * TODO: Make sure that the file descriptor isn't being duplicated, encourage
+ *       not working around this by making it easy to have multiple
+ *       POSIXFiles access one file.
  *****************************************************************************/
 
 // STL includes.
@@ -15,9 +18,10 @@
 #include <unistd.h>
 #include <cerrno>
 #include <pwd.h>
-#include <cxx-general/toString.h++>
-#include <cxx-general/AutoArray.h++>
-#include <cxx-general/SafeInt.h++>
+#include <toString.h++>
+#include <AutoArray.h++>
+#include <SafeInt.h++>
+#include <fcntl.h>
 
 // Class include.
 #include "POSIXFile.h++"
@@ -156,36 +160,64 @@ namespace DAC {
   /*
    * Lock the file.
    */
-  void POSIXFile::flock (LockMode const lockmode) {
+  bool POSIXFile::lock (bool const shared, bool const wait, off_t const start, off_t const len) {
     
     // Make sure the file is open.
     if (!_fd) {
-      throw Errors::NotOpen().Filename(_filename).Operation("flock");
+      throw Errors::NotOpen().Filename(_filename).Operation("fcntl");
     }
     
-    // Do the lock.
-    if (::flock(_fd, lockmode)) {
-      s_throwSysCallError(errno, "flock", _filename);
+    // Lock. Return false if the file is already locked and this is a
+    // non-blocking lock.
+    struct flock lockinfo = { shared ? F_RDLCK : F_WRLCK, SEEK_SET, start, len, 0 };
+    if (fcntl(_fd, wait ? F_SETLKW : F_SETLK, &lockinfo)) {
+      if (wait && errno == EACCES || errno == EAGAIN) {
+        return false;
+      }
+      s_throwSysCallError(errno, "fcntl", _filename);
+    }
+    
+    // Success.
+    return true;
+    
+  }
+  
+  /*
+   * Unlock the file.
+   */
+  void POSIXFile::unlock (off_t const start, off_t const len) {
+    
+    // Don't attempt to unlock if the file is not open.
+    if (!_fd) {
+      return;
+    }
+    
+    // Unlock.
+    struct flock lockinfo = { F_UNLCK, SEEK_SET, start, len, 0 };
+    if (fcntl(_fd, F_SETLK, &lockinfo)) {
+      s_throwSysCallError(errno, "fcntl", _filename);
     }
     
   }
-  bool POSIXFile::flock_nb (LockMode const lockmode) {
+  
+  /*
+   * See if the file is locked.
+   */
+  bool POSIXFile::is_locked (bool const shared, off_t const start, off_t const len) {
     
-    // Make sure the file is open.
+    // Cannot check for a lock if the file is not open.
     if (!_fd) {
-      throw Errors::NotOpen().Filename(_filename).Operation("flock");
+      throw Errors::NotOpen().Filename(_filename).Operation("fcntl");
     }
     
-    // Do the lock.
-    if (::flock(_fd, lockmode | LOCK_NB)) {
-      if (errno == EWOULDBLOCK) {
-        return false;
-      }
-      s_throwSysCallError(errno, "flock", _filename);
+    // Check for the lock.
+    struct flock lockinfo = { shared ? F_RDLCK : F_WRLCK, SEEK_SET, start, len, 0 };
+    if (fcntl(_fd, F_GETLK, &lockinfo)) {
+      s_throwSysCallError(errno, "fcntl", _filename);
     }
     
-    // Lock was successful.
-    return true;
+    // Return whether file is locked.
+    return lockinfo.l_type != F_UNLCK;
     
   }
   
@@ -882,6 +914,7 @@ namespace DAC {
       case EACCES      : throw dynamic_cast<Errors::AccessDenied &>(Errors::AccessDenied ().Errno(errnum).SysCall(syscall).Filename(filename));
       case EAGAIN      : throw dynamic_cast<Errors::TryAgain     &>(Errors::TryAgain     ().Errno(errnum).SysCall(syscall).Filename(filename));
       case EBADF       : throw dynamic_cast<Errors::BadDescriptor&>(Errors::BadDescriptor().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EDEADLK     : throw dynamic_cast<Errors::Deadlock     &>(Errors::Deadlock     ().Errno(errnum).SysCall(syscall).Filename(filename));
       case EEXIST      : throw dynamic_cast<Errors::FileExists   &>(Errors::FileExists   ().Errno(errnum).SysCall(syscall).Filename(filename));
       case EINTR       : throw dynamic_cast<Errors::Interrupted  &>(Errors::Interrupted  ().Errno(errnum).SysCall(syscall).Filename(filename));
       case EINVAL      : throw dynamic_cast<Errors::Invalid      &>(Errors::Invalid      ().Errno(errnum).SysCall(syscall).Filename(filename));
@@ -892,6 +925,7 @@ namespace DAC {
       case ENAMETOOLONG: throw dynamic_cast<Errors::NameTooLong  &>(Errors::NameTooLong  ().Errno(errnum).SysCall(syscall).Filename(filename));
       case ENFILE      : throw dynamic_cast<Errors::SysMaxFiles  &>(Errors::SysMaxFiles  ().Errno(errnum).SysCall(syscall).Filename(filename));
       case ENOENT      : throw dynamic_cast<Errors::PathNonExist &>(Errors::PathNonExist ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case ENOLCK      : throw dynamic_cast<Errors::LockTableFull&>(Errors::LockTableFull().Errno(errnum).SysCall(syscall).Filename(filename));
       case ENOMEM      : throw dynamic_cast<Errors::OutOfMemory  &>(Errors::OutOfMemory  ().Errno(errnum).SysCall(syscall).Filename(filename));
       case ENOSPC      : throw dynamic_cast<Errors::NoSpace      &>(Errors::NoSpace      ().Errno(errnum).SysCall(syscall).Filename(filename));
       case ENOTDIR     : throw dynamic_cast<Errors::NotDirectory &>(Errors::NotDirectory ().Errno(errnum).SysCall(syscall).Filename(filename));

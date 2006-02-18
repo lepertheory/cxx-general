@@ -14,8 +14,8 @@
   #include <map>
 
 // System includes.
-  #include <cxx-general/Exception.h++>
-  #include <cxx-general/toString.h++>
+  #include <Exception.h++>
+  #include <toString.h++>
 
 // Namespace wrapper.
 namespace DAC {

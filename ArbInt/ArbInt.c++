@@ -11,10 +11,10 @@
 #include <algorithm>
 
 // System includes.
-#include <cxx-general/SafeInt.h++>
-#include <cxx-general/ReferencePointer.h++>
-#include <cxx-general/toString.h++>
-#include <cxx-general/rppower.h++>
+#include <SafeInt.h++>
+#include <ReferencePointer.h++>
+#include <toString.h++>
+#include <rppower.h++>
 
 // Class include.
 #include "ArbInt.h++"

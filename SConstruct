@@ -108,7 +108,7 @@ cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, SHLIBSUFFIX = '', sour
 install = []
 install.append(env.Install(includedir, headers   ))
 for module in modules :
-  install.append(env.Install(includedir + '/' + module['own_include'], module['own_headers']))
+  install.append(env.Install(includedir, module['own_headers']))
 install.append(env.Install(libdir                        , cxxgeneral))
 install.append(env.Symlink(libdir + '/' + cxxgeneral_name, cxxgeneral))
 

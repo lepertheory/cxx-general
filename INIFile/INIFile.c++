@@ -8,10 +8,10 @@
 #include <string>
 
 // Internal includes.
-#include "cxx-general/POSIXFile/POSIXFile.h++"
+#include <POSIXFile.h++>
 
 // Class include.
-#include "cxx-general/INIFile/INIFile.h++"
+#include "INIFile.h++"
 
 // Import namespaces.
 using namespace std;

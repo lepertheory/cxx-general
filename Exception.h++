@@ -14,7 +14,7 @@
   #include <iostream>
 
 // System includes.
-  #include <cxx-general/demangle.h++>
+  #include <demangle.h++>
 
 // Namespace wrapper.
 namespace DAC {

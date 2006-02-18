@@ -15,11 +15,11 @@
   #include <limits>
 
 // System includes.
-  #include <cxx-general/SafeInt.h++>
-  #include <cxx-general/ReferencePointer.h++>
-  #include <cxx-general/toString.h++>
-  #include <cxx-general/ArbInt/ArbInt.h++>
-  #include <cxx-general/abs.h++>
+  #include <SafeInt.h++>
+  #include <ReferencePointer.h++>
+  #include <toString.h++>
+  #include <ArbInt.h++>
+  #include <abs.h++>
 
 // Namespace wrapping.
 namespace DAC {

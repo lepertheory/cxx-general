@@ -13,10 +13,10 @@
 // System includes.
 #include <unistd.h>
 #include <getopt.h>
-#include <cxx-general/AutoArray.h++>
-#include <cxx-general/wrapText/wrapText.h++>
-#include <cxx-general/toString.h++>
-#include <cxx-general/Arb/Arb.h++>
+#include <AutoArray.h++>
+#include <wrapText.h++>
+#include <toString.h++>
+#include <Arb.h++>
 
 // Class includes.
 #include "GetOpt.h++"
