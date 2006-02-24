@@ -1,9 +1,14 @@
-# Name of the library.
-project_name = 'cxx-general'
+# General info.
+project_name        = open('config/NAME'       , 'r').read()
+project_description = open('config/DESCRIPTION', 'r').read()
+project_url         = open('config/URL'        , 'r').read()
+project_version_maj = open('config/VER_MAJOR'  , 'r').read()
+project_version_min = open('config/VER_MINOR'  , 'r').read()
+project_version_pat = open('config/VER_PATCH'  , 'r').read()
 
 # Version of the library.
-cxxgeneral_maj_version = open('config/VER_MAJOR', 'r').read()
-cxxgeneral_min_version = open('config/VER_MINOR', 'r').read()
+cxxgeneral_maj_version = open('config/LIB_VER_MAJOR', 'r').read()
+cxxgeneral_min_version = open('config/LIB_VER_MINOR', 'r').read()
 
 # Imports.
 import os
@@ -25,7 +30,32 @@ def symlink_builder_func (target, source, env) :
 # Pkg-config builder.
 def pkgconfig_builder_func (target, source, env) :
   
-  # Always successful.
+  # Create the .pc file.
+  #try :
+  
+  sfile = open(str(source[0]), 'r').readlines()
+  tfile = open(str(target[0]), 'w')
+  
+  for line in sfile :
+    if (line == "NAME\n") :
+      tfile.write('Name: ' + project_name + "\n")
+    elif (line == "DESCRIPTION\n") :
+      tfile.write('Description: ' + project_description + "\n")
+    elif (line == "URL\n") :
+      tfile.write('URL: ' + project_url + "\n")
+    elif (line == "VERSION\n") :
+      tfile.write('Version: ' + project_version_maj + '.' + project_version_min + '.' + project_version_pat + "\n")
+    elif (line == "LIBS\n") :
+      tfile.write('Libs: -l' + project_name + "\n")
+    elif (line == "CFLAGS\n") :
+      tfile.write('Cflags: -I' + project_name + "\n")
+  
+  tfile.close()
+  
+  #except :
+  #  return 1
+  
+  # Successful.
   return 0
 
 # String for the symlink builder.
@@ -117,6 +147,9 @@ for module in modules :
     cxxgeneral_objs += obj
 cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, SHLIBSUFFIX = '', source = cxxgeneral_objs, SHLINKFLAGS = '-Wl,-soname,' + cxxgeneral_soname + env['SHLINKFLAGS'])
 
+# Create the pkg-config file.
+pcfile = env.PkgConfig(target = project_name, source = project_name)
+
 # Install files.
 install = []
 install.append(env.Install(includedir, headers))
@@ -124,6 +157,7 @@ for module in modules :
   install.append(env.Install(includedir, module['own_headers']))
 install.append(env.Install(libdir                        , cxxgeneral))
 install.append(env.Symlink(libdir + '/' + cxxgeneral_name, cxxgeneral))
+install.append(env.Install(pkgconfigdir, pcfile))
 
 # Install alias.
 env.Alias('install', install)
