@@ -1,0 +1,6 @@
+Name: cxx-general
+Description: General usage C++ library.
+URL: http://cxx-general.lepertheory.net/
+Version: 0.6.0
+Libs: -L${libdir} -lcxx-general
+Cflags: -I${includedir}/cxx-general

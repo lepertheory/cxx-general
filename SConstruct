@@ -22,9 +22,19 @@ def symlink_builder_func (target, source, env) :
   # Always successful.
   return 0
 
+# Pkg-config builder.
+def pkgconfig_builder_func (target, source, env) :
+  
+  # Always successful.
+  return 0
+
 # String for the symlink builder.
 def symlink_builder_desc (target, source, env) :
   return "Symlink: %s -> %s" % (str(target[0]), str(source[0]))
+
+# String for the pkg-config builder.
+def pkgconfig_builder_desc (target, source, env) :
+  return "pkg-config %s" % (str(target[0]))
 
 # Create options.
 opts = Options('custom.py')
@@ -40,9 +50,11 @@ env = Environment(
   CPPPATH    = ['.']
 )
 
-# Install the symlink builder.
-symlink_builder = Builder(action = Action(symlink_builder_func, symlink_builder_desc))
-env.Append(BUILDERS = {'Symlink' : symlink_builder})
+# Install the builders.
+symlink_builder   = Builder(action = Action(symlink_builder_func  , symlink_builder_desc  ))
+pkgconfig_builder = Builder(action = Action(pkgconfig_builder_func, pkgconfig_builder_desc), suffix = '.pc', src_suffix = '.pc.src')
+env.Append(BUILDERS = {'Symlink'   : symlink_builder  })
+env.Append(BUILDERS = {'PkgConfig' : pkgconfig_builder})
 
 # Generate help text.
 Help(opts.GenerateHelpText(env))
@@ -59,8 +71,9 @@ if env['CC'] == 'cl' :
 tmpenv = env.Copy()
 
 # Install locations.
-includedir = env['PREFIX'] + '/include/cxx-general'
-libdir     = env['PREFIX'] + '/lib'
+includedir   = env['PREFIX'] + '/include/cxx-general'
+libdir       = env['PREFIX'] + '/lib'
+pkgconfigdir = libdir + '/pkgconfig'
 
 # Headers.
 headers = []
@@ -106,7 +119,7 @@ cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, SHLIBSUFFIX = '', sour
 
 # Install files.
 install = []
-install.append(env.Install(includedir, headers   ))
+install.append(env.Install(includedir, headers))
 for module in modules :
   install.append(env.Install(includedir, module['own_headers']))
 install.append(env.Install(libdir                        , cxxgeneral))
