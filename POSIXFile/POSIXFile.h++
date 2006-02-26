@@ -429,6 +429,7 @@ namespace DAC {
       bool is_writable        () const;
       bool is_writable_real   () const;
       bool is_zero            () const;
+      bool is_open            () const;
       
       // stat() info.
       dev_t     device    () const;
@@ -842,6 +843,7 @@ namespace DAC {
     return !stat(_filename.c_str(), &_stat) && (_cache_valid = true);
   }
   inline bool POSIXFile::is_zero () const { return is_exist() && size() == 0; }
+  inline bool POSIXFile::is_open () const { return _fd;                       }
   
   /*
    * stat() info.
