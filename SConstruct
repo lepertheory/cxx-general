@@ -48,7 +48,7 @@ def pkgconfig_builder_func (target, source, env) :
     elif (line == "LIBS\n") :
       tfile.write('Libs: -l' + project_name + "\n")
     elif (line == "CFLAGS\n") :
-      tfile.write('Cflags: -I' + project_name + "\n")
+      tfile.write('Cflags: -I' + includedir + "\n")
   
   tfile.close()
   
