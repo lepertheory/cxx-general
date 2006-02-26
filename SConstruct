@@ -121,7 +121,7 @@ pkgconfigdir = libdir + '/pkgconfig'
 # Install paths.
 install_includedir   = env['DESTDIR'] + '/include/cxx-general'
 install_libdir       = env['DESTDIR'] + '/lib'
-install_pkgconfigdir = env['DESTDIR'] + '/pkgconfig'
+install_pkgconfigdir = install_libdir + '/pkgconfig'
 
 # Headers.
 headers = []
