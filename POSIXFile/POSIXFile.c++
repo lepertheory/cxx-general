@@ -93,8 +93,9 @@ namespace DAC {
     _stat.st_mtime   = 0;
     _stat.st_ctime   = 0;
     
-    _flags    = O_APPEND | O_CREAT;
-    _openmode = OM_READ           ;
+    _flags      = O_APPEND | O_CREAT                                       ;
+    _openmode   = OM_READ                                                  ;
+    _createmode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     
     _eof      = true;
     _eof_line = true;
@@ -119,8 +120,9 @@ namespace DAC {
     _recordnum = source._recordnum;
     
     // Open flags.
-    _flags    = source._flags;
-    _openmode = source._openmode;
+    _flags      = source._flags     ;
+    _openmode   = source._openmode  ;
+    _createmode = source._createmode;
     
     // Transfer the current position. Will be overwritten unless saved before
     // open and restored after.
@@ -143,7 +145,7 @@ namespace DAC {
     }
     
     // Open the file.
-    if ((_fd = ::open(_filename.c_str(), _openmode | _flags)) == -1) {
+    if ((_fd = ::open(_filename.c_str(), _openmode | _flags, _createmode)) == -1) {
       s_throwSysCallError(errno, "open", _filename);
     }
     

@@ -329,7 +329,7 @@ namespace DAC {
       void open ();
       
       // Lock the file.
-      bool lock (bool const shared, bool const wait = true, off_t const start = 0, off_t const len = 0);
+      bool lock (bool const shared = false, bool const wait = true, off_t const start = 0, off_t const len = 0);
       
       // Unlock the file.
       void unlock (off_t const start = 0, off_t const len = 0);
@@ -549,8 +549,9 @@ namespace DAC {
       mutable bool _cache_valid;
       
       // Open flags.
-      _OMFlagType   _flags   ;
-      enum OpenMode _openmode;
+      _OMFlagType   _flags     ;
+      enum OpenMode _openmode  ;
+      mode_t        _createmode;
       
       // End of file.
       bool _eof     ;
