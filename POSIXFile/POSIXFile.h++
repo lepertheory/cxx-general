@@ -876,7 +876,7 @@ namespace DAC {
   /*
    * _FD constructor.
    */
-  inline POSIXFile::_FD::_FD (_FDType const fd) { set(fd); }
+  inline POSIXFile::_FD::_FD (_FDType const fd) : _fd(fd) {}
   
   /*
    * _FD destructor.
