@@ -1,3 +1,7 @@
+#-----------------------------------------------------------------------------#
+# Configuration.
+#-----------------------------------------------------------------------------#
+
 # General info.
 project_name        = open('config/NAME'       , 'r').read()
 project_description = open('config/DESCRIPTION', 'r').read()
@@ -9,6 +13,10 @@ project_version_pat = open('config/VER_PATCH'  , 'r').read()
 # Version of the library.
 cxxgeneral_maj_version = open('config/LIB_VER_MAJOR', 'r').read()
 cxxgeneral_min_version = open('config/LIB_VER_MINOR', 'r').read()
+
+#-----------------------------------------------------------------------------#
+# End of configuration.
+#-----------------------------------------------------------------------------#
 
 # Imports.
 import os
@@ -66,11 +74,16 @@ def symlink_builder_desc (target, source, env) :
 def pkgconfig_builder_desc (target, source, env) :
   return "pkg-config %s" % (str(target[0]))
 
+#-----------------------------------------------------------------------------#
+# Start of execution.
+#-----------------------------------------------------------------------------#
+
 # Create options.
 opts = Options('custom.py')
 opts.AddOptions(
-  BoolOption('DEBUG',  'Set for a debug build.' , default = 0),
-  PathOption('PREFIX', 'Prefix to install into.', default = '/usr', validator = PathOption.PathIsDir)
+  BoolOption('DEBUG'  , 'Set for a debug build.'                                                          , default = 0                                       ),
+  PathOption('PREFIX' , 'Prefix of hardcoded paths. Set this to the prefix the program will be run from.' , default = '/usr', validator = PathOption.PathIsDir),
+  PathOption('DESTDIR', 'Install destination directory. Use this to install to a place other than PREFIX.', default = '/usr', validator = PathOption.PathIsDir)
 )
 
 # Create the environment.
@@ -100,10 +113,15 @@ if env['CC'] == 'cl' :
 # Make a backup of env so SConscript files do not modify it.
 tmpenv = env.Copy()
 
-# Install locations.
+# Compile-time paths.
 includedir   = env['PREFIX'] + '/include/cxx-general'
 libdir       = env['PREFIX'] + '/lib'
 pkgconfigdir = libdir + '/pkgconfig'
+
+# Install paths.
+install_includedir   = env['DESTDIR'] + '/include/cxx-general'
+install_libdir       = env['DESTDIR'] + '/lib'
+install_pkgconfigdir = env['DESTDIR'] + '/pkgconfig'
 
 # Headers.
 headers = []
@@ -152,12 +170,12 @@ pcfile = env.PkgConfig(target = project_name, source = project_name)
 
 # Install files.
 install = []
-install.append(env.Install(includedir, headers))
+install.append(env.Install(install_includedir, headers))
 for module in modules :
-  install.append(env.Install(includedir, module['own_headers']))
-install.append(env.Install(libdir                        , cxxgeneral))
-install.append(env.Symlink(libdir + '/' + cxxgeneral_name, cxxgeneral))
-install.append(env.Install(pkgconfigdir, pcfile))
+  install.append(env.Install(install_includedir, module['own_headers']))
+install.append(env.Install(install_libdir                        , cxxgeneral))
+install.append(env.Symlink(install_libdir + '/' + cxxgeneral_name, cxxgeneral))
+install.append(env.Install(install_pkgconfigdir, pcfile))
 
 # Install alias.
 env.Alias('install', install)
@@ -166,4 +184,4 @@ env.Alias('install', install)
 if env.GetOption('clean') :
   env.Default('.')
 else :
-  env.Default(cxxgeneral)
+  env.Default(cxxgeneral, pcfile)
