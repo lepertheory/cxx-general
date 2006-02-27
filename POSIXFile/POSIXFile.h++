@@ -2,7 +2,6 @@
  * POSIXFile.h++
  *****************************************************************************
  * Interface for class POSIXFile.
- * TODO: Update to use the POSIX versions of dirname and basename. man 3.
  * FIXME: File descriptor 0 is a valid descriptor, not useful for non-open
  *        file indicator.
  * FIXME: Implement passing of an already open file descriptor.
