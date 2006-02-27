@@ -6,6 +6,8 @@
  * FIXME: File descriptor 0 is a valid descriptor, not useful for non-open
  *        file indicator.
  * FIXME: Implement passing of an already open file descriptor.
+ * FIXME: This needs serious cleanup. Pay special attention to symbolic link
+ *        following.
  *****************************************************************************/
 
 // Include guard.
