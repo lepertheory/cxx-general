@@ -490,7 +490,7 @@ namespace DAC {
           // Function members.
           
           // Default constructor.
-          _FD (_FDType const fd = 0);
+          _FD (_FDType const fd = -1);
           
           // Destructor.
           ~_FD ();
