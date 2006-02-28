@@ -2,8 +2,6 @@
  * POSIXFile.h++
  *****************************************************************************
  * Interface for class POSIXFile.
- * FIXME: File descriptor 0 is a valid descriptor, not useful for non-open
- *        file indicator.
  * FIXME: Implement passing of an already open file descriptor.
  * FIXME: This needs serious cleanup. Pay special attention to symbolic link
  *        following.
@@ -885,7 +883,7 @@ namespace DAC {
   /*
    * _FD destructor.
    */
-  inline POSIXFile::_FD::~_FD () { set(0); }
+  inline POSIXFile::_FD::~_FD () { set(-1); }
   
   /*
    * _FD assignment operator.
@@ -903,7 +901,7 @@ namespace DAC {
   inline int POSIXFile::_FD::set (_FDType const fd) {
     int retval = 0;
     if (fd != _fd) {
-      if (_fd) {
+      if (_fd != -1) {
         retval = ::close(_fd);
       }
       _fd = fd;
