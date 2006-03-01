@@ -42,6 +42,12 @@ namespace DAC {
       /***********************************************************************/
       // Data types.
       
+      // Delay open.
+      enum DelayOpen {
+        OPEN_NOW  ,
+        DELAY_OPEN
+      };
+      
       // Open mode.
       enum OpenMode {
         OM_READ     ,
@@ -89,23 +95,6 @@ namespace DAC {
               virtual char const* what () const throw() { return "Undefined error in POSIXFile."; };
           };
           
-          // Operation is not valid on an open file.
-          class IsOpen : public Base {
-            public:
-              virtual ~IsOpen () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Operation is not valid on open file \"" + _filename + "\".").c_str();
-                } catch (...) {
-                  return "Operation is not valid on open file. Error creating message string.";
-                }
-              };
-              IsOpen& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
-          };
-          
           // Operation attempted at end of file.
           class EoF : public Base {
             public:
@@ -123,47 +112,24 @@ namespace DAC {
               std::string _op;
           };
           
-          // Invalid operation on a non-opened file.
-          class NotOpen : public Base {
-            public:
-              virtual ~NotOpen () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  return ("Requested " + _op + " operation cannot be performed on non-open file \"" + _filename + "\".").c_str();
-                } catch (...) {
-                  return "Requested operation cannot be performed on a non-opened file. Error creating message string.";
-                }
-              };
-              NotOpen& Filename  (std::string const& filename) { _filename = filename; return *this; };
-              NotOpen& Operation (std::string const& op      ) { _op       = op      ; return *this; };
-              std::string Filename  () const { return _filename; };
-              std::string Operation () const { return _op      ; };
-            private:
-              std::string _filename;
-              std::string _op      ;
-          };  
-          
           // Offset overrun.
           class Overrun : public Base {
             public:
               virtual ~Overrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Offset " + DAC::toString(_offset) + " overruns end of file \"" + _filename + "\" with size of " + DAC::toString(_size) + ".").c_str();
+                  return ("Offset " + toString(_offset) + " overruns end of file with size of " + DAC::toString(_size) + ".").c_str();
                 } catch (...) {
                   return "Offset overruns end of file. Error creating message string.";
                 }
               };
-              Overrun& Offset   (off_t       const  offset  ) { _offset   = offset  ; return *this; };
-              Overrun& Filename (std::string const& filename) { _filename = filename; return *this; };
-              Overrun& Size     (off_t       const  size    ) { _size     = size    ; return *this; };
-              off_t       Offset   () const { return _offset  ; };
-              std::string Filename () const { return _filename; };
-              off_t       Size     () const { return _size    ; };
+              Overrun& Offset   (off_t const offset) { _offset = offset; return *this; };
+              Overrun& Size     (off_t const size  ) { _size   = size  ; return *this; };
+              off_t Offset () const { return _offset; };
+              off_t Size   () const { return _size  ; };
             private:
-              off_t       _offset  ;
-              std::string _filename;
-              off_t       _size    ;
+              off_t _offset;
+              off_t _size  ;
           };
           
           // Error making a system call.
@@ -172,25 +138,22 @@ namespace DAC {
               virtual ~SysCallError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("System error number " + DAC::toString(_errno) + ", \"" + getErrorText(_errno) + "\" occured when attempting \"" + _syscall + "\" on file \"" + _filename + "\".").c_str();
+                  return ("System error number " + toString(_errno) + ", \"" + getErrorText(_errno) + "\" occured when attempting \"" + _syscall + "\".").c_str();
                 } catch (...) {
                   try {
-                    return ("System error number " + DAC::toString(_errno) + " occured when attempting \"" + _syscall + "\" on file \"" + _filename + "\". Error fetching system message string.").c_str();
+                    return ("System error number " + toString(_errno) + " occured when attempting \"" + _syscall + "\". Error fetching system message string.").c_str();
                   } catch (...) {
                     return "Error making system call. Error creating message string.";
                   }
                 }
               };
-              SysCallError& Errno    (int         const  errnum  ) { _errno    = errnum  ; return *this; };
-              SysCallError& SysCall  (std::string const& syscall ) { _syscall  = syscall ; return *this; };
-              SysCallError& Filename (std::string const& filename) { _filename = filename; return *this; };
-              int         Errno   () const { return _errno   ; };
-              std::string SysCall () const { return _syscall ; };
-              std::string File    () const { return _filename; };
+              SysCallError& Errno   (int         const  errnum ) { _errno   = errnum ; return *this; };
+              SysCallError& SysCall (std::string const& syscall) { _syscall = syscall; return *this; };
+              int         Errno   () const { return _errno  ; };
+              std::string SysCall () const { return _syscall; };
             private:
-              int         _errno   ;
-              std::string _syscall ;
-              std::string _filename;
+              int         _errno  ;
+              std::string _syscall;
           };
           class AccessDenied  : public SysCallError {};
           class BadDescriptor : public SysCallError {};
@@ -223,15 +186,13 @@ namespace DAC {
               virtual ~UnknownType () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Unknown file type " + DAC::toString(_type) + " returned for file \"" + _filename + "\".").c_str();
+                  return ("Unknown file type " + toString(_type) + " returned.").c_str();
                 } catch (...) {
                   return "Unknown file type returned. Error creating message string.";
                 }
               };
-              UnknownType& Filename (std::string const& filename) { _filename = filename; return *this; };
-              UnknownType& Type     (mode_t      const  filetype) { _type     = filetype; return *this; };
-              std::string Filename () const { return _filename; };
-              mode_t      Type     () const { return _type    ; };
+              UnknownType& Type (mode_t const filetype) { _type = filetype; return *this; };
+              mode_t Type () const { return _type; };
             private:
               std::string _filename;
               mode_t      _type    ;
@@ -252,7 +213,7 @@ namespace DAC {
       POSIXFile ();
       
       // Constructor names the file.
-      POSIXFile (std::string const& filename);
+      POSIXFile (std::string const& filename, DelayOpen const delayopen = OPEN_NOW);
       
       // Constructor with a file descriptor.
       POSIXFile (FDType const fd);
@@ -262,39 +223,40 @@ namespace DAC {
       
       // Assignment operator.
       POSIXFile& operator = (POSIXFile const& right);
+      POSIXFile& operator = (FDType    const  fd   );
       
       // Properties.
-      POSIXFile& Filename  (std::string const& filename );
-      POSIXFile& RecordSep (std::string const& recordsep);
-      POSIXFile& OpenMode  (enum OpenMode    const  openmode );
-      POSIXFile& Append    (bool        const  append   );
-      POSIXFile& Create    (bool        const  create   );
-      POSIXFile& Exclusive (bool        const  exclusive);
-      POSIXFile& DoATime   (bool        const  doatime  );
-      POSIXFile& CanCTTY   (bool        const  canctty  );
-      POSIXFile& FollowSym (bool        const  followsym);
-      POSIXFile& Synch     (bool        const  synch    );
-      POSIXFile& Truncate  (bool        const  truncate );
-      POSIXFile& SetUID    (bool        const  setuid   );
-      POSIXFile& SetGID    (bool        const  setgid   );
-      POSIXFile& Sticky    (bool        const  sticky   );
-      POSIXFile& U_Read    (bool        const  u_read   );
-      POSIXFile& U_Write   (bool        const  u_write  );
-      POSIXFile& U_Execute (bool        const  u_execute);
-      POSIXFile& G_Read    (bool        const  g_read   );
-      POSIXFile& G_Write   (bool        const  g_write  );
-      POSIXFile& G_Execute (bool        const  g_execute);
-      POSIXFile& O_Read    (bool        const  o_read   );
-      POSIXFile& O_Write   (bool        const  o_write  );
-      POSIXFile& O_Execute (bool        const  o_execute);
-      POSIXFile& A_Read    (bool        const  a_read   );
-      POSIXFile& A_Write   (bool        const  a_write  );
-      POSIXFile& A_Execute (bool        const  a_execute);
-      POSIXFile& Mode      (mode_t      const  new_mode );
-      POSIXFile& UID       (uid_t       const  new_uid  );
-      POSIXFile& GID       (gid_t       const  new_gid  );
-      std::string Filename  () const;
-      std::string RecordSep () const;
+      POSIXFile& FD        (FDType        const  fd       );
+      POSIXFile& RecordSep (std::string   const& recordsep);
+      POSIXFile& OpenMode  (enum OpenMode const  openmode );
+      POSIXFile& Append    (bool          const  append   );
+      POSIXFile& Create    (bool          const  create   );
+      POSIXFile& Exclusive (bool          const  exclusive);
+      POSIXFile& DoATime   (bool          const  doatime  );
+      POSIXFile& CanCTTY   (bool          const  canctty  );
+      POSIXFile& FollowSym (bool          const  followsym);
+      POSIXFile& Synch     (bool          const  synch    );
+      POSIXFile& Truncate  (bool          const  truncate );
+      POSIXFile& SetUID    (bool          const  setuid   );
+      POSIXFile& SetGID    (bool          const  setgid   );
+      POSIXFile& Sticky    (bool          const  sticky   );
+      POSIXFile& U_Read    (bool          const  u_read   );
+      POSIXFile& U_Write   (bool          const  u_write  );
+      POSIXFile& U_Execute (bool          const  u_execute);
+      POSIXFile& G_Read    (bool          const  g_read   );
+      POSIXFile& G_Write   (bool          const  g_write  );
+      POSIXFile& G_Execute (bool          const  g_execute);
+      POSIXFile& O_Read    (bool          const  o_read   );
+      POSIXFile& O_Write   (bool          const  o_write  );
+      POSIXFile& O_Execute (bool          const  o_execute);
+      POSIXFile& A_Read    (bool          const  a_read   );
+      POSIXFile& A_Write   (bool          const  a_write  );
+      POSIXFile& A_Execute (bool          const  a_execute);
+      POSIXFile& Mode      (mode_t        const  new_mode );
+      POSIXFile& UID       (uid_t         const  new_uid  );
+      POSIXFile& GID       (gid_t         const  new_gid  );
+      FDType        FD        () const;
+      std::string   RecordSep () const;
       enum OpenMode OpenMode  () const;
       bool          Append    () const;
       bool          Create    () const;
@@ -331,7 +293,9 @@ namespace DAC {
       void copy (POSIXFile const& source);
       
       // Open the file.
-      void open ();
+      void open (                           );
+      void open (FDType      const  fd      );
+      void open (std::string const& filename);
       
       // Close the file.
       void close ();
@@ -345,20 +309,6 @@ namespace DAC {
       // Test for a file lock.
       bool is_locked (bool const shared = true, off_t const start = 0, off_t const len = 0);
       
-      // Create a hard link.
-      void link (std::string const& filename);
-      
-      // Create a symbolic link.
-      void symlink (std::string const& filename) const;
-      
-      // Rename/move the file.
-      void rename (std::string const& filename);
-      
-      // Delete the file.
-      void unlink ();
-      void rm     ();
-      void del    ();
-      
       // Change the permissions of the file.
       void chmod (mode_t const new_mode);
       
@@ -367,16 +317,6 @@ namespace DAC {
       
       // Truncate or expand to an exact length.
       void truncate (off_t const length);
-      
-      // Get the file / directory names.
-      std::string basename () const;
-      std::string dirname  () const;
-      
-      // Convert name to an absolute path.
-      std::string expand_path () const;
-      
-      // Read the target of a symbolic link.
-      std::string readlink () const;
       
       // Seek to a particular location.
       void seek (off_t const offset, SeekMode const whence = SM_SET);
@@ -404,13 +344,6 @@ namespace DAC {
       bool eof      () const;
       bool eof_line () const;
       
-      // Get the file descriptor.
-      FDType fd () const;
-      
-      // Set the file descriptor. Will fail if *this already points to an open
-      // file.
-      void set_fd (FDType const fd);
-      
       // File info.
       bool is_blockDev        () const;
       bool is_charDev         () const;
@@ -433,7 +366,6 @@ namespace DAC {
       bool is_writable        () const;
       bool is_writable_real   () const;
       bool is_zero            () const;
-      bool is_open            () const;
       
       // stat() info.
       dev_t     device    () const;
@@ -453,6 +385,117 @@ namespace DAC {
       /***********************************************************************/
       // Static function members.
       
+      // Properties.
+      static void SetUID    (std::string const& filename, bool   const setuid   );
+      static void SetGID    (std::string const& filename, bool   const setgid   );
+      static void Sticky    (std::string const& filename, bool   const sticky   );
+      static void U_Read    (std::string const& filename, bool   const u_read   );
+      static void U_Write   (std::string const& filename, bool   const u_write  );
+      static void U_Execute (std::string const& filename, bool   const u_execute);
+      static void G_Read    (std::string const& filename, bool   const g_read   );
+      static void G_Write   (std::string const& filename, bool   const g_write  );
+      static void G_Execute (std::string const& filename, bool   const g_execute);
+      static void O_Read    (std::string const& filename, bool   const o_read   );
+      static void O_Write   (std::string const& filename, bool   const o_write  );
+      static void O_Execute (std::string const& filename, bool   const o_execute);
+      static void A_Read    (std::string const& filename, bool   const a_read   );
+      static void A_Write   (std::string const& filename, bool   const a_write  );
+      static void A_Execute (std::string const& filename, bool   const a_execute);
+      static void Mode      (std::string const& filename, mode_t const new_mode );
+      static void UID       (std::string const& filename, uid_t  const new_uid  );
+      static void GID       (std::string const& filename, gid_t  const new_gid  );
+      static bool     SetUID    (std::string const& filename);
+      static bool     SetGID    (std::string const& filename);
+      static bool     Sticky    (std::string const& filename);
+      static bool     U_Read    (std::string const& filename);
+      static bool     U_Write   (std::string const& filename);
+      static bool     U_Execute (std::string const& filename);
+      static bool     G_Read    (std::string const& filename);
+      static bool     G_Write   (std::string const& filename);
+      static bool     G_Execute (std::string const& filename);
+      static bool     O_Read    (std::string const& filename);
+      static bool     O_Write   (std::string const& filename);
+      static bool     O_Execute (std::string const& filename);
+      static bool     A_Read    (std::string const& filename);
+      static bool     A_Write   (std::string const& filename);
+      static bool     A_Execute (std::string const& filename);
+      static mode_t   Mode      (std::string const& filename);
+      static uid_t    UID       (std::string const& filename);
+      static gid_t    GID       (std::string const& filename);
+      static FileType Type      (std::string const& filename);
+      
+      // Create a hard link.
+      static void link (std::string const& src, std::string const& dest);
+      
+      // Create a symbolic link.
+      static void symlink (std::string const& src, std::string const& dest);
+      
+      // Rename/move the file.
+      static void rename (std::string const& src, std::string const& dest);
+      static void mv     (std::string const& src, std::string const& dest);
+      
+      // Delete the file.
+      static void unlink (std::string const& filename);
+      static void rm     (std::string const& filename);
+      static void del    (std::string const& filename);
+      
+      // Change the permissions of the file.
+      static void chmod (std::string const& filename, mode_t const new_mode);
+      
+      // Change the owner of the file.
+      static void chown (std::string const& filename, uid_t const owner = UID_NOCHANGE, gid_t const group = GID_NOCHANGE);
+      
+      // Truncate or expand to an exact length.
+      static void truncate (std::string const& filename, off_t const length);
+      
+      // Get file / directory names.
+      static std::string basename (std::string const& filename);
+      static std::string dirname  (std::string const& filename);
+      
+      // Convert relative name to an absolute filename.
+      static std::string expand_path (std::string const& filename);
+      
+      // Read the target of a symbolic link.
+      static std::string readlink (std::string const filename);
+      
+      // File info.
+      static bool is_blockDev        (std::string const& filename);
+      static bool is_charDev         (std::string const& filename);
+      static bool is_dir             (std::string const& filename);
+      static bool is_directory       (std::string const& filename);
+      static bool is_executable      (std::string const& filename);
+      static bool is_executable_real (std::string const& filename);
+      static bool is_exist           (std::string const& filename);
+      static bool is_file            (std::string const& filename);
+      static bool is_groupOwned      (std::string const& filename);
+      static bool is_userOwned       (std::string const& filename);
+      static bool is_pipe            (std::string const& filename);
+      static bool is_readable        (std::string const& filename);
+      static bool is_readable_real   (std::string const& filename);
+      static bool is_setGID          (std::string const& filename);
+      static bool is_setUID          (std::string const& filename);
+      static bool is_socket          (std::string const& filename);
+      static bool is_sticky          (std::string const& filename);
+      static bool is_symlink         (std::string const& filename);
+      static bool is_writable        (std::string const& filename);
+      static bool is_writable_real   (std::string const& filename);
+      static bool is_zero            (std::string const& filename);
+      
+      // stat() info.
+      static dev_t     device    (std::string const& filename);
+      static ino_t     inode     (std::string const& filename);
+      static mode_t    mode      (std::string const& filename);
+      static nlink_t   links     (std::string const& filename);
+      static uid_t     uid       (std::string const& filename);
+      static gid_t     gid       (std::string const& filename);
+      static dev_t     devid     (std::string const& filename);
+      static off_t     size      (std::string const& filename);
+      static blksize_t blockSize (std::string const& filename);
+      static blkcnt_t  blocks    (std::string const& filename);
+      static time_t    atime     (std::string const& filename);
+      static time_t    mtime     (std::string const& filename);
+      static time_t    ctime     (std::string const& filename);
+      
       // Get the current working directory.
       static std::string getCWD ();
     
@@ -463,9 +506,6 @@ namespace DAC {
       
       /***********************************************************************/
       // Data types.
-      
-      // File descriptor type.
-      typedef int _FDType;
       
       // Open mode flag type.
       typedef int _OMFlagType;
@@ -530,6 +570,7 @@ namespace DAC {
       /***********************************************************************/
       // Constants.
       
+      // Mask to get only permissions out of a mode.
       static mode_t const _PERM_MASK;
       
       /***********************************************************************/
