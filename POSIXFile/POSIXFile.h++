@@ -254,6 +254,9 @@ namespace DAC {
       // Constructor names the file.
       POSIXFile (std::string const& filename);
       
+      // Constructor with a file descriptor.
+      POSIXFile (FDType const fd);
+      
       // Copy constructor.
       POSIXFile (POSIXFile const& source);
       
@@ -330,6 +333,9 @@ namespace DAC {
       // Open the file.
       void open ();
       
+      // Close the file.
+      void close ();
+      
       // Lock the file.
       bool lock (bool const shared = false, bool const wait = true, off_t const start = 0, off_t const len = 0);
       
@@ -338,9 +344,6 @@ namespace DAC {
       
       // Test for a file lock.
       bool is_locked (bool const shared = true, off_t const start = 0, off_t const len = 0);
-      
-      // Close the file.
-      void close ();
       
       // Create a hard link.
       void link (std::string const& filename);
@@ -387,12 +390,7 @@ namespace DAC {
       // Read a line.
       std::string read_line (bool const trim = false);
       
-      // Read the entire file as a vector of lines. Call like so to avoid a
-      // very expensive copy of the entire vector:
-      // POSIXFile           file ;
-      // std::vector<string> value;
-      // file.Filename("foo");
-      // value.swap(file.read_all_lines());
+      // Read the entire file as a vector of lines.
       std::vector<std::string>& read_all_lines (std::vector<std::string>& buffer);
       
       // Read the entire file as a string.
@@ -407,7 +405,11 @@ namespace DAC {
       bool eof_line () const;
       
       // Get the file descriptor.
-      int fd () const;
+      FDType fd () const;
+      
+      // Set the file descriptor. Will fail if *this already points to an open
+      // file.
+      void set_fd (FDType const fd);
       
       // File info.
       bool is_blockDev        () const;
@@ -450,7 +452,8 @@ namespace DAC {
       
       /***********************************************************************/
       // Static function members.
-
+      
+      // Get the current working directory.
       static std::string getCWD ();
     
     /*
@@ -775,7 +778,7 @@ namespace DAC {
   /*
    * Get the file descriptor.
    */
-  inline int POSIXFile::fd () const { return _fd; }
+  inline FDType POSIXFile::fd () const { return _fd; }
   
   /*
    * File info.
@@ -845,7 +848,7 @@ namespace DAC {
     return !stat(_filename.c_str(), &_stat) && (_cache_valid = true);
   }
   inline bool POSIXFile::is_zero () const { return is_exist() && size() == 0; }
-  inline bool POSIXFile::is_open () const { return _fd;                       }
+  inline bool POSIXFile::is_open () const { return _fd != -1;                 }
   
   /*
    * stat() info.

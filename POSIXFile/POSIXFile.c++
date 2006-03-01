@@ -72,8 +72,8 @@ namespace DAC {
     
     _cache_valid = false;
     
-    _fd     = 0;
-    _curpos = 0;
+    _fd     = -1;
+    _curpos =  0;
     
     _filename.clear();
     _recordsep = "\n";
@@ -140,7 +140,7 @@ namespace DAC {
   void POSIXFile::open () {
     
     // Make sure the file is not already open.
-    if (_fd) {
+    if (is_open()) {
       throw Errors::IsOpen().Filename(_filename);
     }
     
@@ -160,12 +160,29 @@ namespace DAC {
   }
   
   /*
+   * Close the file.
+   */
+  void POSIXFile::close () {
+    
+    // Make sure the file is open.
+    if (!is_open()) {
+      throw Errors::NotOpen().Filename(_filename).Operation("close");
+    }
+    
+    // Close the file.
+    if (_fd.set(-1)) {
+      s_throwSysCallError(errno, "close", _filename);
+    }
+    
+  }
+  
+  /*
    * Lock the file.
    */
   bool POSIXFile::lock (bool const shared, bool const wait, off_t const start, off_t const len) {
     
     // Make sure the file is open.
-    if (!_fd) {
+    if (!is_open()) {
       throw Errors::NotOpen().Filename(_filename).Operation("fcntl");
     }
     
@@ -190,7 +207,7 @@ namespace DAC {
   void POSIXFile::unlock (off_t const start, off_t const len) {
     
     // Don't attempt to unlock if the file is not open.
-    if (!_fd) {
+    if (!is_open()) {
       return;
     }
     
@@ -208,7 +225,7 @@ namespace DAC {
   bool POSIXFile::is_locked (bool const shared, off_t const start, off_t const len) {
     
     // Cannot check for a lock if the file is not open.
-    if (!_fd) {
+    if (!is_open()) {
       throw Errors::NotOpen().Filename(_filename).Operation("fcntl");
     }
     
@@ -220,23 +237,6 @@ namespace DAC {
     
     // Return whether file is locked.
     return lockinfo.l_type != F_UNLCK;
-    
-  }
-  
-  /*
-   * Close the file.
-   */
-  void POSIXFile::close () {
-    
-    // Make sure the file is open.
-    if (!_fd) {
-      throw Errors::NotOpen().Filename(_filename).Operation("close");
-    }
-    
-    // Close the file.
-    if (_fd.set(0)) {
-      s_throwSysCallError(errno, "close", _filename);
-    }
     
   }
   
@@ -300,7 +300,7 @@ namespace DAC {
   void POSIXFile::unlink () {
     
     // Make sure we do not have the file open.
-    if (_fd) {
+    if (is_open()) {
       throw Errors::IsOpen().Filename(_filename);
     }
     
@@ -324,7 +324,7 @@ namespace DAC {
     
     // Update the mode of the file.
     _cache_valid = false;
-    if (_fd && fchmod(_fd, new_mode & _PERM_MASK) || ::chmod(_filename.c_str(), new_mode & _PERM_MASK)) {
+    if (is_open() && fchmod(_fd, new_mode & _PERM_MASK) || ::chmod(_filename.c_str(), new_mode & _PERM_MASK)) {
       s_throwSysCallError(errno, "chmod", _filename);
     }
     
@@ -362,7 +362,7 @@ namespace DAC {
     _cache_valid = false;
     
     // Call the correct chown whether the file is open or closed.
-    if (_fd && fchown(_fd, owner, group) || ::chown(opfile.c_str(), owner, group)) {
+    if (is_open() && fchown(_fd, owner, group) || ::chown(opfile.c_str(), owner, group)) {
       s_throwSysCallError(errno, "chown", dosym ? opfile : _filename);
     }
     
@@ -379,7 +379,7 @@ namespace DAC {
     // Truncate. Temporary length because the truncate prototype does not name
     // length as const.
     off_t tmplen(length);
-    if (_fd && ftruncate(_fd, tmplen) || ::truncate(_filename.c_str(), tmplen)) {
+    if (is_open() && ftruncate(_fd, tmplen) || ::truncate(_filename.c_str(), tmplen)) {
       s_throwSysCallError(errno, "truncate", _filename);
     }
     
@@ -576,7 +576,7 @@ namespace DAC {
   void POSIXFile::seek (off_t const offset, SeekMode const whence) {
     
     // Make sure the file is open.
-    if (!_fd) {
+    if (!is_open()) {
       throw Errors::NotOpen().Filename(_filename).Operation("seek");
     }
     
@@ -591,7 +591,7 @@ namespace DAC {
   string POSIXFile::read (size_t const bytes) {
     
     // Make sure the file is open.
-    if (!_fd) {
+    if (!is_open()) {
       throw Errors::NotOpen().Filename(_filename).Operation("read");
     }
     
@@ -613,7 +613,7 @@ namespace DAC {
   ssize_t POSIXFile::write (void const* const data, size_t const bytes) {
     
     // Make sure the file is open.
-    if (!_fd) {
+    if (!is_open()) {
       throw Errors::NotOpen().Filename(_filename).Operation("write");
     }
     
@@ -634,6 +634,27 @@ namespace DAC {
     
     // Return the number of bytes written.
     return retval;
+    
+  }
+  
+  /*
+   * Set the file descriptor.
+   */
+  void POSIXFile::set_fd (FDType const fd) {
+    
+    // Make sure we don't already have an open file.
+    if (is_open()) {
+      throw Errors::IsOpen().Filename(_filename);
+    }
+    
+    // Clear first.
+    clear();
+    
+    // Set the file descriptor.
+    _fd = fd;
+    
+    // Now update the cache.
+    _update_cache();
     
   }
   
@@ -706,7 +727,7 @@ namespace DAC {
     }
     
     // Get the current file open status.
-    bool fileopen = _fd;
+    bool fileopen = is_open();
     
     // Try block to ensure that any changes are undone.
     try {
@@ -725,7 +746,7 @@ namespace DAC {
     // Restore the previous state and rethrow the error.
     } catch (...) {
       if (!fileopen) {
-        try { _fd = 0; } catch (...) {}
+        try { _fd = -1; } catch (...) {}
       }
       throw;
     }
@@ -761,7 +782,7 @@ namespace DAC {
     buf = new char[size()];
     
     // Get the current file open status.
-    bool fileopen = _fd;
+    bool fileopen = is_open();
     
     // Try block to ensure that any changes are undone.
     try {
@@ -778,7 +799,7 @@ namespace DAC {
     // Restore the previous state and rethrow the error.
     } catch (...) {
       if (!fileopen) {
-        try { _fd = 0; } catch (...) {}
+        try { _fd = -1; } catch (...) {}
       }
       throw;
     }
@@ -834,7 +855,7 @@ namespace DAC {
     
     // Call stat or lstat depending on whether we are following symlinks or
     // not.
-    if (FollowSym() && is_symlink()) {
+    if (FollowSym()) {
       
       // Link stat.
       if (lstat(_filename.c_str(), &_stat)) {
@@ -844,7 +865,7 @@ namespace DAC {
     } else {
       
       // Call correct stat() or fstat() if the file is already open.
-      if (_fd && fstat(_fd, &_stat) || stat(_filename.c_str(), &_stat)) {
+      if (is_open() && fstat(_fd, &_stat) || stat(_filename.c_str(), &_stat)) {
         s_throwSysCallError(errno, "stat", _filename);
       }
       
