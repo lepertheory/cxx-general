@@ -2,9 +2,6 @@
  * POSIXFile.c++
  *****************************************************************************
  * Implementation of class POSIXFile.
- * TODO: Make sure that the file descriptor isn't being duplicated, encourage
- *       not working around this by making it easy to have multiple
- *       POSIXFiles access one file.
  *****************************************************************************/
 
 // STL includes.
@@ -51,19 +48,6 @@ namespace DAC {
   
   /***************************************************************************/
   // Function members.
-  
-  /*
-   * Constructor names the file.
-   */
-  POSIXFile::POSIXFile (string const& filename) {
-    
-    // Do standard init.
-    clear();
-    
-    // Set the filename.
-    Filename(filename);
-    
-  }
   
   /*
    * Reset to just-constructed defaults.
@@ -139,14 +123,14 @@ namespace DAC {
    */
   void POSIXFile::open () {
     
-    // Make sure the file is not already open.
-    if (is_open()) {
-      throw Errors::IsOpen().Filename(_filename);
+    // Make sure that a filename has been set.
+    if (_filename.empty()) {
+      throw Errors::NoFile();
     }
     
     // Open the file.
     if ((_fd = ::open(_filename.c_str(), _openmode | _flags, _createmode)) == -1) {
-      s_throwSysCallError(errno, "open", _filename);
+      s_throwSysCallError(errno, "open");
     }
     
     // Reset the current file position.
@@ -166,12 +150,12 @@ namespace DAC {
     
     // Make sure the file is open.
     if (!is_open()) {
-      throw Errors::NotOpen().Filename(_filename).Operation("close");
+      return;
     }
     
     // Close the file.
     if (_fd.set(-1)) {
-      s_throwSysCallError(errno, "close", _filename);
+      s_throwSysCallError(errno, "close");
     }
     
   }
@@ -183,7 +167,7 @@ namespace DAC {
     
     // Make sure the file is open.
     if (!is_open()) {
-      throw Errors::NotOpen().Filename(_filename).Operation("fcntl");
+      open();
     }
     
     // Lock. Return false if the file is already locked and this is a
@@ -193,7 +177,7 @@ namespace DAC {
       if (wait && errno == EACCES || errno == EAGAIN) {
         return false;
       }
-      s_throwSysCallError(errno, "fcntl", _filename);
+      s_throwSysCallError(errno, "fcntl");
     }
     
     // Success.
@@ -214,7 +198,7 @@ namespace DAC {
     // Unlock.
     struct flock lockinfo = { F_UNLCK, SEEK_SET, start, len, 0 };
     if (fcntl(_fd, F_SETLK, &lockinfo)) {
-      s_throwSysCallError(errno, "fcntl", _filename);
+      s_throwSysCallError(errno, "fcntl");
     }
     
   }
@@ -224,15 +208,15 @@ namespace DAC {
    */
   bool POSIXFile::is_locked (bool const shared, off_t const start, off_t const len) {
     
-    // Cannot check for a lock if the file is not open.
+    // Make sure the file is open.
     if (!is_open()) {
-      throw Errors::NotOpen().Filename(_filename).Operation("fcntl");
+      open();
     }
     
     // Check for the lock.
     struct flock lockinfo = { shared ? F_RDLCK : F_WRLCK, SEEK_SET, start, len, 0 };
     if (fcntl(_fd, F_GETLK, &lockinfo)) {
-      s_throwSysCallError(errno, "fcntl", _filename);
+      s_throwSysCallError(errno, "fcntl");
     }
     
     // Return whether file is locked.
@@ -241,91 +225,22 @@ namespace DAC {
   }
   
   /*
-   * Create a hard link.
-   */
-  void POSIXFile::link (string const& filename) {
-    
-    // Work area.
-    string linksrc;
-    
-    // If we are supposed to follow symlinks, do so. is_symlink also updates
-    // the stat cache, which is necessary. This behavior is in line with POSIX,
-    // and deviates from Linux.
-    if (FollowSym() && is_symlink()) {
-      linksrc = dirname() + "/" + readlink();
-    } else {
-      linksrc = _filename;
-    }
-    
-    // Link.
-    if (::link(linksrc.c_str(), filename.c_str())) {
-      s_throwSysCallError(errno, "link", "\"" + linksrc + "\" \"" + filename + "\"");
-    }
-    
-    // Update the link count to the file in the cache.
-    _stat.st_nlink += 1;
-    
-  }
-  
-  /*
-   * Create a symbolic link.
-   */
-  void POSIXFile::symlink (string const& filename) const {
-    
-    // Create symlink.
-    if (::symlink(_filename.c_str(), filename.c_str())) {
-      s_throwSysCallError(errno, "symlink", "\"" + _filename + "\" \"" + filename + "\"");
-    }
-    
-  }
-  
-  /*
-   * Rename the file.
-   */
-  void POSIXFile::rename (string const& filename) {
-    
-    // Invalidate the cache.
-    _cache_valid = false;
-    
-    // Rename.
-    if (::rename(_filename.c_str(), filename.c_str())) {
-      s_throwSysCallError(errno, "rename", "\"" + _filename + "\" \"" + filename + "\"");
-    }
-    
-  }
-  
-  /*
-   * Delete the file.
-   */
-  void POSIXFile::unlink () {
-    
-    // Make sure we do not have the file open.
-    if (is_open()) {
-      throw Errors::IsOpen().Filename(_filename);
-    }
-    
-    // Invalidate the cache.
-    _cache_valid = false;
-    
-    // Unlink.
-    if (::unlink(_filename.c_str())) {
-      s_throwSysCallError(errno, "unlink", _filename);
-    }
-    
-  }
-  
-  /*
    * Change the mode.
    */
   void POSIXFile::chmod (mode_t const new_mode) {
+    
+    // Make sure the file is open.
+    if (!is_open()) {
+      open();
+    }
     
     // Make sure the stat cache is updated.
     _update_cache();
     
     // Update the mode of the file.
     _cache_valid = false;
-    if (is_open() && fchmod(_fd, new_mode & _PERM_MASK) || ::chmod(_filename.c_str(), new_mode & _PERM_MASK)) {
-      s_throwSysCallError(errno, "chmod", _filename);
+    if (fchmod(_fd, new_mode & _PERM_MASK)) {
+      s_throwSysCallError(errno, "chmod");
     }
     
     // Set the new mode in the cache.
@@ -344,26 +259,17 @@ namespace DAC {
       return;
     }
     
-    // Work area.
-    string opfile;
-    bool   dosym;
-    
-    // Decide whether we will be changing the symlink's mode or the link
-    // target.
-    if (FollowSym() && is_symlink()) {
-      opfile = dirname() + "/" + readlink();
-      dosym  = true;
-    } else {
-      opfile = _filename;
-      dosym  = false;
+    // Make sure the file is open.
+    if (!is_open()) {
+      open();
     }
     
     // Invalidate the cache.
     _cache_valid = false;
     
     // Call the correct chown whether the file is open or closed.
-    if (is_open() && fchown(_fd, owner, group) || ::chown(opfile.c_str(), owner, group)) {
-      s_throwSysCallError(errno, "chown", dosym ? opfile : _filename);
+    if (fchown(_fd, owner, group)) {
+      s_throwSysCallError(errno, "chown");
     }
     
   }
@@ -373,215 +279,20 @@ namespace DAC {
    */
   void POSIXFile::truncate (off_t const length) {
     
+    // Make sure the file is open.
+    if (!is_open()) {
+      open();
+    }
+    
     // Invalidate the cache.
     _cache_valid = false;
     
     // Truncate. Temporary length because the truncate prototype does not name
     // length as const.
     off_t tmplen(length);
-    if (is_open() && ftruncate(_fd, tmplen) || ::truncate(_filename.c_str(), tmplen)) {
-      s_throwSysCallError(errno, "truncate", _filename);
+    if (ftruncate(_fd, tmplen)) {
+      s_throwSysCallError(errno, "truncate");
     }
-    
-  }
-  
-  /*
-   * Get the file part of the filename.
-   */
-  string POSIXFile::basename () const {
-    
-    // Work area.
-    string::size_type pos;
-    string::size_type sz       = _filename.size();
-    string::size_type lastchar = _filename.find_last_not_of(DIR_SEP);
-    
-    // If the filename is less than two characters, return the filename; since
-    // we can't have a separator & filename in one character filename must
-    // either be only a filename, only a directory separator--in which case it
-    // points to the root dir--or an empty string.
-    if (sz < 2) {
-      return _filename;
-    }
-    
-    // If the filename does not contain a separator before the last component,
-    // return the string minus any trailing separators. 1 + lastchar to
-    // convert from an offset to a length.
-    if ((pos = _filename.rfind(DIR_SEP, lastchar)) == string::npos) {
-      return _filename.substr(0, 1 + lastchar);
-    }
-    
-    // If we have gotten this far and not found a non-separator character, we
-    // were passed a string of only separators, which can only be root. Return
-    // dir separator.
-    if (lastchar == string::npos) {
-      return DAC::toStringChr(DIR_SEP);
-    }
-    
-    // Return the filename starting one character after the last separator,
-    // and ending at the last character that is not a separator. Subtract pos
-    // from offset for a length, do not + 1 because subtracting two offsets
-    // gives us a length.
-    return _filename.substr(pos + 1, lastchar - pos);
-    
-  }
-  
-  /*
-   * Get the directory part of the filename.
-   */
-  string POSIXFile::dirname () const {
-    
-    // Work area.
-    string::size_type lastsep = _filename.rfind(DIR_SEP, _filename.find_last_not_of(DIR_SEP));
-    string::size_type lastchr = string::npos;
-    
-    // If the filename is blank, return that.
-    if (_filename.empty()) {
-      return string();
-    }
-    
-    // If the filename does not contain a separator character, return current
-    // directory.
-    if (lastsep == string::npos) {
-      return string(".");
-    }
-    
-    // Get the last directory name character.
-    lastchr = _filename.find_last_not_of(DIR_SEP, lastsep);
-    
-    // If filename consists of only separator characters, return that.
-    if (lastchr == string::npos) {
-      return DAC::toStringChr(DIR_SEP);
-    }
-    
-    // Return the filename up to the start of the last separator block.
-    // lastchr + 1 because we are converting from an offset to a length.
-    // Compress redundant directory separators.
-    return _filename.substr(0, lastchr + 1);
-    
-  }
-  
-  /*
-   * Convert to an absolute path. Home directory interpretation is not
-   * supported.
-   */
-  string POSIXFile::expand_path () const {
-    
-    // Constants.
-    static string const CUR_DIR (DAC::toStringChr(DIR_SEP) + "." );
-    static string const PREV_DIR(DAC::toStringChr(DIR_SEP) + "..");
-    static string::size_type const CUR_DIR_LEN (CUR_DIR .length());
-    static string::size_type const PREV_DIR_LEN(PREV_DIR.length());
-    
-    // Work area.
-    string retval;
-    
-    // If the filename is blank, return that.
-    if (_filename.empty()) {
-      return _filename;
-    }
-    
-    // If the filename does not begin with a directory separator, prefix the
-    // cwd.
-    if (_filename[0] != DIR_SEP) {
-      retval += getCWD() + DAC::toStringChr(DIR_SEP);
-    }
-    
-    // Append the filename.
-    retval += _filename;
-    
-    // Compress any redundant directory separators.
-    s_compress_dirSep(retval);
-    
-    // Compress any current directories.
-    for (string::size_type pos = 0; pos = retval.find(CUR_DIR, pos), pos != string::npos;) {
-      if (retval.length() > pos + CUR_DIR_LEN) {
-        if (retval[pos + CUR_DIR_LEN] == DIR_SEP) {
-          retval.erase(pos, CUR_DIR_LEN);
-        } else {
-          pos += CUR_DIR_LEN;
-        }
-      } else {
-        retval.resize(pos);
-      }
-    }
-    
-    // Process any previous directories.
-    for (string::size_type pos = 0; pos = retval.find(PREV_DIR, pos), pos != string::npos;) {
-      if (retval.length() > pos + PREV_DIR_LEN) {
-        if (retval[pos + PREV_DIR_LEN] == DIR_SEP) {
-          if (pos == 0) {
-            retval.erase(0, PREV_DIR_LEN);
-          } else {
-            string::size_type prevdirstart = retval.rfind(DIR_SEP, pos - 1);
-            retval.erase(prevdirstart + 1, pos + PREV_DIR_LEN - prevdirstart);
-            pos = prevdirstart;
-          }
-        } else {
-          pos += PREV_DIR_LEN;
-        }
-      } else {
-        if (pos == 0) {
-          retval = DAC::toStringChr(DIR_SEP);
-        } else {
-          retval.resize(retval.rfind(DIR_SEP, pos - 1) + 1);
-        }
-      }
-    }
-    
-    // We done.
-    return retval;
-    
-  }
-  
-  /*
-   * Read the target of a symbolic link.
-   */
-  string POSIXFile::readlink () const {
-    
-    // Work area. SafeInt for the signed/unsigned comparison.
-    AutoArray<char> buf;
-    SafeInt<int>    chars;
-    
-    // Double the buffer size with each iteration.
-    for (size_t bufsize = _MIN_PATH; bufsize <= _MAX_PATH; bufsize *= 2) {
-      
-      // Allocate buffer.
-      buf = new char[bufsize];
-      
-      // Make the system call, break if successful. bufsize - 1 because
-      // readlink() does not null terminate.
-      if ((chars = ::readlink(_filename.c_str(), buf.get(), bufsize - 1)) == -1) {
-        s_throwSysCallError(errno, "readlink", _filename);
-      }
-      
-      // Make sure that readlink did not fill the buffer. Will waste a call if
-      // the length of the path is exactly as long as buf, but there is no
-      // way to tell if there was truncation otherwise. Signed/unsigned
-      // comparison is the reason chars is a SafeInt.
-      if (chars < bufsize) {
-        buf[chars] = '\0';
-        break;
-      }
-      
-    }
-    
-    // Return the link target.
-    return buf.get();
-    
-  }
-  
-  /*
-   * Seek to a particular offset.
-   */
-  void POSIXFile::seek (off_t const offset, SeekMode const whence) {
-    
-    // Make sure the file is open.
-    if (!is_open()) {
-      throw Errors::NotOpen().Filename(_filename).Operation("seek");
-    }
-    
-    // Seek.
-    _seek(offset, whence);
     
   }
   
@@ -592,7 +303,7 @@ namespace DAC {
     
     // Make sure the file is open.
     if (!is_open()) {
-      throw Errors::NotOpen().Filename(_filename).Operation("read");
+      open();
     }
     
     // Work area.
@@ -604,57 +315,6 @@ namespace DAC {
     
     // Convert buffer to a string and return.
     return string(buf.get(), bytes_read);
-    
-  }
-  
-  /*
-   * Write.
-   */
-  ssize_t POSIXFile::write (void const* const data, size_t const bytes) {
-    
-    // Make sure the file is open.
-    if (!is_open()) {
-      throw Errors::NotOpen().Filename(_filename).Operation("write");
-    }
-    
-    // Work area.
-    ssize_t retval = 0;
-    
-    // Write the data.
-    if ((retval = ::write(_fd, data, bytes)) == -1) {
-      s_throwSysCallError(errno, "write", _filename);
-    }
-    
-    // Update the current position and file size.
-    _curpos       += retval;
-    _stat.st_size += retval;
-    
-    // Check for end of file.
-    _eof = _curpos >= size();
-    
-    // Return the number of bytes written.
-    return retval;
-    
-  }
-  
-  /*
-   * Set the file descriptor.
-   */
-  void POSIXFile::set_fd (FDType const fd) {
-    
-    // Make sure we don't already have an open file.
-    if (is_open()) {
-      throw Errors::IsOpen().Filename(_filename);
-    }
-    
-    // Clear first.
-    clear();
-    
-    // Set the file descriptor.
-    _fd = fd;
-    
-    // Now update the cache.
-    _update_cache();
     
   }
   
@@ -726,34 +386,10 @@ namespace DAC {
       return buffer;
     }
     
-    // Get the current file open status.
-    bool fileopen = is_open();
-    
-    // Try block to ensure that any changes are undone.
-    try {
-      
-      // If the file is not open, open it.
-      if (!fileopen) {
-        open();
-      }
-      
-      // Fill the vector.
-      _seek(0);
-      while (!eof_line()) {
-        retval.push_back(read_line());
-      }
-      
-    // Restore the previous state and rethrow the error.
-    } catch (...) {
-      if (!fileopen) {
-        try { _fd = -1; } catch (...) {}
-      }
-      throw;
-    }
-    
-    // Close the file if it was not already open.
-    if (!fileopen) {
-      close();
+    // Fill the vector.
+    _seek(0);
+    while (!eof_line()) {
+      retval.push_back(read_line());
     }
     
     // Done. Copy the result into place and return a reference for syntatic
@@ -781,39 +417,321 @@ namespace DAC {
     // Reserve space for the file contents.
     buf = new char[size()];
     
-    // Get the current file open status.
-    bool fileopen = is_open();
-    
-    // Try block to ensure that any changes are undone.
-    try {
-      
-      // If the file is not open, open it.
-      if (!fileopen) {
-        open();
-      }
-      
-      // Read the entire file.
-      _seek(0);
-      bytes_read = _read(reinterpret_cast<void*>(buf.get()), size());
-      
-    // Restore the previous state and rethrow the error.
-    } catch (...) {
-      if (!fileopen) {
-        try { _fd = -1; } catch (...) {}
-      }
-      throw;
-    }
-    
-    // Close the file if it was not already open.
-    if (!fileopen) {
-      close();
-    }
+    // Read the entire file.
+    _seek(0);
+    bytes_read = _read(reinterpret_cast<void*>(buf.get()), size());
     
     // Copy the buffer into the string.
     retval.assign(buf.get(), bytes_read);
     
     // Done.
     return retval;
+    
+  }
+  
+  /*
+   * Write.
+   */
+  ssize_t POSIXFile::write (void const* const data, size_t const bytes) {
+    
+    // Make sure the file is open.
+    if (!is_open()) {
+      open();
+    }
+    
+    // Work area.
+    ssize_t retval = 0;
+    
+    // Write the data.
+    if ((retval = ::write(_fd, data, bytes)) == -1) {
+      s_throwSysCallError(errno, "write", _filename);
+    }
+    
+    // Update the current position and invalidate cache for file size.
+    _curpos      += retval;
+    _cache_valid  = false;
+    
+    // Check for end of file.
+    _eof = _curpos >= size();
+    
+    // Return the number of bytes written.
+    return retval;
+    
+  }
+  
+  /*
+   * Create a hard link.
+   */
+  void POSIXFile::link (string const& src, string const& dest) {
+    
+    // Link.
+    if (::link(src.c_str(), dest.c_str())) {
+      s_throwSysCallError(errno, "link");
+    }
+    
+  }
+  
+  /*
+   * Create a symbolic link.
+   */
+  void POSIXFile::symlink (string const& src, string const& dest) {
+    
+    // Create symlink.
+    if (::symlink(src.c_str(), dest.c_str())) {
+      s_throwSysCallError(errno, "symlink");
+    }
+    
+  }
+  
+  /*
+   * Rename the file.
+   */
+  void POSIXFile::rename (string const& src, string const& dest) {
+    
+    // Rename.
+    if (::rename(src.c_str(), dest.c_str())) {
+      s_throwSysCallError(errno, "rename");
+    }
+    
+  }
+  
+  /*
+   * Delete the file.
+   */
+  void POSIXFile::unlink (string const& filename) {
+    
+    // Unlink.
+    if (::unlink(filename.c_str())) {
+      s_throwSysCallError(errno, "unlink");
+    }
+    
+  }
+  
+  /*
+   * Change the mode.
+   */
+  void POSIXFile::chmod (string const& filename, mode_t const new_mode) {
+    
+    // Set the mode.
+    if (chmod(filename.c_str(), new_mode & _PERM_MASK)) {
+      s_throwSysCallError(errno, "chmod");
+    }
+    
+  }
+  
+  /*
+   * Change owner/group.
+   */
+  void POSIXFile::chown (string const& filename, uid_t const owner, gid_t const group) {
+    
+    // Don't waste time if there's nothing to do.
+    if (owner == UID_NOCHANGE && group == GID_NOCHANGE) {
+      return;
+    }
+    
+    // Change.
+    if (chown(filename.c_str(), owner, group)) {
+      s_throwSysCallError(errno, "chown");
+    }
+    
+  }
+  
+  /*
+   * Truncate or expand to an exact length.
+   */
+  void POSIXFile::truncate (string const& filename, off_t const length) {
+    
+    // Truncate. Temporary length because the truncate prototype dose not name
+    // length as const.
+    off_t tmplen(length);
+    if (truncate(filename.c_str(), tmplen)) {
+      s_throwSysCallError(errno, "truncate");
+    }
+    
+  }
+  
+  /*
+   * Get the file part of the filename.
+   */
+  string POSIXFile::basename (string const& filename) {
+    
+    // Work area.
+    string::size_type pos;
+    string::size_type sz       = filename.size();
+    string::size_type lastchar = filename.find_last_not_of(DIR_SEP);
+    
+    // If the filename is less than two characters, return the filename; since
+    // we can't have a separator & filename in one character filename must
+    // either be only a filename, only a directory separator--in which case it
+    // points to the root dir--or an empty string.
+    if (sz < 2) {
+      return filename;
+    }
+    
+    // If the filename does not contain a separator before the last component,
+    // return the string minus any trailing separators. 1 + lastchar to
+    // convert from an offset to a length.
+    if ((pos = filename.rfind(DIR_SEP, lastchar)) == string::npos) {
+      return filename.substr(0, 1 + lastchar);
+    }
+    
+    // If we have gotten this far and not found a non-separator character, we
+    // were passed a string of only separators, which can only be root. Return
+    // dir separator.
+    if (lastchar == string::npos) {
+      return toStringChr(DIR_SEP);
+    }
+    
+    // Return the filename starting one character after the last separator,
+    // and ending at the last character that is not a separator. Subtract pos
+    // from offset for a length, do not + 1 because subtracting two offsets
+    // gives us a length.
+    return filename.substr(pos + 1, lastchar - pos);
+    
+  }
+  
+  /*
+   * Get the directory part of the filename.
+   */
+  string POSIXFile::dirname (string const& filename) {
+    
+    // Work area.
+    string::size_type lastsep = filename.rfind(DIR_SEP, filename.find_last_not_of(DIR_SEP));
+    string::size_type lastchr = string::npos;
+    
+    // If the filename is blank, return that.
+    if (filename.empty()) {
+      return string();
+    }
+    
+    // If the filename does not contain a separator character, return current
+    // directory.
+    if (lastsep == string::npos) {
+      return string(".");
+    }
+    
+    // Get the last directory name character.
+    lastchr = filename.find_last_not_of(DIR_SEP, lastsep);
+    
+    // If filename consists of only separator characters, return that.
+    if (lastchr == string::npos) {
+      return toStringChr(DIR_SEP);
+    }
+    
+    // Return the filename up to the start of the last separator block.
+    // lastchr + 1 because we are converting from an offset to a length.
+    // Compress redundant directory separators.
+    return filename.substr(0, lastchr + 1);
+    
+  }
+  
+  /*
+   * Convert to an absolute path. Home directory interpretation is not
+   * supported.
+   */
+  string POSIXFile::expand_path (string const& filename) const {
+    
+    // Constants.
+    static string const CUR_DIR (toStringChr(DIR_SEP) + "." );
+    static string const PREV_DIR(toStringChr(DIR_SEP) + "..");
+    static string::size_type const CUR_DIR_LEN (CUR_DIR .length());
+    static string::size_type const PREV_DIR_LEN(PREV_DIR.length());
+    
+    // Work area.
+    string retval;
+    
+    // If the filename is blank, return that.
+    if (filename.empty()) {
+      return filename;
+    }
+    
+    // If the filename does not begin with a directory separator, prefix the
+    // cwd.
+    if (filename[0] != DIR_SEP) {
+      retval += getCWD() + toStringChr(DIR_SEP);
+    }
+    
+    // Append the filename.
+    retval += filename;
+    
+    // Compress any redundant directory separators.
+    s_compress_dirSep(retval);
+    
+    // Compress any current directories.
+    for (string::size_type pos = 0; pos = retval.find(CUR_DIR, pos), pos != string::npos;) {
+      if (retval.length() > pos + CUR_DIR_LEN) {
+        if (retval[pos + CUR_DIR_LEN] == DIR_SEP) {
+          retval.erase(pos, CUR_DIR_LEN);
+        } else {
+          pos += CUR_DIR_LEN;
+        }
+      } else {
+        retval.resize(pos);
+      }
+    }
+    
+    // Process any previous directories.
+    for (string::size_type pos = 0; pos = retval.find(PREV_DIR, pos), pos != string::npos;) {
+      if (retval.length() > pos + PREV_DIR_LEN) {
+        if (retval[pos + PREV_DIR_LEN] == DIR_SEP) {
+          if (pos == 0) {
+            retval.erase(0, PREV_DIR_LEN);
+          } else {
+            string::size_type prevdirstart = retval.rfind(DIR_SEP, pos - 1);
+            retval.erase(prevdirstart + 1, pos + PREV_DIR_LEN - prevdirstart);
+            pos = prevdirstart;
+          }
+        } else {
+          pos += PREV_DIR_LEN;
+        }
+      } else {
+        if (pos == 0) {
+          retval = DAC::toStringChr(DIR_SEP);
+        } else {
+          retval.resize(retval.rfind(DIR_SEP, pos - 1) + 1);
+        }
+      }
+    }
+    
+    // We done.
+    return retval;
+    
+  }
+  
+  /*
+   * Read the target of a symbolic link.
+   */
+  string POSIXFile::readlink (string const& filename) {
+    
+    // Work area. SafeInt for the signed/unsigned comparison.
+    AutoArray<char> buf;
+    SafeInt<int>    chars;
+    
+    // Double the buffer size with each iteration.
+    for (size_t bufsize = _MIN_PATH; bufsize <= _MAX_PATH; bufsize *= 2) {
+      
+      // Allocate buffer.
+      buf = new char[bufsize];
+      
+      // Make the system call, break if successful. bufsize - 1 because
+      // readlink() does not null terminate.
+      if ((chars = ::readlink(filename.c_str(), buf.get(), bufsize - 1)) == -1) {
+        s_throwSysCallError(errno, "readlink");
+      }
+      
+      // Make sure that readlink did not fill the buffer. Will waste a call if
+      // the length of the path is exactly as long as buf, but there is no
+      // way to tell if there was truncation otherwise. Signed/unsigned
+      // comparison is the reason chars is a SafeInt.
+      if (chars < bufsize) {
+        buf[chars] = '\0';
+        break;
+      }
+      
+    }
+    
+    // Return the link target.
+    return buf.get();
     
   }
   
@@ -838,7 +756,7 @@ namespace DAC {
       
       // Throw an error if we got any error but the buffer being too small.
       if (errno != ERANGE) {
-        s_throwSysCallError(errno, "getcwd", ".");
+        s_throwSysCallError(errno, "getcwd");
       }
       
     }
@@ -853,22 +771,9 @@ namespace DAC {
    */
   void POSIXFile::_update_cache () const {
     
-    // Call stat or lstat depending on whether we are following symlinks or
-    // not.
-    if (FollowSym()) {
-      
-      // Link stat.
-      if (lstat(_filename.c_str(), &_stat)) {
-        s_throwSysCallError(errno, "stat", _filename);
-      }
-      
-    } else {
-      
-      // Call correct stat() or fstat() if the file is already open.
-      if (is_open() && fstat(_fd, &_stat) || stat(_filename.c_str(), &_stat)) {
-        s_throwSysCallError(errno, "stat", _filename);
-      }
-      
+    // Call fstat().
+    if (fstat(_fd, &_stat)) {
+      s_throwSysCallError(errno, "stat", _filename);
     }
     
     // Cache has been successfully updated.
@@ -924,6 +829,67 @@ namespace DAC {
     
     // Update end of file status.
     _eof = _curpos >= size();
+    
+  }
+  
+  /***************************************************************************/
+  // Static function members.
+  
+  /*
+   * Change file owner.
+   */
+  void POSIXFile::chmod (string const& filename, mode_t const new_mode) {
+    
+    // Update the mode of the file.
+    if (chmod(filename.c_str(), new_mode & _PERM_MASK)) {
+      s_throwSysCallError(errno, "chmod");
+    }
+    
+  }
+  
+  /*
+   * Change the file owner.
+   */
+  void POSIXFile::chown (string const& filename, uid_t const owner, gid_t const group) {
+    
+    // Don't work if we don't have to.
+    if (owner == UID_NOCHANGE && group == GID_NOCHANGE) {
+      return;
+    }
+    
+    // Call chown().
+    if (chown(filename.c_str(), owner, group)) {
+      s_throwSysCallError(errno, "chown");
+    }
+    
+  }
+  
+  /*
+   * stat().
+   */
+  struct stat* POSIXFile::s_stat (string const& filename, struct stat* const buf) {
+    
+    // Call stat().
+    if (stat(filename.c_str(), buf)) {
+      s_throwSysCallError(errno, "stat");
+    }
+    
+    // Done, return.
+    return buf;
+    
+  }
+  struct stat* POSIXFile::s_try_stat (string const& filename, struct stat* const buf) {
+    
+    // Init.
+    struct stat* retval = buf;
+    
+    // Call stat(). Will not follow symlinks.
+    if (stat(filename.c_str(), retval)) {
+      retval = 0;
+    }
+    
+    // Done, return.
+    return retval;
     
   }
   

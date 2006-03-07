@@ -2,9 +2,6 @@
  * POSIXFile.h++
  *****************************************************************************
  * Interface for class POSIXFile.
- * FIXME: Implement passing of an already open file descriptor.
- * FIXME: This needs serious cleanup. Pay special attention to symbolic link
- *        following.
  *****************************************************************************/
 
 // Include guard.
@@ -42,12 +39,6 @@ namespace DAC {
       /***********************************************************************/
       // Data types.
       
-      // Delay open.
-      enum DelayOpen {
-        OPEN_NOW  ,
-        DELAY_OPEN
-      };
-      
       // Open mode.
       enum OpenMode {
         OM_READ     ,
@@ -73,6 +64,9 @@ namespace DAC {
         FT_FIFO      = S_IFIFO
       };
       
+      // File descriptor type.
+      typedef int FDType;
+      
       /***********************************************************************/
       // Constants.
       
@@ -93,6 +87,13 @@ namespace DAC {
             public:
               virtual ~Base () throw() {};
               virtual char const* what () const throw() { return "Undefined error in POSIXFile."; };
+          };
+          
+          // No file was given to operate on.
+          class NoFile : public Base {
+            public:
+              virtual ~NoFile () throw() {};
+              virtual char const* what () const throw() { return "No filename was provided."; };
           };
           
           // Operation attempted at end of file.
@@ -213,7 +214,7 @@ namespace DAC {
       POSIXFile ();
       
       // Constructor names the file.
-      POSIXFile (std::string const& filename, DelayOpen const delayopen = OPEN_NOW);
+      POSIXFile (std::string const& filename);
       
       // Constructor with a file descriptor.
       POSIXFile (FDType const fd);
@@ -294,11 +295,13 @@ namespace DAC {
       
       // Open the file.
       void open (                           );
-      void open (FDType      const  fd      );
       void open (std::string const& filename);
       
       // Close the file.
       void close ();
+      
+      // Check if the file has been opened.
+      bool is_open () const;
       
       // Lock the file.
       bool lock (bool const shared = false, bool const wait = true, off_t const start = 0, off_t const len = 0);
@@ -533,19 +536,19 @@ namespace DAC {
           // Function members.
           
           // Default constructor.
-          _FD (_FDType const fd = -1);
+          _FD (FDType const fd = -1);
           
           // Destructor.
           ~_FD ();
           
           // Assignment operator.
-          _FD& operator = (_FDType const right);
+          _FD& operator = (FDType const right);
           
           // Casting operator, use _FD just like a normal fd.
-          operator _FDType () const;
+          operator FDType () const;
           
           // Set a new fd.
-          int set (_FDType const fd);
+          int set (FDType const fd);
           
         /*
          * Private members.
@@ -556,7 +559,7 @@ namespace DAC {
           // Data members.
           
           // Guess.
-          _FDType _fd;
+          FDType _fd;
           
           /*******************************************************************/
           // Function members.
@@ -623,11 +626,18 @@ namespace DAC {
       /***********************************************************************/
       // Static members.
       
+      // stat() a file.
+      static struct stat* s_stat     (std::string const& filename, struct stat* const buf);
+      static struct stat* s_try_stat (std::string const& filename, struct stat* const buf);
+      
       // Handle and throw a system call error.
       static void s_throwSysCallError (int const errnum, std::string const& syscall, std::string const& filename);
       
       // Compress redundant directory separators.
       static void s_compress_dirSep (std::string& path);
+      
+      // Convert from stat() file type to POSIXFile::FileType.
+      static FileType s_convert_FileType (mode_t const type);
     
   };
   
@@ -644,6 +654,16 @@ namespace DAC {
   inline POSIXFile::POSIXFile () { clear(); }
   
   /*
+   * Constructor names the file.
+   */
+  inline POSIXFile::POSIXFile (std::string const& filename) { clear(); _filename = filename; }
+  
+  /*
+   * Constructor with a file descriptor.
+   */
+  inline POSIXFile::POSIXFile (FDType const fd) { clear(); _fd = fd; }
+  
+  /*
    * Copy constructor.
    */
   inline POSIXFile::POSIXFile (POSIXFile const& source) { copy(source); }
@@ -651,19 +671,8 @@ namespace DAC {
   /*
    * Assignment operator.
    */
-  inline POSIXFile& POSIXFile::operator = (POSIXFile const& right) { copy(right); return *this; }
-  
-  /*
-   * Set / get the filename.
-   */
-  inline POSIXFile& POSIXFile::Filename (std::string const& filename) {
-    if (filename != _filename) {
-      clear();
-      _filename = filename;
-    }
-    return *this;
-  }
-  inline std::string POSIXFile::Filename () const { return _filename; }
+  inline POSIXFile& POSIXFile::operator = (POSIXFile const& right) { copy(right)         ; return *this; }
+  inline POSIXFile& POSIXFile::operator = (FDType    const  right) { clear(); _fd = right; return *this; }
   
   /*
    * Set / get the record separator.
@@ -786,18 +795,26 @@ namespace DAC {
   /*
    * Get the file type.
    */
-  inline POSIXFile::FileType POSIXFile::Type () const {
-    mode_t type(mode() & S_IFMT);
-    switch (type) {
-      case S_IFSOCK: return FT_SOCKET   ;
-      case S_IFLNK : return FT_SYMLINK  ;
-      case S_IFREG : return FT_FILE     ;
-      case S_IFBLK : return FT_BLOCKDEV ;
-      case S_IFDIR : return FT_DIRECTORY;
-      case S_IFCHR : return FT_CHARDEV  ;
-      case S_IFIFO : return FT_FIFO     ;
-      default      : throw Errors::UnknownType().Type(type).Filename(_filename);
-    };
+  inline POSIXFile::FileType POSIXFile::Type () const { return s_convert_FileType(mode() & S_IFMT); }
+  
+  /*
+   * Open a given file.
+   */
+  inline void POSIXFile::open (std::string const& filename) { _filename = filename; open(); }
+  
+  /*
+   * Check if the file has been opened.
+   */
+  inline bool POSIXFile::is_open () const { return _fd == -1; }
+  
+  /*
+   * Seek to a particular location.
+   */
+  inline void POSIXFile::seek (off_t const offset, SeekMode const whence) {
+    if (!is_open()) {
+      open();
+    }
+    _seek(offset, whence);
   }
   
   /*
@@ -815,11 +832,6 @@ namespace DAC {
    */
   inline bool POSIXFile::eof      () const { return _eof             ; }
   inline bool POSIXFile::eof_line () const { return _eof && _eof_line; }
-  
-  /*
-   * Get the file descriptor.
-   */
-  inline FDType POSIXFile::fd () const { return _fd; }
   
   /*
    * File info.
@@ -889,7 +901,6 @@ namespace DAC {
     return !stat(_filename.c_str(), &_stat) && (_cache_valid = true);
   }
   inline bool POSIXFile::is_zero () const { return is_exist() && size() == 0; }
-  inline bool POSIXFile::is_open () const { return _fd != -1;                 }
   
   /*
    * stat() info.
@@ -909,20 +920,147 @@ namespace DAC {
   inline time_t    POSIXFile::ctime     () const { _check_cache(); return _stat.st_ctime  ; }
   
   /*
-   * Delete the file.
-   */
-  inline void POSIXFile::rm  () { unlink(); }
-  inline void POSIXFile::del () { unlink(); }
-  
-  /*
    * Update cache if necessary.
    */
   inline void POSIXFile::_check_cache () const { if (!_cache_valid) { _update_cache(); } }
   
+  /***************************************************************************/
+  // Static function members.
+  
+  /*
+   * Set properties.
+   */
+  inline void POSIXFile::SetUID    (std::string const& filename, bool   const setuid   ) { if (setuid   ) { Mode(filename, Mode(filename) | S_ISUID); } else { Mode(filename, Mode(filename) & ~S_ISUID); } }
+  inline void POSIXFile::SetGID    (std::string const& filename, bool   const setgid   ) { if (setgid   ) { Mode(filename, Mode(filename) | S_ISGID); } else { Mode(filename, Mode(filename) & ~S_ISGID); } }
+  inline void POSIXFile::Sticky    (std::string const& filename, bool   const sticky   ) { if (sticky   ) { Mode(filename, Mode(filename) | S_ISVTX); } else { Mode(filename, Mode(filename) & ~S_ISVTX); } }
+  inline void POSIXFile::U_Read    (std::string const& filename, bool   const u_read   ) { if (u_read   ) { Mode(filename, Mode(filename) | S_IRUSR); } else { Mode(filename, Mode(filename) & ~S_IRUSR); } }
+  inline void POSIXFile::U_Write   (std::string const& filename, bool   const u_write  ) { if (u_write  ) { Mode(filename, Mode(filename) | S_IWUSR); } else { Mode(filename, Mode(filename) & ~S_IWUSR); } }
+  inline void POSIXFile::U_Execute (std::string const& filename, bool   const u_execute) { if (u_execute) { Mode(filename, Mode(filename) | S_IXUSR); } else { Mode(filename, Mode(filename) & ~S_IXUSR); } }
+  inline void POSIXFile::G_Read    (std::string const& filename, bool   const g_read   ) { if (g_read   ) { Mode(filename, Mode(filename) | S_IRGRP); } else { Mode(filename, Mode(filename) & ~S_IRGRP); } }
+  inline void POSIXFile::G_Write   (std::string const& filename, bool   const g_write  ) { if (g_write  ) { Mode(filename, Mode(filename) | S_IWGRP); } else { Mode(filename, Mode(filename) & ~S_IWGRP); } }
+  inline void POSIXFile::G_Execute (std::string const& filename, bool   const g_execute) { if (g_execute) { Mode(filename, Mode(filename) | S_IXGRP); } else { Mode(filename, Mode(filename) & ~S_IXGRP); } }
+  inline void POSIXFile::O_Read    (std::string const& filename, bool   const o_read   ) { if (o_read   ) { Mode(filename, Mode(filename) | S_IROTH); } else { Mode(filename, Mode(filename) & ~S_IROTH); } }
+  inline void POSIXFile::O_Write   (std::string const& filename, bool   const o_write  ) { if (o_write  ) { Mode(filename, Mode(filename) | S_IWOTH); } else { Mode(filename, Mode(filename) & ~S_IWOTH); } }
+  inline void POSIXFile::O_Execute (std::string const& filename, bool   const o_execute) { if (o_execute) { Mode(filename, Mode(filename) | S_IXOTH); } else { Mode(filename, Mode(filename) & ~S_IXOTH); } }
+  inline void POSIXFile::A_Read    (std::string const& filename, bool   const a_read   ) {
+    if (a_read) {
+      Mode(filename, Mode(filename) | S_IRUSR | S_IRGRP | S_IROTH);
+    } else {
+      Mode(filename, Mode(filename) & ~(S_IRUSR | S_IRGRP | S_IROTH));
+    }
+  }
+  inline void POSIXFile::A_Write   (std::string const& filename, bool   const a_write  ) {
+    if (a_write) {
+      Mode(filename, Mode(filename) | S_IWUSR | S_IWGRP | S_IWOTH);
+    } else {
+      Mode(filename, Mode(filename) & ~(S_IWUSR | S_IWGRP | S_IWOTH));
+    }
+  }
+  inline void POSIXFile::A_Execute (std::string const& filename, bool   const a_execute) {
+    if (a_execute) {
+      Mode(filename, Mode(filename) | S_IXUSR | S_IXGRP | S_IXOTH);
+    } else {
+      Mode(filename, Mode(filename) & ~(S_IXUSR | S_IXGRP | S_IXOTH));
+    }
+  }
+  inline void POSIXFile::Mode      (std::string const& filename, mode_t const new_mode ) { chmod(filename, new_mode);                   }
+  inline void POSIXFile::UID       (std::string const& filename, uid_t  const new_uid  ) { chown(filename, new_uid     , GID_NOCHANGE); }
+  inline void POSIXFile::GID       (std::string const& filename, gid_t  const new_gid  ) { chown(filename, UID_NOCHANGE, new_gid     ); }
+  
+  /*
+   * Get properties.
+   */
+  inline bool   POSIXFile::SetUID    (std::string const& filename) { return Mode(filename) & S_ISUID; }
+  inline bool   POSIXFile::SetGID    (std::string const& filename) { return Mode(filename) & S_ISGID; }
+  inline bool   POSIXFile::Sticky    (std::string const& filename) { return Mode(filename) & S_ISVTX; }
+  inline bool   POSIXFile::U_Read    (std::string const& filename) { return Mode(filename) & S_IRUSR; }
+  inline bool   POSIXFile::U_Write   (std::string const& filename) { return Mode(filename) & S_IWUSR; }
+  inline bool   POSIXFile::U_Execute (std::string const& filename) { return Mode(filename) & S_IXUSR; }
+  inline bool   POSIXFile::G_Read    (std::string const& filename) { return Mode(filename) & S_IRGRP; }
+  inline bool   POSIXFile::G_Write   (std::string const& filename) { return Mode(filename) & S_IWGRP; }
+  inline bool   POSIXFile::G_Execute (std::string const& filename) { return Mode(filename) & S_IXGRP; }
+  inline bool   POSIXFile::O_Read    (std::string const& filename) { return Mode(filename) & S_IROTH; }
+  inline bool   POSIXFile::O_Write   (std::string const& filename) { return Mode(filename) & S_IWOTH; }
+  inline bool   POSIXFile::O_Execute (std::string const& filename) { return Mode(filename) & S_IXOTH; }
+  inline bool   POSIXFile::A_Read    (std::string const& filename) { mode_t tmp = Mode(filename); return tmp & S_IRUSR && tmp & S_IRGRP && tmp & S_IROTH; }
+  inline bool   POSIXFile::A_Write   (std::string const& filename) { mode_t tmp = Mode(filename); return tmp & S_IWUSR && tmp & S_IWGRP && tmp & S_IWOTH; }
+  inline bool   POSIXFile::A_Execute (std::string const& filename) { mode_t tmp = Mode(filename); return tmp & S_IXUSR && tmp & S_IXGRP && tmp & S_IXOTH; }
+  inline mode_t POSIXFile::Mode      (std::string const& filename) { return mode(filename) & _PERM_MASK; }
+  inline uid_t  POSIXFile::UID       (std::string const& filename) { return uid(filename); }
+  inline gid_t  POSIXFile::GID       (std::string const& filename) { return gid(filename); }
+  inline POSIXFile::FileType POSIXFile::Type (std::string const& filename) { return s_convert_FileType(mode(filename) & S_IFMT); }
+  
+  /*
+   * Rename/move the file.
+   */
+  inline void POSIXFile::mv (std::string const& src, std::string const& dest) { rename(src, dest); }
+  
+  /*
+   * Delete the file.
+   */
+  inline void POSIXFile::rm  (std::string const& filename) { unlink(filename); }
+  inline void POSIXFile::del (std::string const& filename) { unlink(filename); }
+  
+  /*
+   * File info.
+   */
+  inline bool POSIXFile::is_blockDev        (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFBLK ) == S_IFBLK ; }
+  inline bool POSIXFile::is_charDev         (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFCHR ) == S_IFCHR ; }
+  inline bool POSIXFile::is_dir             (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFDIR ) == S_IFDIR ; }
+  inline bool POSIXFile::is_directory       (std::string const& filename) { return is_dir();                                           }
+  inline bool POSIXFile::is_executable      (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFREG ) == S_IFREG ; }
+  inline bool POSIXFile::is_executable_real (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFIFO ) == S_IFIFO ; }
+  inline bool POSIXFile::is_exist           (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFSOCK) == S_IFSOCK; }
+  inline bool POSIXFile::is_file            (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFLNK ) == S_IFLNK ; }
+  inline bool POSIXFile::is_groupOwned      (std::string const& filename) {}
+  inline bool POSIXFile::is_userOwned       (std::string const& filename) {}
+  inline bool POSIXFile::is_pipe            (std::string const& filename) {}
+  inline bool POSIXFile::is_readable        (std::string const& filename) {}
+  inline bool POSIXFile::is_readable_real   (std::string const& filename) {}
+  inline bool POSIXFile::is_setGID          (std::string const& filename) {}
+  inline bool POSIXFile::is_setUID          (std::string const& filename) {}
+  inline bool POSIXFile::is_socket          (std::string const& filename) {}
+  inline bool POSIXFile::is_sticky          (std::string const& filename) {}
+  inline bool POSIXFile::is_symlink         (std::string const& filename) {}
+  inline bool POSIXFile::is_writable        (std::string const& filename) {}
+  inline bool POSIXFile::is_writable_real   (std::string const& filename) {}
+  inline bool POSIXFile::is_zero            (std::string const& filename) {}
+  
+  /*
+   * stat() info.
+   */
+  inline mode_t POSIXFile::mode (std::string const& filename) {
+    struct stat retval;
+    return s_stat(filename, &retval).st_mode;
+  }
+  
+  /*
+   * Convert from stat() file type to POSIXFile::FileType.
+   */
+  inline POSIXFile::FileType POSIXFile::s_convert_FileType (mode_t const type) {
+    switch (type) {
+      case S_IFSOCK: return FT_SOCKET   ;
+      case S_IFLNK : return FT_SYMLINK  ;
+      case S_IFREG : return FT_FILE     ;
+      case S_IFBLK : return FT_BLOCKDEV ;
+      case S_IFDIR : return FT_DIRECTORY;
+      case S_IFCHR : return FT_CHARDEV  ;
+      case S_IFIFO : return FT_FIFO     ;
+      default      : throw Errors::UnknownType().Type(type);
+    };
+  }
+  
+  /***************************************************************************
+   * _FD
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Function members.
+  
   /*
    * _FD constructor.
    */
-  inline POSIXFile::_FD::_FD (_FDType const fd) : _fd(fd) {}
+  inline POSIXFile::_FD::_FD (FDType const fd) : _fd(fd) {}
   
   /*
    * _FD destructor.
@@ -932,17 +1070,17 @@ namespace DAC {
   /*
    * _FD assignment operator.
    */
-  inline POSIXFile::_FD& POSIXFile::_FD::operator = (_FDType const right) { set(right); return *this; }
+  inline POSIXFile::_FD& POSIXFile::_FD::operator = (FDType const right) { set(right); return *this; }
   
   /*
    * _FD cast operator.
    */
-  inline POSIXFile::_FD::operator _FDType () const { return _fd; }
+  inline POSIXFile::_FD::operator FDType () const { return _fd; }
   
   /*
    * Set a new fd.
    */
-  inline int POSIXFile::_FD::set (_FDType const fd) {
+  inline int POSIXFile::_FD::set (FDType const fd) {
     int retval = 0;
     if (fd != _fd) {
       if (_fd != -1) {
