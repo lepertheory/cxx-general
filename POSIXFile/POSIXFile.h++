@@ -459,7 +459,7 @@ namespace DAC {
       static std::string expand_path (std::string const& filename);
       
       // Read the target of a symbolic link.
-      static std::string readlink (std::string const filename);
+      static std::string readlink (std::string const& filename);
       
       // File info.
       static bool is_blockDev        (std::string const& filename);
@@ -498,6 +498,9 @@ namespace DAC {
       static time_t    atime     (std::string const& filename);
       static time_t    mtime     (std::string const& filename);
       static time_t    ctime     (std::string const& filename);
+      
+      // stat() a file.
+      static struct stat* stat (std::string const& filename, struct stat* const buf);
       
       // Get the current working directory.
       static std::string getCWD ();
@@ -626,12 +629,8 @@ namespace DAC {
       /***********************************************************************/
       // Static members.
       
-      // stat() a file.
-      static struct stat* s_stat     (std::string const& filename, struct stat* const buf);
-      static struct stat* s_try_stat (std::string const& filename, struct stat* const buf);
-      
       // Handle and throw a system call error.
-      static void s_throwSysCallError (int const errnum, std::string const& syscall, std::string const& filename);
+      static void s_throwSysCallError (int const errnum, std::string const& syscall);
       
       // Compress redundant directory separators.
       static void s_compress_dirSep (std::string& path);
@@ -673,6 +672,16 @@ namespace DAC {
    */
   inline POSIXFile& POSIXFile::operator = (POSIXFile const& right) { copy(right)         ; return *this; }
   inline POSIXFile& POSIXFile::operator = (FDType    const  right) { clear(); _fd = right; return *this; }
+  
+  /*
+   * Get / set the file descriptor.
+   */
+  inline POSIXFile& POSIXFile::FD (FDType const fd) {
+    clear();
+    _fd = fd;
+    return *this;
+  }
+  inline POSIXFile::FDType POSIXFile::FD () const { return _fd; }
   
   /*
    * Set / get the record separator.
@@ -1004,35 +1013,118 @@ namespace DAC {
   /*
    * File info.
    */
-  inline bool POSIXFile::is_blockDev        (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFBLK ) == S_IFBLK ; }
-  inline bool POSIXFile::is_charDev         (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFCHR ) == S_IFCHR ; }
-  inline bool POSIXFile::is_dir             (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFDIR ) == S_IFDIR ; }
-  inline bool POSIXFile::is_directory       (std::string const& filename) { return is_dir();                                           }
-  inline bool POSIXFile::is_executable      (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFREG ) == S_IFREG ; }
-  inline bool POSIXFile::is_executable_real (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFIFO ) == S_IFIFO ; }
-  inline bool POSIXFile::is_exist           (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFSOCK) == S_IFSOCK; }
-  inline bool POSIXFile::is_file            (std::string const& filename) { return ((s_try_mode(filename) & S_IFMT) & S_IFLNK ) == S_IFLNK ; }
-  inline bool POSIXFile::is_groupOwned      (std::string const& filename) {}
-  inline bool POSIXFile::is_userOwned       (std::string const& filename) {}
-  inline bool POSIXFile::is_pipe            (std::string const& filename) {}
-  inline bool POSIXFile::is_readable        (std::string const& filename) {}
-  inline bool POSIXFile::is_readable_real   (std::string const& filename) {}
-  inline bool POSIXFile::is_setGID          (std::string const& filename) {}
-  inline bool POSIXFile::is_setUID          (std::string const& filename) {}
-  inline bool POSIXFile::is_socket          (std::string const& filename) {}
-  inline bool POSIXFile::is_sticky          (std::string const& filename) {}
-  inline bool POSIXFile::is_symlink         (std::string const& filename) {}
-  inline bool POSIXFile::is_writable        (std::string const& filename) {}
-  inline bool POSIXFile::is_writable_real   (std::string const& filename) {}
-  inline bool POSIXFile::is_zero            (std::string const& filename) {}
+  inline bool POSIXFile::is_blockDev        (std::string const& filename) { try { return ((mode(filename) & S_IFMT) & S_IFBLK ) == S_IFBLK ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_charDev         (std::string const& filename) { try { return ((mode(filename) & S_IFMT) & S_IFCHR ) == S_IFCHR ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_dir             (std::string const& filename) { try { return ((mode(filename) & S_IFMT) & S_IFDIR ) == S_IFDIR ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_directory       (std::string const& filename) { return is_dir(filename);                                                                                          }
+  inline bool POSIXFile::is_file            (std::string const& filename) { try { return ((mode(filename) & S_IFMT) & S_IFREG ) == S_IFREG ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_pipe            (std::string const& filename) { try { return ((mode(filename) & S_IFMT) & S_IFIFO ) == S_IFIFO ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_socket          (std::string const& filename) { try { return ((mode(filename) & S_IFMT) & S_IFSOCK) == S_IFSOCK; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_symlink         (std::string const& filename) { try { return ((mode(filename) & S_IFMT) & S_IFLNK ) == S_IFLNK ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_groupOwned      (std::string const& filename) { try { return gid(filename) == getegid()                        ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_userOwned       (std::string const& filename) { try { return uid(filename) == geteuid()                        ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_setGID          (std::string const& filename) { try { return SetGID(filename)                                  ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_setUID          (std::string const& filename) { try { return SetUID(filename)                                  ; } catch (Errors::SysCallError) { return false; } }
+  inline bool POSIXFile::is_sticky          (std::string const& filename) { try { return Sticky(filename)                                  ; } catch (Errors::SysCallError) { return false; } }
+  
+  inline bool POSIXFile::is_executable (std::string const& filename) {
+    try {
+      return (geteuid() == 0) ? (
+        U_Execute(filename) || G_Execute(filename) || O_Execute(filename)
+      ) : (
+        (is_userOwned (filename) && U_Execute(filename)) ||
+        (is_groupOwned(filename) && G_Execute(filename)) ||
+                                    O_Execute(filename)
+      );
+    } catch (Errors::SysCallError) {
+      return false;
+    }
+  }
+  inline bool POSIXFile::is_executable_real (std::string const& filename) {
+    try {
+      return (getuid() == 0) ? (
+        U_Execute(filename) || G_Execute(filename) || O_Execute(filename)
+      ) : (
+        (uid(filename) == getuid() && U_Execute(filename)) ||
+        (gid(filename) == getgid() && G_Execute(filename)) ||
+                                      O_Execute(filename)
+      );
+    } catch (Errors::SysCallError) {
+      return false;
+    }
+  }
+  inline bool POSIXFile::is_readable (std::string const& filename) {
+    try {
+      return (geteuid() == 0) ? (
+        is_exist(filename)
+      ) : (
+        (uid(filename) == geteuid() && U_Read(filename)) ||
+        (gid(filename) == getegid() && G_Read(filename)) ||
+                                       O_Read(filename)
+      );
+    } catch (Errors::SysCallError) {
+      return false;
+    }
+  }
+  inline bool POSIXFile::is_readable_real (std::string const& filename) {
+    try {
+      return (getuid() == 0) ? (
+        is_exist(filename)
+      ) : (
+        (uid(filename) == getuid() && U_Read(filename)) ||
+        (gid(filename) == getgid() && G_Read(filename)) ||
+                                      O_Read(filename)
+      );
+    } catch (Errors::SysCallError) {
+      return false;
+    }
+  }
+  inline bool POSIXFile::is_writable (std::string const& filename) {
+    try {
+      return (geteuid() == 0) ? (
+        is_exist(filename)
+      ) : (
+        (uid(filename) == geteuid() && U_Write(filename)) ||
+        (gid(filename) == getegid() && G_Write(filename)) ||
+                                       O_Write(filename)
+      );
+    } catch (Errors::SysCallError) {
+      return false;
+    }
+  }
+  inline bool POSIXFile::is_writable_real (std::string const& filename) {
+    try {
+      return (getuid() == 0) ? (
+        is_exist(filename)
+      ) : (
+        (uid(filename) == getuid() && U_Write(filename)) ||
+        (gid(filename) == getgid() && G_Write(filename)) ||
+                                      O_Write(filename)
+      );
+    } catch (Errors::SysCallError) {
+      return false;
+    }
+  }
+  
+  inline bool POSIXFile::is_exist (std::string const& filename) { struct stat tmp; try { stat(filename, &tmp); } catch (Errors::SysCallError) { return false; } return true; }
+  inline bool POSIXFile::is_zero  (std::string const& filename) { try { return size(filename) == 0; } catch (Errors::SysCallError) { return false; } }
   
   /*
    * stat() info.
    */
-  inline mode_t POSIXFile::mode (std::string const& filename) {
-    struct stat retval;
-    return s_stat(filename, &retval).st_mode;
-  }
+  inline dev_t     POSIXFile::device    (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_dev    ; }
+  inline ino_t     POSIXFile::inode     (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_ino    ; }
+  inline mode_t    POSIXFile::mode      (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_mode   ; }
+  inline nlink_t   POSIXFile::links     (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_nlink  ; }
+  inline uid_t     POSIXFile::uid       (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_uid    ; }
+  inline gid_t     POSIXFile::gid       (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_gid    ; }
+  inline dev_t     POSIXFile::devid     (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_rdev   ; }
+  inline off_t     POSIXFile::size      (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_size   ; }
+  inline blksize_t POSIXFile::blockSize (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_blksize; }
+  inline blkcnt_t  POSIXFile::blocks    (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_blocks ; }
+  inline time_t    POSIXFile::atime     (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_atime  ; }
+  inline time_t    POSIXFile::mtime     (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_mtime  ; }
+  inline time_t    POSIXFile::ctime     (std::string const& filename) { struct stat retval; return stat(filename, &retval)->st_ctime  ; }
   
   /*
    * Convert from stat() file type to POSIXFile::FileType.

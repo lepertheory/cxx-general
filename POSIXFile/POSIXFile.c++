@@ -444,7 +444,7 @@ namespace DAC {
     
     // Write the data.
     if ((retval = ::write(_fd, data, bytes)) == -1) {
-      s_throwSysCallError(errno, "write", _filename);
+      s_throwSysCallError(errno, "write");
     }
     
     // Update the current position and invalidate cache for file size.
@@ -513,7 +513,7 @@ namespace DAC {
   void POSIXFile::chmod (string const& filename, mode_t const new_mode) {
     
     // Set the mode.
-    if (chmod(filename.c_str(), new_mode & _PERM_MASK)) {
+    if (::chmod(filename.c_str(), new_mode & _PERM_MASK)) {
       s_throwSysCallError(errno, "chmod");
     }
     
@@ -530,7 +530,7 @@ namespace DAC {
     }
     
     // Change.
-    if (chown(filename.c_str(), owner, group)) {
+    if (::chown(filename.c_str(), owner, group)) {
       s_throwSysCallError(errno, "chown");
     }
     
@@ -544,7 +544,7 @@ namespace DAC {
     // Truncate. Temporary length because the truncate prototype dose not name
     // length as const.
     off_t tmplen(length);
-    if (truncate(filename.c_str(), tmplen)) {
+    if (::truncate(filename.c_str(), tmplen)) {
       s_throwSysCallError(errno, "truncate");
     }
     
@@ -629,7 +629,7 @@ namespace DAC {
    * Convert to an absolute path. Home directory interpretation is not
    * supported.
    */
-  string POSIXFile::expand_path (string const& filename) const {
+  string POSIXFile::expand_path (string const& filename) {
     
     // Constants.
     static string const CUR_DIR (toStringChr(DIR_SEP) + "." );
@@ -736,6 +736,21 @@ namespace DAC {
   }
   
   /*
+   * stat().
+   */
+  struct stat* POSIXFile::stat (string const& filename, struct stat* const buf) {
+    
+    // Call stat().
+    if (::stat(filename.c_str(), buf)) {
+      s_throwSysCallError(errno, "stat");
+    }
+    
+    // Done, return.
+    return buf;
+    
+  }
+  
+  /*
    * Get the current working directory.
    */
   string POSIXFile::getCWD () {
@@ -773,7 +788,7 @@ namespace DAC {
     
     // Call fstat().
     if (fstat(_fd, &_stat)) {
-      s_throwSysCallError(errno, "stat", _filename);
+      s_throwSysCallError(errno, "stat");
     }
     
     // Cache has been successfully updated.
@@ -796,7 +811,7 @@ namespace DAC {
     
     // Read the file.
     if ((retval = ::read(_fd, buf, bufsize)) == -1) {
-      s_throwSysCallError(errno, "read", _filename);
+      s_throwSysCallError(errno, "read");
     }
     
     // Update the current position.
@@ -817,7 +832,7 @@ namespace DAC {
     
     // Do the seek.
     if (lseek(_fd, offset, whence) == -1) {
-      s_throwSysCallError(errno, "lseek", _filename);
+      s_throwSysCallError(errno, "lseek");
     }
     
     // Update the current position.
@@ -836,94 +851,36 @@ namespace DAC {
   // Static function members.
   
   /*
-   * Change file owner.
-   */
-  void POSIXFile::chmod (string const& filename, mode_t const new_mode) {
-    
-    // Update the mode of the file.
-    if (chmod(filename.c_str(), new_mode & _PERM_MASK)) {
-      s_throwSysCallError(errno, "chmod");
-    }
-    
-  }
-  
-  /*
-   * Change the file owner.
-   */
-  void POSIXFile::chown (string const& filename, uid_t const owner, gid_t const group) {
-    
-    // Don't work if we don't have to.
-    if (owner == UID_NOCHANGE && group == GID_NOCHANGE) {
-      return;
-    }
-    
-    // Call chown().
-    if (chown(filename.c_str(), owner, group)) {
-      s_throwSysCallError(errno, "chown");
-    }
-    
-  }
-  
-  /*
-   * stat().
-   */
-  struct stat* POSIXFile::s_stat (string const& filename, struct stat* const buf) {
-    
-    // Call stat().
-    if (stat(filename.c_str(), buf)) {
-      s_throwSysCallError(errno, "stat");
-    }
-    
-    // Done, return.
-    return buf;
-    
-  }
-  struct stat* POSIXFile::s_try_stat (string const& filename, struct stat* const buf) {
-    
-    // Init.
-    struct stat* retval = buf;
-    
-    // Call stat(). Will not follow symlinks.
-    if (stat(filename.c_str(), retval)) {
-      retval = 0;
-    }
-    
-    // Done, return.
-    return retval;
-    
-  }
-  
-  /*
    * Handle and throw a system call error.
    */
-  void POSIXFile::s_throwSysCallError (int const errnum, std::string const& syscall, std::string const& filename) {
+  void POSIXFile::s_throwSysCallError (int const errnum, std::string const& syscall) {
     
     // Throw the appropriate error.
     switch (errnum) {
-      case EACCES      : throw dynamic_cast<Errors::AccessDenied &>(Errors::AccessDenied ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EAGAIN      : throw dynamic_cast<Errors::TryAgain     &>(Errors::TryAgain     ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EBADF       : throw dynamic_cast<Errors::BadDescriptor&>(Errors::BadDescriptor().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EDEADLK     : throw dynamic_cast<Errors::Deadlock     &>(Errors::Deadlock     ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EEXIST      : throw dynamic_cast<Errors::FileExists   &>(Errors::FileExists   ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EINTR       : throw dynamic_cast<Errors::Interrupted  &>(Errors::Interrupted  ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EINVAL      : throw dynamic_cast<Errors::Invalid      &>(Errors::Invalid      ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EIO         : throw dynamic_cast<Errors::IOError      &>(Errors::IOError      ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EISDIR      : throw dynamic_cast<Errors::IsDirectory  &>(Errors::IsDirectory  ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ELOOP       : throw dynamic_cast<Errors::SymlinkLoop  &>(Errors::SymlinkLoop  ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EMFILE      : throw dynamic_cast<Errors::ProcMaxFiles &>(Errors::ProcMaxFiles ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ENAMETOOLONG: throw dynamic_cast<Errors::NameTooLong  &>(Errors::NameTooLong  ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ENFILE      : throw dynamic_cast<Errors::SysMaxFiles  &>(Errors::SysMaxFiles  ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ENOENT      : throw dynamic_cast<Errors::PathNonExist &>(Errors::PathNonExist ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ENOLCK      : throw dynamic_cast<Errors::LockTableFull&>(Errors::LockTableFull().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ENOMEM      : throw dynamic_cast<Errors::OutOfMemory  &>(Errors::OutOfMemory  ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ENOSPC      : throw dynamic_cast<Errors::NoSpace      &>(Errors::NoSpace      ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ENOTDIR     : throw dynamic_cast<Errors::NotDirectory &>(Errors::NotDirectory ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EOVERFLOW   : throw dynamic_cast<Errors::FileOverflow &>(Errors::FileOverflow ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EPERM       : throw dynamic_cast<Errors::NotPermitted &>(Errors::NotPermitted ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ESPIPE      : throw dynamic_cast<Errors::CannotSeek   &>(Errors::CannotSeek   ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case EROFS       : throw dynamic_cast<Errors::ReadOnlyFS   &>(Errors::ReadOnlyFS   ().Errno(errnum).SysCall(syscall).Filename(filename));
-      case ETXTBSY     : throw dynamic_cast<Errors::FileBusy     &>(Errors::FileBusy     ().Errno(errnum).SysCall(syscall).Filename(filename));
-      default          : throw dynamic_cast<Errors::Unexpected   &>(Errors::Unexpected   ().Errno(errnum).SysCall(syscall).Filename(filename));
+      case EACCES      : throw dynamic_cast<Errors::AccessDenied &>(Errors::AccessDenied ().Errno(errnum).SysCall(syscall));
+      case EAGAIN      : throw dynamic_cast<Errors::TryAgain     &>(Errors::TryAgain     ().Errno(errnum).SysCall(syscall));
+      case EBADF       : throw dynamic_cast<Errors::BadDescriptor&>(Errors::BadDescriptor().Errno(errnum).SysCall(syscall));
+      case EDEADLK     : throw dynamic_cast<Errors::Deadlock     &>(Errors::Deadlock     ().Errno(errnum).SysCall(syscall));
+      case EEXIST      : throw dynamic_cast<Errors::FileExists   &>(Errors::FileExists   ().Errno(errnum).SysCall(syscall));
+      case EINTR       : throw dynamic_cast<Errors::Interrupted  &>(Errors::Interrupted  ().Errno(errnum).SysCall(syscall));
+      case EINVAL      : throw dynamic_cast<Errors::Invalid      &>(Errors::Invalid      ().Errno(errnum).SysCall(syscall));
+      case EIO         : throw dynamic_cast<Errors::IOError      &>(Errors::IOError      ().Errno(errnum).SysCall(syscall));
+      case EISDIR      : throw dynamic_cast<Errors::IsDirectory  &>(Errors::IsDirectory  ().Errno(errnum).SysCall(syscall));
+      case ELOOP       : throw dynamic_cast<Errors::SymlinkLoop  &>(Errors::SymlinkLoop  ().Errno(errnum).SysCall(syscall));
+      case EMFILE      : throw dynamic_cast<Errors::ProcMaxFiles &>(Errors::ProcMaxFiles ().Errno(errnum).SysCall(syscall));
+      case ENAMETOOLONG: throw dynamic_cast<Errors::NameTooLong  &>(Errors::NameTooLong  ().Errno(errnum).SysCall(syscall));
+      case ENFILE      : throw dynamic_cast<Errors::SysMaxFiles  &>(Errors::SysMaxFiles  ().Errno(errnum).SysCall(syscall));
+      case ENOENT      : throw dynamic_cast<Errors::PathNonExist &>(Errors::PathNonExist ().Errno(errnum).SysCall(syscall));
+      case ENOLCK      : throw dynamic_cast<Errors::LockTableFull&>(Errors::LockTableFull().Errno(errnum).SysCall(syscall));
+      case ENOMEM      : throw dynamic_cast<Errors::OutOfMemory  &>(Errors::OutOfMemory  ().Errno(errnum).SysCall(syscall));
+      case ENOSPC      : throw dynamic_cast<Errors::NoSpace      &>(Errors::NoSpace      ().Errno(errnum).SysCall(syscall));
+      case ENOTDIR     : throw dynamic_cast<Errors::NotDirectory &>(Errors::NotDirectory ().Errno(errnum).SysCall(syscall));
+      case EOVERFLOW   : throw dynamic_cast<Errors::FileOverflow &>(Errors::FileOverflow ().Errno(errnum).SysCall(syscall));
+      case EPERM       : throw dynamic_cast<Errors::NotPermitted &>(Errors::NotPermitted ().Errno(errnum).SysCall(syscall));
+      case ESPIPE      : throw dynamic_cast<Errors::CannotSeek   &>(Errors::CannotSeek   ().Errno(errnum).SysCall(syscall));
+      case EROFS       : throw dynamic_cast<Errors::ReadOnlyFS   &>(Errors::ReadOnlyFS   ().Errno(errnum).SysCall(syscall));
+      case ETXTBSY     : throw dynamic_cast<Errors::FileBusy     &>(Errors::FileBusy     ().Errno(errnum).SysCall(syscall));
+      default          : throw dynamic_cast<Errors::Unexpected   &>(Errors::Unexpected   ().Errno(errnum).SysCall(syscall));
     };
     
   }
