@@ -186,13 +186,13 @@ namespace DAC {
     POSIXFile file(_data->filename);
     
     // Make sure we will be able to read the file.
-    if (!file.is_exist()) {
+    if (!POSIXFile::is_exist(_data->filename)) {
       throw Errors::FileNonExist().Filename(_data->filename);
     }
-    if (!file.is_file()) {
+    if (!POSIXFile::is_file(_data->filename)) {
       throw Errors::FileNonFile().Filename(_data->filename);
     }
-    if (!file.is_readable()) {
+    if (!POSIXFile::is_readable(_data->filename)) {
       throw Errors::FileNonReadable().Filename(_data->filename);
     }
     
