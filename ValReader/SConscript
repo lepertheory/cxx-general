@@ -1,0 +1,31 @@
+# Imports from caller.
+Import('*')
+
+# Include the parent directory.
+env.Append(CPPPATH = ['..'])
+
+# Include dependency directories.
+for incdir in cArbInt['include'] :
+  env.Append(CPPPATH = ['#' + incdir])
+for incdir in cArb['include'] :
+  env.Append(CPPPATH = ['#' + incdir])
+
+# Object files.
+o_ValReader = env.Object      (target = 'ValReader', source = ['ValReader.c++'])
+s_ValReader = env.SharedObject(target = 'ValReader', source = ['ValReader.c++'])
+
+# Create a dictionary containing all necessary information and objects to
+# compile with ArbInt.
+cValReader = { 'obj'        : cArbInt['obj']     + cArb['obj']     + [o_ValReader]              ,
+               'sobj'       : cArbInt['sobj']    + cArb['sobj']    + [s_ValReader]              ,
+               'include'    : cArbInt['include'] + cArb['include'] + ['ValReader']              ,
+               'headers'    : cArbInt['headers'] + cArb['headers'] + ['ValReader/ValReader.h++'],
+               'defines'    : cArbInt['defines'] + cArb['defines']                              ,
+               'own_obj'    : [o_ValReader]                                                     ,
+               'own_sobj'   : [s_ValReader]                                                     ,
+               'own_include': 'ValReader'                                                       ,
+               'own_headers': ['ValReader/ValReader.h++']                                       ,
+               'own_defines': []                                                                 }
+
+# Return.
+Return('cValReader')

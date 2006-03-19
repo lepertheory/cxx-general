@@ -142,17 +142,18 @@ h_CaseConvert      = env.File('CaseConvert.h++'     ) ; headers += [h_CaseConver
 
 # Modules.
 modules = []
-cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'                ) ; env = tmpenv.Copy() ; modules.append(cArbInt   )
-cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt'        ) ; env = tmpenv.Copy() ; modules.append(cArb      )
-cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'           ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
-cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'                ) ; env = tmpenv.Copy() ; modules.append(cPOSIXFile)
-cwrapText  = SConscript(['wrapText/SConscript' ], exports = 'env'                ) ; env = tmpenv.Copy() ; modules.append(cwrapText )
-cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env cwrapText cArb' ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
-cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cPOSIXFile'     ) ; env = tmpenv.Copy() ; modules.append(cINIFile  )
-cSyslog    = SConscript(['Syslog/SConscript'   ], exports = 'env'                ) ; env = tmpenv.Copy() ; modules.append(cSyslog   )
+cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'                           ) ; env = tmpenv.Copy() ; modules.append(cArbInt   )
+cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt'                   ) ; env = tmpenv.Copy() ; modules.append(cArb      )
+cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'                      ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
+cPOSIXFile = SConscript(['POSIXFile/SConscript'], exports = 'env'                           ) ; env = tmpenv.Copy() ; modules.append(cPOSIXFile)
+cwrapText  = SConscript(['wrapText/SConscript' ], exports = 'env'                           ) ; env = tmpenv.Copy() ; modules.append(cwrapText )
+cValReader = SConscript(['ValReader/SConscript'], exports = 'env cArbInt cArb'              ) ; env = tmpenv.Copy() ; modules.append(cValReader)
+cGetOpt    = SConscript(['GetOpt/SConscript'   ], exports = 'env cwrapText cArb cValReader' ) ; env = tmpenv.Copy() ; modules.append(cGetOpt   )
+cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cPOSIXFile cValReader'     ) ; env = tmpenv.Copy() ; modules.append(cINIFile  )
+cSyslog    = SConscript(['Syslog/SConscript'   ], exports = 'env'                           ) ; env = tmpenv.Copy() ; modules.append(cSyslog   )
 
 # Tests.
-SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile cGetOpt cINIFile cSyslog') ; env = tmpenv.Copy()
+SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile cGetOpt cINIFile cSyslog cValReader') ; env = tmpenv.Copy()
 
 # Shared library filenames.
 cxxgeneral_name   = env['LIBPREFIX'] + project_name + env['SHLIBSUFFIX']

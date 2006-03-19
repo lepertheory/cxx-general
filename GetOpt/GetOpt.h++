@@ -29,6 +29,7 @@
   #include <ArbInt.h++>
   #include <Arb.h++>
   #include <demangle.h++>
+  #include <ValReader.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -406,58 +407,6 @@ namespace DAC {
       };
       
       /***********************************************************************
-       * ArgReader
-       ***********************************************************************
-       * Reads an argument. Mostly used for operator access.
-       ***********************************************************************/
-      class ArgReader {
-        
-        /*
-         * Public members.
-         */
-        public:
-          
-          /*******************************************************************/
-          // Function members.
-          
-          // Constructor.
-          ArgReader (std::string const& arg = _BLANK);
-          
-          // Get value.
-          operator std::string () const;
-          
-          // Get value as string.
-          std::string to_string () const;
-          
-          // Get value as a bool.
-          bool to_boolean () const;
-          
-          // Get value as an integer type.
-          template <class T> T to_integer () const;
-          
-          // Get value as a floating-point type.
-          template <class T> T to_float () const;
-          
-        /*
-         * Private members.
-         */
-        private:
-          
-          /*******************************************************************/
-          // Constants.
-          
-          // Blank string, in case somebody wants it.
-          static std::string const _BLANK;
-          
-          /*******************************************************************/
-          // Data members.
-          
-          // The argument.
-          std::string const& _arg;
-        
-      };
-      
-      /***********************************************************************
        * ShortOptReader
        ***********************************************************************
        * Reads a short option. Mostly used for operator access.
@@ -479,7 +428,7 @@ namespace DAC {
           operator bool () const;
           
           // Element access operator, read option argument.
-          ArgReader operator [] (size_t const argnum) const;
+          ValReader operator [] (size_t const argnum) const;
           
           // Return argument directly, or blank string if not set.
           std::string to_string () const;
@@ -528,7 +477,7 @@ namespace DAC {
           operator bool () const;
           
           // Element access operator, read option argument.
-          ArgReader operator [] (size_t const argnum) const;
+          ValReader operator [] (size_t const argnum) const;
           
           // Return argument directly, or blank string if not set.
           std::string to_string () const;
@@ -574,7 +523,7 @@ namespace DAC {
       GetOpt (Options const& options);
       
       // Element access operator, read command line argument.
-      ArgReader operator [] (size_t const element) const;
+      ValReader operator [] (size_t const element) const;
       
       // Element access operator, read option.
       ShortOptReader operator [] (char        const  sopt) const;
@@ -627,12 +576,12 @@ namespace DAC {
       size_t numArgs (std::string const& lopt) const;
       
       // Get arguments. First form is for non-option args.
-      ArgReader getArg (                                            ) const;
-      ArgReader getArg (                         size_t const argnum) const;
-      ArgReader getArg (char const sopt                             ) const;
-      ArgReader getArg (char const sopt        , size_t const argnum) const;
-      ArgReader getArg (std::string const& lopt                     ) const;
-      ArgReader getArg (std::string const& lopt, size_t const argnum) const;
+      ValReader getArg (                                            ) const;
+      ValReader getArg (                         size_t const argnum) const;
+      ValReader getArg (char const sopt                             ) const;
+      ValReader getArg (char const sopt        , size_t const argnum) const;
+      ValReader getArg (std::string const& lopt                     ) const;
+      ValReader getArg (std::string const& lopt, size_t const argnum) const;
       
       // Get command-line arguments in order.
       ArgListPT getOrdered () const;
@@ -875,7 +824,7 @@ namespace DAC {
   /*
    * Element access operator, read command line argument.
    */
-  inline GetOpt::ArgReader GetOpt::operator [] (size_t const element) const { return getArg(element); }
+  inline ValReader GetOpt::operator [] (size_t const element) const { return getArg(element); }
   
   /*
    * Element access operator, read option.
@@ -1012,52 +961,6 @@ namespace DAC {
   inline void GetOpt::_check_scan () const { if (_data->modified) { scan(); } }
   
   /***************************************************************************
-   * GetOpt::ArgReader
-   ***************************************************************************/
-  
-  /***************************************************************************/
-  // Function members.
-  
-  /*
-   * Constructor.
-   */
-  inline GetOpt::ArgReader::ArgReader (std::string const& arg) : _arg(arg) {}
-  
-  /*
-   * Get value.
-   */
-  inline GetOpt::ArgReader::operator std::string () const { return _arg; }
-  
-  /*
-   * Get value as string.
-   */
-  inline std::string GetOpt::ArgReader::to_string () const { return _arg; }
-  
-  /*
-   * Get value as an integer type.
-   */
-  template <class T> T GetOpt::ArgReader::to_integer () const {
-    T retval;
-    try {
-      retval = ArbInt(_arg);
-    } catch (ArbInt::Errors::Base& e) {
-      throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
-    }
-    return retval;
-  }
-  
-  // Get value as a floating-point type.
-  template <class T> T GetOpt::ArgReader::to_float () const {
-    T retval;
-    try {
-      retval = Arb(_arg);
-    } catch (Arb::Errors::Base& e) {
-      throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
-    }
-    return retval;
-  }
-  
-  /***************************************************************************
    * GetOpt::ShortOptReader
    ***************************************************************************/
   
@@ -1077,7 +980,7 @@ namespace DAC {
   /*
    * Element access operator, read option argument.
    */
-  inline GetOpt::ArgReader GetOpt::ShortOptReader::operator [] (size_t const argnum) const { 
+  inline ValReader GetOpt::ShortOptReader::operator [] (size_t const argnum) const { 
     if (argnum >= _opt.args.size()) {
       throw Errors::ArgOOBShort().ArgNum(argnum).Size(_opt.args.size()).Option(_opt.Short());
     }
@@ -1094,13 +997,13 @@ namespace DAC {
   }
   
   // Same, get value as bool. False if not set.
-  inline bool GetOpt::ShortOptReader::to_boolean () const { return ArgReader(to_string()).to_boolean(); }
+  inline bool GetOpt::ShortOptReader::to_boolean () const { return ValReader(to_string()).to_boolean(); }
   
   // Get value as integer type. 0 if not set.
-  template <class T> inline T GetOpt::ShortOptReader::to_integer () const { return ArgReader(to_string()).to_integer<T>(); }
+  template <class T> inline T GetOpt::ShortOptReader::to_integer () const { return ValReader(to_string()).to_integer<T>(); }
   
   // Get value as integer type. 0.0 if not set.
-  template <class T> inline T GetOpt::ShortOptReader::to_float () const { return ArgReader(to_string()).to_float<T>(); }
+  template <class T> inline T GetOpt::ShortOptReader::to_float () const { return ValReader(to_string()).to_float<T>(); }
   
   /***************************************************************************
    * GetOpt::LongOptReader
@@ -1122,7 +1025,7 @@ namespace DAC {
   /*
    * Element access operator, read option argument.
    */
-  inline GetOpt::ArgReader GetOpt::LongOptReader::operator [] (size_t const argnum) const {
+  inline ValReader GetOpt::LongOptReader::operator [] (size_t const argnum) const {
     if (argnum >= _opt.args.size()) {
       throw Errors::ArgOOBLong().ArgNum(argnum).Size(_opt.args.size()).Option(_opt.Long());
     }
@@ -1139,13 +1042,13 @@ namespace DAC {
   }
   
   // Same, get value as bool. False if not set.
-  inline bool GetOpt::LongOptReader::to_boolean () const { return ArgReader(to_string()).to_boolean(); }
+  inline bool GetOpt::LongOptReader::to_boolean () const { return ValReader(to_string()).to_boolean(); }
   
   // Get value as integer type. 0 if not set.
-  template <class T> inline T GetOpt::LongOptReader::to_integer () const { return ArgReader(to_string()).to_integer<T>(); }
+  template <class T> inline T GetOpt::LongOptReader::to_integer () const { return ValReader(to_string()).to_integer<T>(); }
   
   // Get value as integer type. 0.0 if not set.
-  template <class T> inline T GetOpt::LongOptReader::to_float () const { return ArgReader(to_string()).to_float<T>(); }
+  template <class T> inline T GetOpt::LongOptReader::to_float () const { return ValReader(to_string()).to_float<T>(); }
   
   /***************************************************************************
    * GetOpt::_Data

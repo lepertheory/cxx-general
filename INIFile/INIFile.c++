@@ -9,6 +9,7 @@
 
 // Internal includes.
 #include <POSIXFile.h++>
+#include <ValReader.h++>
 
 // Class include.
 #include "INIFile.h++"
@@ -323,7 +324,7 @@ namespace DAC {
   /*
    * Return a key's value.
    */
-  string INIFile::Section::operator [] (string const& key) const {
+  ValReader INIFile::Section::operator [] (string const& key) const {
     
     // Make sure the key is defined.
     if (!key_defined(key)) {

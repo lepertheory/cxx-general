@@ -2,7 +2,6 @@
  * INIFile
  *****************************************************************************
  * Facilitates reading from an INI file.
- * TODO: Provide automatic data-type conversion as in GetOpt.
  *****************************************************************************/
 
 // Include guard.
@@ -18,6 +17,7 @@
 // System includes.
   #include <ReferencePointer.h++>
   #include <Exception.h++>
+  #include <ValReader.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -35,7 +35,7 @@ namespace DAC {
       /***********************************************************************/
       // Data types.
       
-      // Key type..
+      // Key type.
       typedef std::map<std::string, std::string> _KeyT;
       
     /*
@@ -76,7 +76,7 @@ namespace DAC {
           {};
           
           // Provides access to key values.
-          std::string operator [] (std::string const& key) const;
+          ValReader operator [] (std::string const& key) const;
           
           // Determine if a particular key is defined.
           bool key_defined (std::string const& key) const;
