@@ -385,10 +385,10 @@ namespace DAC {
       ArbInt& copy (ArbInt const& number, bool const copynow = false);
       
       // Set this number.
-                         ArbInt& set (ArbInt      const& number);
-                         ArbInt& set (std::string const& number);
-      template <class T> ArbInt& set (SafeInt<T>  const  number);
-      template <class T> ArbInt& set (T           const  number);
+                         ArbInt& set (ArbInt      const& number                            );
+                         ArbInt& set (std::string const& number, bool const autobase = true);
+      template <class T> ArbInt& set (SafeInt<T>  const  number                            );
+      template <class T> ArbInt& set (T           const  number                            );
       
       // Set this number with an exact bitwise copy.
       template <class T> ArbInt& setBitwise (SafeInt<T> const number);

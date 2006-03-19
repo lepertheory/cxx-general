@@ -15,6 +15,7 @@
 #include <ReferencePointer.h++>
 #include <toString.h++>
 #include <rppower.h++>
+#include <CaseConvert.h++>
 
 // Class include.
 #include "ArbInt.h++"
@@ -131,7 +132,7 @@ namespace DAC {
   /*
    * Set this number with a string.
    */
-  ArbInt& ArbInt::set (string const& number) {
+  ArbInt& ArbInt::set (string const& number, bool const autobase) {
     
     // Load the number into this for exception safety and COW.
     _DataPT new_digits(new _DigsT);
@@ -142,14 +143,30 @@ namespace DAC {
     // Parser will load data into here.
     _DigStrT num;
     
+    // Determine the number base.
+    string::size_type num_start =     0;
+    _DigT             num_base  = _base;
+    if (autobase) {
+      if (number.length() > 2 && uppercase(number.substr(0, 2)) == "0X") {
+        num_base  = 16;
+        num_start =  2;
+      } else if (number.length() > 2 && uppercase(number.substr(0, 2)) == "0B") {
+        num_base  = 2;
+        num_start = 2;
+      } else if (number.length() > 1 && number[0] == '0') {
+        num_base  = 8;
+        num_start = 1;
+      }
+    }
+    
     // Parse the number.
-    for (string::size_type i = 0; i != number.length(); ++i) {
+    for (string::size_type i = num_start; i != number.length(); ++i) {
       
       // Get the value of this digit.
       SafeInt<_NumChrT> digval(s_idigits[number[i]]);
       
       // Make sure this digit is within the number base.
-      if ((digval >= _base || (digval == numeric_limits<_NumChrT>::max()))) {
+      if ((digval >= num_base || (digval == numeric_limits<_NumChrT>::max()))) {
         throw ArbInt::Errors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
       }
       
@@ -162,7 +179,7 @@ namespace DAC {
     s_trimZerosE(num);
     
     // Convert to the native number base.
-    s_baseConv(num, _base, *new_digits, s_digitbase);
+    s_baseConv(num, num_base, *new_digits, s_digitbase);
     
     // The new number has been loaded successfully. Swap it in.
     _digits = new_digits;

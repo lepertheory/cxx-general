@@ -12,6 +12,7 @@
   #include <rppower.h++>
   #include <toString.h++>
   #include <reduce.h++>
+  #include <CaseConvert.h++>
 
 // Class include.
   #include "Arb.h++"
@@ -240,8 +241,9 @@ namespace DAC {
         _DigsT numeric;
         numeric.Base(_data->base);
         
-        // Get the whole number part.
-        numeric = _data->p / _data->q;
+        // Get the whole number part. Use set() to avoid overwriting the base
+        // of numeric.
+        numeric.set(_data->p / _data->q);
         
         // This is the number of digits from the end of the string to put
         // the radix point.
@@ -257,22 +259,31 @@ namespace DAC {
           std::string::size_type sigdigs  = 0;
           bool                   sigstart = (numeric != 0);
           _DigsT                 digit;
-          digit.Base(_data->base);
           while ((sigdigs < _maxradix) && (remainder != 0)) {
+            
+            // Push one base digit to a whole number.
             remainder *= _data->base;
             digit      = remainder / _data->q;
+            
+            // Push that digit onto the end of the number we are constructing
+            // and increment the number of radix positions.
             numeric.push_back(digit);
             ++radixpos;
+            
+            // Remove that digit from the remainder.
             remainder %= _data->q;
+            
+            // Start incrementing significant digits when we actually hit one,
+            // do not count 0s.
             if (sigstart || (digit != 0)) {
               ++sigdigs;
               sigstart = true;
             }
+            
           }
           
           // Round.
           if (remainder != 0) {
-            remainder *= 2;
             switch (_round) {
               case ROUND_UP: {
                 if (_data->positive) {
@@ -290,13 +301,17 @@ namespace DAC {
                 ++numeric;
               } break;
               case ROUND_NORMAL: {
-                if (remainder >= _data->q) {
+                if (remainder * 2 >= _data->q) {
                   ++numeric;
                 }
               } break;
               case ROUND_DEFAULT:
               case ROUND_EVEN: {
-                if (remainder > _data->q || (remainder == _data->q && remainder & 1)) {
+                // Double remainder to make it easy to check for half over,
+                // but when checking for odd, make sure to op& with 2 since we
+                // just left-shifted by 1.
+                remainder *= 2;
+                if (remainder > _data->q || (remainder == _data->q && remainder & 2)) {
                   ++numeric;
                 }
               } break;
@@ -316,7 +331,8 @@ namespace DAC {
           
         }
         
-        // Convert the number to a string.
+        // Convert the number to a string. Make sure that numeric is in the
+        // desired base before this line.
         retval += numeric.toString();
         
         // Add placeholder zeros.
@@ -370,7 +386,7 @@ namespace DAC {
   /*
    * Set the number from a string.
    */
-  Arb& Arb::set (string const& number) {
+  Arb& Arb::set (string const& number, bool const autobase) {
     
     // Load the number into this for exception safety.
     Arb new_num;
@@ -379,33 +395,62 @@ namespace DAC {
     ConstReferencePointer<string> tmp_number(new std::string(number));
     
     // Parser will load data into here.
-    string            num               ;
-    string            rad               ;
-    string            exp               ;
-    bool              p_num      = true ;
-    bool              p_exp      = true ;
-    string::size_type nexp       = 0    ;
-    string::size_type numstart   = 0    ;
-    string::size_type radstart   = 0    ;
-    string::size_type expstart   = 0    ;
-    string::size_type numlen     = 0    ;
-    string::size_type radlen     = 0    ;
-    string::size_type explen     = 0    ;
-    bool              numstarted = false;
-    bool              radstarted = false;
-    bool              expstarted = false;
+    string            num                     ;
+    string            rad                     ;
+    string            exp                     ;
+    bool              p_num      = true       ;
+    bool              p_exp      = true       ;
+    string::size_type nexp       =           0;
+    string::size_type numstart   =           0;
+    string::size_type radstart   =           0;
+    string::size_type expstart   =           0;
+    string::size_type numlen     =           0;
+    string::size_type radlen     =           0;
+    string::size_type explen     =           0;
+    bool              numstarted = false      ;
+    bool              radstarted = false      ;
+    bool              expstarted = false      ;
+    BaseT             num_base   = _data->base;
     
     // Parse the number, scoped for temp variables.
     {
       
       // Data for initial pass.
       enum Mode { NUM, RAD, EXP } mode = NUM;
-      string::size_type length   = number.length();
-      bool              s_num    = false;
-      bool              s_exp    = false;
-      bool              diggiven = false;
+      string::size_type length    = number.length();
+      bool              s_num     = false;
+      bool              s_exp     = false;
+      bool              diggiven  = false;
+      string::size_type num_start =     0;
       
-      for (string::size_type i = 0; i != length; ++i) {
+      // Check for sign before number base.
+      if (number.length() > 1) {
+        if (number[0] == '+') {
+          s_num     = true;
+          p_num     = true;
+          num_start =    1;
+        } else if (number[0] == '-') {
+          s_num     = true ;
+          p_num     = false;
+          num_start =     1;
+        }
+      }
+      
+      // Determine the number base.
+      if (autobase) {
+        if (number.length() > 2 + num_start && uppercase(number.substr(num_start, 2)) == "0X") {
+          num_base  = 16;
+          num_start =  2 + num_start;
+        } else if (number.length() > 2 + num_start && uppercase(number.substr(num_start, 2)) == "0B") {
+          num_base  = 2;
+          num_start = 2 + num_start;
+        } else if (number.length() > 1 + num_start && number[num_start] == '0' && (number.length() < 3 + num_start || number[num_start + 1] != '.')) {
+          num_base  = 8;
+          num_start = 1 + num_start;
+        }
+      }
+      
+      for (string::size_type i = num_start; i != length; ++i) {
         
         switch (number[i]) {
           
@@ -490,7 +535,7 @@ namespace DAC {
     
     // Load the number.
     try {
-      new_num._data->p.Base(_data->base) = num;
+      new_num._data->p.Base(num_base).set(num, false);
     } catch (ArbInt::Errors::BadFormat& e) {
       if (e.Position() < numstart + numlen) {
         throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart                      ).Number(tmp_number);
@@ -513,7 +558,7 @@ namespace DAC {
       _DigsT expn;
       _DigsT expr(nexp);
       try {
-        expn = exp;
+        expn.Base(num_base).set(exp, false);
       } catch (ArbInt::Errors::BadFormat& e) {
         throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + expstart).Number(tmp_number);
       }
@@ -534,7 +579,7 @@ namespace DAC {
         // This calculation will be needed whether exponent is positive or
         // negative. If positive, multiply p by it and clear, thus bringing p
         // down to 1s. If negative, leave as it is, it is already accurate.
-        new_num._data->q = _DigsT(_data->base).pow(expn);
+        new_num._data->q = _DigsT(num_base).pow(expn);
         if (p_exp) {
           new_num._data->p *= new_num._data->q;
           new_num._data->q  = 1;

@@ -17,6 +17,7 @@
 #include <wrapText.h++>
 #include <toString.h++>
 #include <Arb.h++>
+#include <CaseConvert.h++>
 
 // Class includes.
 #include "GetOpt.h++"
@@ -894,7 +895,7 @@ namespace DAC {
     }
     
     // Work area.
-    string work(_uppercase());
+    string work(uppercase(_arg));
     
     // Check for negative text.
     if (work == "F" || work == "N" || work == "FALSE" || work == "NO" || work == "OFF") {

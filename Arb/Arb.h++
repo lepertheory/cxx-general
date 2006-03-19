@@ -373,11 +373,11 @@ namespace DAC {
       Arb& deepcopy (Arb const& number)        ;
       
       // Set the number.
-                         Arb& set (std::string const& number);
-                         Arb& set (Arb         const& number);
-                         Arb& set (ArbInt      const& number);
-      template <class T> Arb& set (SafeInt<T>  const  number);
-      template <class T> Arb& set (T           const  number);
+                         Arb& set (std::string const& number, bool const autobase = true);
+                         Arb& set (Arb         const& number                            );
+                         Arb& set (ArbInt      const& number                            );
+      template <class T> Arb& set (SafeInt<T>  const  number                            );
+      template <class T> Arb& set (T           const  number                            );
       
       // Convert to string.
       std::string toString (OutputFormat const format = FMT_DEFAULT) const;

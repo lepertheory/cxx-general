@@ -454,12 +454,6 @@ namespace DAC {
           
           // The argument.
           std::string const& _arg;
-          
-          /*******************************************************************/
-          // Function members.
-          
-          // Convert a string to uppercase.
-          std::string _uppercase () const;
         
       };
       
@@ -1060,16 +1054,6 @@ namespace DAC {
     } catch (Arb::Errors::Base& e) {
       throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
     }
-    return retval;
-  }
-  
-  /*
-   * Convert a string to uppercase.
-   */
-  inline std::string GetOpt::ArgReader::_uppercase () const {
-    std::string retval;
-    retval.reserve(_arg.length());
-    transform(_arg.begin(), _arg.end(), retval.begin(), toupper);
     return retval;
   }
   
