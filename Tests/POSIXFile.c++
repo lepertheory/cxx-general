@@ -13,6 +13,12 @@ int main (int argc, char** argv) {
     return 1;
   }
   
+  POSIXFile test;
+  
+  test.open(argv[1]);
+  test.lock();
+  
+  /*
   POSIXFile test(argv[1]);
   
   cout << "File: " << argv[1] << "\n"
@@ -104,6 +110,7 @@ int main (int argc, char** argv) {
   for (vector<string>::iterator i = temp.begin(); i != temp.end(); ++i) {
     cout << "\"" << *i << "\"\n";
   }
+  */
   
   return 0;
   

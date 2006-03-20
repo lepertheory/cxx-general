@@ -814,7 +814,7 @@ namespace DAC {
   /*
    * Check if the file has been opened.
    */
-  inline bool POSIXFile::is_open () const { return _fd == -1; }
+  inline bool POSIXFile::is_open () const { return _fd != -1; }
   
   /*
    * Seek to a particular location.
