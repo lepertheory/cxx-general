@@ -35,7 +35,9 @@ def symlink_builder_func (target, source, env) :
   # Always successful.
   return 0
 
+#
 # Pkg-config builder.
+#
 def pkgconfig_builder_func (target, source, env) :
   
   # Create the .pc file.
