@@ -7,6 +7,8 @@
  * in error conditions. Since I want to pick up any quirks of getopt, we're
  * pretty much stuck with the nasty hacks. I believe I've caught at least 98%
  * of the error conditions and will report them correctly.
+ * 
+ * TODO: Create command sets, some options are only required with others.
  *****************************************************************************/
 
 // Include guard.
