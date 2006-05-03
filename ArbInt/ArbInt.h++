@@ -358,8 +358,10 @@ namespace DAC {
       
       // Casting operators.
       operator bool               () const;
+      operator char               () const;
       operator signed   char      () const;
       operator unsigned char      () const;
+      operator wchar_t            () const;
       operator signed   short int () const;
       operator unsigned short int () const;
       operator signed   int       () const;
@@ -894,8 +896,10 @@ namespace DAC {
    * Casting operators.
    */
   inline ArbInt::operator bool               () const { return !isZero();                   }
+  inline ArbInt::operator char               () const { return Value<char              >(); }
   inline ArbInt::operator signed   char      () const { return Value<signed   char     >(); }
   inline ArbInt::operator unsigned char      () const { return Value<unsigned char     >(); }
+  inline ArbInt::operator wchar_t            () const { return Value<wchar_t           >(); }
   inline ArbInt::operator signed   short int () const { return Value<signed   short int>(); }
   inline ArbInt::operator unsigned short int () const { return Value<unsigned short int>(); }
   inline ArbInt::operator signed   int       () const { return Value<signed   int      >(); }

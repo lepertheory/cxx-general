@@ -234,8 +234,10 @@ namespace DAC {
       
       // Casting operators.
       operator bool               () const;
+      operator char               () const;
       operator signed   char      () const;
       operator unsigned char      () const;
+      operator wchar_t            () const;
       operator signed   short int () const;
       operator unsigned short int () const;
       operator signed   int       () const;
@@ -781,8 +783,10 @@ namespace DAC {
    * Casting operators.
    */
   template <class T> inline SafeInt<T>::operator bool               () const { return _value != static_cast<T>(0);                                                                                       }
+  template <class T> inline SafeInt<T>::operator char               () const { return SafeIntUtil::SafeCast<T, char,               SafeIntUtil::Relationship<T, char              >::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator signed   char      () const { return SafeIntUtil::SafeCast<T, signed   char,      SafeIntUtil::Relationship<T, signed   char     >::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator unsigned char      () const { return SafeIntUtil::SafeCast<T, unsigned char,      SafeIntUtil::Relationship<T, unsigned char     >::value>::op(_value); }
+  template <class T> inline SafeInt<T>::operator wchar_t            () const { return SafeIntUtil::SafeCast<T, wchar_t,            SafeIntUtil::Relationship<T, wchar_t           >::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator signed   short int () const { return SafeIntUtil::SafeCast<T, signed   short int, SafeIntUtil::Relationship<T, signed   short int>::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator unsigned short int () const { return SafeIntUtil::SafeCast<T, unsigned short int, SafeIntUtil::Relationship<T, unsigned short int>::value>::op(_value); }
   template <class T> inline SafeInt<T>::operator signed   int       () const { return SafeIntUtil::SafeCast<T, signed   int,       SafeIntUtil::Relationship<T, signed   int      >::value>::op(_value); }

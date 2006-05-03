@@ -2,7 +2,6 @@
  * Arb.h++
  *****************************************************************************
  * Interface for class Arb.
- * FIXME: Need support for wchar_t.
  *****************************************************************************/
 
 // Include guard.
@@ -328,8 +327,10 @@ namespace DAC {
       
       // Casting operators.
       operator bool               () const;
+      operator char               () const;
       operator signed   char      () const;
       operator unsigned char      () const;
+      operator wchar_t            () const;
       operator signed   short int () const;
       operator unsigned short int () const;
       operator signed   int       () const;
@@ -935,8 +936,10 @@ namespace DAC {
    * Casting operators.
    */
   inline Arb::operator bool               () const { return !isZero();                   }
+  inline Arb::operator char               () const { return Value<char              >(); }
   inline Arb::operator signed   char      () const { return Value<signed   char     >(); }
   inline Arb::operator unsigned char      () const { return Value<unsigned char     >(); }
+  inline Arb::operator wchar_t            () const { return Value<wchar_t           >(); }
   inline Arb::operator signed   short int () const { return Value<signed   short int>(); }
   inline Arb::operator unsigned short int () const { return Value<unsigned short int>(); }
   inline Arb::operator signed   int       () const { return Value<signed   int      >(); }
