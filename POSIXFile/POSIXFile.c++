@@ -933,47 +933,47 @@ namespace DAC {
     // Iterate through potential current directories.
     for (string::size_type pos = 0; pos = path.find(CUR_DIR, pos), pos != string::npos;) {
       
-      // Current dir at beginning of string.
-      if (pos == 0) {
+      // Determine if this is at the beginning or end of the path.
+      bool is_begin = pos == 0;
+      bool is_end   = pos == path.length() - CUR_DIR.length();
+      
+      // If the current directory char is the entire path, it is not redundant.
+      if (is_begin && is_end) {
+        return;
+      }
+      
+      // Make sure this is actually a current directory entry.
+      if ((is_begin || path[pos - 1] == DIR_SEP) && (is_end || path[pos + CUR_DIR.length()] == DIR_SEP)) {
         
-        // Make sure that the next character is a directory separator. If so,
-        // redundant, erase it.
-        if (path.length() > 1 && path[CUR_DIR.length()] == DIR_SEP) {
-          path.erase(pos, CUR_DIR.length() + 1);
-        } else {
-          ++pos;
-        }
-        
-      // Current dir at end of string.
-      } else if (pos == path.length() - CUR_DIR.length()) {
-        
-        // Make sure that the previous character is a directory separator. If
-        // so, redundant, erase it. Don't erase the directory separator if it
-        // is the first character. We know that path.length() > 1 because
-        // this match would be character 0 otherwise.
-        if (path[pos - 1] == DIR_SEP) {
-          if (pos == 1) {
-            path.erase(pos, CUR_DIR.length());
+        // Special case of a relative path with no further paths. Preserve
+        // trailing directory separator.
+        if (is_begin && path.find_first_not_of(DIR_SEP, pos + 1) == string::npos) {
+          if (path[path.length() - 1] == DIR_SEP) {
+            path = CUR_DIR + DIR_SEP;
           } else {
-            path.erase(pos - 1, 1 + CUR_DIR.length());
-            --pos;
+            path = CUR_DIR;
           }
-        } else {
-          ++pos;
+          return;
         }
         
-      // Current dir in the middle of string.
+        // Special case of a current dir at the root of /. Make sure to leave
+        // a DIR_SEP.
+        if (pos == 1 && path.length() == 1 + CUR_DIR.length() && path[0] == DIR_SEP) {
+          path = DIR_SEP;
+          return;
+        }
+        
+        // Get the bounds of the current directory entry. Grab the preceeding
+        // directory separator if possible, if not, grab the trailing.
+        string::size_type dirent_begin = pos - (is_begin ? 0 : 1);
+        string::size_type dirent_end   = pos + CUR_DIR.length() - 1 + (is_begin ? 1 : 0);
+        
+        // Erase this entry.
+        path.erase(dirent_begin, dirent_end - dirent_begin + 1);
+        
+      // If it is not, continue search.
       } else {
-        
-        // Make sure that we are surrounded by directory separators. We know
-        // that there is a character ahead and before, or we would be in one
-        // of the previous ifs.
-        if (path[pos - 1] == DIR_SEP && path[pos + CUR_DIR.length()] == DIR_SEP) {
-          path.erase(pos, CUR_DIR.length() + 1);
-        } else {
-          ++pos;
-        }
-        
+        ++pos;
       }
       
     }
@@ -986,6 +986,7 @@ namespace DAC {
   void POSIXFile::s_compress_prevDir (string& path) {
     
     // Constants.
+    static string const CUR_DIR ("." );
     static string const PREV_DIR("..");
     
     // If path.length() <= PREV_DIR.length(), nothing is redundant.
@@ -996,108 +997,76 @@ namespace DAC {
     // Iterate through potential previous directories.
     for (string::size_type pos = 0; pos = path.find(PREV_DIR, pos), pos != string::npos;) {
       
-      // Previous dir at beginning of string.
-      if (pos == 0) {
+      // Determine if this is at the beginning or end of the path.
+      bool is_begin = pos == 0;
+      bool is_end   = pos == path.length() - PREV_DIR.length();
+      
+      // If this is the entire path, it is not redundant.
+      if (is_begin && is_end) {
+        return;
+      }
+      
+      // Make sure this is actually a previous directory entry.
+      if ((is_begin || path[pos - 1] == DIR_SEP) && (is_end || path[pos + PREV_DIR.length()] == DIR_SEP)) {
         
-        // Never redundant since this is a relative path.
-        ++pos;
+        // If we are at the beginning of a relative path this previous dir
+        // cannot be redundant.
+        if (is_begin) {
+          ++pos;
+          continue;
+        }
         
-      // Previous dir at end of string.
-      } else if (pos == path.length() - PREV_DIR.length()) {
-        
-        // Make sure that previous character is directory separator. If so,
-        // step back one level if we can.
-        if (path[pos - 1] == DIR_SEP) {
+        // If we are at the beginning of an absolute path this previous dir
+        // is completely redundant.
+        if (pos == 1) {
           
-          // Reverse find the first closing directory separator of the previous
-          // dir in the stack. Actually finds the character after it (reverse),
-          // but will be corrected in next section.
-          string::size_type prevdir_end = path.find_last_not_of(DIR_SEP, pos - 1);
+          // If there are no further paths, preserve the DIR_SEP.
+          if (pos + PREV_DIR.length() == path.length()) {
+            path.erase(1, PREV_DIR.length());
+          } else {
+            path.erase(0, PREV_DIR.length() + 1);
+          }
           
-          // If there is no non-/ character, this is asking for the previous
-          // dir of the root of an absolute path, which means this is
-          // redundant. Since there are no more dirs after this, return
-          // DIR_SEP. Otherwise, correct position, see previous note.
-          if (prevdir_end == string::npos) {
+        }
+        
+        // Get the bounds of the previous directory entry plus the previous
+        // path component. 
+        string::size_type prevdir_end = path.find_last_not_of(DIR_SEP, pos - 1);
+        if (prevdir_end == string::npos) {
+          continue;
+        }
+        string::size_type dirent_begin = path.find_last_of(DIR_SEP, prevdir_end);
+        if (dirent_begin == string::npos) {
+          dirent_begin = 0;
+        }
+        string::size_type dirent_end = pos + PREV_DIR.length() - 1;
+        
+        // If the previous path component is a previous directory, it would
+        // only exist if we were unable to get rid of it, so we won't be able
+        // to get rid of this one either.
+        if (path.substr(dirent_begin + (path[dirent_begin] == DIR_SEP ? 1 : 0), PREV_DIR.length() + 1) == PREV_DIR + DIR_SEP) {
+          ++pos;
+          continue;
+        }
+        
+        // If we will be wiping out the path completely, instead set a useful
+        // value.
+        if (dirent_begin == 0 && dirent_end == path.length() - 1) {
+          if (path[0] == DIR_SEP) {
             path = DIR_SEP;
-            return;
           } else {
-            ++prevdir_end;
+            path = CUR_DIR;
           }
-          
-          // Now find the first character of the previous dir in the stack.
-          string::size_type prevdir_begin = path.rfind(DIR_SEP, prevdir_end - 1);
-          if (prevdir_begin == string::npos) {
-            prevdir_begin = 0;
-          } else {
-            ++prevdir_begin;
-          }
-          
-          // If the previous directory in the stack is .. and this is not an
-          // absolute path, nothing further can be redundant. Return.
-          if (prevdir_begin == 0 && path.substr(0, prevdir_end - 1) == PREV_DIR) {
-            return;
-          }
-          
-          // Erase the previous directory in the stack along with the ..
-          path.erase(prevdir_begin, pos + PREV_DIR.length() - 1 - prevdir_begin);
-          
-          // No need to do anything with pos, this will be the last iteration.
-          
-        } else {
-          ++pos;
+          return;
         }
         
-      // Previous dir in the middle of string.
+        // Get rid of the previous directory and set pos.
+        path.erase(dirent_begin, dirent_end - dirent_begin + 1);
+        pos = dirent_begin;
+        
+      // If it is not, continue search.
       } else {
-        
-        // Make sure that we are surrounded by directory separators. We know
-        // that there is a character before and after, or we would be in one of
-        // the previous ifs.
-        if (path[pos - 1] == DIR_SEP && path[pos + PREV_DIR.length()] == DIR_SEP) {
-          
-          // Reverse find the first closing directory separator of the previous
-          // dir in the stack. Actually finds the character after it (reverse),
-          // but will be corrected in next section.
-          string::size_type prevdir_end = path.find_last_not_of(DIR_SEP, pos - 1);
-          
-          // If there is no non-/ character, this is asking for the previous
-          // dir of the root of an absolute path, which means this is
-          // redundant. Erase the ////.. and keep searching. Otherwise, correct
-          // position, see previous note.
-          if (prevdir_end == string::npos) {
-            path.erase(0, pos + PREV_DIR.length() - 1);
-            pos = 0;
-            continue;
-          } else {
-            ++prevdir_end;
-          }
-          
-          // Now find the first character of the previous dir in the stack.
-          string::size_type prevdir_begin = path.rfind(DIR_SEP, prevdir_end - 1);
-          if (prevdir_begin == string::npos) {
-            prevdir_begin = 0;
-          } else {
-            ++prevdir_begin;
-          }
-          
-          // If the previous directory in the stack is .. and this is not an
-          // absolute path, this is not redundant. Keep searching.
-          if (prevdir_begin == 0 && path.substr(0, prevdir_end - 1) == PREV_DIR) {
-            ++pos;
-            continue;
-          }
-          
-          // Erase the previous directory in the stack along with the ../
-          path.erase(prevdir_begin, pos + PREV_DIR.length() - prevdir_begin);
-          
-          // Set the start of the search properly.
-          pos = prevdir_begin;
-          
-        } else {
-          ++pos;
-        }
-        
+        ++pos;
       }
       
     }
