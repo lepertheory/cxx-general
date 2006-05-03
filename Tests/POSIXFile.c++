@@ -15,6 +15,9 @@ int main (int argc, char** argv) {
   
   POSIXFile test;
   
+  cout << "path:  " << POSIXFile::expand_path  (argv[1]) << endl;
+  cout << "path2: " << POSIXFile::compress_path(argv[1]) << endl;
+  
   test.open(argv[1]);
   test.lock();
   

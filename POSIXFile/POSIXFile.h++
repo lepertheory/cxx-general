@@ -458,6 +458,9 @@ namespace DAC {
       // Convert relative name to an absolute filename.
       static std::string expand_path (std::string const& filename);
       
+      // Remove any redundancies in path.
+      static std::string compress_path (std::string const& filename);
+      
       // Read the target of a symbolic link.
       static std::string readlink (std::string const& filename);
       
@@ -634,6 +637,12 @@ namespace DAC {
       
       // Compress redundant directory separators.
       static void s_compress_dirSep (std::string& path);
+      
+      // Compress redundant current directories.
+      static void s_compress_curDir (std::string& path);
+      
+      // Compress redundant previous directories.
+      static void s_compress_prevDir (std::string& path);
       
       // Convert from stat() file type to POSIXFile::FileType.
       static FileType s_convert_FileType (mode_t const type);
