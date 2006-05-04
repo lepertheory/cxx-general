@@ -377,6 +377,11 @@ namespace DAC {
    */
   vector<string>& POSIXFile::read_all_lines (vector<string>& buffer) {
     
+    // Make sure the file is open.
+    if (!is_open()) {
+      open();
+    }
+    
     // Work area.
     vector<string> retval;
     
@@ -403,6 +408,11 @@ namespace DAC {
    * Read the entire file as a string.
    */
   string POSIXFile::read_file () {
+    
+    // Make sure the file is open.
+    if (!is_open()) {
+      open();
+    }
     
     // Work area.
     string          retval    ;
