@@ -90,7 +90,8 @@ namespace DAC {
               virtual ~UndefinedShort () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Undefined short option \"" + DAC::toStringChr(_option) + "\" was referenced.").c_str();
+                  std::string tmpmsg("Undefined short option \"" + DAC::toStringChr(_option) + "\" was referenced.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Undefined short option was referenced. Error creating message string.";
                 }
@@ -105,7 +106,8 @@ namespace DAC {
               virtual ~UndefinedLong () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Undefined long option \"" + _option + "\" was referenced.").c_str();
+                  std::string tmpmsg("Undefined long option \"" + _option + "\" was referenced.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Undefined long option was referenced. Error creating message string.";
                 }
@@ -127,7 +129,8 @@ namespace DAC {
               virtual ~DuplicateShortOption () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Attempted to add a duplicate short option, \"" + DAC::toStringChr(_option) + "\".").c_str();
+                  std::string tmpmsg("Attempted to add a duplicate short option, \"" + DAC::toStringChr(_option) + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Attempted to add a duplicate short option. Error creating message string.";
                 }
@@ -142,7 +145,8 @@ namespace DAC {
               virtual ~DuplicateLongOption () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Attempted to add a duplicate long option, \"" + _option + "\".").c_str();
+                  std::string tmpmsg("Attempted to add a duplicate long option, \"" + _option + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Attempted to add a duplicate long option. Error creating message string.";
                 }
@@ -166,7 +170,8 @@ namespace DAC {
               virtual ~InvalidOption () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Invalid option passed: " + _option + ".").c_str();
+                  std::string tmpmsg("Invalid option passed: " + _option + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Invalid option passed. Error creating message string.";
                 }
@@ -183,7 +188,8 @@ namespace DAC {
               virtual ~MissingArg () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Option " + _option + " is missing a required argument.").c_str();
+                  std::string tmpmsg("Option " + _option + " is missing a required argument.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Option is missing a required argument. Error creating message string.";
                 }
@@ -200,7 +206,8 @@ namespace DAC {
               virtual ~BadNum () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Could not convert option to \"" + _type + "\", lower-level error message is: \"" + _errtext + "\".").c_str();
+                  std::string tmpmsg("Could not convert option to \"" + _type + "\", lower-level error message is: \"" + _errtext + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Could not convert option to requested type. Error creating message string.";
                 }
@@ -220,7 +227,8 @@ namespace DAC {
               virtual ~UnmatchedEscape () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Unmatched escape character at position " + DAC::toString(_pos) + " in string \"" + _text + "\".").c_str();
+                  std::string tmpmsg("Unmatched escape character at position " + DAC::toString(_pos) + " in string \"" + _text + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unmatched escape character in string. Error creating message string.";
                 }
@@ -240,7 +248,8 @@ namespace DAC {
               virtual ~UnknownEscape () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Unknown escape character at position " + DAC::toString(_pos) + " in string \"" + _text + "\".").c_str();
+                  std::string tmpmsg("Unknown escape character at position " + DAC::toString(_pos) + " in string \"" + _text + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unknown escape character in string. Error creating message string.";
                 }
@@ -259,7 +268,8 @@ namespace DAC {
               virtual ~ArgOOB () throw () {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Requested argument number " + DAC::toString(_argnum) + " exceeds argument list of " + DAC::toString(_size) + " arguments.").c_str();
+                  std::string tmpmsg("Requested argument number " + DAC::toString(_argnum) + " exceeds argument list of " + DAC::toString(_size) + " arguments.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Requested argument number exceeds argument list size. Error creating message string.";
                 }
@@ -280,7 +290,8 @@ namespace DAC {
               virtual ~ArgOOBShort () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Requested argument number " + DAC::toString(ArgNum()) + " exceeds -" + DAC::toStringChr(_sopt) + " argument list of " + DAC::toString(Size()) + " arguments.").c_str();
+                  std::string tmpmsg("Requested argument number " + DAC::toString(ArgNum()) + " exceeds -" + DAC::toStringChr(_sopt) + " argument list of " + DAC::toString(Size()) + " arguments.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Requested short option argument number exceeds argument list size. Error creating message string.";
                 }
@@ -299,7 +310,8 @@ namespace DAC {
               virtual ~ArgOOBLong () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Requested argument number " + DAC::toString(ArgNum()) + " exceeds --" + _lopt + " argument list of " + DAC::toString(Size()) + " arguments.").c_str();
+                  std::string tmpmsg("Requested argument number " + DAC::toString(ArgNum()) + " exceeds --" + _lopt + " argument list of " + DAC::toString(Size()) + " arguments.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Requested long option argument number exceeds argument list size. Error creating message string.";
                 }
@@ -320,7 +332,8 @@ namespace DAC {
               virtual ~TooNarrow () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Display width of " + DAC::toString(_width) + " characters is too narrow to show help.").c_str();
+                  std::string tmpmsg("Display width of " + DAC::toString(_width) + " characters is too narrow to show help.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Display is too narrow to show help. Error creating message string.";
                 }

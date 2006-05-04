@@ -102,7 +102,8 @@ namespace DAC {
               virtual ~EoF () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Requested " + _op + " operation cannot be performed at end of file.").c_str();
+                  std::string tmpmsg("Requested " + _op + " operation cannot be performed at end of file.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Requested operation cannot be performed at end of file. Error creating message string.";
                 }
@@ -119,7 +120,8 @@ namespace DAC {
               virtual ~Overrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Offset " + toString(_offset) + " overruns end of file with size of " + DAC::toString(_size) + ".").c_str();
+                  std::string tmpmsg("Offset " + toString(_offset) + " overruns end of file with size of " + DAC::toString(_size) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Offset overruns end of file. Error creating message string.";
                 }
@@ -139,10 +141,12 @@ namespace DAC {
               virtual ~SysCallError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("System error number " + toString(_errno) + ", \"" + getErrorText(_errno) + "\" occured when attempting \"" + _syscall + "\".").c_str();
+                  std::string tmpmsg("System error number " + toString(_errno) + ", \"" + getErrorText(_errno) + "\" occured when attempting \"" + _syscall + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   try {
-                    return ("System error number " + toString(_errno) + " occured when attempting \"" + _syscall + "\". Error fetching system message string.").c_str();
+                    std::string tmpmsg("System error number " + toString(_errno) + " occured when attempting \"" + _syscall + "\". Error fetching system message string.");
+                    return Exception::buffer_message(tmpmsg);
                   } catch (...) {
                     return "Error making system call. Error creating message string.";
                   }
@@ -187,7 +191,8 @@ namespace DAC {
               virtual ~UnknownType () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Unknown file type " + toString(_type) + " returned.").c_str();
+                  std::string tmpmsg("Unknown file type " + toString(_type) + " returned.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unknown file type returned. Error creating message string.";
                 }

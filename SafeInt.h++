@@ -55,7 +55,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (toString(_number) + ": Cast overflows type limit of " + toString(_limit) + ".").c_str();
+                  std::string tmpmsg(toString(_number) + ": Cast overflows type limit of " + toString(_limit) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Cast overflow. Error returning message string.";
                 }
@@ -74,7 +75,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + DAC::toString(_number) + " overflows type limit of " + DAC::toString(_limit)).c_str();
+                  std::string tmpmsg(std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + DAC::toString(_number) + " overflows type limit of " + DAC::toString(_limit));
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unary operation overflow. Error returning message string.";
                 }
@@ -100,7 +102,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (toString(_l) + " " + _op + " " + toString(_r) + ": Operation overflows type limit of " + toString(_limit) + ".").c_str();
+                  std::string tmpmsg(toString(_l) + " " + _op + " " + toString(_r) + ": Operation overflows type limit of " + toString(_limit) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Binary operation overflow. Error returning message string.";
                 }
@@ -126,7 +129,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (toString(_l) + " " + _op + " " + toString(_r) + ": Operation requires more than " + toString(std::numeric_limits<T>::digits + (std::numeric_limits<T>::is_signed ? 1 : 0)) + " bits of storage.").c_str();
+                  std::string tmpmsg(toString(_l) + " " + _op + " " + toString(_r) + ": Operation requires more than " + toString(std::numeric_limits<T>::digits + (std::numeric_limits<T>::is_signed ? 1 : 0)) + " bits of storage.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bitwise operation overflow. Error returning message string.";
                 }
@@ -148,7 +152,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (toString(_l) + " " + _op + " " + toString(_r) + ": Divide by zero.").c_str();
+                  std::string tmpmsg(toString(_l) + " " + _op + " " + toString(_r) + ": Divide by zero.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Divide by zero. Error returning message string.";
                 }
@@ -177,7 +182,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (toString(_l) + " " + _op + " " + toString(_r) + ": Result of operation is undefined.").c_str();
+                  std::string tmpmsg(toString(_l) + " " + _op + " " + toString(_r) + ": Result of operation is undefined.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Result of operation is undefined. Error returning message string.";
                 }

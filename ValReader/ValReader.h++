@@ -52,7 +52,8 @@ namespace DAC {
               virtual ~BadNum () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Could not convert value to \"" + _type + "\", lower-level error message is \"" + _errtext + "\"").c_str();
+                  std::string tmpmsg("Could not convert value to \"" + _type + "\", lower-level error message is \"" + _errtext + "\"");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Could not convert value to requested type. Error creating message string.";
                 }

@@ -73,7 +73,8 @@ namespace DAC {
               virtual ~IndentOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Indent of " + DAC::toString(_indent) + " leaves no room for wrap width of " + DAC::toString(_width) + " characters.").c_str();
+                  std::string tmpmsg("Indent of " + DAC::toString(_indent) + " leaves no room for wrap width of " + DAC::toString(_width) + " characters.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Indent leaves no room for text. Error creating message string.";
                 }
@@ -93,7 +94,8 @@ namespace DAC {
               virtual ~POIOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Point of interest position " + DAC::toString(_poi) + " overruns end of string \"" + _text + "\".").c_str();
+                  std::string tmpmsg("Point of interest position " + DAC::toString(_poi) + " overruns end of string \"" + _text + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Point of interest overruns text. Error creating message string.";
                 }
@@ -111,7 +113,8 @@ namespace DAC {
               virtual ~POIShyOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Soft hyphen position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".").c_str();
+                  std::string tmpmsg("Soft hyphen position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Soft hyphen position overruns text. Error creating message string.";
                 }
@@ -126,7 +129,8 @@ namespace DAC {
               virtual ~POINBOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Non-break position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".").c_str();
+                  std::string tmpmsg("Non-break position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Non-break position overruns text. Error creating message string.";
                 }
@@ -141,7 +145,8 @@ namespace DAC {
               virtual ~POIZWSOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Zero width space position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".").c_str();
+                  std::string tmpmsg("Zero width space position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Zero width space position overruns text. Error creating message string.";
                 }

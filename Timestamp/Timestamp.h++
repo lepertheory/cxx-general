@@ -210,7 +210,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (_problem + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in format \"" + *_format + "\".").c_str();
+                  std::string tmpmsg(_problem + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in format \"" + *_format + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
                 }
@@ -239,7 +240,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Invalid MJD of " + DAC::toString(_mjd) + " sent.").c_str();
+                  std::string tmpmsg("Invalid MJD of " + DAC::toString(_mjd) + " sent.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Invalid MJD sent. Error creating message string.";
                 }
@@ -253,7 +255,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("MJD of " + DAC::toString(_mjd) + " sent, MJD maximum is 99999.").c_str();
+                  std::string tmpmsg("MJD of " + DAC::toString(_mjd) + " sent, MJD maximum is 99999.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "MJD over maximum of 99999 sent. Error creating message string.";
                 }
@@ -265,7 +268,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Invalid offset of " + DAC::toString(_offset) + " sent.").c_str();
+                  std::string tmpmsg("Invalid offset of " + DAC::toString(_offset) + " sent.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Invalid offset sent. Error creating message string.";
                 }
@@ -279,7 +283,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Offset of " + DAC::toString(_offset) + " sent, offset minimum is -720.").c_str();
+                  std::string tmpmsg("Offset of " + DAC::toString(_offset) + " sent, offset minimum is -720.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Offset under minimum of -720 sent. Error creating message string.";
                 }
@@ -289,7 +294,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Offset of " + DAC::toString(_offset) + " sent, offset maximum is 720.").c_str();
+                  std::string tmpmsg("Offset of " + DAC::toString(_offset) + " sent, offset maximum is 720.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Offset over maximum of 720 sent. Error creating message string.";
                 }
@@ -301,7 +307,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Invalid time specified: " + _month.toString() + "/" + _day.toString() + "/" + _year.toString() + " " + _hour.toString() + ":" + _minute.toString() + ":" + _second.toString() + "." + _millisecond.toString()).c_str();
+                  std::string tmpmsg("Invalid time specified: " + _month.toString() + "/" + _day.toString() + "/" + _year.toString() + " " + _hour.toString() + ":" + _minute.toString() + ":" + _second.toString() + "." + _millisecond.toString());
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Invalid time specified. Error creating message string.";
                 }
@@ -343,7 +350,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Error making the requested system call to " + _syscall + ".").c_str();
+                  std::string tmpmsg("Error making the requested system call to " + _syscall + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error making the requested system call. Error creating message string.";
                 }
@@ -400,7 +408,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Missing support for the requested operation: " + _op).c_str();
+                  std::string tmpmsg("Missing support for the requested operation: " + _op);
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Missing support for the requested operation. Error creating message string.";
                 }

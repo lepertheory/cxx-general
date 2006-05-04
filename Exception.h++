@@ -50,7 +50,7 @@ namespace DAC {
       virtual Exception& clear () throw();
       
       // Buffer a temporary string.
-      char const* buffer_message (std::string const& message);
+      char const* buffer_message (std::string& message) const;
       
     /*
      * Private members.
@@ -61,7 +61,7 @@ namespace DAC {
       // Data members.
       
       // Buffer for constructed error messages.
-      std::string _buffer;
+      mutable std::string _buffer;
     
   };
   
@@ -95,7 +95,7 @@ namespace DAC {
   /*
    * Buffer a temporary string.
    */
-  inline char const* buffer_message (std::string const& message) {
+  inline char const* Exception::buffer_message (std::string& message) const {
     
     // Swap the contents of the message with the buffer.
     _buffer.swap(message);

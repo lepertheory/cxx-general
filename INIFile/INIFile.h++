@@ -132,7 +132,8 @@ namespace DAC {
               virtual ~FileError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Unspecified error reading INI file \"" + _filename + "\".").c_str();
+                  std::string tmpmsg("Unspecified error reading INI file \"" + _filename + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unspecified error reading INI file. Error creating message string.";
                 }
@@ -147,7 +148,8 @@ namespace DAC {
               virtual ~FileNonExist () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("INI file \"" + FileError::Filename() + "\" does not exist.").c_str();
+                  std::string tmpmsg("INI file \"" + FileError::Filename() + "\" does not exist.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "INI file does not exist. Error creating message string.";
                 }
@@ -159,7 +161,8 @@ namespace DAC {
               virtual ~FileNonFile () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("INI file \"" + FileError::Filename() + "\" is not a file.").c_str();
+                  std::string tmpmsg("INI file \"" + FileError::Filename() + "\" is not a file.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "INI file is not a file. Error creating message string.";
                 }
@@ -171,7 +174,8 @@ namespace DAC {
               virtual ~FileNonReadable () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("INI file \"" + FileError::Filename() + "\" is not readable.").c_str();
+                  std::string tmpmsg("INI file \"" + FileError::Filename() + "\" is not readable.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "INI file is not readable. Error creating message string.";
                 }
@@ -183,7 +187,8 @@ namespace DAC {
               virtual ~FileUnexpectedError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Unexpected error reading \"" + FileError::Filename() + "\". Error message was \"" + _errmsg + "\".").c_str();
+                  std::string tmpmsg("Unexpected error reading \"" + FileError::Filename() + "\". Error message was \"" + _errmsg + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unexpected error reading INI file. Error creating message string.";
                 }
@@ -201,7 +206,8 @@ namespace DAC {
               virtual ~SectionMultiDefine () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Multiple definitions of section \"" + _section + "\".").c_str();
+                  std::string tmpmsg("Multiple definitions of section \"" + _section + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Multiple definitions of a section. Error creating message string.";
                 }
@@ -218,7 +224,8 @@ namespace DAC {
               virtual ~SectionUndefined () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Section \"" + _section + "\" is undefined.").c_str();
+                  std::string tmpmsg("Section \"" + _section + "\" is undefined.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Section is undefined. Error creating message string.";
                 }
@@ -249,7 +256,8 @@ namespace DAC {
               virtual ~KeyNoSection () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Key \"" + _key + "\" was specified without a section.").c_str();
+                  std::string tmpmsg("Key \"" + _key + "\" was specified without a section.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Key was specified without a section. Error creating message string.";
                 }
@@ -266,7 +274,8 @@ namespace DAC {
               virtual ~KeyMultiDefine () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Multiple definitions of key \"" + _key + "\" within section \"" + _section + "\".").c_str();
+                  std::string tmpmsg("Multiple definitions of key \"" + _key + "\" within section \"" + _section + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Multiple definitions of a key within a section. Error creating message string.";
                 }
@@ -286,7 +295,8 @@ namespace DAC {
               virtual ~KeyUndefined () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Key \"" + _key + "\" is undefined within section \"" + _section + "\".").c_str();
+                  std::string tmpmsg("Key \"" + _key + "\" is undefined within section \"" + _section + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Key is undefined within section. Error creating message string.";
                 }
@@ -306,7 +316,8 @@ namespace DAC {
               virtual ~ParseError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  return ("Could not parse line: \"" + _line + "\".").c_str();
+                  std::string tmpmsg("Could not parse line: \"" + _line + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Could not parse line. Error creating message string.";
                 }

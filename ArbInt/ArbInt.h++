@@ -68,7 +68,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".").c_str();
+                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
                 }
@@ -96,7 +97,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw()  {
                 try {
-                  return (DAC::toString(_source) + ": Attempt to set ArbInt to a negative number.").c_str();
+                  std::string tmpmsg(DAC::toString(_source) + ": Attempt to set ArbInt to a negative number.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Attempt to set ArbInt to a negative number. Error creating message string.";
                 }
@@ -111,7 +113,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + _number->toString() + " results in a negative number.").c_str();
+                  std::string tmpmsg(std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + _number->toString() + " results in a negative number.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unary operation results in a negative number. Error creating message string.";
                 }
@@ -132,7 +135,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Results in a negative number.").c_str();
+                  std::string tmpmsg(DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Results in a negative number.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Binary operation results in a negative number. Error creating message string.";
                 }
@@ -161,7 +165,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (std::string(_problem) + " at offset " + DAC::toString(_offset) + " with limit of " + DAC::toString(_limit) + ".").c_str();
+                  std::string tmpmsg(std::string(_problem) + " at offset " + DAC::toString(_offset) + " with limit of " + DAC::toString(_limit) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Instruction overruns end of container. Error creating message string.";
                 }
@@ -182,7 +187,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Requested shift of " + _bits->toString() + " bits overruns the maximum bits (" + _maxbits->toString() + ") of the container.").c_str();
+                  std::string tmpmsg("Requested shift of " + _bits->toString() + " bits overruns the maximum bits (" + _maxbits->toString() + ") of the container.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Requested shift overruns maximum bits of the digit container. Error creating message string.";
                 }
@@ -207,7 +213,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Divide by zero.").c_str();
+                  std::string tmpmsg(DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Divide by zero.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Divide by zero. Error creating message string.";
                 }
@@ -235,7 +242,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (_number->toString() + ": Oveflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
+                  std::string tmpmsg(_number->toString() + ": Oveflows requested scalar type's limit of " + DAC::toString(_limit) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "ArbInt overflows requested scalar type. Error creating message string.";
                 }
@@ -260,7 +268,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (DAC::toString(_base) + ": Requested base is out of range, limit is " + DAC::toString(_limit) + ".").c_str();
+                  std::string tmpmsg(DAC::toString(_base) + ": Requested base is out of range, limit is " + DAC::toString(_limit) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Requested base is out of range. Error creating message string.";
                 }
@@ -278,7 +287,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (DAC::toString(this->Base()) + ": Requsted range is below minimum base of " + DAC::toString(this->Limit()) + ".").c_str();
+                  std::string tmpmsg(DAC::toString(this->Base()) + ": Requsted range is below minimum base of " + DAC::toString(this->Limit()) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Requested base is below minimum. Error creating message string.";
                 }
@@ -289,7 +299,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (DAC::toString(this->Base()) + ": Requsted range is above maximum base of " + DAC::toString(this->Limit()) + ".").c_str();
+                  std::string tmpmsg(DAC::toString(this->Base()) + ": Requsted range is above maximum base of " + DAC::toString(this->Limit()) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Requested base is above maximum. Error creating message string.";
                 }
@@ -302,7 +313,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (_root->toString() + " root of " + _number->toString() + ": Root is too large to calculate.").c_str();
+                  std::string tmpmsg(_root->toString() + " root of " + _number->toString() + ": Root is too large to calculate.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Root is too large to calculate. Error creating message string.";
                 }

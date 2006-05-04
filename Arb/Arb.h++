@@ -92,7 +92,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".").c_str();
+                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
                 }
@@ -119,7 +120,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Divide by zero.").c_str();
+                  std::string tmpmsg(DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Divide by zero.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Divide by zero. Error creating message string.";
                 }
@@ -146,7 +148,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (std::string("Attempting to take the even root ") + DAC::toString(*_root) + " of negative number " + DAC::toString(*_number) + " results in a complex number.").c_str();
+                  std::string tmpmsg(std::string("Attempting to take the even root ") + DAC::toString(*_root) + " of negative number " + DAC::toString(*_number) + " results in a complex number.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Even roots of negative numbers can only be complex numbers. Error creating message string.";
                 }
@@ -169,7 +172,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Integer operation attempted on a non-integer.").c_str();
+                  std::string tmpmsg(DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Integer operation attempted on a non-integer.");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Integer operation attempted on a non-integer. Error creating message string.";
                 }
@@ -196,7 +200,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (_number->toString() + ": Overflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
+                  std::string tmpmsg(_number->toString() + ": Overflows requested scalar type's limit of " + DAC::toString(_limit) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Arb overflows requested scalar type. Error creating message string.";
                 }
@@ -219,7 +224,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return (_number->toString() + ": Underflows requested scalar type's limit of " + DAC::toString(_limit) + ".").c_str();
+                  std::string tmpmsg(_number->toString() + ": Underflows requested scalar type's limit of " + DAC::toString(_limit) + ".");
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Arb underflows requested scalar type. Error creating message string.";
                 }
@@ -242,7 +248,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Attempt to set Arb from an invalid floating-point number: " + DAC::toString(_number)).c_str();
+                  std::string tmpmsg("Attempt to set Arb from an invalid floating-point number: " + DAC::toString(_number));
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Attempt to set Arb from an invalid floating-point number. Error creating message string.";
                 }
@@ -256,7 +263,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Attempt to set Arb to infinity: " + DAC::toString(this->Number())).c_str();
+                  std::string tmpmsg("Attempt to set Arb to infinity: " + DAC::toString(this->Number()));
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Attempt to set Arb to infinity. Error creating message string.";
                 }
@@ -266,7 +274,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Attempt to set Arb to positive infinity: " + DAC::toString(this->Number())).c_str();
+                  std::string tmpmsg("Attempt to set Arb to positive infinity: " + DAC::toString(this->Number()));
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Attempt to set Arb to positive infinity. Error creating message string.";
                 }
@@ -276,7 +285,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Attempt to set Arb to negative infinity: " + DAC::toString(this->Number())).c_str();
+                  std::string tmpmsg("Attempt to set Arb to negative infinity: " + DAC::toString(this->Number()));
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Attempt to set Arb to negative infinity. Error creating message string.";
                 }
@@ -286,7 +296,8 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  return ("Attempt to set Arb to Not-a-Number: " + DAC::toString(this->Number())).c_str();
+                  std::string tmpmsg("Attempt to set Arb to Not-a-Number: " + DAC::toString(this->Number()));
+                  return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Attempt to set Arb to Not-a-Number. Error creating message string.";
                 }
