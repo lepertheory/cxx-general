@@ -48,6 +48,20 @@ namespace DAC {
       
       // Reset to just-constructed state.
       virtual Exception& clear () throw();
+      
+      // Buffer a temporary string.
+      char const* buffer_message (std::string const& message);
+      
+    /*
+     * Private members.
+     */
+    private:
+      
+      /***********************************************************************/
+      // Data members.
+      
+      // Buffer for constructed error messages.
+      std::string _buffer;
     
   };
   
@@ -77,6 +91,19 @@ namespace DAC {
   inline std::string Exception::type() const throw() { return demangle(*this); }
   
   inline Exception& Exception::clear() throw() { return *this; }
+  
+  /*
+   * Buffer a temporary string.
+   */
+  inline char const* buffer_message (std::string const& message) {
+    
+    // Swap the contents of the message with the buffer.
+    _buffer.swap(message);
+    
+    // Return a pointer to the char array.
+    return _buffer.c_str();
+    
+  }
   
 }
 
