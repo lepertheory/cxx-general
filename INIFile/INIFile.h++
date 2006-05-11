@@ -143,45 +143,6 @@ namespace DAC {
             private:
               std::string _filename;
           };
-          class FileNonExist : public FileError {
-            public:
-              virtual ~FileNonExist () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("INI file \"" + FileError::Filename() + "\" does not exist.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "INI file does not exist. Error creating message string.";
-                }
-              };
-              virtual FileNonExist& Filename (std::string const& filename) { FileError::Filename(filename); return *this; };
-          };
-          class FileNonFile : public FileError {
-            public:
-              virtual ~FileNonFile () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("INI file \"" + FileError::Filename() + "\" is not a file.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "INI file is not a file. Error creating message string.";
-                }
-              };
-              virtual FileNonFile& Filename (std::string const& filename) { FileError::Filename(filename); return *this; };
-          };
-          class FileNonReadable : public FileError {
-            public:
-              virtual ~FileNonReadable () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("INI file \"" + FileError::Filename() + "\" is not readable.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "INI file is not readable. Error creating message string.";
-                }
-              };
-              virtual FileNonReadable& Filename (std::string const& filename) { FileError::Filename(filename); return *this; };
-          };
           class FileUnexpectedError : public FileError {
             public:
               virtual ~FileUnexpectedError () throw() {};

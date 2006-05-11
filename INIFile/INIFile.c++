@@ -6,9 +6,9 @@
 
 // Standard includes.
 #include <string>
+#include <fstream>
 
 // Internal includes.
-#include <POSIXFile.h++>
 #include <ValReader.h++>
 
 // Class include.
@@ -184,29 +184,26 @@ namespace DAC {
     }
     
     // Work area.
-    POSIXFile file(_data->filename);
-    
-    // Make sure we will be able to read the file.
-    if (!POSIXFile::is_exist(_data->filename)) {
-      throw Errors::FileNonExist().Filename(_data->filename);
-    }
-    if (!POSIXFile::is_file(_data->filename)) {
-      throw Errors::FileNonFile().Filename(_data->filename);
-    }
-    if (!POSIXFile::is_readable(_data->filename)) {
-      throw Errors::FileNonReadable().Filename(_data->filename);
+    ifstream file(_data->filename);
+    if (!file) {
+      throw Errors::FileNoOpen();
     }
     
     // Work area.
     _DataPT    retval(new _Data(*_data));
     _SectionT& newsections = retval->sections;
+    char*      buffer[32768] // TODO: This should not be hardcoded at the
+                             //       least, really shouldn't be a line length
+                             //       limit.
     
     // Process each line.
     string line   ;
     string section;
-    for (file.OpenMode(POSIXFile::OM_READ).open(); !file.eof_line(); ) {
+    while (!file.eof()) {
       
       // Read a line and trim whitespace.
+      // FIXME: This isn't trimming whitespace.
+      
       line = file.read_line(true);
       
       // Skip blank lines and comments.
