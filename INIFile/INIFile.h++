@@ -126,39 +126,32 @@ namespace DAC {
               virtual char const* what () const throw() { return "Cannot perform requested operation, filename is not set."; };
           };
           
-          // Error reading INI file.
-          class FileError : public Base {
+          // File could not be opened.
+          class FileNoOpen : public Base {
             public:
-              virtual ~FileError () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Unspecified error reading INI file \"" + _filename + "\".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Unspecified error reading INI file. Error creating message string.";
-                }
-              };
-              virtual FileError& Filename (std::string const& filename) { _filename = filename; return *this; };
-              std::string Filename () const { return _filename; };
-            private:
-              std::string _filename;
+              virtual ~FileNoOpen () throw() {};
+              virtual char const* what () const throw() { return "INI file could not be opened."; }
           };
-          class FileUnexpectedError : public FileError {
+          
+          // Unexpected file error.
+          class FileUnexpectedError : public Base {
             public:
               virtual ~FileUnexpectedError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Unexpected error reading \"" + FileError::Filename() + "\". Error message was \"" + _errmsg + "\".");
+                  std::string tmpmsg("Unexpected " + type + " error reading INI file: " + message);
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unexpected error reading INI file. Error creating message string.";
                 }
               };
-              virtual FileUnexpectedError& Filename (std::string const& filename) { FileError::Filename(filename); return *this; };
-              FileUnexpectedError& ErrMsg (std::string const& errmsg) { _errmsg = errmsg; return *this; };
-              std::string ErrMsg () const { return _errmsg; };
+              FileUnexpectedError& Type    (std::string const& type   ) { _type    = type   ; return *this; };
+              FileUnexpectedError& Message (std::string const& message) { _message = message; return *this; };
+              std::string Type    () const { return _type   ; };
+              std::string Message () const { return _message; };
             private:
-              std::string _errmsg;
+              std::string _type   ;
+              std::string _message;
           };
           
           // Multiple definition of a section.

@@ -82,7 +82,7 @@ cValReader = SConscript(['ValReader/SConscript'], exports = 'env cArbInt cArb') 
 cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cValReader'  ) ; env = tmpenv.Copy() ; modules.append(cINIFile  )
 
 # Tests.
-SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cPOSIXFile cGetOpt cINIFile cSyslog cValReader') ; env = tmpenv.Copy()
+SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cINIFile cValReader') ; env = tmpenv.Copy()
 
 # Shared library filenames.
 cxxgeneral_name   = env['LIBPREFIX'] + env['project_name'] + env['SHLIBSUFFIX']

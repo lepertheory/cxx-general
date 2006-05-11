@@ -184,17 +184,43 @@ namespace DAC {
     }
     
     // Work area.
-    ifstream file(_data->filename);
-    if (!file) {
-      throw Errors::FileNoOpen();
+    AutoArray<char> buffer                        ;
+    vector<string>  lines                         ;
+    _DataPT         retval     (new _Data(*_data));
+    _SectionT&      newsections(retval->sections) ;
+    
+    // Do not allow file errors to propagate.
+    try {
+      
+      // Open the INI file.
+      ifstream file(_data->filename.c_str());
+      if (!file) {
+        throw Errors::FileNoOpen();
+      }
+      
+      // Get the size of the file.
+      streampos filesize = 0;
+      file.seekg(0, ios::end);
+      filesize = file.tellg();
+      file.seekg(0, ios::beg);
+      
+      // Read the entire file into a buffer.
+      buffer = new char[filesize + 1];
+      file.read(buffer.get(), filesize);
+      file.close();
+      
+    // Error during file operation.
+    } catch (exception& e) {
+      throw Errors::FileUnexpectedError().Type(demangle(e)).Message(e.what());
+    } catch (...) {
+      throw Errors::FileUnexpectedError().Type("-Unknown-").Message("-Unknown-");
     }
     
-    // Work area.
-    _DataPT    retval(new _Data(*_data));
-    _SectionT& newsections = retval->sections;
-    char*      buffer[32768] // TODO: This should not be hardcoded at the
-                             //       least, really shouldn't be a line length
-                             //       limit.
+    // Split each line.
+    {
+      string tmpstr(buffer.get());
+      
+    }
     
     // Process each line.
     string line   ;
@@ -204,7 +230,7 @@ namespace DAC {
       // Read a line and trim whitespace.
       // FIXME: This isn't trimming whitespace.
       
-      line = file.read_line(true);
+      file.getline(buffer, 32768);
       
       // Skip blank lines and comments.
       if (line.empty() || line[0] == ';') {
