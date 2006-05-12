@@ -16,10 +16,10 @@ int main (int argc, char** argv) {
   
   INIFile::SectionListPT sections(test.get_sections());
   for (INIFile::SectionListPT::value_type::iterator i = sections->begin(); i != sections->end(); ++i) {
-    cout << "Section: \"" << *i << "\"\n";
+    cout << "Section: \"" << *i << "\"" << endl;
     INIFile::KeyListPT keys(test[*i].get_keys());
     for (INIFile::KeyListPT::value_type::iterator j = keys->begin(); j != keys->end(); ++j) {
-      cout << "Key: \"" << *j << "\"  Value: \"" << test[*i][*j] << "\"\n";
+      cout << "Key: \"" << *j << "\"  Value: \"" << test[*i][*j].to_string() << "\"" << endl;
     }
   }
   

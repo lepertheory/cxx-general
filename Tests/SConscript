@@ -6,17 +6,13 @@ env.Append(CPPPATH = ['..'])
 
 # Create program-specific environments.
 env_ArbInt = env.Copy()
-for incdir in cArbInt['include'] : env_ArbInt.Append(CPPPATH    = ['#' + incdir])
-for define in cArbInt['defines'] : env_ArbInt.Append(CPPDEFINES = [define]      )
+cArbInt.apply(env_ArbInt)
 env_Arb = env.Copy()
-for incdir in cArb['include'] : env_Arb.Append(CPPPATH    = ['#' + incdir])
-for define in cArb['defines'] : env_Arb.Append(CPPDEFINES = [define]      )
+cArb.apply(env_Arb)
 env_Timestamp = env.Copy()
-for incdir in cTimestamp['include'] : env_Timestamp.Append(CPPPATH    = ['#' + incdir])
-for define in cTimestamp['defines'] : env_Timestamp.Append(CPPDEFINES = [define]      )
+cTimestamp.apply(env_Timestamp)
 env_INIFile = env.Copy()
-for incdir in cINIFile['include'] : env_INIFile.Append(CPPPATH    = ['#' + incdir])
-for define in cINIFile['defines'] : env_INIFile.Append(CPPDEFINES = [define]      )
+cINIFile.apply(env_INIFile)
 
 # Object files.
 o_SafeInt   = env          .Object(target = 'SafeInt'  , source = ['SafeInt.c++'  ])
@@ -26,8 +22,8 @@ o_Timestamp = env_Timestamp.Object(target = 'Timestamp', source = ['Timestamp.c+
 o_INIFile   = env_INIFile  .Object(target = 'INIFile'  , source = ['INIFile.c++'  ])
 
 # Programs.
-env          .Program(target = 'SafeInt'  , source =                           [o_SafeInt  ])
-env_ArbInt   .Program(target = 'ArbInt'   , source = list(cArbInt   ['obj']) + [o_ArbInt   ])
-env_Arb      .Program(target = 'Arb'      , source = list(cArb      ['obj']) + [o_Arb      ])
-env_Timestamp.Program(target = 'Timestamp', source = list(cTimestamp['obj']) + [o_Timestamp])
-env_INIFile  .Program(target = 'INIFile'  , source = list(cINIFile  ['obj']) + [o_INIFile  ])
+env          .Program(target = 'SafeInt'  , source =                            [o_SafeInt  ])
+env_ArbInt   .Program(target = 'ArbInt'   , source = cArbInt   .get_objects() + [o_ArbInt   ])
+env_Arb      .Program(target = 'Arb'      , source = cArb      .get_objects() + [o_Arb      ])
+env_Timestamp.Program(target = 'Timestamp', source = cTimestamp.get_objects() + [o_Timestamp])
+env_INIFile  .Program(target = 'INIFile'  , source = cINIFile  .get_objects() + [o_INIFile  ])

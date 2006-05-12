@@ -139,13 +139,13 @@ namespace DAC {
               virtual ~FileUnexpectedError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Unexpected " + type + " error reading INI file: " + message);
+                  std::string tmpmsg("Unexpected " + _type + " error reading INI file: " + _message);
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Unexpected error reading INI file. Error creating message string.";
                 }
               };
-              FileUnexpectedError& Type    (std::string const& type   ) { _type    = type   ; return *this; };
+              FileUnexpectedError& Type    (std::string const& errtype) { _type    = errtype; return *this; };
               FileUnexpectedError& Message (std::string const& message) { _message = message; return *this; };
               std::string Type    () const { return _type   ; };
               std::string Message () const { return _message; };

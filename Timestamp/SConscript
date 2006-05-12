@@ -1,15 +1,22 @@
+# Imports.
+from sconsgeneral import Module
+
 # Imports from caller.
 Import('*')
 
 # Include the parent directory.
 env.Append(CPPPATH = ['..'])
 
-# Include dependency directories.
-for incdir in cArb['include'] :
-  env.Append(CPPPATH = ['#' + incdir])
+# Bring in dependencies.
+cArb.apply(env)
 
-# Create a list of defines.
-defines = []
+# Create our module definition.
+cTimestamp = Module()
+cTimestamp.take(cArb)
+
+# Headers.
+cTimestamp.own_include = 'Timestamp'
+cTimestamp.own_headers = ['Timestamp.h++']
 
 # Define... uh, defines.
 have_windows_h    = 0
@@ -60,56 +67,45 @@ if not env.GetOption('clean') :
   env['CCFLAGS'] = tmpccflags
 
 # Set defines
-if have_windows_h    : defines += [ 'HAVE_WINDOWS_H'    ]
-if have_sys_time_h   : defines += [ 'HAVE_SYS_TIME_H'   ]
-if have_time_h       : defines += [ 'HAVE_TIME_H'       ]
-if have__systemtime  : defines += [ 'HAVE__SYSTEMTIME'  ]
-if have_lpsystemtime : defines += [ 'HAVE_LPSYSTEMTIME' ]
-if have_timeval      : defines += [ 'HAVE_TIMEVAL'      ]
-if have_timezone     : defines += [ 'HAVE_TIMEZONE'     ]
-if have_gettimeofday : defines += [ 'HAVE_GETTIMEOFDAY' ]
-if have_time_t       : defines += [ 'HAVE_TIME_T'       ]
-if have_tm           : defines += [ 'HAVE_TM'           ]
-if have_time         : defines += [ 'HAVE_TIME'         ]
-if have_gmtime       : defines += [ 'HAVE_GMTIME'       ]
-if have_gmtime_r     : defines += [ 'HAVE_GMTIME_R'     ]
+if have_windows_h    : cTimestamp.own_defines += [ 'HAVE_WINDOWS_H'    ]
+if have_sys_time_h   : cTimestamp.own_defines += [ 'HAVE_SYS_TIME_H'   ]
+if have_time_h       : cTimestamp.own_defines += [ 'HAVE_TIME_H'       ]
+if have__systemtime  : cTimestamp.own_defines += [ 'HAVE__SYSTEMTIME'  ]
+if have_lpsystemtime : cTimestamp.own_defines += [ 'HAVE_LPSYSTEMTIME' ]
+if have_timeval      : cTimestamp.own_defines += [ 'HAVE_TIMEVAL'      ]
+if have_timezone     : cTimestamp.own_defines += [ 'HAVE_TIMEZONE'     ]
+if have_gettimeofday : cTimestamp.own_defines += [ 'HAVE_GETTIMEOFDAY' ]
+if have_time_t       : cTimestamp.own_defines += [ 'HAVE_TIME_T'       ]
+if have_tm           : cTimestamp.own_defines += [ 'HAVE_TM'           ]
+if have_time         : cTimestamp.own_defines += [ 'HAVE_TIME'         ]
+if have_gmtime       : cTimestamp.own_defines += [ 'HAVE_GMTIME'       ]
+if have_gmtime_r     : cTimestamp.own_defines += [ 'HAVE_GMTIME_R'     ]
 
 # Determine what our timestamp will support.
 if have_windows_h and have__systemtime and have_lpsystemtime :
-  defines += [ 'TIMESTAMP_SYSTIME_GETSYSTEMTIME' ]
-  defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'     ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_GETSYSTEMTIME' ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'     ]
 elif have_sys_time_h and have_timeval and have_timezone and have_gettimeofday and have_time_h and have_tm and have_time_t and have_gmtime_r :
-  defines += [ 'TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R' ]
-  defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'             ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R' ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'             ]
 elif have_sys_time_h and have_timeval and have_timezone and have_gettimeofday and have_time_h and have_tm and have_time_t and have_gmtime :
-  defines += [ 'TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME' ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME' ]
 elif have_time_h and have_time_t and have_time and have_tm and have_gmtime_r :
-  defines += [ 'TIMESTAMP_SYSTIME_TIME_GMTIME_R' ]
-  defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'     ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_TIME_GMTIME_R' ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_REENTRANT'     ]
 elif have_time_h and have_time_t and have_time and have_tm and have_gmtime :
-  defines += [ 'TIMESTAMP_SYSTIME_TIME_GMTIME' ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_TIME_GMTIME' ]
 else :
-  defines += [ 'TIMESTAMP_SYSTIME_NONE' ]
+  cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_NONE' ]
 
-# Create defines.
-for define in defines : env.Append(CPPDEFINES = [ define ])
+# Apply defines.
+cTimestamp.apply_defines(env)
 
 # Object files.
 o_Timestamp = env.Object      (target = 'Timestamp', source = ['Timestamp.c++'])
 s_Timestamp = env.SharedObject(target = 'Timestamp', source = ['Timestamp.c++'])
-
-# Create a dictionary containing all necessary information and objects to
-# compile with Timestamp.
-cTimestamp = { 'obj'        : cArb['obj']     + [o_Timestamp]              ,
-               'sobj'       : cArb['sobj']    + [s_Timestamp]              ,
-               'include'    : cArb['include'] + ['Timestamp']              ,
-               'headers'    : cArb['headers'] + ['Timestamp/Timestamp.h++'],
-               'defines'    : cArb['defines'] + [defines]                  ,
-               'own_obj'    : [o_Timestamp]                                ,
-               'own_sobj'   : [s_Timestamp]                                ,
-               'own_include': 'Timestamp'                                  ,
-               'own_headers': ['Timestamp/Timestamp.h++']                  ,
-               'own_defines': defines                                        }
+cTimestamp.own_objects        += [o_Timestamp]
+cTimestamp.own_shared_objects += [s_Timestamp]
 
 # Return.
 Return('cTimestamp')

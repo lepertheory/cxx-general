@@ -74,15 +74,16 @@ h_CaseConvert      = env.File('CaseConvert.h++'     ) ; headers += [h_CaseConver
 # Modules.
 modules = []
 tmpenv = env.Copy()
-cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'             ) ; env = tmpenv.Copy() ; modules.append(cArbInt   )
-cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt'     ) ; env = tmpenv.Copy() ; modules.append(cArb      )
-cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'        ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
-cwrapText  = SConscript(['wrapText/SConscript' ], exports = 'env'             ) ; env = tmpenv.Copy() ; modules.append(cwrapText )
-cValReader = SConscript(['ValReader/SConscript'], exports = 'env cArbInt cArb') ; env = tmpenv.Copy() ; modules.append(cValReader)
-cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cValReader'  ) ; env = tmpenv.Copy() ; modules.append(cINIFile  )
+cArbInt    = SConscript(['ArbInt/SConscript'   ], exports = 'env'                     ) ; env = tmpenv.Copy() ; modules.append(cArbInt   )
+cArb       = SConscript(['Arb/SConscript'      ], exports = 'env cArbInt'             ) ; env = tmpenv.Copy() ; modules.append(cArb      )
+cTimestamp = SConscript(['Timestamp/SConscript'], exports = 'env cArb'                ) ; env = tmpenv.Copy() ; modules.append(cTimestamp)
+cwrapText  = SConscript(['wrapText/SConscript' ], exports = 'env'                     ) ; env = tmpenv.Copy() ; modules.append(cwrapText )
+cValReader = SConscript(['ValReader/SConscript'], exports = 'env cArbInt cArb'        ) ; env = tmpenv.Copy() ; modules.append(cValReader)
+ctokenize  = SConscript(['tokenize/SConscript' ], exports = 'env'                     ) ; env = tmpenv.Copy() ; modules.append(ctokenize )
+cINIFile   = SConscript(['INIFile/SConscript'  ], exports = 'env cValReader ctokenize') ; env = tmpenv.Copy() ; modules.append(cINIFile  )
 
 # Tests.
-SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cINIFile cValReader') ; env = tmpenv.Copy()
+SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cINIFile cValReader ctokenize') ; env = tmpenv.Copy()
 
 # Shared library filenames.
 cxxgeneral_name   = env['LIBPREFIX'] + env['project_name'] + env['SHLIBSUFFIX']
@@ -92,7 +93,7 @@ cxxgeneral_rname  = cxxgeneral_soname + '.' + cxxgeneral_min_version
 # Create the shared library.
 cxxgeneral_objs = []
 for module in modules :
-  for obj in module['own_sobj'] :
+  for obj in module.own_shared_objects :
     cxxgeneral_objs += obj
 cxxgeneral = env.SharedLibrary(target = cxxgeneral_rname, SHLIBSUFFIX = '', source = cxxgeneral_objs, SHLINKFLAGS = '-Wl,-soname,' + cxxgeneral_soname + env['SHLINKFLAGS'])
 
@@ -103,7 +104,7 @@ pcfile = env.PkgConfig(target = env['project_name'], source = env['project_name'
 install = []
 install.append(env.Install(install_includedir, headers))
 for module in modules :
-  install.append(env.Install(install_includedir, module['own_headers']))
+  install.append(env.Install(install_includedir, module.own_headers))
 install.append(env.Install(install_libdir                        , cxxgeneral))
 install.append(env.Symlink(install_libdir + '/' + cxxgeneral_name, cxxgeneral))
 install.append(env.Install(install_pkgconfigdir, pcfile))

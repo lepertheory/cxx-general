@@ -6,10 +6,13 @@
 
 // Standard includes.
 #include <string>
+#include <vector>
 #include <fstream>
 
 // Internal includes.
 #include <ValReader.h++>
+#include <tokenize.h++>
+#include <AutoArray.h++>
 
 // Class include.
 #include "INIFile.h++"
@@ -205,7 +208,7 @@ namespace DAC {
       file.seekg(0, ios::beg);
       
       // Read the entire file into a buffer.
-      buffer = new char[filesize + 1];
+      buffer = new char[filesize + static_cast<streampos>(1)];
       file.read(buffer.get(), filesize);
       file.close();
       
@@ -217,23 +220,17 @@ namespace DAC {
     }
     
     // Split each line.
-    {
-      string tmpstr(buffer.get());
-      
-    }
+    tokenize(buffer.get(), lines, "\n");
     
     // Process each line.
-    string line   ;
     string section;
-    while (!file.eof()) {
+    for (vector<string>::iterator line = lines.begin(); line != lines.end(); ++line) {
       
-      // Read a line and trim whitespace.
-      // FIXME: This isn't trimming whitespace.
-      
-      file.getline(buffer, 32768);
+      // Trim whitespace.
+      //trim(*line);
       
       // Skip blank lines and comments.
-      if (line.empty() || line[0] == ';') {
+      if (line->empty() || (*line)[0] == ';') {
         continue;
       }
       
@@ -241,15 +238,15 @@ namespace DAC {
       string::size_type valuesep = string::npos;
       
       // Check if this is the beginning of a section.
-      if (line[0] == '[' && line[line.size() - 1] == ']') {
+      if ((*line)[0] == '[' && (*line)[line->size() - 1] == ']') {
         
         // Make sure the section is not blank.
-        if (line.size() == 2) {
+        if (line->size() == 2) {
           throw Errors::SectionBlank();
         }
         
         // Get the section name.
-        section = line.substr(1, line.size() - 2);
+        section = line->substr(1, line->size() - 2);
         
         // Make sure this section does not already exist.
         if (newsections.count(section)) {
@@ -260,7 +257,7 @@ namespace DAC {
         newsections[section];
         
       // Check for a key=value.
-      } else if ((valuesep = line.find('=')) != string::npos) {
+      } else if ((valuesep = line->find('=')) != string::npos) {
         
         // Make sure that we have a key.
         if (valuesep == 0) {
@@ -272,7 +269,7 @@ namespace DAC {
         string value;
         
         // Get the key, trim whitespace from end.
-        key = line.substr(0, min(line.find_last_not_of(" \t", valuesep - 1) + 1, valuesep));
+        key = line->substr(0, min(line->find_last_not_of(" \t", valuesep - 1) + 1, valuesep));
         
         // Make sure that we have an active section.
         if (section.empty()) {
@@ -285,8 +282,8 @@ namespace DAC {
         }
         
         // Get the value, trim whitespace from beginning.
-        if (valuesep != line.size() - 1) {
-          value = line.substr(line.find_first_not_of(" \t", valuesep + 1));
+        if (valuesep != line->size() - 1) {
+          value = line->substr(line->find_first_not_of(" \t", valuesep + 1));
         }
         
         // Add the key.
@@ -294,11 +291,10 @@ namespace DAC {
         
       // Parse error.
       } else {
-        throw Errors::ParseError().Line(line);
+        throw Errors::ParseError().Line(*line);
       }
       
     }
-    file.close();
     
     // File was successfully read.
     retval->wasread = true;

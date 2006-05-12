@@ -1,31 +1,30 @@
+# Imports.
+from sconsgeneral import Module
+
 # Imports from the caller.
 Import('*')
 
 # Include the parent directory.
 env.Append(CPPPATH = ['..'])
 
-# Include dependency directories.
-for incdir in cValReader['include'] :
-  env.Append(CPPPATH = ['#' + incdir])
+# Bring in dependencies.
+cValReader.apply(env)
+ctokenize .apply(env)
+
+# Create our module definition.
+cINIFile = Module()
+cINIFile.take(cValReader)
+cINIFile.take(ctokenize )
+
+# Headers.
+cINIFile.own_include = 'INIFile'
+cINIFile.own_headers = ['INIFile.h++']
 
 # Object files.
 o_INIFile = env.Object      (target = 'INIFile', source = ['INIFile.c++'])
 s_INIFile = env.SharedObject(target = 'INIFile', source = ['INIFile.c++'])
-
-# Create a dictionary containing all necessary information and objects to
-# compile with INIFile.
-cINIFile = {
-  'obj'         : cValReader['obj']     + [o_INIFile]            ,
-  'sobj'        : cValReader['sobj']    + [s_INIFile]            ,
-  'include'     : cValReader['include'] + ['INIFile']            ,
-  'headers'     : cValReader['headers'] + ['INIFile/INIFile.h++'],
-  'defines'     : cValReader['defines']                          ,
-  'own_obj'     : [o_INIFile]                                    ,
-  'own_sobj'    : [s_INIFile]                                    ,
-  'own_include' : 'INIFile'                                      ,
-  'own_headers' : ['INIFile/INIFile.h++']                        ,
-  'own_defines' : []
-}
+cINIFile.own_objects        = [o_INIFile]
+cINIFile.own_shared_objects = [s_INIFile]
 
 # Return.
 Return('cINIFile')
