@@ -41,6 +41,9 @@ namespace DAC {
       // don't want to include the delimiter.
       workarr.push_back(strtotok.substr(spos, epos - spos));
       
+      // Start looking after the current delimiter.
+      spos = epos + 1;
+      
     }
     
     // Move the results into place.

@@ -13,6 +13,7 @@
 #include <ValReader.h++>
 #include <tokenize.h++>
 #include <AutoArray.h++>
+#include <trim.h++>
 
 // Class include.
 #include "INIFile.h++"
@@ -227,7 +228,7 @@ namespace DAC {
     for (vector<string>::iterator line = lines.begin(); line != lines.end(); ++line) {
       
       // Trim whitespace.
-      //trim(*line);
+      trim(*line);
       
       // Skip blank lines and comments.
       if (line->empty() || (*line)[0] == ';') {
