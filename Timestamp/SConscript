@@ -99,7 +99,9 @@ else :
   cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_NONE' ]
 
 # Create define file.
-test = env.Define('Timestamp_config')
+define_env = env.Copy()
+cTimestamp.apply(define_env)
+test = define_env.Define('Timestamp_config')
 cTimestamp.own_headers.append(test)
 
 # Object files.

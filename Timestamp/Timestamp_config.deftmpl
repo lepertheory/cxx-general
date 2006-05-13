@@ -9,7 +9,7 @@
   #define TIMESTAMP_CONFIG_80mk3m80u4
 
 // The defines.
-/*<:DEFINES:HAVE_:TIMESTAMP_:>*/
+  /*<:DEFINES:HAVE_:TIMESTAMP_:>*/
 
 // End include guard.
 #endif
