@@ -105,7 +105,8 @@ pcfile = env.PkgConfig(target = env['project_name'], source = env['project_name'
 install = []
 install.append(env.Install(install_includedir, headers))
 for module in modules :
-  install.append(env.Install(install_includedir, module.own_headers))
+  for header in module.own_headers :
+    install.append(env.Install(install_includedir, module.own_include + '/' + header))
 install.append(env.Install(install_libdir                        , cxxgeneral))
 install.append(env.Symlink(install_libdir + '/' + cxxgeneral_name, cxxgeneral))
 install.append(env.Install(install_pkgconfigdir, pcfile))
