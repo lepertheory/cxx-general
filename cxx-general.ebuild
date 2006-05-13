@@ -17,7 +17,7 @@ KEYWORDS="~x86"
 IUSE=""
 
 DEPEND="                        \
-  >=dev-python/sconsgeneral-0.2 \
+  >=dev-python/sconsgeneral-0.3 \
   !>=dev-python/sconsgeneral-1  \
 "
 
