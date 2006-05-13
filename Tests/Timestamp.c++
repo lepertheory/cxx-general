@@ -14,6 +14,8 @@
 // Testing include.
 #include "Timestamp.h++"
 
+#include "Timestamp_config.h++"
+
 // Namespace declarations.
 using namespace std;
 using namespace DAC;

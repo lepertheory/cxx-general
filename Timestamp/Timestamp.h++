@@ -19,6 +19,9 @@
   #include <Arb.h++>
   #include <ReferencePointer.h++>
 
+// Config includes.
+  #include "Timestamp_config.h++"
+
 // Namespace wrapping.
 namespace DAC {
   

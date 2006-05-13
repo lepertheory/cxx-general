@@ -98,8 +98,9 @@ elif have_time_h and have_time_t and have_time and have_tm and have_gmtime :
 else :
   cTimestamp.own_defines += [ 'TIMESTAMP_SYSTIME_NONE' ]
 
-# Apply defines.
-cTimestamp.apply_defines(env)
+# Create define file.
+test = env.Define('Timestamp_config')
+cTimestamp.own_headers.append(test)
 
 # Object files.
 o_Timestamp = env.Object      (target = 'Timestamp', source = ['Timestamp.c++'])

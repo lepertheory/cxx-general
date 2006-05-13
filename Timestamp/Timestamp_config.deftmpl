@@ -1,0 +1,15 @@
+/*****************************************************************************
+ * Timestamp_config.deftmpl
+ *****************************************************************************
+ * Defines for compiling Timestamp.
+ *****************************************************************************/
+
+// Include guard.
+#if !defined(TIMESTAMP_CONFIG_80mk3m80u4)
+  #define TIMESTAMP_CONFIG_80mk3m80u4
+
+// The defines.
+/*<:DEFINES:HAVE_:TIMESTAMP_:>*/
+
+// End include guard.
+#endif

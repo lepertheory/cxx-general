@@ -4,6 +4,9 @@
  * Implementation for class Timestamp.
  *****************************************************************************/
 
+// Config include.
+#include "Timestamp_config.h++"
+
 // OS includes.
 #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
   #include <windows.h>

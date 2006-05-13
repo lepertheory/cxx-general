@@ -106,7 +106,10 @@ install = []
 install.append(env.Install(install_includedir, headers))
 for module in modules :
   for header in module.own_headers :
-    install.append(env.Install(install_includedir, module.own_include + '/' + header))
+    if isinstance(header, basestring) :
+      install.append(env.Install(install_includedir, module.own_include + '/' + header))
+    else :
+      install.append(env.Install(install_includedir, header))
 install.append(env.Install(install_libdir                        , cxxgeneral))
 install.append(env.Symlink(install_libdir + '/' + cxxgeneral_name, cxxgeneral))
 install.append(env.Install(install_pkgconfigdir, pcfile))

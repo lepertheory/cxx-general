@@ -10,7 +10,7 @@ cArbInt.apply(env_ArbInt)
 env_Arb = env.Copy()
 cArb.apply(env_Arb)
 env_Timestamp = env.Copy()
-cTimestamp.apply(env_Timestamp)
+cTimestamp.apply_includes(env_Timestamp)
 env_INIFile = env.Copy()
 cINIFile.apply(env_INIFile)
 
