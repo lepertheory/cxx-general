@@ -40,167 +40,31 @@ namespace DAC {
           // All SafeInt errors are based off of this.
           class Base : public Exception {
             public:
+              virtual ~Base () throw() {};
               virtual char const* what () const throw() { return "Unknown SafeInt error."; };
-              virtual ~Base () throw() { };
           };
           
           // Overflow.
           class Overflow : public Base {
             public:
-              virtual char const* what () const throw() { return "Unknown overflow."; };
-          };
-          
-          // Overflow resulting from a cast.
-          template <class U> class CastOverflow : public Overflow {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(toString(_number) + ": Cast overflows type limit of " + toString(_limit) + ".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Cast overflow. Error returning message string.";
-                }
-              };
-              CastOverflow& Number (U const number) throw() { _number = number; return *this; };
-              CastOverflow& Limit  (T const limit)  throw() { _limit  = limit;  return *this; };
-              U Number () const throw() { return _number; };
-              T Limit  () const throw() { return _limit;  };
-            private:
-              U _number;
-              T _limit;
-          };
-          
-          // Overflow in a unary operation.
-          class UnOpOverflow : public Overflow {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + DAC::toString(_number) + " overflows type limit of " + DAC::toString(_limit));
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Unary operation overflow. Error returning message string.";
-                }
-              };
-              virtual ~UnOpOverflow () throw() {};
-              UnOpOverflow& Number   (T           const number) throw() { _number = number; return *this; };
-              UnOpOverflow& Operator (char const* const op)     throw() { _op     = op    ; return *this; };
-              UnOpOverflow& Prefix   (bool        const prefix) throw() { _prefix = prefix; return *this; };
-              UnOpOverflow& Limit    (T           const limit)  throw() { _limit  = limit ; return *this; };
-              T           Number   () const throw() { return _number    ; };
-              char const* Operator () const throw() { return _op.c_str(); };
-              bool        Prefix   () const throw() { return _prefix    ; };
-              T           Limit    () const throw() { return _limit     ; };
-            private:
-              T           _number;
-              std::string _op;
-              bool        _prefix;
-              T           _limit;
-          };
-          
-          // Overflow in a binary operation.
-          template <class U> class BinOpOverflow : public Overflow {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(toString(_l) + " " + _op + " " + toString(_r) + ": Operation overflows type limit of " + toString(_limit) + ".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Binary operation overflow. Error returning message string.";
-                }
-              };
-              virtual ~BinOpOverflow () throw() {};
-              BinOpOverflow& Left     (T           const l)     throw() { _l     = l    ; return *this; };
-              BinOpOverflow& Operator (char const* const op)    throw() { _op    = op   ; return *this; };
-              BinOpOverflow& Right    (U           const r)     throw() { _r     = r    ; return *this; };
-              BinOpOverflow& Limit    (T           const limit) throw() { _limit = limit; return *this; };
-              T           Left     () const throw() { return _l         ; };
-              char const* Operator () const throw() { return _op.c_str(); };
-              U           Right    () const throw() { return _r         ; };
-              T           Limit    () const throw() { return _limit     ; };
-            private:
-              T           _l;
-              std::string _op;
-              U           _r;
-              T           _limit;
-          };
-          
-          // Overflow in a bitwise operator.
-          template <class U> class BitOverflow : public Overflow {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(toString(_l) + " " + _op + " " + toString(_r) + ": Operation requires more than " + toString(std::numeric_limits<T>::digits + (std::numeric_limits<T>::is_signed ? 1 : 0)) + " bits of storage.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Bitwise operation overflow. Error returning message string.";
-                }
-              };
-              BitOverflow& Left     (T           const l)  throw() { _l  = l ; return *this; };
-              BitOverflow& Operator (char const* const op) throw() { _op = op; return *this; };
-              BitOverflow& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l         ; };
-              char const* Operator () const throw() { return _op.c_str(); };
-              U           Right    () const throw() { return _r         ; };
-            private:
-              T           _l;
-              std::string _op;
-              U           _r;
+              virtual ~Overflow () throw() {};
+              virtual char const* what () const throw() { return "Operation causes overflow."; };
           };
           
           // Divide by zero.
-          template <class U> class DivByZero : public Base {
+          class DivByZero : public Base {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(toString(_l) + " " + _op + " " + toString(_r) + ": Divide by zero.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Divide by zero. Error returning message string.";
-                }
-              };
               virtual ~DivByZero () throw() {};
-              DivByZero& Left     (T           const l)  throw() { _l  = l ; return *this; };
-              DivByZero& Operator (char const* const op) throw() { _op = op; return *this; };
-              DivByZero& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l         ; };
-              char const* Operator () const throw() { return _op.c_str(); };
-              U           Right    () const throw() { return _r         ; };
-            private:
-              T           _l;
-              std::string _op;
-              U           _r;
+              virtual char const* what () const throw() { return "Divide by zero."; };
           };
           
           // Result of operation is undefined.
           class Undefined : public Base {
             public:
+              virtual ~Undefined () throw() {};
               virtual char const* what () const throw() { return "Result of operation is undefined."; };
           };
           
-          // Undefined binary operation.
-          template <class U> class BinOpUndefined : public Undefined {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(toString(_l) + " " + _op + " " + toString(_r) + ": Result of operation is undefined.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Result of operation is undefined. Error returning message string.";
-                }
-              };
-              virtual ~BinOpUndefined () throw() {};
-              BinOpUndefined& Left     (T           const l)  throw() { _l  = l ; return *this; };
-              BinOpUndefined& Operator (char const* const op) throw() { _op = op; return *this; };
-              BinOpUndefined& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left ()     const throw() { return _l         ; };
-              char const* Operator () const throw() { return _op.c_str(); };
-              U           Right ()    const throw() { return _r         ; };
-            private:
-              T           _l;
-              std::string _op;
-              U           _r;
-          };
-        
         // Private constructor, cannot instantiate this class.
         private:
           Errors ();
@@ -906,7 +770,7 @@ namespace DAC {
     }
     template <class T, class U> inline U SafeCast<T, U, SE_UE>::op (T const value) {
       if (value < static_cast<T>(0)) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(static_cast<U>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<U>(value);
     }
@@ -915,25 +779,25 @@ namespace DAC {
     }
     template <class T, class U> inline U SafeCast<T, U, SS_UL>::op (T const value) {
       if (value < static_cast<T>(0)) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(static_cast<U>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<U>(value);
     }
     template <class T, class U> inline U SafeCast<T, U, SL_SS>::op (T const value) {
       if (value < static_cast<T>(std::numeric_limits<U>::min())) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(std::numeric_limits<U>::min());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       if (value > static_cast<T>(std::numeric_limits<U>::max())) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(std::numeric_limits<U>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<U>(value);
     }
     template <class T, class U> inline U SafeCast<T, U, SL_US>::op (T const value) {
       if (value < static_cast<T>(0)) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(static_cast<U>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       if (value > static_cast<T>(std::numeric_limits<U>::max())) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(std::numeric_limits<U>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<U>(value);
     }
@@ -948,19 +812,19 @@ namespace DAC {
     }
     template <class T, class U> inline U SafeCast<T, U, US_UL>::op (T const value) {
       if (value > static_cast<T>(std::numeric_limits<U>::max())) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(std::numeric_limits<U>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<U>(value);
     }
     template <class T, class U> inline U SafeCast<T, U, UL_SS>::op (T const value) {
       if (value > static_cast<T>(std::numeric_limits<U>::max())) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(std::numeric_limits<U>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<U>(value);
     }
     template <class T, class U> inline U SafeCast<T, U, UL_US>::op (T const value) {
       if (value > static_cast<T>(std::numeric_limits<U>::max())) {
-        throw typename SafeInt<T>::Errors::template CastOverflow<U>().Number(value).Limit(std::numeric_limits<U>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<U>(value);
     }
@@ -1025,7 +889,7 @@ namespace DAC {
       }
       if (r == static_cast<U>(-1)) {
         if (l == std::numeric_limits<T>::min()) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return (l * static_cast<T>(-1));
       }
@@ -1034,28 +898,28 @@ namespace DAC {
       }
       if (l == static_cast<T>(-1)) {
         if (r == static_cast<U>(std::numeric_limits<T>::min())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r * static_cast<U>(-1));
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
           if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (r < static_cast<U>(std::numeric_limits<T>::min() / l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       } else {
         if (r > static_cast<U>(0)) {
           if (r > static_cast<U>(std::numeric_limits<T>::min() / l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (r < static_cast<U>(std::numeric_limits<T>::max() / l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -1076,11 +940,11 @@ namespace DAC {
       }
       if (l > static_cast<T>(0)) {
         if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       } else {
         if (static_cast<T>(r) > std::numeric_limits<T>::min() / l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return (l * static_cast<T>(r));
@@ -1094,45 +958,45 @@ namespace DAC {
       }
       if (r == static_cast<U>(-1)) {
         if (l == std::numeric_limits<T>::min()) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return (l * static_cast<T>(-1));
       }
       if (l == static_cast<T>(1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         if (r < static_cast<U>(std::numeric_limits<T>::min())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (l == static_cast<T>(-1)) {
         if (r <= static_cast<U>(std::numeric_limits<T>::min())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         if (r > (static_cast<U>(std::numeric_limits<T>::min()) * static_cast<U>(-1))) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
           if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (r < static_cast<U>(std::numeric_limits<T>::min() / l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       } else {
         if (r > static_cast<U>(0)) {
           if (r > static_cast<U>(std::numeric_limits<T>::min() / l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (r < static_cast<U>(std::numeric_limits<T>::max() / l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -1147,13 +1011,13 @@ namespace DAC {
       }
       if (l == static_cast<T>(1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (l == static_cast<T>(-1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max()) + static_cast<U>(1)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         if (r == static_cast<U>(std::numeric_limits<T>::max()) + static_cast<U>(1)) {
           return std::numeric_limits<T>::min();
@@ -1163,11 +1027,11 @@ namespace DAC {
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       } else {
         if (r > static_cast<U>(std::numeric_limits<T>::min() / l)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return (l * static_cast<T>(r));
@@ -1181,7 +1045,7 @@ namespace DAC {
       }
       if (r == static_cast<U>(-1)) {
         if (l == std::numeric_limits<T>::min()) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return (l * static_cast<T>(r));
       }
@@ -1194,21 +1058,21 @@ namespace DAC {
       if (l > static_cast<T>(0)) {
         if (r > static_cast<T>(0)) {
           if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (static_cast<T>(r) < std::numeric_limits<T>::min() / l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       } else {
         if (r > static_cast<T>(0)) {
           if (static_cast<T>(r) > std::numeric_limits<T>::min() / l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (static_cast<T>(r) < std::numeric_limits<T>::max() / l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -1229,11 +1093,11 @@ namespace DAC {
       }
       if (l > static_cast<T>(0)) {
         if (r > std::numeric_limits<T>::max() / l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       } else {
         if (r > std::numeric_limits<T>::min() / l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return (l * static_cast<T>(r));
@@ -1249,7 +1113,7 @@ namespace DAC {
         return static_cast<T>(r);
       }
       if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l * static_cast<T>(r));
     }
@@ -1261,13 +1125,13 @@ namespace DAC {
         return l;
       }
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
       if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l * static_cast<T>(r));
     }
@@ -1279,16 +1143,16 @@ namespace DAC {
         return l;
       }
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       if (l == static_cast<T>(1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l * static_cast<T>(r));
     }
@@ -1301,12 +1165,12 @@ namespace DAC {
       }
       if (l == static_cast<T>(1)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (r > static_cast<U>(std::numeric_limits<T>::max() / l)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l * static_cast<T>(r));
     }
@@ -1318,13 +1182,13 @@ namespace DAC {
         return l;
       }
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::min());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       if (l == static_cast<T>(1)) {
         return static_cast<T>(r);
       }
       if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l * static_cast<T>(r));
     }
@@ -1339,7 +1203,7 @@ namespace DAC {
         return static_cast<T>(r);
       }
       if (static_cast<T>(r) > std::numeric_limits<T>::max() / l) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("*").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l * static_cast<T>(r));
     }
@@ -1349,7 +1213,7 @@ namespace DAC {
      */
     template <class T, class U> T SafeDiv<T, U, SE_SE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1358,13 +1222,13 @@ namespace DAC {
         return l;
       }
       if ((l == std::numeric_limits<T>::min()) && (r == static_cast<U>(-1))) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("/").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l / static_cast<T>(r));
     }
     template <class T, class U> T SafeDiv<T, U, SE_UE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1376,7 +1240,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeDiv<T, U, SS_SL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1385,13 +1249,13 @@ namespace DAC {
         return l;
       }
       if ((l == std::numeric_limits<T>::min()) && (r == static_cast<U>(-1))) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("/").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<T>(static_cast<U>(l) / r);
     }
     template <class T, class U> T SafeDiv<T, U, SS_UL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1407,7 +1271,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeDiv<T, U, SL_SS>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1416,13 +1280,13 @@ namespace DAC {
         return l;
       }
       if ((l == std::numeric_limits<T>::min()) && (r == static_cast<U>(-1))) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("/").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l / static_cast<T>(r));
     }
     template <class T, class U> T SafeDiv<T, U, SL_US>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1434,7 +1298,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeDiv<T, U, UE_UE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1446,7 +1310,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeDiv<T, U, UE_SE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1455,13 +1319,13 @@ namespace DAC {
         return l;
       }
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("/").Right(r).Limit(static_cast<T>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l / static_cast<T>(r));
     }
     template <class T, class U> T SafeDiv<T, U, US_SL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1470,13 +1334,13 @@ namespace DAC {
         return l;
       }
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("/").Right(r).Limit(static_cast<T>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<T>(static_cast<U>(l) / r);
     }
     template <class T, class U> T SafeDiv<T, U, US_UL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1488,7 +1352,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeDiv<T, U, UL_SS>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1497,13 +1361,13 @@ namespace DAC {
         return l;
       }
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("/").Right(r).Limit(static_cast<T>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l / static_cast<T>(r));
     }
     template <class T, class U> T SafeDiv<T, U, UL_US>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("/").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if (l == static_cast<T>(0)) {
         return static_cast<T>(0);
@@ -1519,7 +1383,7 @@ namespace DAC {
      */
     template <class T, class U> T SafeMod<T, U, SE_SE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1528,7 +1392,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, SE_UE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1537,7 +1401,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, SS_SL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1546,7 +1410,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, SS_UL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1559,7 +1423,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, SL_SS>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1568,7 +1432,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, SL_US>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1577,7 +1441,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, UE_UE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1586,7 +1450,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, UE_SE>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1595,7 +1459,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, US_SL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1604,7 +1468,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, US_UL>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1613,7 +1477,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, UL_SS>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1630,7 +1494,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeMod<T, U, UL_US>::op (T const l, U const r) {
       if (r == static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template DivByZero<U>().Left(l).Operator("%").Right(r);
+        throw typename SafeInt<T>::Errors::DivByZero();
       }
       if ((l == static_cast<T>(0)) || (r == static_cast<U>(1))) {
         return static_cast<T>(0);
@@ -1651,13 +1515,13 @@ namespace DAC {
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
           if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       } else {
         if (r < static_cast<U>(0)) {
           if (static_cast<T>(r) < std::numeric_limits<T>::min() - l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -1672,7 +1536,7 @@ namespace DAC {
       }
       if (l > static_cast<T>(0)) {
         if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return (l + static_cast<T>(r));
@@ -1683,22 +1547,22 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         if (r < static_cast<U>(std::numeric_limits<T>::min())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
           if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (r < (static_cast<U>(l) * static_cast<U>(-1))) {
             if (r - static_cast<U>(l) < static_cast<U>(std::numeric_limits<T>::min())) {
-              throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::min());
+              throw typename SafeInt<T>::Errors::Overflow();
             }
           }
         }
@@ -1706,12 +1570,12 @@ namespace DAC {
         if (r > static_cast<U>(0)) {
           if (r > (static_cast<U>(l) * static_cast<U>(-1))) {
             if (r + static_cast<U>(l) > static_cast<U>(std::numeric_limits<T>::max())) {
-              throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+              throw typename SafeInt<T>::Errors::Overflow();
             }
           }
         } else {
           if (r < static_cast<U>(std::numeric_limits<T>::min() - l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -1723,20 +1587,20 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(static_cast<U>(l) + r);
       } else {
         U tmp(static_cast<U>((l + static_cast<T>(1)) * static_cast<T>(-1)) + static_cast<U>(1));
         if (r > tmp) {
           if (r - tmp > static_cast<U>(std::numeric_limits<T>::max())) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
           return static_cast<T>(r - tmp);
         } else {
@@ -1754,13 +1618,13 @@ namespace DAC {
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
           if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       } else {
         if (r < static_cast<U>(0)) {
           if (static_cast<T>(r) < std::numeric_limits<T>::min() - l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -1775,7 +1639,7 @@ namespace DAC {
       }
       if (l > static_cast<T>(0)) {
         if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return (l + static_cast<T>(r));
@@ -1788,7 +1652,7 @@ namespace DAC {
         return static_cast<T>(r);
       }
       if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l + static_cast<T>(r));
     }
@@ -1798,17 +1662,17 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r < static_cast<U>(0)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (r > static_cast<U>(0)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       } else {
         if (r < static_cast<U>(l) * static_cast<U>(-1)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return static_cast<T>(static_cast<U>(l) + r);
@@ -1819,20 +1683,20 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r < static_cast<U>(0)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (r > static_cast<U>(0)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       } else {
         if (r < static_cast<U>(l) * static_cast<U>(-1)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return static_cast<T>(static_cast<U>(l) + r);
@@ -1843,12 +1707,12 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (r > static_cast<U>(std::numeric_limits<T>::max() - l)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<T>(static_cast<U>(l) + r);
     }
@@ -1858,19 +1722,19 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r < static_cast<U>(0)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r);
       }
       if (r > static_cast<U>(0)) {
         if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return (l + static_cast<T>(r));
       } else {
         T tmp(static_cast<T>((r + 1) * static_cast<U>(-1)) + static_cast<T>(1));
         if (tmp > l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return (l - tmp);
       }
@@ -1883,7 +1747,7 @@ namespace DAC {
         return static_cast<T>(r);
       }
       if (static_cast<T>(r) > std::numeric_limits<T>::max() - l) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("+").Right(r).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return (l + static_cast<T>(r));
     }
@@ -1897,20 +1761,20 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r == static_cast<U>(std::numeric_limits<T>::min())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(static_cast<U>(0) - r);
       }
       if (l > static_cast<T>(0)) {
         if (r < static_cast<U>(0)) {
           if (static_cast<T>(r) < std::numeric_limits<T>::max() - l * static_cast<T>(-1)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       } else {
         if (r > static_cast<U>(0)) {
           if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -1925,7 +1789,7 @@ namespace DAC {
       }
       if (l < static_cast<T>(0)) {
         if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return (l - static_cast<T>(r));
@@ -1937,11 +1801,11 @@ namespace DAC {
       if (l == static_cast<T>(0)) {
         if (r > 0) {
           if (r * static_cast<U>(-1) < static_cast<U>(std::numeric_limits<T>::min())) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (r < static_cast<U>(std::numeric_limits<T>::max()) * static_cast<U>(-1)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
         return static_cast<T>(static_cast<U>(0) - r);
@@ -1950,23 +1814,23 @@ namespace DAC {
         if (r > static_cast<U>(0)) {
           if (r > static_cast<U>(l)) {
             if ((r - static_cast<U>(l)) * static_cast<U>(-1) < static_cast<U>(std::numeric_limits<T>::min())) {
-              throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+              throw typename SafeInt<T>::Errors::Overflow();
             }
           }
         } else {
           if (r < static_cast<U>(std::numeric_limits<T>::max() - l) * static_cast<U>(-1)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       } else {
         if (r > static_cast<U>(0)) {
           if (r * static_cast<U>(-1) < static_cast<U>(std::numeric_limits<T>::min() - l)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         } else {
           if (r < static_cast<U>(l)) {
             if ((r - static_cast<U>(l)) < static_cast<U>(std::numeric_limits<T>::max()) * static_cast<U>(-1)) {
-              throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+              throw typename SafeInt<T>::Errors::Overflow();
             }
           }
         }
@@ -1979,14 +1843,14 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r > static_cast<U>((std::numeric_limits<T>::min() + static_cast<T>(1)) * static_cast<T>(-1)) + static_cast<U>(1)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(r - static_cast<U>(1)) * static_cast<T>(-1) - static_cast<T>(1);
       }
       if (l > static_cast<T>(0)) {
         if (r > static_cast<U>(l)) {
           if (r - static_cast<U>(l) > static_cast<U>(std::numeric_limits<T>::max()) + static_cast<U>(1)) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
           return (static_cast<T>(r - static_cast<U>(l) - static_cast<U>(1)) * static_cast<T>(-1)) - static_cast<T>(1);
         } else {
@@ -1994,7 +1858,7 @@ namespace DAC {
         }
       } else {
         if (r > static_cast<U>((std::numeric_limits<T>::min() - l) * static_cast<T>(-1))) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(static_cast<U>(l * static_cast<T>(-1)) + r - static_cast<U>(1)) * static_cast<T>(-1) - static_cast<T>(1);
       }
@@ -2009,13 +1873,13 @@ namespace DAC {
       if (l > static_cast<T>(0)) {
         if (r < static_cast<U>(0)) {
           if (static_cast<T>(r) * static_cast<T>(-1) > std::numeric_limits<T>::max() - l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       } else {
         if (r > static_cast<U>(0)) {
           if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -2031,7 +1895,7 @@ namespace DAC {
       if (l < static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
           if (static_cast<T>(r) * static_cast<T>(-1) < std::numeric_limits<T>::min() - l) {
-            throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::min());
+            throw typename SafeInt<T>::Errors::Overflow();
           }
         }
       }
@@ -2042,7 +1906,7 @@ namespace DAC {
         return l;
       }
       if (r > static_cast<U>(l)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l - static_cast<T>(r);
     }
@@ -2052,20 +1916,20 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         if (r < static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(static_cast<U>(0) - r);
       }
       if (r > static_cast<U>(0)) {
         if (r > static_cast<U>(l)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       } else {
         if (r < static_cast<U>(std::numeric_limits<T>::max() - l) * static_cast<U>(-1)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return static_cast<T>(static_cast<U>(l) - r);
@@ -2076,20 +1940,20 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         if (r < static_cast<U>(0) - static_cast<U>(std::numeric_limits<T>::max())) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return static_cast<T>(static_cast<U>(0) - r);
       }
       if (r > static_cast<U>(0)) {
         if (r > static_cast<U>(l)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       } else {
         if (r < static_cast<U>(0) - static_cast<U>(std::numeric_limits<T>::max() - l)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
       }
       return static_cast<T>(static_cast<U>(l) - r);
@@ -2099,7 +1963,7 @@ namespace DAC {
         return l;
       }
       if (r > static_cast<U>(l)) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return static_cast<T>(static_cast<U>(l) - r);
     }
@@ -2109,7 +1973,7 @@ namespace DAC {
       }
       if (l == static_cast<T>(0)) {
         if (r > static_cast<U>(0)) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         if (r == std::numeric_limits<U>::min()) {
           return static_cast<T>((std::numeric_limits<U>::min() + static_cast<U>(1)) * static_cast<U>(-1)) + static_cast<T>(1);
@@ -2119,13 +1983,13 @@ namespace DAC {
       }
       if (r > static_cast<U>(0)) {
         if (static_cast<T>(r) > l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return l - static_cast<T>(r);
       } else {
         T tmpnum = static_cast<T>((r + static_cast<U>(1)) * static_cast<U>(-1)) + static_cast<T>(1);
         if (tmpnum > std::numeric_limits<T>::max() - l) {
-          throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(std::numeric_limits<T>::max());
+          throw typename SafeInt<T>::Errors::Overflow();
         }
         return l + tmpnum;
       }
@@ -2135,7 +1999,7 @@ namespace DAC {
         return l;
       }
       if (static_cast<T>(r) > l) {
-        throw typename SafeInt<T>::Errors::template BinOpOverflow<U>().Left(l).Operator("-").Right(r).Limit(static_cast<T>(0));
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l - static_cast<T>(r);
     }
@@ -2143,91 +2007,91 @@ namespace DAC {
     // Shift left.
     template <class T, class U> T SafeShL<T, U, SE_SE>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, SE_UE>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, SS_SL>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, SS_UL>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, SL_SS>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, SL_US>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, UE_UE>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, UE_SE>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, US_SL>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, US_UL>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, UL_SS>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
     template <class T, class U> T SafeShL<T, U, UL_US>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator("<<").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l << r;
     }
@@ -2237,10 +2101,10 @@ namespace DAC {
      */
     template <class T, class U> T SafeShR<T, U, SE_SE>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
         return static_cast<T>(0);
@@ -2253,7 +2117,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeShR<T, U, SE_UE>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
         return static_cast<T>(0);
@@ -2266,10 +2130,10 @@ namespace DAC {
     }
     template <class T, class U> T SafeShR<T, U, SS_SL>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
         return static_cast<T>(0);
@@ -2282,7 +2146,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeShR<T, U, SS_UL>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
         return static_cast<T>(0);
@@ -2295,10 +2159,10 @@ namespace DAC {
     }
     template <class T, class U> T SafeShR<T, U, SL_SS>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
         return static_cast<T>(0);
@@ -2311,7 +2175,7 @@ namespace DAC {
     }
     template <class T, class U> T SafeShR<T, U, SL_US>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits + 1) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) == std::numeric_limits<T>::digits + 1) {
         return static_cast<T>(0);
@@ -2324,46 +2188,46 @@ namespace DAC {
     }
     template <class T, class U> T SafeShR<T, U, UE_UE>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l >> r;
     }
     template <class T, class U> T SafeShR<T, U, UE_SE>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l >> r;
     }
     template <class T, class U> T SafeShR<T, U, US_SL>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l >> r;
     }
     template <class T, class U> T SafeShR<T, U, US_UL>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l >> r;
     }
     template <class T, class U> T SafeShR<T, U, UL_SS>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l >> r;
     }
     template <class T, class U> T SafeShR<T, U, UL_US>::op (T const l, U const r) {
       if (SafeInt<U>(r) > std::numeric_limits<T>::digits) {
-        throw typename SafeInt<T>::Errors::template BinOpUndefined<U>().Left(l).Operator(">>").Right(r);
+        throw typename SafeInt<T>::Errors::Undefined();
       }
       return l >> r;
     }
@@ -2587,13 +2451,13 @@ namespace DAC {
     }
     template <class T, class U> inline T SafeBitIOr<T, U, SS_SL>::op (T const l, U const r) {
       if (r < static_cast<U>(0) || r > (static_cast<U>(std::numeric_limits<T>::max()) << 1) + static_cast<U>(1)) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("|").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
     template <class T, class U> inline T SafeBitIOr<T, U, SS_UL>::op (T const l, U const r) {
       if (r > (static_cast<U>(std::numeric_limits<T>::max()) << 1) + static_cast<U>(1)) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("|").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
@@ -2608,19 +2472,19 @@ namespace DAC {
     }
     template <class T, class U> inline T SafeBitIOr<T, U, UE_SE>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("|").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
     template <class T, class U> inline T SafeBitIOr<T, U, US_SL>::op (T const l, U const r) {
       if (r < static_cast<U>(0) || r > static_cast<U>(std::numeric_limits<T>::max())) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("|").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
     template <class T, class U> inline T SafeBitIOr<T, U, US_UL>::op (T const l, U const r) {
       if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("|").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l | RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
@@ -2642,13 +2506,13 @@ namespace DAC {
     }
     template <class T, class U> inline T SafeBitXOr<T, U, SS_SL>::op (T const l, U const r) {
       if (r < static_cast<U>(0) || r > (static_cast<U>(std::numeric_limits<T>::max()) << 1) + static_cast<U>(1)) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("^").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
     template <class T, class U> inline T SafeBitXOr<T, U, SS_UL>::op (T const l, U const r) {
       if (r > (static_cast<U>(std::numeric_limits<T>::max()) << 1) + static_cast<U>(1)) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("^").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
@@ -2663,19 +2527,19 @@ namespace DAC {
     }
     template <class T, class U> inline T SafeBitXOr<T, U, UE_SE>::op (T const l, U const r) {
       if (r < static_cast<U>(0)) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("^").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
     template <class T, class U> inline T SafeBitXOr<T, U, US_SL>::op (T const l, U const r) {
       if (r < static_cast<U>(0) || r > static_cast<U>(std::numeric_limits<T>::max())) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("^").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
     template <class T, class U> inline T SafeBitXOr<T, U, US_UL>::op (T const l, U const r) {
       if (r > static_cast<U>(std::numeric_limits<T>::max())) {
-        throw typename SafeInt<T>::Errors::template BitOverflow<U>().Left(l).Operator("^").Right(r);
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return l ^ RawCast<U, T, Relationship<U, T>::value>::op(r);
     }
@@ -2701,7 +2565,7 @@ namespace DAC {
      */
     template <class T> inline T SafeNegate<T, SE_SE>::op (T const value) {
       if (value == std::numeric_limits<T>::min()) {
-        throw typename SafeInt<T>::Errors::UnOpOverflow().Number(value).Operator("-").Prefix(true).Limit(std::numeric_limits<T>::max());
+        throw typename SafeInt<T>::Errors::Overflow();
       }
       return SafeBitCpm<T, Relationship<T, T>::value>::op(value) + static_cast<T>(1);
     }
@@ -2709,7 +2573,7 @@ namespace DAC {
       if (value == static_cast<T>(0)) {
         return value;
       }
-      throw typename SafeInt<T>::Errors::UnOpOverflow().Number(value).Operator("-").Prefix(true).Limit(0);
+      throw typename SafeInt<T>::Errors::Overflow();
     }
     
     /*

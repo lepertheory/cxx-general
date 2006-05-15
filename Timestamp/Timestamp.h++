@@ -213,23 +213,20 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg(_problem + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in format \"" + *_format + "\".");
+                  std::string tmpmsg(_problem + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + ".");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
                 }
               };
               virtual ~BadFormat () throw() {};
-              BadFormat& Problem  (char const*                        const problem ) throw() { _problem  = problem ; return *this; };
-              BadFormat& Position (std::string::size_type             const position) throw() { _position = position; return *this; };
-              BadFormat& Format   (ConstReferencePointer<std::string> const format  ) throw() { _format   = format  ; return *this; };
-              char const*                        Problem  () const throw() { return _problem.c_str(); }
-              std::string::size_type             Position () const throw() { return _position       ; }
-              ConstReferencePointer<std::string> Format   () const throw() { return _format         ; }
+              BadFormat& Problem  (char const*            const problem ) throw() { _problem  = problem ; return *this; };
+              BadFormat& Position (std::string::size_type const position) throw() { _position = position; return *this; };
+              char const*            Problem  () const throw() { return _problem.c_str(); }
+              std::string::size_type Position () const throw() { return _position       ; }
             private:
-              std::string                        _problem ;
-              std::string::size_type             _position;
-              ConstReferencePointer<std::string> _format  ;
+              std::string            _problem ;
+              std::string::size_type _position;
           };
           
           // Bad value.
@@ -241,168 +238,141 @@ namespace DAC {
           // Invalid MJD sent.
           class BadMJD : public BadValue {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Invalid MJD of " + DAC::toString(_mjd) + " sent.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Invalid MJD sent. Error creating message string.";
-                }
-              };
-              BadMJD& MJD (unsigned int const mjd) throw() { _mjd = mjd; return *this; };
-              unsigned int MJD () const throw() { return _mjd; };
-            protected:
-              unsigned int _mjd;
+              virtual ~BadMJD () throw() {};
+              virtual char const* what () const throw() { return "Invalid Modified Julian Date sent." };
           };
           class MJDMax : public BadMJD {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("MJD of " + DAC::toString(_mjd) + " sent, MJD maximum is 99999.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "MJD over maximum of 99999 sent. Error creating message string.";
-                }
-              };
+              virtual ~MJDMax () throw() {};
+              virtual char const* what () const throw() { return "Modified Julian Date exceeds 99999."; };
           };
           
           // Invalid offset.
           class BadOffset : public BadValue {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Invalid offset of " + DAC::toString(_offset) + " sent.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Invalid offset sent. Error creating message string.";
-                }
-              };
-              BadOffset& Offset (int const offset) throw() { _offset = offset; return *this; }
-              int Offset () const throw() { return _offset; }
-            protected:
-              int _offset;
+              virtual ~BadOffset () throw() {};
+              virtual char const* what () const throw() { return "Invalid offset."; };
           };
           class OffsetMin : public BadOffset {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Offset of " + DAC::toString(_offset) + " sent, offset minimum is -720.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Offset under minimum of -720 sent. Error creating message string.";
-                }
-              };
+              virtual ~OffsetMin () throw() {};
+              virtual char const* what () const throw() { return "Offset is below minimum of -720."; };
           };
           class OffsetMax : public BadOffset {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Offset of " + DAC::toString(_offset) + " sent, offset maximum is 720.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Offset over maximum of 720 sent. Error creating message string.";
-                }
-              };
+              virtual ~OffsetMax () throw() {};
+              virtual char const* what () const throw() { return "Offset is above maximum of 720."; };
           };
           
           // Invalid time.
           class InvalidTime : public BadValue {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Invalid time specified: " + _month.toString() + "/" + _day.toString() + "/" + _year.toString() + " " + _hour.toString() + ":" + _minute.toString() + ":" + _second.toString() + "." + _millisecond.toString());
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Invalid time specified. Error creating message string.";
-                }
-              };
-              InvalidTime& Year        (TimeVal const& year       ) throw() { _year        = year       ; return *this; };
-              InvalidTime& Month       (TimeVal const& month      ) throw() { _month       = month      ; return *this; };
-              InvalidTime& Day         (TimeVal const& day        ) throw() { _day         = day        ; return *this; };
-              InvalidTime& Hour        (TimeVal const& hour       ) throw() { _hour        = hour       ; return *this; };
-              InvalidTime& Minute      (TimeVal const& minute     ) throw() { _minute      = minute     ; return *this; };
-              InvalidTime& Second      (TimeVal const& second     ) throw() { _second      = second     ; return *this; };
-              InvalidTime& Millisecond (TimeVal const& millisecond) throw() { _millisecond = millisecond; return *this; };
-              TimeVal Year        () const throw() { return _year       ; };
-              TimeVal Month       () const throw() { return _month      ; };
-              TimeVal Day         () const throw() { return _day        ; };
-              TimeVal Hour        () const throw() { return _hour       ; };
-              TimeVal Minute      () const throw() { return _minute     ; };
-              TimeVal Second      () const throw() { return _second     ; };
-              TimeVal Millisecond () const throw() { return _millisecond; };
-            private:
-              TimeVal _year       ;
-              TimeVal _month      ;
-              TimeVal _day        ;
-              TimeVal _hour       ;
-              TimeVal _minute     ;
-              TimeVal _second     ;
-              TimeVal _millisecond;
+              virtual ~InvalidTime () throw() {};
+              virtual char const* what () const throw() { return "Invalid time specified."; };
           };
           
           // The year zero does not exist.
           class NoYearZero : public InvalidTime {
             public:
-              virtual char const* what () const throw() {
-                return "There is no year 0.";
-              }
+              virtual ~NoYearZero () throw() {};
+              virtual char const* what () const throw() { return "There is no year 0."; }
           };
           
           // Error making a system call.
           class SysCallError : public Base {
             public:
+              virtual ~SysCallError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Error making the requested system call to " + _syscall + ".");
+                  std::string tmpmsg;
+                  tmpmsg = "System call returned error " + DAC::toString(_errnum) + ": " + get_errorText(tmpmsg, _errnum);
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error making the requested system call. Error creating message string.";
                 }
               };
-              virtual ~SysCallError () throw() {};
-              SysCallError& SysCall (char const* const syscall) throw() { _syscall = syscall; return *this; };
-              char const* SysCall () const throw() { return _syscall.c_str(); }
+              virtual SysCallError& Errno (int const errnum) throw() { _errnum = errnum; return *this; };
+              int Errno () const throw() { return _errnum; };
             private:
-              std::string _syscall;
+              int _errnum;
           };
   #if defined(HAVE_WINDOWS_H)
           class SysCall_GetSystemTime : public SysCallError {
             public:
-              SysCall_GetSystemTime () {
-                SysCall("GetSystemTime");
+              virtual ~SysCall_GetSystemTime () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  std::string tmpmsg("GetSystemTime() returned error " + DAC::toString(Errno()) + ".");
+                  return Exception::buffer_message(tmpmsg);
+                } catch (...) {
+                  return "Error calling GetSystemTime(). Error creating message string.";
+                }
               };
+              virtual SysCall_GetSystemTime& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
           };
   #endif
   #if defined(HAVE_GETTIMEOFDAY)
           class SysCall_gettimeofday : public SysCallError {
             public:
-              SysCall_gettimeofday () {
-                SysCall("gettimeofday");
+              virtual ~SysCall_gettimeofday () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  std::string tmpmsg;
+                  tmpmsg = "gettimeofday() returned error " + DAC::toString(Errno()) + ": " + get_errorText(tmpmsg, _errnum);
+                  return Exception::buffer_message(tmpmsg);
+                } catch (...) {
+                  return "Error calling gettimeofday(). Error creating message string.";
+                }
               };
+              virtual SysCall_gettimeofday& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
           };
   #endif
   #if defined(HAVE_TIME)
           class SysCall_time : public SysCallError {
             public:
-              SysCall_time () {
-                SysCall("time");
+              virtual ~SysCall_time () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  std::string tmpmsg;
+                  tmpmsg = "time() returned error " + DAC::toString(Errno()) + ": " + get_errorText(tmpmsg, _errnum);
+                  return Exception::buffer_message(tmpmsg);
+                } catch (...) {
+                  return "Error calling time(). Error creating message string.";
+                }
               };
+              virtual SysCall_time& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
           };
   #endif
   #if defined(HAVE_GMTIME_R)
           class SysCall_gmtime_r : public SysCallError {
             public:
-              SysCall_gmtime_r () {
-                SysCall("gmtime_r");
+              virtual ~SysCall_gmtime_r () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  std::string tmpmsg;
+                  tmpmsg = "gmtime_r() returned error " + DAC::toString(Errno()) + ": " + get_errorText(tmpmsg, _errnum);
+                  return Exception::buffer_message(tmpmsg);
+                } catch (...) {
+                  return "Error calling gmtime_r(). Error creating message string.";
+                }
               };
+              virtual SysCall_gmtime_r& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
           };
   #endif
   #if defined(HAVE_GMTIME)
           class SysCall_gmtime : public SysCallError {
             public:
-              SysCall_gmtime () {
-                SysCall("gmtime");
+              virtual ~SysCall_gmtime () throw() {};
+              virtual char const* what () const throw() {
+                try {
+                  std::string tmpmsg;
+                  tmpmsg = "gmtime() returned error " + DAC::toString(Errno()) + ": " + get_errorText(tmpmsg, _errnum);
+                  return Exception::buffer_message(tmpmsg);
+                } catch (...) {
+                  return "Error calling gmtime(). Error creating message string.";
+                }
               };
+              virtual SysCall_gmtime& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
           };
   #endif
           

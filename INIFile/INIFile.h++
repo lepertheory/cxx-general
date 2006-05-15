@@ -176,18 +176,7 @@ namespace DAC {
           class SectionUndefined : public Base {
             public:
               virtual ~SectionUndefined () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Section \"" + _section + "\" is undefined.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Section is undefined. Error creating message string.";
-                }
-              };
-              SectionUndefined& Section (std::string const& section) { _section = section; return *this; };
-              std::string Section () const { return _section; }
-            private:
-              std::string _section;
+              virtual char const* what () const throw() { return "Section is undefined."; };
           };
           
           // Section title is blank.
@@ -247,21 +236,7 @@ namespace DAC {
           class KeyUndefined : public Base {
             public:
               virtual ~KeyUndefined () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Key \"" + _key + "\" is undefined within section \"" + _section + "\".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Key is undefined within section. Error creating message string.";
-                }
-              };
-              KeyUndefined& Section (std::string const& section) { _section = section; return *this; };
-              KeyUndefined& Key     (std::string const& key    ) { _key     = key    ; return *this; };
-              std::string Section () const { return _section; };
-              std::string Key     () const { return _key    ; };
-            private:
-              std::string _section;
-              std::string _key    ;
+              virtual char const* what () const throw() { return "Key is undefined."; };
           };
           
           // Unable to parse line.
@@ -270,16 +245,16 @@ namespace DAC {
               virtual ~ParseError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Could not parse line: \"" + _line + "\".");
+                  std::string tmpmsg("Could not parse line " + toString(_line) + ".");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Could not parse line. Error creating message string.";
                 }
               };
-              ParseError& Line (std::string const& line) { _line = line; return *this; };
-              std::string Line () const { return _line; };
+              ParseError& Line (size_t const line) { _line = line; return *this; };
+              size_t Line () const { return _line; };
             private:
-              std::string _line;
+              size_t _line;
           };
         
         // No instantiation of this class is allowed.

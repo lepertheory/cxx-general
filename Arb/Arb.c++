@@ -438,10 +438,12 @@ namespace DAC {
       
       // Determine the number base.
       if (autobase) {
-        if (number.length() > 2 + num_start && uppercase(number.substr(num_start, 2)) == "0X") {
+        string baseprefix(number.substr(num_start, 2));
+        uppercase(baseprefix);
+        if (number.length() > 2 + num_start && baseprefix == "0X") {
           num_base  = 16;
           num_start =  2 + num_start;
-        } else if (number.length() > 2 + num_start && uppercase(number.substr(num_start, 2)) == "0B") {
+        } else if (number.length() > 2 + num_start && baseprefix == "0B") {
           num_base  = 2;
           num_start = 2 + num_start;
         } else if (number.length() > 1 + num_start && number[num_start] == '0' && (number.length() < 3 + num_start || number[num_start + 1] != '.')) {
@@ -457,9 +459,9 @@ namespace DAC {
           // Decimal point.
           case '.':
             switch (mode) {
-              case NUM: mode = RAD;                                                                                                   break;
-              case RAD: throw Arb::Errors::BadFormat().Problem("Radix point given for a second time").Position(i).Number(tmp_number); break;
-              case EXP: throw Arb::Errors::BadFormat().Problem("Radix point given in exponent"      ).Position(i).Number(tmp_number); break;
+              case NUM: mode = RAD;                                                                                break;
+              case RAD: throw Arb::Errors::BadFormat().Problem("Radix point given for a second time").Position(i); break;
+              case EXP: throw Arb::Errors::BadFormat().Problem("Radix point given in exponent"      ).Position(i); break;
             }
           break;
           
@@ -467,9 +469,9 @@ namespace DAC {
           case 'e':
           case 'E':
             switch (mode) {
-              case NUM: mode = EXP;                                                                                                       break;
-              case RAD: mode = EXP;                                                                                                       break;
-              case EXP: throw Arb::Errors::BadFormat().Problem("Exponent symbol given for a second time").Position(i).Number(tmp_number); break;
+              case NUM: mode = EXP;                                                                                    break;
+              case RAD: mode = EXP;                                                                                    break;
+              case EXP: throw Arb::Errors::BadFormat().Problem("Exponent symbol given for a second time").Position(i); break;
             }
             diggiven = false;
           break;
@@ -478,22 +480,22 @@ namespace DAC {
           case '+':
           case '-':
             if (diggiven) {
-              throw Arb::Errors::BadFormat().Problem("Sign given after digits").Position(i).Number(tmp_number);
+              throw Arb::Errors::BadFormat().Problem("Sign given after digits").Position(i);
             }
             switch (mode) {
               case NUM:
                 if (s_num) {
-                  throw Arb::Errors::BadFormat().Problem("Sign of number given for a second time").Position(i).Number(tmp_number);
+                  throw Arb::Errors::BadFormat().Problem("Sign of number given for a second time").Position(i);
                 }
                 p_num = (number[i] == '+');
                 s_num = true;
               break;
               case RAD:
-                throw Arb::Errors::BadFormat().Problem("Sign given after radix point").Position(i).Number(tmp_number);
+                throw Arb::Errors::BadFormat().Problem("Sign given after radix point").Position(i);
               break;
               case EXP:
                 if (s_exp) {
-                  throw Arb::Errors::BadFormat().Problem("Sign of exponent given for a second time").Position(i).Number(tmp_number);
+                  throw Arb::Errors::BadFormat().Problem("Sign of exponent given for a second time").Position(i);
                 }
                 p_exp = (number[i] == '+');
                 s_exp = true;
@@ -538,9 +540,9 @@ namespace DAC {
       new_num._data->p.Base(num_base).set(num, false);
     } catch (ArbInt::Errors::BadFormat& e) {
       if (e.Position() < numstart + numlen) {
-        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart                      ).Number(tmp_number);
+        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart                      );
       } else {
-        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart + (radstart - numlen)).Number(tmp_number);
+        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart + (radstart - numlen));
       }
     }
     
@@ -560,7 +562,7 @@ namespace DAC {
       try {
         expn.Base(num_base).set(exp, false);
       } catch (ArbInt::Errors::BadFormat& e) {
-        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + expstart).Number(tmp_number);
+        throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + expstart);
       }
       if (p_exp) {
         if (expn >= expr) {
@@ -730,7 +732,7 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw Arb::Errors::DivByZeroBinary<Arb, Arb>().Left(*this).Operator("/").Right(number);
+      throw Arb::Errors::DivByZero();
     }
     
     // Work area
@@ -755,7 +757,7 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw Arb::Errors::DivByZeroBinary<Arb, ArbInt>().Left(*this).Operator("/").Right(number);
+      throw Arb::Errors::DivByZero();
     }
     
     // Work area.
@@ -780,12 +782,12 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw Arb::Errors::DivByZeroBinary<Arb, Arb>().Left(*this).Operator("%").Right(number);
+      throw Arb::Errors::DivByZero();
     }
     
     // Throw an error if both numbers are not integer.
     if (!isInteger() || !number.isInteger()) {
-      throw Arb::Errors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator("%").Right(number);
+      throw Arb::Errors::NonInteger();
     }
     
     // Work area.
@@ -803,12 +805,12 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw Arb::Errors::DivByZeroBinary<Arb, ArbInt>().Left(*this).Operator("%").Right(number);
+      throw Arb::Errors::DivByZero();
     }
     
     // Throw an error if this number is not integer.
     if (!isInteger()) {
-      throw Arb::Errors::NonIntegerBinary<Arb, ArbInt>().Left(*this).Operator("%").Right(number);
+      throw Arb::Errors::NonInteger();
     }
     
     // Work area.
@@ -1278,7 +1280,7 @@ namespace DAC {
     
     // No divide by zero.
     if (n.isZero()) {
-      throw Arb::Errors::DivByZeroBinary<Arb, Arb>().Left(*this).Operator("**").Right(n);
+      throw Arb::Errors::DivByZero();
     }
     
     // This is a rational number class, not complex.
@@ -1384,9 +1386,9 @@ namespace DAC {
     // Number of bits to shift must be integer.
     if (!bits.isInteger()) {
       if (dir == _DIR_L) {
-        throw Arb::Errors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator("<<").Right(bits);
+        throw Arb::Errors::NonInteger();
       } else {
-        throw Arb::Errors::NonIntegerBinary<Arb, Arb>().Left(*this).Operator(">>").Right(bits);
+        throw Arb::Errors::NonInteger();
       }
     }
     
@@ -1549,14 +1551,14 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissa == 0) {
         if (converter.bits.sign == 0) {
-          throw Arb::Errors::PositiveInfinity<float>().Number(r);
+          throw Arb::Errors::PositiveInfinity();
         } else {
-          throw Arb::Errors::NegativeInfinity<float>().Number(r);
+          throw Arb::Errors::NegativeInfinity();
         }
       }
       
       // NaN.
-      throw Arb::Errors::NaN<float>().Number(r);
+      throw Arb::Errors::NaN();
       
     }
     
@@ -1633,14 +1635,14 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
         if (converter.bits.sign == 0) {
-          throw Arb::Errors::PositiveInfinity<double>().Number(r);
+          throw Arb::Errors::PositiveInfinity();
         } else {
-          throw Arb::Errors::NegativeInfinity<double>().Number(r);
+          throw Arb::Errors::NegativeInfinity();
         }
       }
       
       // NaN.
-      throw Arb::Errors::NaN<double>().Number(r);
+      throw Arb::Errors::NaN();
       
     }
     
@@ -1717,14 +1719,14 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
         if (converter.bits.sign == 0) {
-          throw Arb::Errors::PositiveInfinity<long double>().Number(r);
+          throw Arb::Errors::PositiveInfinity();
         } else {
-          throw Arb::Errors::NegativeInfinity<long double>().Number(r);
+          throw Arb::Errors::NegativeInfinity();
         }
       }
       
       // NaN.
-      throw Arb::Errors::NaN<long double>().Number(r);
+      throw Arb::Errors::NaN();
       
     }
     

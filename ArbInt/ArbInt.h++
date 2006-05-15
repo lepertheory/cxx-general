@@ -59,99 +59,36 @@ namespace DAC {
           // All ArbInt errors are based off of this.
           class Base : public Exception {
             public:
-              virtual char const* what () const throw() { return "Undefined error in ArbInt."; };
               virtual ~Base () throw() {};
+              virtual char const* what () const throw() { return "Undefined error in ArbInt."; };
           };
           
           // Bad format.
           class BadFormat : public Base {
             public:
+              virtual ~BadFormat () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + " in number \"" + *_number + "\".");
+                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + ".");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
                 }
               };
-              virtual ~BadFormat () throw() {};
-              BadFormat& Problem  (char const*                        const problem)  throw() { _problem  = problem ; return *this; };
-              BadFormat& Position (std::string::size_type             const position) throw() { _position = position; return *this; };
-              BadFormat& Number   (ConstReferencePointer<std::string> const number)   throw() { _number   = number  ; return *this; };
-              char const*                        Problem  () const throw() { return _problem.c_str(); };
-              std::string::size_type             Position () const throw() { return _position       ; };
-              ConstReferencePointer<std::string> Number   () const throw() { return _number         ; };
+              BadFormat& Problem  (char const*            const problem)  throw() { _problem  = problem ; return *this; };
+              BadFormat& Position (std::string::size_type const position) throw() { _position = position; return *this; };
+              char const*            Problem  () const throw() { return _problem.c_str(); };
+              std::string::size_type Position () const throw() { return _position       ; };
             private:
-              std::string                        _problem;
-              std::string::size_type             _position;
-              ConstReferencePointer<std::string> _number;
+              std::string            _problem;
+              std::string::size_type _position;
           };
           
           // Attempt to set ArbInt to a negative number.
           class Negative : public Base {
             public:
-              virtual char const* what () const throw() { return "Attempt to set ArbInt to a negative number."; };
               virtual ~Negative () throw() {};
-          };
-          template <class T> class NegativeSet : public Negative {
-            public:
-              virtual char const* what () const throw()  {
-                try {
-                  std::string tmpmsg(DAC::toString(_source) + ": Attempt to set ArbInt to a negative number.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Attempt to set ArbInt to a negative number. Error creating message string.";
-                }
-              };
-              virtual ~NegativeSet () throw() {};
-              NegativeSet& Source (T const source) throw() { _source = source; return *this; };
-              T Source () const throw() { return _source; };
-            private:
-              T _source;
-          };
-          class NegativeUnary : public Negative {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(std::string(_prefix ? "Prefix" : "Postfix") + " operator " + _op + " applied to " + _number->toString() + " results in a negative number.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Unary operation results in a negative number. Error creating message string.";
-                }
-              };
-              virtual ~NegativeUnary () throw() {};
-              NegativeUnary& Number   (ConstReferencePointer<ArbInt> const number) throw() { _number = number; return *this; };
-              NegativeUnary& Operator (char const*                   const op)     throw() { _op     = op    ; return *this; };
-              NegativeUnary& Prefix   (bool                          const prefix) throw() { _prefix = prefix; return *this; };
-              ConstReferencePointer<ArbInt> Number   () const throw() { return _number;     };
-              char const*                   Operator () const throw() { return _op.c_str(); };
-              bool                          Prefix   () const throw() { return _prefix;     };
-            private:
-              ConstReferencePointer<ArbInt> _number;
-              std::string                   _op;
-              bool                          _prefix;
-          };
-          template <class T, class U> class NegativeBinary : public Negative {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Results in a negative number.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Binary operation results in a negative number. Error creating message string.";
-                }
-              };
-              virtual ~NegativeBinary () throw() {};
-              NegativeBinary& Left     (T           const l)  throw() { _l  = l ; return *this; };
-              NegativeBinary& Operator (char const* const op) throw() { _op = op; return *this; };
-              NegativeBinary& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l         ; };
-              char const* Operator () const throw() { return _op.c_str(); };
-              U           Right    () const throw() { return _r         ; };
-            private:
-              T           _l;
-              std::string _op;
-              U           _r;
+              virtual char const* what () const throw() { return "Attempt to set ArbInt to a negative number."; };
           };
           
           // Operation overruns container size. Generic version first for easy
@@ -161,46 +98,10 @@ namespace DAC {
               virtual char const* what () const throw() { return "Instruction overruns end of container."; };
               virtual ~Overrun () throw() {};
           };
-          template <class T> class OverrunSpecialized : public Overrun {
+          class ShiftTooLarge : public Overrun {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(std::string(_problem) + " at offset " + DAC::toString(_offset) + " with limit of " + DAC::toString(_limit) + ".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Instruction overruns end of container. Error creating message string.";
-                }
-              };
-              virtual ~OverrunSpecialized () throw() {};
-              OverrunSpecialized& Problem (char const* const problem) throw() { _problem = problem; return *this; };
-              OverrunSpecialized& Offset  (T           const offset)  throw() { _offset  = offset ; return *this; };
-              OverrunSpecialized& Limit   (T           const limit)   throw() { _limit   = limit  ; return *this; };
-              char const* Problem () const throw() { return _problem.c_str(); };
-              T           Offset  () const throw() { return _offset         ; };
-              T           Limit   () const throw() { return _limit          ; };
-            private:
-              std::string _problem;
-              T           _offset ;
-              T           _limit  ;
-          };
-          template <class T> class ShiftTooLarge : public Overrun {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Requested shift of " + _bits->toString() + " bits overruns the maximum bits (" + _maxbits->toString() + ") of the container.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Requested shift overruns maximum bits of the digit container. Error creating message string.";
-                }
-              };
               virtual ~ShiftTooLarge () throw() {};
-              ShiftTooLarge& Bits    (ConstReferencePointer<ArbInt> const bits   ) throw() { _bits    = bits   ; return *this; };
-              ShiftTooLarge& MaxBits (ConstReferencePointer<ArbInt> const maxbits) throw() { _maxbits = maxbits; return *this; };
-              ConstReferencePointer<ArbInt> Bits    () const throw() { return _bits   ; };
-              ConstReferencePointer<ArbInt> MaxBits () const throw() { return _maxbits; };
-            private:
-              ConstReferencePointer<ArbInt> _bits   ;
-              ConstReferencePointer<ArbInt> _maxbits;
+              virtual char const* what () const throw() { return "Requested shift overruns the maximum bits of the container."; };
           };
           
           // Divide by zero.
@@ -209,53 +110,12 @@ namespace DAC {
               virtual char const* what () const throw() { return "Divide by zero."; };
               virtual ~DivByZero () throw() {};
           };
-          template <class T, class U> class DivByZeroBinary : public DivByZero {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(DAC::toString(_l) + " " + std::string(_op) + " " + DAC::toString(_r) + ": Divide by zero.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Divide by zero. Error creating message string.";
-                }
-              };
-              virtual ~DivByZeroBinary () throw() {};
-              DivByZeroBinary& Left     (T           const l)  throw() { _l  = l ; return *this; };
-              DivByZeroBinary& Operator (char const* const op) throw() { _op = op; return *this; };
-              DivByZeroBinary& Right    (U           const r)  throw() { _r  = r ; return *this; };
-              T           Left     () const throw() { return _l         ; };
-              char const* Operator () const throw() { return _op.c_str(); };
-              U           Right    () const throw() { return _r         ; };
-            private:
-              T           _l;
-              std::string _op;
-              U           _r;
-          };
           
           // Overflow converting to a scalar type.
           class ScalarOverflow : public Base {
             public:
-              virtual char const* what () const throw() { return "ArbInt overflows requested scalar type."; };
+              virtual char const* what () const throw() { return "Number overflows requested scalar type."; };
               virtual ~ScalarOverflow () throw() {};
-          };
-          template <class T> class ScalarOverflowSpecialized : public ScalarOverflow {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(_number->toString() + ": Oveflows requested scalar type's limit of " + DAC::toString(_limit) + ".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "ArbInt overflows requested scalar type. Error creating message string.";
-                }
-              };
-              virtual ~ScalarOverflowSpecialized () throw() {};
-              ScalarOverflowSpecialized& Number (ConstReferencePointer<ArbInt> const number) throw() { _number = number; return *this; };
-              ScalarOverflowSpecialized& Limit  (T                             const limit)  throw() { _limit  = limit ; return *this; };
-              ConstReferencePointer<ArbInt> Number () const throw() { return _number; };
-              T                             Limit  () const throw() { return _limit ; };
-            private:
-              ConstReferencePointer<ArbInt> _number;
-              T                             _limit;
           };
           
           // Requested base is out of range.
@@ -264,69 +124,22 @@ namespace DAC {
               virtual char const* what () const throw() { return "Requested base is out of range."; };
               virtual ~BaseOutOfRange () throw() {};
           };
-          template <class T, class U> class BaseOutOfRangeSpecialized : public BaseOutOfRange {
+          class BaseOutOfRangeMin : public BaseOutOfRange {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(DAC::toString(_base) + ": Requested base is out of range, limit is " + DAC::toString(_limit) + ".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Requested base is out of range. Error creating message string.";
-                }
-              };
-              virtual ~BaseOutOfRangeSpecialized () throw() {};
-              BaseOutOfRangeSpecialized& Base  (T const base)  throw() { _base  = base ; return *this; };
-              BaseOutOfRangeSpecialized& Limit (U const limit) throw() { _limit = limit; return *this; };
-              T Base  () const throw() { return _base ; };
-              U Limit () const throw() { return _limit; };
-            private:
-              T _base;
-              U _limit;
-          };
-          template <class T, class U> class BaseOutOfRangeMin : public BaseOutOfRangeSpecialized<T, U> {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(DAC::toString(this->Base()) + ": Requsted range is below minimum base of " + DAC::toString(this->Limit()) + ".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Requested base is below minimum. Error creating message string.";
-                }
-              };
               virtual ~BaseOutOfRangeMin () throw() {};
+              virtual char const* what () const throw() { return "Requested base is below minimum."; };
           };
-          template <class T, class U> class BaseOutOfRangeMax : public BaseOutOfRangeSpecialized<T, U> {
+          class BaseOutOfRangeMax : public BaseOutOfRange {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(DAC::toString(this->Base()) + ": Requsted range is above maximum base of " + DAC::toString(this->Limit()) + ".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Requested base is above maximum. Error creating message string.";
-                }
-              };
               virtual ~BaseOutOfRangeMax () throw() {};
+              virtual char const* what () const throw() { return "Requested base is above maximum."; };
           };
           
           // Requested root is too large to calculate.
           class RootTooLarge : public Base {
             public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg(_root->toString() + " root of " + _number->toString() + ": Root is too large to calculate.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Root is too large to calculate. Error creating message string.";
-                }
-              };
               virtual ~RootTooLarge () throw() {};
-              RootTooLarge& Number (ConstReferencePointer<ArbInt> const number) throw() { _number = number; return *this; };
-              RootTooLarge& Root   (ConstReferencePointer<ArbInt> const root)   throw() { _root   = root  ; return *this; };
-              ConstReferencePointer<ArbInt> Number () const throw() { return _number; };
-              ConstReferencePointer<ArbInt> Root   () const throw() { return _root  ; };
-            private:
-              ConstReferencePointer<ArbInt> _number;
-              ConstReferencePointer<ArbInt> _root;
+              virtual char const* what () const throw() { return "Requested root is too large to calculate."; };
           };
         
         // Private constructor, cannot instantiate this class.
@@ -876,28 +689,14 @@ namespace DAC {
    */
   inline ArbInt& ArbInt::operator ++ ()    { return op_add(1);                               }
   inline ArbInt  ArbInt::operator ++ (int) { ArbInt retval(*this); op_add(1); return retval; }
-  inline ArbInt& ArbInt::operator -- ()    {
-    try {
-      return op_sub(1);
-    } catch (ArbInt::Errors::NegativeBinary<ArbInt, int>) {
-      throw ArbInt::Errors::NegativeUnary().Number(ConstReferencePointer<ArbInt>(new ArbInt(*this))).Operator("--").Prefix(true);
-    }
-  }
-  inline ArbInt  ArbInt::operator -- (int) {
-    ArbInt retval(*this);
-    try {
-      op_sub(1);
-    } catch (ArbInt::Errors::NegativeBinary<ArbInt, int>) {
-      throw ArbInt::Errors::NegativeUnary().Number(ConstReferencePointer<ArbInt>(new ArbInt(*this))).Operator("--").Prefix(false);
-    }
-    return retval;
-  }
+  inline ArbInt& ArbInt::operator -- ()    { return op_sub(1); }
+  inline ArbInt  ArbInt::operator -- (int) { ArbInt retval(*this); op_sub(1); return retval; }
   
   /*
    * Unary sign operators.
    */
   inline ArbInt ArbInt::operator + () const { return *this;                                                                              }
-  inline ArbInt ArbInt::operator - () const { throw ArbInt::Errors::NegativeUnary().Number(ConstReferencePointer<ArbInt>(new ArbInt(*this))).Operator("-").Prefix(true); }
+  inline ArbInt ArbInt::operator - () const { throw ArbInt::Errors::Negative(); }
   
   /*
    * Bitwise compliment.
@@ -944,7 +743,7 @@ namespace DAC {
           mag *= s_digitbase;
         }
       } catch (typename SafeInt<T>::Errors::Overflow) {
-        throw ArbInt::Errors::ScalarOverflowSpecialized<T>().Number(ConstReferencePointer<ArbInt>(new ArbInt(*this))).Limit(std::numeric_limits<T>::max());
+        throw ArbInt::Errors::ScalarOverflow();
       }
     }
     return retval;
@@ -955,10 +754,10 @@ namespace DAC {
    */
   inline ArbInt& ArbInt::Base (value_type const base) {
     if (base < 2) {
-      throw ArbInt::Errors::BaseOutOfRangeMin<value_type, _DigT>().Base(base).Limit(2);
+      throw ArbInt::Errors::BaseOutOfRangeMin();
     }
     if (base > s_digitbase) {
-      throw ArbInt::Errors::BaseOutOfRangeMax<value_type, _DigT>().Base(base).Limit(s_digitbase);
+      throw ArbInt::Errors::BaseOutOfRangeMax();
     }
     _base = base;
     return *this;
@@ -1179,16 +978,16 @@ namespace DAC {
     // type combination.
     static SafeInt<typename TT::value_type> maxbase = rppower(SafeInt<typename TT::value_type>(2), std::numeric_limits<typename TT::value_type>::digits >> 1);
     if (SafeInt<value_type>(frombase) < 2) {
-      throw ArbInt::Errors::BaseOutOfRangeMin<value_type, value_type>().Base(frombase).Limit(2);
+      throw ArbInt::Errors::BaseOutOfRangeMin();
     }
     if (SafeInt<value_type>(tobase) < 2) {
-      throw ArbInt::Errors::BaseOutOfRangeMin<value_type, value_type>().Base(tobase).Limit(2);
+      throw ArbInt::Errors::BaseOutOfRangeMin();
     }
     if (SafeInt<value_type>(frombase) > maxbase) {
-      throw ArbInt::Errors::BaseOutOfRangeMax<value_type, value_type>().Base(frombase).Limit(maxbase);
+      throw ArbInt::Errors::BaseOutOfRangeMax();
     }
     if (SafeInt<value_type>(tobase) > maxbase) {
-      throw ArbInt::Errors::BaseOutOfRangeMax<value_type, value_type>().Base(tobase).Limit(maxbase);
+      throw ArbInt::Errors::BaseOutOfRangeMax();
     }
     
     // Empty out target container.
@@ -1268,7 +1067,7 @@ namespace DAC {
     
     // If we were sent a negative number, error.
     if (r < 0) {
-      throw ArbInt::Errors::NegativeSet<T>().Source(r);
+      throw ArbInt::Errors::Negative();
     }
     
     // Set.
@@ -1287,7 +1086,7 @@ namespace DAC {
     
     // If we were sent a negative number, error.
     if (tmp < 0) {
-      throw ArbInt::Errors::NegativeSet<T>().Source(r);
+      throw ArbInt::Errors::Negative();
     }
     
     // Convert to string and set.
@@ -1389,7 +1188,7 @@ namespace DAC {
     
     // If we were sent a negative number, error.
     if (r < 0) {
-      throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("*").Right(r);
+      throw ArbInt::Errors::Negative();
     }
     
     // OK, now multiply.
@@ -1408,7 +1207,7 @@ namespace DAC {
     
     // If we were sent a negative number, error.
     if (tmp < 0) {
-      throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("*").Right(r);
+      throw ArbInt::Errors::Negative();
     }
     
     // Now convert to ArbInt and multiply.
@@ -1423,7 +1222,7 @@ namespace DAC {
     
     // Cannot divide by zero.
     if (r == 0) {
-      throw ArbInt::Errors::DivByZeroBinary<ArbInt, T>().Left(l).Operator("/").Right(r);
+      throw ArbInt::Errors::DivByZero();
     }
     
     // If the number is too large to do in one step, resort to conversion to
@@ -1465,7 +1264,7 @@ namespace DAC {
     
     // Cannot return a negative number.
     if (r < 0) {
-      throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("/").Right(r);
+      throw ArbInt::Errors::Negative();
     }
     
     // OK, now divide.
@@ -1484,12 +1283,12 @@ namespace DAC {
     
     // Cannot divide by zero.
     if (tmp == 0) {
-      throw ArbInt::Errors::DivByZeroBinary<ArbInt, T>().Left(l).Operator("/").Right(r);
+      throw ArbInt::Errors::DivByZero();
     }
     
     // If we were sent a negative number, error.
     if (tmp < 0) {
-      throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("/").Right(r);
+      throw ArbInt::Errors::Negative();
     }
     
     // Now convert to ArbInt and divide.
@@ -1506,14 +1305,8 @@ namespace DAC {
     ArbInt retval;
     ArbInt quotient(l);
     
-    // Do division, translate any errors.
-    try {
-      quotient.op_div(r, &retval);
-    } catch (ArbInt::Errors::DivByZeroBinary<ArbInt, T>) {
-      throw ArbInt::Errors::DivByZeroBinary<ArbInt, T>().Left(l).Operator("%").Right(r);
-    } catch (ArbInt::Errors::DivByZeroBinary<ArbInt, ArbInt>) {
-      throw ArbInt::Errors::DivByZeroBinary<ArbInt, T>().Left(l).Operator("%").Right(r);
-    }
+    // Do division.
+    quotient.op_div(r, &retval);
     
     // Copy remainder into place and return.
     l._digits = retval._digits;
@@ -1535,7 +1328,7 @@ namespace DAC {
     if (r < 0) {
       try {
         ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op(l, -r);
-      } catch (typename SafeInt<T>::Errors::UnOpOverflow) {
+      } catch (typename SafeInt<T>::Errors::Overflow) {
         l.op_mod(ArbInt(~r) + 1);
       }
     } else {
@@ -1558,12 +1351,8 @@ namespace DAC {
       tmp = -tmp;
     }
     
-    // Now convert to ArbInt and divide. Convert any errors.
-    try {
-      l.op_mod(ArbInt(tmp));
-    } catch (ArbInt::Errors::DivByZeroBinary<ArbInt, ArbInt>) {
-      throw ArbInt::Errors::DivByZeroBinary<ArbInt, T>().Left(l).Operator("%").Right(r);
-    }
+    // Now convert to ArbInt and divide.
+    l.op_mod(ArbInt(tmp));
     
   }
   
@@ -1609,18 +1398,10 @@ namespace DAC {
     // If adding a negative, subtract the opposite. Use the same trick as in
     // _Mod to convert to a positive number.
     if (r < 0) {
-      
-      // Catch any negative errors and convert the operator.
       try {
-        try {
-          ArbInt::_Sub<T, ArbInt::_NUM_UINT>::op(l, -r);
-        } catch (typename SafeInt<T>::Errors::UnOpOverflow) {
-          l.op_sub(ArbInt(~r) + 1);
-        }
-      } catch (ArbInt::Errors::NegativeBinary<ArbInt, T>) {
-        throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("+").Right(r);
-      } catch (ArbInt::Errors::NegativeBinary<ArbInt, ArbInt>) {
-        throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("+").Right(r);
+        ArbInt::_Sub<T, ArbInt::_NUM_UINT>::op(l, -r);
+      } catch (typename SafeInt<T>::Errors::Overflow) {
+        l.op_sub(ArbInt(~r) + 1);
       }
       
     // Otherwise add normally.
@@ -1641,13 +1422,7 @@ namespace DAC {
     
     // If adding a negative, subtract the opposite.
     if (tmp < 0) {
-      
-      // Catch any negative errors and convert the operator.
-      try {
-        l.op_sub(ArbInt(tmp * -1.0));
-      } catch (ArbInt::Errors::NegativeBinary<ArbInt, ArbInt>) {
-        throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("+").Right(tmp);
-      }
+      l.op_sub(ArbInt(tmp * -1.0));
       
     // Otherwise add normally.
     } else {
@@ -1664,11 +1439,7 @@ namespace DAC {
     // If the number is too large to subtract directly, resort to conversion
     // to ArbInt then subtract. Convert any errors thrown.
     if (l >= ArbInt::s_digitbase) {
-      try {
-        l.op_sub(ArbInt(r));
-      } catch (ArbInt::Errors::NegativeBinary<ArbInt, ArbInt>) {
-        throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("+").Right(r);
-      }
+      l.op_sub(ArbInt(r));
       return;
     }
     
@@ -1679,7 +1450,7 @@ namespace DAC {
     
     // If subtraction will result in a negative, error.
     if (r > l) {
-      throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("-").Right(r);
+      throw ArbInt::Errors::Negative();
     }
     
     // Work area.
@@ -1711,7 +1482,7 @@ namespace DAC {
       //  Use the same trick as in _Mod to convert to a positive number.
       try {
         ArbInt::_Add<T, ArbInt::_NUM_UINT>::op(l, -r);
-      } catch (typename SafeInt<T>::Errors::UnOpOverflow) {
+      } catch (typename SafeInt<T>::Errors::Overflow) {
         l.op_add(ArbInt(~r) + 1);
       }
       
@@ -1736,14 +1507,7 @@ namespace DAC {
     if (tmp < 0) {
       l.op_add(ArbInt(tmp * -1.0));
     } else {
-      
-      // Catch and convert any errors thrown.
-      try {
-        l.op_sub(ArbInt(tmp));
-      } catch (ArbInt::Errors::NegativeBinary<ArbInt, ArbInt>) {
-        throw ArbInt::Errors::NegativeBinary<ArbInt, T>().Left(l).Operator("+").Right(r);
-      }
-      
+      l.op_sub(ArbInt(tmp));
     }
     
   }

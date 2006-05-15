@@ -137,9 +137,6 @@ namespace DAC {
     // Load the number into this for exception safety and COW.
     _DataPT new_digits(new _DigsT);
     
-    // Hold the number in case an error needs to be thrown.
-    ConstReferencePointer<string> tmp_number(new string(number));
-    
     // Parser will load data into here.
     _DigStrT num;
     
@@ -147,10 +144,12 @@ namespace DAC {
     string::size_type num_start =     0;
     _DigT             num_base  = _base;
     if (autobase) {
-      if (number.length() > 2 && uppercase(number.substr(0, 2)) == "0X") {
+      string baseprefix(number.substr(0, 2));
+      uppercase(baseprefix);
+      if (number.length() > 2 && baseprefix == "0X") {
         num_base  = 16;
         num_start =  2;
-      } else if (number.length() > 2 && uppercase(number.substr(0, 2)) == "0B") {
+      } else if (number.length() > 2 && baseprefix == "0B") {
         num_base  = 2;
         num_start = 2;
       } else if (number.length() > 1 && number[0] == '0') {
@@ -167,7 +166,7 @@ namespace DAC {
       
       // Make sure this digit is within the number base.
       if ((digval >= num_base || (digval == numeric_limits<_NumChrT>::max()))) {
-        throw ArbInt::Errors::BadFormat().Problem("Unrecognized character").Position(i).Number(tmp_number);
+        throw ArbInt::Errors::BadFormat().Problem("Unrecognized character").Position(i);
       }
       
       // Add the digit to the digit string.
@@ -309,7 +308,7 @@ namespace DAC {
     
     // If number is zero, throw error.
     if (number.isZero()) {
-      throw ArbInt::Errors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("/").Right(number);
+      throw ArbInt::Errors::DivByZero();
     }
     
     // Work area.
@@ -451,7 +450,7 @@ namespace DAC {
     // Cannot divide by zero. check is redundant, but needed for exception to
     // report proper operator.
     if (number.isZero()) {
-      throw ArbInt::Errors::DivByZeroBinary<ArbInt, ArbInt>().Left(*this).Operator("%").Right(number);
+      throw ArbInt::Errors::DivByZero();
     }
     
     // Work area.
@@ -503,7 +502,7 @@ namespace DAC {
     
     // These are unsigned numbers, so if number > this, throw an error.
     if (number > retval) {
-      throw ArbInt::Errors::NegativeBinary<ArbInt, ArbInt>().Left(*this).Operator("-").Right(number);
+      throw ArbInt::Errors::Negative();
     }
     
     // Subtract like kindergarten.
@@ -793,7 +792,7 @@ namespace DAC {
     
     // Ensure that the start is not beyond the end of the container.
     if (start >= _digits->size()) {
-      throw ArbInt::Errors::OverrunSpecialized<_DigsT::size_type>().Problem("Carry requested beyond end of container").Offset(start).Limit(_digits->size());
+      throw ArbInt::Errors::Overrun();
     }
     
     // Loop through the container looking for base overflow.
@@ -838,7 +837,7 @@ namespace DAC {
     
     // Ensure that the start is not beyond the end of the container.
     if (start >= _digits->size()) {
-      throw ArbInt::Errors::OverrunSpecialized<_DigsT::size_type>().Problem("Borrow requested beyond end of container").Offset(start).Limit(_digits->size());
+      throw ArbInt::Errors::Overrun();
     }
     
     // Loop through the container borrowing until we've met our borrow.
@@ -863,7 +862,7 @@ namespace DAC {
     }
     
     // If we get here, we have not paid for our borrow.
-    throw ArbInt::Errors::OverrunSpecialized<_DigsT::size_type>().Problem("Borrow requested ran out of digits").Offset(_digits->size()).Limit(_digits->size());
+    throw ArbInt::Errors::Overrun();
     
   }
   
@@ -882,8 +881,8 @@ namespace DAC {
       if (bits >= s_digitbits) {
         try {
           tmp_digits = static_cast<_DigsT::size_type>(bits / s_digitbits);
-        } catch (ArbInt::Errors::ScalarOverflowSpecialized<_DigsT::size_type>& e) {
-          throw ArbInt::Errors::ShiftTooLarge<_DigsT::size_type>().Bits(ConstReferencePointer<ArbInt>(new ArbInt(bits))).MaxBits(ConstReferencePointer<ArbInt>(new ArbInt(ArbInt(numeric_limits<_DigsT::size_type>::max()) * s_digitbits)));
+        } catch (ArbInt::Errors::ScalarOverflow) {
+          throw ArbInt::Errors::ShiftTooLarge();
         }
         tmp_bits = static_cast<unsigned int>(bits - tmp_digits * s_digitbits);
       } else {
@@ -944,7 +943,7 @@ namespace DAC {
         
         // Check if shift will overrun _DigsT::size_type.
         if (digits > numeric_limits<_DigsT::size_type>::max() - _digits->size()) {
-          throw ArbInt::Errors::OverrunSpecialized<_DigsT::size_type>().Problem("Shift requested will overrun maximum size of digit container").Offset(digits).Limit(numeric_limits<_DigsT::size_type>::max());
+          throw ArbInt::Errors::Overrun();
         }
         
         // Insert 0s to shift left.

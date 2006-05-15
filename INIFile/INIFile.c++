@@ -91,7 +91,7 @@ namespace DAC {
     
     // Ensure that this section is defined.
     if (!section_defined(section)) {
-      throw Errors::SectionUndefined().Section(section);
+      throw Errors::SectionUndefined();
     }
     
     // Return a Section object pointing to this section.
@@ -292,7 +292,7 @@ namespace DAC {
         
       // Parse error.
       } else {
-        throw Errors::ParseError().Line(*line);
+        throw Errors::ParseError().Line(line - lines.begin() + 1);
       }
       
     }
@@ -348,7 +348,7 @@ namespace DAC {
     
     // Make sure the key is defined.
     if (!key_defined(key)) {
-      throw Errors::KeyUndefined().Section(_section).Key(key);
+      throw Errors::KeyUndefined();
     }
     
     // Return the value.

@@ -44,13 +44,13 @@ if env['CC'] == 'cl' :
   env.Append(CPPDEFINES = 'CC_CL')
 
 # Compile-time paths.
-includedir   = env['PREFIX'] + '/include/cxx-general'
+includedir   = env['PREFIX'] + '/include/' + env['project_name']
 libdir       = env['PREFIX'] + '/lib'
 pkgconfigdir = libdir + '/pkgconfig'
 env['project_includedir'] = includedir
 
 # Install paths.
-install_includedir   = env['DESTDIR'] + '/include/cxx-general'
+install_includedir   = env['DESTDIR'] + '/include/' + env['project_name']
 install_libdir       = env['DESTDIR'] + '/lib'
 install_pkgconfigdir = install_libdir + '/pkgconfig'
 

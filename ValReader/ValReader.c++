@@ -44,7 +44,8 @@ namespace DAC {
     }
     
     // Work area.
-    string work(uppercase(_value));
+    string work(_value);
+    uppercase(work);
     
     // Check for negative text.
     if (work == "F" || work == "N" || work == "FALSE" || work == "NO" || work == "OFF") {
