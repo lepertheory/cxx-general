@@ -137,7 +137,7 @@ bool testOp (ArbInt const& l, Operation const op, ArbInt const& r) {
   
   try {
     ArbInt test;
-    output = l.toString();
+    output = l.to_string();
     switch (op) {
       case MUL: output += "  * "; break;
       case DIV: output += "  / "; break;
@@ -163,58 +163,58 @@ bool testOp (ArbInt const& l, Operation const op, ArbInt const& r) {
       case ODE: output += "--  "; break;
       case BCM: output += "   ~"; break;
     }
-    output += r.toString() + " = ";
+    output += r.to_string() + " = ";
     switch (op) {
       /**/
-      case MUL: output += (l  * r).toString(); break;
-      case DIV: output += (l  / r).toString(); break;
-      case MOD: output += (l  % r).toString(); break;
-      case ADD: output += (l  + r).toString(); break;
-      case SUB: output += (l  - r).toString(); break;
-      case SHL: output += ((r > ArbInt(10000)) ? "Skipped, huge." : (l << r).toString()); break;
-      case SHR: output += (l >> r).toString(); break;
+      case MUL: output += (l  * r).to_string(); break;
+      case DIV: output += (l  / r).to_string(); break;
+      case MOD: output += (l  % r).to_string(); break;
+      case ADD: output += (l  + r).to_string(); break;
+      case SUB: output += (l  - r).to_string(); break;
+      case SHL: output += ((r > ArbInt(10000)) ? "Skipped, huge." : (l << r).to_string()); break;
+      case SHR: output += (l >> r).to_string(); break;
       case CGT: output += ((l >  r) ? "true" : "false"); break;
       case CGE: output += ((l >= r) ? "true" : "false"); break;
       case CLT: output += ((l <  r) ? "true" : "false"); break;
       case CLE: output += ((l <= r) ? "true" : "false"); break;
       case CEQ: output += ((l == r) ? "true" : "false"); break;
       case CNE: output += ((l != r) ? "true" : "false"); break;
-      case BND: output += (l  & r).toString(); break;
-      case BIO: output += (l  | r).toString(); break;
-      case BXO: output += (l  ^ r).toString(); break;
+      case BND: output += (l  & r).to_string(); break;
+      case BIO: output += (l  | r).to_string(); break;
+      case BXO: output += (l  ^ r).to_string(); break;
       case LND: output += ((l && r) ? "true" : "false"); break;
       case LIO: output += ((l || r) ? "true" : "false"); break;
-      case PIN: output += "++" + l.toString() + ": " + (++ArbInt(l)).toString() + "  ++" + r.toString() + ": " + (++ArbInt(r)).toString(); break;
-      case OIN: output += l.toString() + "++: " + (ArbInt(l)++).toString() + "  " + r.toString() + "++: " + (ArbInt(r)++).toString();  break;
-      case PDE: output += "--" + l.toString() + ": " + (--ArbInt(l)).toString() + "  --" + r.toString() + ": " + (--ArbInt(r)).toString(); break;
-      case ODE: output += l.toString() + "--: " + (ArbInt(l)--).toString() + "  " + r.toString() + "--: " + (ArbInt(r)--).toString();  break;
-      case BCM: output += "~" + l.toString() + ": " + (~l).toString() + "  ~" + r.toString() + ": " + (~r).toString(); break;
+      case PIN: output += "++" + l.to_string() + ": " + (++ArbInt(l)).to_string() + "  ++" + r.to_string() + ": " + (++ArbInt(r)).to_string(); break;
+      case OIN: output += l.to_string() + "++: " + (ArbInt(l)++).to_string() + "  " + r.to_string() + "++: " + (ArbInt(r)++).to_string();  break;
+      case PDE: output += "--" + l.to_string() + ": " + (--ArbInt(l)).to_string() + "  --" + r.to_string() + ": " + (--ArbInt(r)).to_string(); break;
+      case ODE: output += l.to_string() + "--: " + (ArbInt(l)--).to_string() + "  " + r.to_string() + "--: " + (ArbInt(r)--).to_string();  break;
+      case BCM: output += "~" + l.to_string() + ": " + (~l).to_string() + "  ~" + r.to_string() + ": " + (~r).to_string(); break;
       //*/
       /** /
       case ADD:
         test = l + r;
         retval = (l == (test - r));
-        output += test.toString() + " (" + l.toString() + " == " + "(" + test.toString() + " - " + r.toString() + "))";
+        output += test.to_string() + " (" + l.to_string() + " == " + "(" + test.to_string() + " - " + r.to_string() + "))";
       break;
       case SUB:
         test = l - r;
         retval = (l == (test + r));
-        output += test.toString() + " (" + l.toString() + " == " + "(" + test.toString() + " + " + r.toString() + "))";
+        output += test.to_string() + " (" + l.to_string() + " == " + "(" + test.to_string() + " + " + r.to_string() + "))";
       break;
       case MUL:
         test = l * r;
         retval = (((r == ArbInt<T>(0)) && (test == ArbInt<T>(0))) || (l == (test / r)));
-        output += test.toString() + " (" + ((r == ArbInt<T>(0)) ? "0 == 0" : l.toString() + " == " + "(" + test.toString() + " / " + r.toString()) + "))";
+        output += test.to_string() + " (" + ((r == ArbInt<T>(0)) ? "0 == 0" : l.to_string() + " == " + "(" + test.to_string() + " / " + r.to_string()) + "))";
       break;
       case DIV:
         test = l / r;
         retval = (l == (test * r + (l % r)));
-        output += test.toString() + " (" + l.toString() + " == (" + test.toString() + " * " + r.toString() + "(" + (l % r).toString() + ")))";
+        output += test.to_string() + " (" + l.to_string() + " == (" + test.to_string() + " * " + r.to_string() + "(" + (l % r).to_string() + ")))";
       break;
       case MOD:
         test = l % r;
         retval = (test == l - ((l / r) * r));
-        output += test.toString() + " (" + test.toString() + " == " + l.toString() + " - ((" + l.toString() + " / " + r.toString() + ") * " + r.toString() + "))";
+        output += test.to_string() + " (" + test.to_string() + " == " + l.to_string() + " - ((" + l.to_string() + " / " + r.to_string() + ") * " + r.to_string() + "))";
       break;
       //*/
     }

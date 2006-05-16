@@ -214,7 +214,7 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg(_problem + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + ".");
+                  std::string tmpmsg(_problem + " at position " + DAC::to_string(SafeInt<std::string::size_type>(_position) + 1) + ".");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
@@ -286,7 +286,7 @@ namespace DAC {
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "System call returned error " + DAC::toString(_errnum) + ": " + get_errorText(tmpmsg, _errnum);
+                  tmpmsg = "System call returned error " + DAC::to_string(_errnum) + ": " + get_errorText(tmpmsg, _errnum);
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error making the requested system call. Error creating message string.";
@@ -304,7 +304,7 @@ namespace DAC {
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "gettimeofday() returned error " + DAC::toString(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
+                  tmpmsg = "gettimeofday() returned error " + DAC::to_string(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error calling gettimeofday(). Error creating message string.";
@@ -320,7 +320,7 @@ namespace DAC {
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "time() returned error " + DAC::toString(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
+                  tmpmsg = "time() returned error " + DAC::to_string(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error calling time(). Error creating message string.";
@@ -336,7 +336,7 @@ namespace DAC {
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "gmtime_r() returned error " + DAC::toString(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
+                  tmpmsg = "gmtime_r() returned error " + DAC::to_string(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error calling gmtime_r(). Error creating message string.";
@@ -352,7 +352,7 @@ namespace DAC {
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "gmtime() returned error " + DAC::toString(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
+                  tmpmsg = "gmtime() returned error " + DAC::to_string(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error calling gmtime(). Error creating message string.";
@@ -460,7 +460,7 @@ namespace DAC {
       
       // Follows the formatting rules at the following URL:
       // http://www.opengroup.org/onlinepubs/009695399/functions/strftime.html
-      std::string toString (std::string const& format = "") const;
+      std::string& to_string (std::string& buffer, std::string const& format = std::string()) const;
       
       // Arithmetic operator backends.
       Timestamp& op_add (TimeVal   const& tv)      ;
@@ -872,7 +872,7 @@ namespace DAC {
   /*
    * Stream I/O operators.
    */
-  inline std::ostream& operator << (std::ostream& l, Timestamp const& r) { l << r.toString(); return l; }
+  inline std::ostream& operator << (std::ostream& l, Timestamp const& r) { std::string tmpstr; l << r.to_string(tmpstr); return l; }
   
   /*
    * Arithmetic operators.

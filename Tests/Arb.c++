@@ -120,7 +120,7 @@ bool testOp (Arb const& l, Operation const op, Arb const& r) {
   string output;
   
   try {
-    output = l.toString();
+    output = l.to_string();
     switch (op) {
       case MUL: output += "  * "; break;
       case DIV: output += "  / "; break;
@@ -134,13 +134,13 @@ bool testOp (Arb const& l, Operation const op, Arb const& r) {
       case CEQ: output += " == "; break;
       case CNE: output += " != "; break;
     }
-    output += r.toString() + " = ";
+    output += r.to_string() + " = ";
     switch (op) {
-      case MUL: output += (l  * r).toString(); break;
-      case DIV: output += (l  / r).toString(); break;
-      case MOD: output += (l  % r).toString(); break;
-      case ADD: output += (l  + r).toString(); break;
-      case SUB: output += (l  - r).toString(); break;
+      case MUL: output += (l  * r).to_string(); break;
+      case DIV: output += (l  / r).to_string(); break;
+      case MOD: output += (l  % r).to_string(); break;
+      case ADD: output += (l  + r).to_string(); break;
+      case SUB: output += (l  - r).to_string(); break;
       case CGT: output += ((l >  r) ? "true" : "false"); break;
       case CGE: output += ((l >= r) ? "true" : "false"); break;
       case CLT: output += ((l <  r) ? "true" : "false"); break;

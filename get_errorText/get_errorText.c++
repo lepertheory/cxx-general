@@ -44,7 +44,7 @@ namespace DAC {
       switch (retval) {
         case EINVAL: buffer = "Error number is invalid."                                        ; break;
         case ERANGE: buffer = "Buffer too small for error text."                                ; break;
-        default    : buffer = "Unexpected error " + toString(retval) + " retrieving error text."; break;
+        default    : buffer = "Unexpected error " + to_string(retval) + " retrieving error text."; break;
       };
     }
   #else

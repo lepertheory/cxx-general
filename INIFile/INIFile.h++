@@ -145,10 +145,10 @@ namespace DAC {
                   return "Unexpected error reading INI file. Error creating message string.";
                 }
               };
-              FileUnexpectedError& Type    (std::string const& errtype) { _type    = errtype; return *this; };
-              FileUnexpectedError& Message (std::string const& message) { _message = message; return *this; };
-              std::string Type    () const { return _type   ; };
-              std::string Message () const { return _message; };
+              FileUnexpectedError& set_Type    (std::string const& errtype) { _type    = errtype; return *this; };
+              FileUnexpectedError& set_Message (std::string const& message) { _message = message; return *this; };
+              std::string& Type    (std::string& buffer) const { buffer = _type   ; return buffer; };
+              std::string& Message (std::string& buffer) const { buffer = _message; return buffer; };
             private:
               std::string _type   ;
               std::string _message;
@@ -166,8 +166,8 @@ namespace DAC {
                   return "Multiple definitions of a section. Error creating message string.";
                 }
               };
-              SectionMultiDefine& Section (std::string const& section) { _section = section; return *this; };
-              std::string Section () const { return _section; };
+              SectionMultiDefine& set_Section (std::string const& section) { _section = section; return *this; };
+              std::string& Section (std::string& buffer) const { buffer = _section; return buffer; };
             private:
               std::string _section;
           };
@@ -205,8 +205,8 @@ namespace DAC {
                   return "Key was specified without a section. Error creating message string.";
                 }
               };
-              KeyNoSection& Key (std::string const& key) { _key = key; return *this; };
-              std::string Key () const { return _key; };
+              KeyNoSection& set_Key (std::string const& key) { _key = key; return *this; };
+              std::string& Key (std::string& buffer) const { buffer = _key; return buffer; };
             private:
               std::string _key;
           };
@@ -223,10 +223,10 @@ namespace DAC {
                   return "Multiple definitions of a key within a section. Error creating message string.";
                 }
               };
-              KeyMultiDefine& Section (std::string const& section) { _section = section; return *this; };
-              KeyMultiDefine& Key     (std::string const& key    ) { _key     = key    ; return *this; };
-              std::string Section () const { return _section; };
-              std::string Key     () const { return _key    ; };
+              KeyMultiDefine& set_Section (std::string const& section) { _section = section; return *this; };
+              KeyMultiDefine& set_Key     (std::string const& key    ) { _key     = key    ; return *this; };
+              std::string& Section (std::string& buffer) const { buffer = _section; return buffer; };
+              std::string& Key     (std::string& buffer) const { buffer = _key    ; return buffer; };
             private:
               std::string _section;
               std::string _key    ;
@@ -245,7 +245,7 @@ namespace DAC {
               virtual ~ParseError () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Could not parse line " + toString(_line) + ".");
+                  std::string tmpmsg("Could not parse line " + to_string(_line) + ".");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Could not parse line. Error creating message string.";
@@ -286,7 +286,7 @@ namespace DAC {
       
       // Properties.
       INIFile& Filename (std::string const& filename);
-      std::string Filename () const;
+      std::string& Filename (std::string& buffer) const;
       
       // Reset to just-constructed state.
       void clear ();
@@ -457,7 +457,7 @@ namespace DAC {
   /*
    * Properties.
    */
-  inline std::string INIFile::Filename () const { return _data->filename; }
+  inline std::string& INIFile::Filename (std::string& buffer) const { buffer = _data->filename; return buffer; }
   
   /***************************************************************************
    * Class INIFile::Section.

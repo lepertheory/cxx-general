@@ -10,7 +10,7 @@
 
 // System includes.
   #include <rppower.h++>
-  #include <toString.h++>
+  #include <to_string.h++>
   #include <reduce.h++>
   #include <CaseConvert.h++>
 
@@ -215,7 +215,7 @@ namespace DAC {
   /*
    * Convert this number to a string.
    */
-  string Arb::toString (OutputFormat const format) const {
+  string& Arb::to_string (string& buffer, OutputFormat const format) const {
     
     // This is the string we will be returning.
     string retval;
@@ -229,7 +229,9 @@ namespace DAC {
       // Output both notations.
       case FMT_BOTH: {
         
-        retval += toString(FMT_RADIX) + " " + toString(FMT_FRACTION);
+        string tmpstr;
+        retval += to_string(tmpstr, FMT_RADIX   ) + " ";
+        retval += to_string(tmpstr, FMT_FRACTION)      ;
         
       } break;
       
@@ -333,7 +335,10 @@ namespace DAC {
         
         // Convert the number to a string. Make sure that numeric is in the
         // desired base before this line.
-        retval += numeric.toString();
+        {
+          string tmpstr;
+          retval += numeric.to_string(tmpstr);
+        }
         
         // Add placeholder zeros.
         if (radixpos >= retval.length()) {
@@ -367,7 +372,9 @@ namespace DAC {
       case FMT_FRACTION: {
         
         // Easy, output p/q.
-        retval += _data->p.Base(_data->base).toString() + "/" + _data->q.Base(_data->base).toString();
+        string tmpstr;
+        retval += _data->p.Base(_data->base).to_string(tmpstr) + "/";
+        retval += _data->q.Base(_data->base).to_string(tmpstr)      ;
         
       } break;
       
@@ -379,7 +386,8 @@ namespace DAC {
     }
     
     // We done.
-    return retval;
+    buffer.swap(retval);
+    return buffer;
     
   }
   

@@ -11,7 +11,7 @@
 // Internal includes.
 #include "SafeInt.h++"
 #include "Exception.h++"
-#include "toString.h++"
+#include "to_string.h++"
 
 // Namespace declarations.
 using namespace std;
@@ -99,8 +99,8 @@ template <class T1, class T2> void gamut (char const* const type1, char const* c
   
   cout << "Running gamut on " << type1 << " : " << type2 << endl;
   
-  cout << "  Type 1 range: " << toString(numeric_limits<T1>::min()) << " to " << toString(numeric_limits<T1>::max()) << endl;
-  cout << "  Type 2 range: " << toString(numeric_limits<T2>::min()) << " to " << toString(numeric_limits<T2>::max()) << endl;
+  cout << "  Type 1 range: " << to_string(numeric_limits<T1>::min()) << " to " << to_string(numeric_limits<T1>::max()) << endl;
+  cout << "  Type 2 range: " << to_string(numeric_limits<T2>::min()) << " to " << to_string(numeric_limits<T2>::max()) << endl;
   
   if (numeric_limits<T1>::digits >= numeric_limits<T2>::digits) {
     
@@ -162,7 +162,7 @@ template <class T1, class T2> void gamut (char const* const type1, char const* c
 
 template <class ArgT, class FromT, class ToT> void testVal (ArgT const value) {
   
-  cout << "  " << toString(value) << ": " << toString(static_cast<ToT>(static_cast<FromT>(value))) << endl;
+  cout << "  " << to_string(value) << ": " << to_string(static_cast<ToT>(static_cast<FromT>(value))) << endl;
   
 }
 

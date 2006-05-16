@@ -116,12 +116,12 @@ int main () {
     
     cout << endl
          << "String version: " << test2 << endl;
-    cout << "Century: " << test2.toString("%C") << endl
+    cout << "Century: " << test2.to_string("%C") << endl
          << endl;
     
     string format;
     cout << "Format: "; cin >> format;
-    cout << "Formatted: "; cout << test2.toString(format) << endl;
+    cout << "Formatted: "; cout << test2.to_string(format) << endl;
     //*/
     
     return 0;

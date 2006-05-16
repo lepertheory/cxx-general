@@ -17,7 +17,7 @@
 // System includes.
   #include <SafeInt.h++>
   #include <ReferencePointer.h++>
-  #include <toString.h++>
+  #include <to_string.h++>
   #include <ArbInt.h++>
   #include <abs.h++>
 
@@ -92,7 +92,7 @@ namespace DAC {
             public:
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + ".");
+                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::to_string(SafeInt<std::string::size_type>(_position) + 1) + ".");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
@@ -259,7 +259,7 @@ namespace DAC {
       template <class T> Arb& set (T           const  number                            );
       
       // Convert to string.
-      std::string toString (OutputFormat const format = FMT_DEFAULT) const;
+      std::string& to_string (std::string& buffer, OutputFormat const format = FMT_DEFAULT) const;
       
       // Arithmetic operator backends.
                          Arb& op_mul (Arb        const& number);
@@ -2012,8 +2012,8 @@ namespace DAC {
   /*
    * Stream I/O operators.
    */
-  inline std::ostream&       operator << (std::ostream&       l, Arb  const& r) { l << r.toString();                                  return l; }
-  inline std::ostringstream& operator << (std::ostringstream& l, Arb  const& r) { l << r.toString();                                  return l; }
+  inline std::ostream&       operator << (std::ostream&       l, Arb  const& r) { std::string tmpstr; l << r.to_string(tmpstr);       return l; }
+  inline std::ostringstream& operator << (std::ostringstream& l, Arb  const& r) { std::string tmpstr; l << r.to_string(tmpstr);       return l; }
   inline std::istream&       operator >> (std::istream&       l, Arb&        r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   /*

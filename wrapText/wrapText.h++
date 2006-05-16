@@ -15,7 +15,7 @@
 
 // System includes.
   #include <Exception.h++>
-  #include <toString.h++>
+  #include <to_string.h++>
 
 // Namespace wrapper.
 namespace DAC {
@@ -71,21 +71,7 @@ namespace DAC {
           class IndentOverrun : public Base {
             public:
               virtual ~IndentOverrun () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Indent of " + DAC::toString(_indent) + " leaves no room for wrap width of " + DAC::toString(_width) + " characters.");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Indent leaves no room for text. Error creating message string.";
-                }
-              };
-              IndentOverrun& Indent (std::string::size_type const indent) { _indent = indent; return *this; };
-              IndentOverrun& Width  (std::string::size_type const width ) { _width  = width ; return *this; };
-              std::string::size_type Indent () const { return _indent; };
-              std::string::size_type Width  () const { return _width ; };
-            private:
-              std::string::size_type _indent;
-              std::string::size_type _width ;
+              virtual char const* what () const throw() { return "Indent leaves no room for text."; };
           };
           
           // POI past end of string.
@@ -94,67 +80,61 @@ namespace DAC {
               virtual ~POIOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Point of interest position " + DAC::toString(_poi) + " overruns end of string \"" + _text + "\".");
+                  std::string tmpmsg("Point of interest position " + DAC::to_string(_poi) + " overruns end of string.");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Point of interest overruns text. Error creating message string.";
                 }
               };
-              virtual POIOverrun& POI  (std::string::size_type const  poi ) { _poi  = poi ; return *this; };
-              virtual POIOverrun& Text (std::string            const& text) { _text = text; return *this; };
-              virtual std::string::size_type POI  () const { return _poi ; };
-              virtual std::string            Text () const { return _text; };
+              virtual POIOverrun& POI (std::string::size_type const poi ) { _poi = poi; return *this; };
+              virtual std::string::size_type POI  () const { return _poi  ; };
             private:
-              std::string::size_type _poi ;
-              std::string            _text;
+              std::string::size_type _poi;
           };
           class POIShyOverrun : public POIOverrun {
             public:
               virtual ~POIShyOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Soft hyphen position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".");
+                  std::string tmpstr;
+                  std::string tmpmsg("Soft hyphen position " + DAC::to_string(POI()) + " overruns end of string.");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Soft hyphen position overruns text. Error creating message string.";
                 }
               };
-              virtual POIShyOverrun& POI  (std::string::size_type const  poi ) { return reinterpret_cast<POIShyOverrun&>(POIOverrun::POI (poi )); };
-              virtual POIShyOverrun& Text (std::string            const& text) { return reinterpret_cast<POIShyOverrun&>(POIOverrun::Text(text)); };
-              virtual std::string::size_type POI  () const { return POIOverrun::POI (); };
-              virtual std::string            Text () const { return POIOverrun::Text(); };
+              virtual POIShyOverrun& POI (std::string::size_type const poi ) { POIOverrun::POI(poi); return *this; };
+              virtual std::string::size_type POI () const { return POIOverrun::POI(); };
           };
           class POINBOverrun : public POIOverrun {
             public:
               virtual ~POINBOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Non-break position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".");
+                  std::string tmpstr;
+                  std::string tmpmsg("Non-break position " + DAC::to_string(POI()) + " overruns end of string.");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Non-break position overruns text. Error creating message string.";
                 }
               };
-              virtual POINBOverrun& POI  (std::string::size_type const  poi ) { return reinterpret_cast<POINBOverrun&>(POIOverrun::POI (poi )); };
-              virtual POINBOverrun& Text (std::string            const& text) { return reinterpret_cast<POINBOverrun&>(POIOverrun::Text(text)); };
-              virtual std::string::size_type POI  () const { return POIOverrun::POI (); };
-              virtual std::string            Text () const { return POIOverrun::Text(); };
+              virtual POINBOverrun& POI (std::string::size_type const  poi) { POIOverrun::POI(poi); return *this; };
+              virtual std::string::size_type POI () const { return POIOverrun::POI(); };
           };
           class POIZWSOverrun : public POIOverrun {
             public:
               virtual ~POIZWSOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Zero width space position " + DAC::toString(POI()) + " overruns end of string \"" + Text() + "\".");
+                  std::string tmpstr;
+                  std::string tmpmsg("Zero width space position " + DAC::to_string(POI()) + " overruns end of string.");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Zero width space position overruns text. Error creating message string.";
                 }
               };
-              virtual POIZWSOverrun& POI  (std::string::size_type const  poi ) { return reinterpret_cast<POIZWSOverrun&>(POIOverrun::POI (poi )); };
-              virtual POIZWSOverrun& Text (std::string            const& text) { return reinterpret_cast<POIZWSOverrun&>(POIOverrun::Text(text)); };
-              virtual std::string::size_type POI  () const { return POIOverrun::POI (); };
-              virtual std::string            Text () const { return POIOverrun::Text(); };
+              virtual POIZWSOverrun& POI (std::string::size_type const poi) { POIOverrun::POI(poi); return *this; };
+              virtual std::string::size_type POI () const { return POIOverrun::POI(); };
           };
           
         // No instances of this class are allowed.
@@ -175,7 +155,7 @@ namespace DAC {
       void clear ();
       
       // Function call operator.
-      std::string operator () (std::string const* const text = 0) const;
+      std::string& operator () (std::string& buffer, std::string const* const text = 0) const;
       
       // Properties.
       wrapText& Width    (std::string::size_type const width   );
@@ -196,7 +176,7 @@ namespace DAC {
       bool                   Hanging  () const;
       
       // Wrap text.
-      std::string wrap (std::string const* const text = 0) const;
+      std::string& wrap (std::string& buffer, std::string const* const text = 0) const;
       
     /*
      * Private members.
@@ -265,7 +245,7 @@ namespace DAC {
   /*
    * Function call operator.
    */
-  inline std::string wrapText::operator () (std::string const* const text) const { return wrap(text); }
+  inline std::string& wrapText::operator () (std::string& buffer, std::string const* const text) const { return wrap(buffer, text); }
   
   /*
    * Properties.

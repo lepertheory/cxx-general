@@ -47,7 +47,7 @@ namespace DAC {
   /*
    * Wrap text.
    */
-  string wrapText::wrap (string const* const text) const {
+  string& wrapText::wrap (string& buffer, string const* const text) const {
     
     // Check for no text.
     if (text == 0 && _textptr == 0) {
@@ -61,7 +61,7 @@ namespace DAC {
     
     // Do not allow indent wider than wrap width - 1.
     if (_indent >= _width) {
-      throw Errors::IndentOverrun().Indent(_indent).Width(_width);
+      throw Errors::IndentOverrun();
     }
     
     // Work area.
@@ -83,7 +83,7 @@ namespace DAC {
     if (_shypos) {
       for (POIContainer::const_iterator i = _shypos->begin(); i != _shypos->end(); ++i) {
         if (*i >= work.length()) {
-          throw Errors::POIShyOverrun().POI(*i).Text(work);
+          throw Errors::POIShyOverrun().POI(*i);
         }
         poi[*i] = _CT_SHY;
       }
@@ -91,7 +91,7 @@ namespace DAC {
     if (_nbpos) {
       for (POIContainer::const_iterator i = _nbpos->begin(); i != _nbpos->end(); ++i) {
         if (*i >= work.length()) {
-          throw Errors::POINBOverrun().POI(*i).Text(work);
+          throw Errors::POINBOverrun().POI(*i);
         }
         poi[*i] = _CT_NB;
       }
@@ -99,7 +99,7 @@ namespace DAC {
     if (_zwspos) {
       for (POIContainer::const_iterator i = _zwspos->begin(); i != _zwspos->end(); ++i) {
         if (*i >= work.length()) {
-          throw Errors::POIZWSOverrun().POI(*i).Text(work);
+          throw Errors::POIZWSOverrun().POI(*i);
         }
         poi[*i] = _CT_ZWS;
       }
@@ -259,7 +259,8 @@ namespace DAC {
     }
     
     // Done.
-    return retval;
+    buffer.swap(retval);
+    return buffer;
     
   }
   

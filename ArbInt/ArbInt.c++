@@ -13,7 +13,7 @@
 // System includes.
 #include <SafeInt.h++>
 #include <ReferencePointer.h++>
-#include <toString.h++>
+#include <to_string.h++>
 #include <rppower.h++>
 #include <CaseConvert.h++>
 
@@ -215,7 +215,7 @@ namespace DAC {
   /*
    * Return a string of this number.
    */
-  string ArbInt::toString () const {
+  string& ArbInt::to_string (string& buffer) const {
     
     // This is the string we will return.
     string retval;
@@ -236,7 +236,7 @@ namespace DAC {
       // of digits defined, output the raw numbers of each digit.
       if (SafeInt<_DigT>(_base) > s_numodigits) {
         for (_DigsT::reverse_iterator i = num.rbegin(); i != num.rend(); ++i) {
-          retval += "'" + DAC::toString(*i) + "'";
+          retval += "'" + DAC::to_string(*i) + "'";
           if (i != (num.rend() - 1)) {
             retval += ",";
           }
@@ -250,7 +250,8 @@ namespace DAC {
     }
     
     // String constructed, return it.
-    return retval;
+    buffer.swap(retval);
+    return buffer;
     
   }
   

@@ -329,7 +329,7 @@ namespace DAC {
   /*
    * Convert this timestamp to a string.
    */
-  string Timestamp::toString (string const& format) const {
+  string& Timestamp::to_string (string& buffer, string const& format) const {
     
     // This is the string we will be returning.
     string retval;
@@ -401,83 +401,97 @@ namespace DAC {
           
           // Default date and time format.
           case 'c': {
-            retval += toString("%a %b %e %T %Y");
+            string tmpstr;
+            retval += to_string(tmpstr, "%a %b %e %T %Y");
           } break;
           
           // Century (00..99).
           case 'C': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = ((Year() / 100).floor().abs() % 100).toString();
+            numfield = ((Year() / 100).floor().abs() % 100).to_string(tmpstr);
           } break;
           
           // Day of month (01..31).
           case 'd': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = Day().toString();
+            numfield = Day().to_string(tmpstr);
           } break;
           
           // Date (mm/dd/yy).
           case 'D': {
-            retval += toString("%m/%d/%y");
+            string tmpstr;
+            retval += to_string(tmpstr, "%m/%d/%y");
           } break;
           
           // Day of month, blank padded.
           case 'e': {
+            string tmpstr;
             fieldlen = 2;
             fieldpad = PAD_SPPAD;
-            numfield = Day().toString();
+            numfield = Day().to_string(tmpstr);
           } break;
           
           // Same as %Y-%m-%d, ISO 8601:2000.
           case 'F': {
-            retval += toString("%Y-%m-%d");
+            string tmpstr;
+            retval += to_string(tmpstr, "%Y-%m-%d");
           } break;
           
           // The 2-digit year corresponding to the %V week number.
           case 'g': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = (getISOYear() % 100).abs().toString();
+            numfield = (getISOYear() % 100).abs().to_string(tmpstr);
           } break;
           
           // The ISO year.
           case 'G': {
-            retval += Year().toString();
+            string tmpstr;
+            retval += Year().to_string(tmpstr);
           } break;
           
           // Equivalent to %b.
           case 'h': {
-            retval += toString("%b");
+            string tmpstr;
+            retval += to_string(tmpstr, "%b");
           } break;
           
           // 24-hour clock hour (00..23).
           case 'H': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = Hour().toString();
+            numfield = Hour().to_string(tmpstr);
           } break;
           
           // 12-hour clock hour (01..12).
           case 'I': {
+            string tmpstr;
             fieldlen = 2;
             TimeVal hour = Hour();
-            numfield = ((hour > 12) ? hour - 12 : ((hour == 0) ? hour + 12 : hour)).toString();
+            numfield = ((hour > 12) ? hour - 12 : ((hour == 0) ? hour + 12 : hour)).to_string(tmpstr);
           } break;
           
           // Day of year (001..366).
           case 'j': {
+            string tmpstr;
             fieldlen = 3;
-            numfield = doy().toString();
+            numfield = doy().to_string(tmpstr);
           } break;
           
           // Month (01..12).
           case 'm': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = Month().toString();
+            numfield = Month().to_string(tmpstr);
           } break;
           
           // Minute (00..59).
           case 'M': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = Minute().toString();
+            numfield = Minute().to_string(tmpstr);
           } break;
           
           // Newline.
@@ -498,18 +512,21 @@ namespace DAC {
           // Time in am/pm notation. In POSIX locale this is equivalent to
           // "%I:%M:%S %p".
           case 'r': {
-            retval += toString("%I:%M:%S %p");
+            string tmpstr;
+            retval += to_string(tmpstr, "%I:%M:%S %p");
           } break;
           
           // Time in 24-hour notation (%H:%M).
           case 'R': {
-            retval += toString("%H:%M");
+            string tmpstr;
+            retval += to_string(tmpstr, "%H:%M");
           } break;
           
           // Second (00..60).
           case 'S': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = Second().toString();
+            numfield = Second().to_string(tmpstr);
           } break;
           
           // Day of month suffix (st, nd, rd, th).
@@ -533,66 +550,77 @@ namespace DAC {
           
           // Time (%H:%M:%S).
           case 'T': {
-            retval += toString("%H:%M:%S");
+            string tmpstr;
+            retval += to_string(tmpstr, "%H:%M:%S");
           } break;
           
           // ISO weekday (1=Monday..7=Sunday).
           case 'u': {
-            retval += dowISO().toString();
+            string tmpstr;
+            retval += dowISO().to_string(tmpstr);
           } break;
           
           // Week number. First Sunday of January is the first day of week 1.
           // Days before this are week 0 (00..53).
           case 'U': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = woy(DOW_SUNDAY).toString();
+            numfield = woy(DOW_SUNDAY).to_string(tmpstr);
           } break;
           
           // Week of year according to ISO-8601 rules, week 1 of a given year
           // is the week containing the 4th of January, Monday is the first
           // day of the week. (01..53).
           case 'V': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = woyISO().toString();
+            numfield = woyISO().to_string(tmpstr);
           } break;
           
           // Weekday number (0=Sunday..6=Saturday).
           case 'w': {
-            retval += dow().toString();
+            string tmpstr;
+            retval += dow().to_string(tmpstr);
           } break;
           
           // Week number. First Monday of January is the first day of week 1.
           // Days before this are week 0 (00..53).
           case 'W': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = woy(DOW_MONDAY).toString();
+            numfield = woy(DOW_MONDAY).to_string(tmpstr);
           } break;
           
           // Date represtation (%m/%d/%y).
           case 'x': {
-            retval += toString("%m/%d/%y");
+            string tmpstr;
+            retval += to_string(tmpstr, "%m/%d/%y");
           } break;
           
           // Time representation (%H:%M:%S).
           case 'X': {
-            retval += toString("%H:%M:%S");
+            string tmpstr;
+            retval += to_string(tmpstr, "%H:%M:%S");
           } break;
           
           // Last two digits of the year.
           case 'y': {
+            string tmpstr;
             fieldlen = 2;
-            numfield = (Year() % 100).toString();
+            numfield = (Year() % 100).to_string(tmpstr);
           } break;
           
           // Year.
           case 'Y': {
-            retval += Year().toString();
+            string tmpstr;
+            retval += Year().to_string(tmpstr);
           } break;
           
           // Offset from UTC in the ISO 8601:2000 standard format
           // (+hhmm or -hhmm), or by nothing if no timezone is determinable.
           case 'z': {
-            string offset   = (_offset.abs() * 1440).toString();
+            string tmpstr;
+            string offset   = (_offset.abs() * 1440).to_string(tmpstr);
             bool   positive = _offset >= 0;
             offset.insert(0, 4 - offset.length(), '0');
             offset.insert(0, 1, positive ? '+' : '-');
@@ -637,7 +665,8 @@ namespace DAC {
     }
     
     // We done, return the string.
-    return retval;
+    buffer.swap(retval);
+    return buffer;
     
   }
   

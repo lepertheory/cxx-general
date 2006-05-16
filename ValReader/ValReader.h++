@@ -41,9 +41,7 @@ namespace DAC {
           class Base : public Exception {
             public:
               virtual ~Base () throw() {};
-              virtual char const* what () const throw() {
-                return "Unspecified error in ValReader.";
-              };
+              virtual char const* what () const throw() { return "Unspecified error in ValReader."; };
           };
           
           // Error converting number.
@@ -52,18 +50,15 @@ namespace DAC {
               virtual ~BadNum () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg("Could not convert value to \"" + _type + "\", lower-level error message is \"" + _errtext + "\"");
+                  std::string tmpmsg("Could not convert value to requested type, lower-level error message is \"" + _errtext + "\"");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Could not convert value to requested type. Error creating message string.";
                 }
               };
-              BadNum& Type    (std::string const& totype ) throw() { _type    = totype ; return *this; };
-              BadNum& ErrText (std::string const& errtext) throw() { _errtext = errtext; return *this; };
-              std::string Type    () const throw() { return _type   ; };
-              std::string ErrText () const throw() { return _errtext; };
+              BadNum& set_ErrText (std::string const& errtext) throw() { _errtext = errtext; return *this; };
+              std::string& ErrText (std::string& buffer) const throw() { buffer = _errtext; return buffer; };
             private:
-              std::string _type   ;
               std::string _errtext;
           };
           
@@ -81,11 +76,8 @@ namespace DAC {
       // Constructor.
       ValReader (std::string const& value = _BLANK);
       
-      // Get unmodified value. Synonym for to_string()
-      operator std::string () const;
-      
       // Get value as a string. Returns unmodified value.
-      std::string to_string () const;
+      std::string& to_string (std::string& buffer) const;
       
       // Get value as a boolean.
       bool to_boolean () const;
@@ -132,14 +124,9 @@ namespace DAC {
   inline ValReader::ValReader (std::string const& value) : _value(value) {}
   
   /*
-   * Get unmodified value. Synonym for to_string().
-   */
-  inline ValReader::operator std::string () const { return _value; }
-  
-  /*
    * Get unmodified value.
    */
-  inline std::string ValReader::to_string () const { return _value; }
+  inline std::string& ValReader::to_string (std::string& buffer) const { buffer = _value; return buffer; }
   
   /*
    * Get value as an integer.
@@ -155,7 +142,7 @@ namespace DAC {
     try {
       retval = ArbInt(_value);
     } catch (ArbInt::Errors::Base& e) {
-      throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
+      throw Errors::BadNum().set_ErrText(e.what());
     }
     
     // Conversion was successful, return.
@@ -175,7 +162,7 @@ namespace DAC {
     try {
       retval = Arb(_value);
     } catch (Arb::Errors::Base& e) {
-      throw Errors::BadNum().Type(demangle(retval)).ErrText(e.what());
+      throw Errors::BadNum().set_ErrText(e.what());
     }
     
     // Conversion was successful, return.

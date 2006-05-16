@@ -19,7 +19,7 @@
 // System includes.
   #include <SafeInt.h++>
   #include <ReferencePointer.h++>
-  #include <toString.h++>
+  #include <to_string.h++>
   #include <rppower.h++>
   #include <Exception.h++>
 
@@ -69,7 +69,7 @@ namespace DAC {
               virtual ~BadFormat () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::toString(SafeInt<std::string::size_type>(_position) + 1) + ".");
+                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::to_string(SafeInt<std::string::size_type>(_position) + 1) + ".");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
@@ -228,7 +228,7 @@ namespace DAC {
       template <class T> ArbInt& push_back (T           const  number);
       
       // Convert to string.
-      std::string toString () const;
+      std::string& to_string (std::string& buffer) const;
       
       // Arithmetic operator backends.
                          ArbInt& op_mul (ArbInt     const& number);
@@ -788,9 +788,9 @@ namespace DAC {
   /*
    * Push a string onto the back of this number.
    */
-                     inline ArbInt& ArbInt::push_back (ArbInt     const& number) { return push_back(ArbInt(number).Base(_base).toString()); }
-  template <class T> inline ArbInt& ArbInt::push_back (SafeInt<T> const  number) { return push_back(static_cast<T>(number));                }
-  template <class T> inline ArbInt& ArbInt::push_back (T          const  number) { return push_back(DAC::toString(number));                 }
+                     inline ArbInt& ArbInt::push_back (ArbInt     const& number) { std::string tmpstr; return push_back(ArbInt(number).Base(_base).to_string(tmpstr)); }
+  template <class T> inline ArbInt& ArbInt::push_back (SafeInt<T> const  number) {                     return push_back(static_cast<T>(number));                       }
+  template <class T> inline ArbInt& ArbInt::push_back (T          const  number) {                     return push_back(DAC::to_string(number));                       }
   
   /*
    * Arithmetic operator backends.
@@ -1090,7 +1090,7 @@ namespace DAC {
     }
     
     // Convert to string and set.
-    l.set(DAC::toString(r));
+    l.set(DAC::to_string(r));
     
   }
   
@@ -1949,8 +1949,8 @@ namespace DAC {
   /*
    * Stream I/O operators.
    */
-  inline std::ostream&       operator << (std::ostream&       l, ArbInt const& r) { l << r.toString();                                  return l; }
-  inline std::ostringstream& operator << (std::ostringstream& l, ArbInt const& r) { l << r.toString();                                  return l; }
+  inline std::ostream&       operator << (std::ostream&       l, ArbInt const& r) { std::string tmpstr; l << r.to_string(tmpstr);       return l; }
+  inline std::ostringstream& operator << (std::ostringstream& l, ArbInt const& r) { std::string tmpstr; l << r.to_string(tmpstr);       return l; }
   inline std::istream&       operator >> (std::istream&       l, ArbInt&       r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   /*

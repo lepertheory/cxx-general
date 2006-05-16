@@ -14,7 +14,7 @@
   #include <sstream>
 
 // System includes.
-  #include <toString.h++>
+  #include <to_string.h++>
   #include <Exception.h++>
 
 // Namespace wrapper.
@@ -2651,8 +2651,8 @@ namespace DAC {
   /*
    * Stream I/O operators.
    */
-  template <class T> inline std::ostream&       operator << (std::ostream&       l, SafeInt<T>  r) { l << DAC::toString(static_cast<T>(r)); return l; }
-  template <class T> inline std::ostringstream& operator << (std::ostringstream& l, SafeInt<T>  r) { l << DAC::toString(static_cast<T>(r)); return l; }
+  template <class T> inline std::ostream&       operator << (std::ostream&       l, SafeInt<T>  r) { l << DAC::to_string(static_cast<T>(r)); return l; }
+  template <class T> inline std::ostringstream& operator << (std::ostringstream& l, SafeInt<T>  r) { l << DAC::to_string(static_cast<T>(r)); return l; }
   template <class T> inline std::istream&       operator >> (std::istream&       l, SafeInt<T>& r) { T input; l >> input; r = input; return l;        }
   
   /*
