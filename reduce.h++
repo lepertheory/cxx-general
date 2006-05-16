@@ -4,6 +4,8 @@
  * Reduce a fraction.
  *****************************************************************************/
 
+// FIXME: Don't use references.
+
 // System includes.
 #include <gcd.h++>
 
@@ -14,7 +16,22 @@
 // Contain in namepsace.
 namespace DAC {
   
-  // Reduce a given fraction.
+  /***************************************************************************/
+  // Functions.
+  
+  // Reduce a fraction.
+  template <class T> void reduce (T& p, T& q);
+  
+  /***************************************************************************
+   * Inline and template definitions.
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Functions.
+  
+  /*
+   * Reduce a given fraction.
+   */
   template <class T> void reduce (T& p, T& q) {
     
     // Get the greatest common divisor.

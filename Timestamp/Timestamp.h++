@@ -18,6 +18,7 @@
   #include <Exception.h++>
   #include <Arb.h++>
   #include <ReferencePointer.h++>
+  #include <get_errorText.h++>
 
 // Config includes.
   #include "Timestamp_config.h++"
@@ -239,7 +240,7 @@ namespace DAC {
           class BadMJD : public BadValue {
             public:
               virtual ~BadMJD () throw() {};
-              virtual char const* what () const throw() { return "Invalid Modified Julian Date sent." };
+              virtual char const* what () const throw() { return "Invalid Modified Julian Date sent."; };
           };
           class MJDMax : public BadMJD {
             public:
@@ -296,29 +297,14 @@ namespace DAC {
             private:
               int _errnum;
           };
-  #if defined(HAVE_WINDOWS_H)
-          class SysCall_GetSystemTime : public SysCallError {
-            public:
-              virtual ~SysCall_GetSystemTime () throw() {};
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("GetSystemTime() returned error " + DAC::toString(Errno()) + ".");
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Error calling GetSystemTime(). Error creating message string.";
-                }
-              };
-              virtual SysCall_GetSystemTime& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
-          };
-  #endif
-  #if defined(HAVE_GETTIMEOFDAY)
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
           class SysCall_gettimeofday : public SysCallError {
             public:
               virtual ~SysCall_gettimeofday () throw() {};
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "gettimeofday() returned error " + DAC::toString(Errno()) + ": " + get_errorText(tmpmsg, _errnum);
+                  tmpmsg = "gettimeofday() returned error " + DAC::toString(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error calling gettimeofday(). Error creating message string.";
@@ -327,14 +313,14 @@ namespace DAC {
               virtual SysCall_gettimeofday& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
           };
   #endif
-  #if defined(HAVE_TIME)
+  #if defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
           class SysCall_time : public SysCallError {
             public:
               virtual ~SysCall_time () throw() {};
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "time() returned error " + DAC::toString(Errno()) + ": " + get_errorText(tmpmsg, _errnum);
+                  tmpmsg = "time() returned error " + DAC::toString(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error calling time(). Error creating message string.";
@@ -343,14 +329,14 @@ namespace DAC {
               virtual SysCall_time& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
           };
   #endif
-  #if defined(HAVE_GMTIME_R)
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R)
           class SysCall_gmtime_r : public SysCallError {
             public:
               virtual ~SysCall_gmtime_r () throw() {};
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "gmtime_r() returned error " + DAC::toString(Errno()) + ": " + get_errorText(tmpmsg, _errnum);
+                  tmpmsg = "gmtime_r() returned error " + DAC::toString(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error calling gmtime_r(). Error creating message string.";
@@ -359,14 +345,14 @@ namespace DAC {
               virtual SysCall_gmtime_r& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
           };
   #endif
-  #if defined(HAVE_GMTIME)
+  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
           class SysCall_gmtime : public SysCallError {
             public:
               virtual ~SysCall_gmtime () throw() {};
               virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg;
-                  tmpmsg = "gmtime() returned error " + DAC::toString(Errno()) + ": " + get_errorText(tmpmsg, _errnum);
+                  tmpmsg = "gmtime() returned error " + DAC::toString(SysCallError::Errno()) + ": " + get_errorText(tmpmsg, SysCallError::Errno());
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Error calling gmtime(). Error creating message string.";
@@ -376,24 +362,6 @@ namespace DAC {
           };
   #endif
           
-          // Missing system support.
-          class MissingSysSupport : public Base {
-            public:
-              virtual char const* what () const throw() {
-                try {
-                  std::string tmpmsg("Missing support for the requested operation: " + _op);
-                  return Exception::buffer_message(tmpmsg);
-                } catch (...) {
-                  return "Missing support for the requested operation. Error creating message string.";
-                }
-              };
-              virtual ~MissingSysSupport () throw() {};
-              MissingSysSupport& Operation (char const* const op) throw() { _op = op; return *this; };
-              char const* Operation () const throw() { return _op.c_str(); }
-            private:
-              std::string _op;
-          };
-        
         // Private constructor, no instantiation.
         private:
           Errors ();

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * toString.h++
+ * to_string.h++
  *****************************************************************************
  * Convert a number to a string.
  *****************************************************************************/
@@ -19,45 +19,41 @@ namespace DAC {
   // Functions.
   
   // Convert the number to a string.
-  template <class T> std::string toString (T const& from);
+  template <class T> std::string to_string (T const& from);
   
   // Convert a character to a string.
-  std::string toStringChr (char const from);
+  std::string to_stringChr (char const from);
   
-}
+  /***************************************************************************
+   * Inline and template definitions.
+   ***************************************************************************/
   
-/*****************************************************************************
- * Inline and template definitions.
- *****************************************************************************/
-
-namespace DAC {
-  
-  template <> inline std::string toString<char> (char const& from) {
+  template <> inline std::string to_string<char> (char const& from) {
     std::ostringstream os;
     os << static_cast<int>(from);
     return os.str();
   }
   
-  template <> inline std::string toString<signed char> (signed char const& from) {
+  template <> inline std::string to_string<signed char> (signed char const& from) {
     std::ostringstream os;
     os << static_cast<int>(from);
     return os.str();
   }
   
-  template <> inline std::string toString<unsigned char> (unsigned char const& from) {
+  template <> inline std::string to_string<unsigned char> (unsigned char const& from) {
     std::ostringstream os;
     os << static_cast<unsigned int>(from);
     return os.str();
   }
   
-  template <class T> inline std::string toString (T const& from) {
+  template <class T> inline std::string to_string (T const& from) {
     std::ostringstream os;
     os.precision(std::numeric_limits<T>::digits10 + 1);
     os << from;
     return os.str();
   }
   
-  inline std::string toStringChr (char const from) {
+  inline std::string to_stringChr (char const from) {
     std::ostringstream os;
     os << from;
     return os.str();

@@ -132,14 +132,14 @@ namespace DAC {
    * Accessors.
    */
   Timestamp& Timestamp::MJD (unsigned int const mjd) {
-    if (mjd > 99999) { throw Errors::MJDMax().MJD(mjd); }
+    if (mjd > 99999) { throw Errors::MJDMax(); }
     _cache_valid = false;
     _jd.set(mjd + TimeVal(2400000) - 0.5 - _offset);
     return *this;
   }
   Timestamp& Timestamp::Offset (int const offset) {
-    if (offset < -720) { throw Errors::OffsetMin().Offset(offset); }
-    if (offset >  720) { throw Errors::OffsetMax().Offset(offset); }
+    if (offset < -720) { throw Errors::OffsetMin(); }
+    if (offset >  720) { throw Errors::OffsetMax(); }
     _cache_valid = false;
     _offset = offset / TimeVal(1440);
     return *this;
@@ -150,68 +150,63 @@ namespace DAC {
    */
   Timestamp& Timestamp::getSystemTime () {
     
-    // Disable this function if system support is missing.
-#if defined(TIMESTAMP_SYSTIME_NONE)
-    throw Errors::MissingSysSupport().Operation("Timestamp::getSystemTime");
-#else
-    
     // Work area.
     Timestamp  newtime(*this);
     Interval   interval;
-  #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
+#if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
     _SYSTEMTIME systime;
-  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-        defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+#elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
+      defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     struct timeval  tv = { 0, 0 };
     struct timezone tz = { 0, 0 };
-  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
-        defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+#elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
+      defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     time_t tv = 0;
-  #endif
-  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-      defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        )
+#endif
+#if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
+    defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R        )
     struct tm systime = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \
-        defined(TIMESTAMP_SYSTIME_TIME_GMTIME        )
+#elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || \
+      defined(TIMESTAMP_SYSTIME_TIME_GMTIME        )
     tm* systime = 0;
-  #endif
+#endif
     
     // Get the time from the system.
-  #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
+#if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
     GetSystemTime(&systime);
-  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-        defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+#elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
+      defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     if (gettimeofday(&tv, &tz)) {
       throw Errors::SysCall_gettimeofday();
     }
-  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
-        defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+#elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
+      defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     if (time(&tv) == -1) {
       throw Errors::SysCall_time();
     }
-  #endif
+#endif
   
     // Convert time to YMDHMS.
-  #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R)
+#if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R)
     if (!gmtime_r(&(tv.tv_sec), &systime)) {
       throw Errors::SysCall_gmtime_r();
     }
-  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
+#elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME)
     if (!(systime = gmtime(&(tv.tv_sec)))) {
       throw Errors::SysCall_gmtime();
     }
-  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R)
+#elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R)
     if (!gmtime_r(&tv, &systime)) {
       throw Errors::SysCall_gmtime_r();
     }
-  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
+#elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
     if (!(systime = gmtime(&tv))) {
       throw Errors::SysCall_gmtime();
     }
-  #endif
+#endif
     
     // Set the interval.
-  #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
+#if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)
     interval.Millisecond(TimeVal(systime.wMilliseconds))
             .Second     (TimeVal(systime.wSecond      ))
             .Minute     (TimeVal(systime.wMinute      ))
@@ -219,8 +214,8 @@ namespace DAC {
             .Day        (TimeVal(systime.wDay         ))
             .Month      (TimeVal(systime.wMonth       ))
             .Year       (TimeVal(systime.wYear        ));
-  #elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
-        defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
+#elif defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || \
+      defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME  )
     interval.Millisecond((TimeVal(tv.tv_usec     ) / 1000).toInt())
             .Second     ( TimeVal(systime.tm_sec )                )
             .Minute     ( TimeVal(systime.tm_min )                )
@@ -228,15 +223,15 @@ namespace DAC {
             .Day        ( TimeVal(systime.tm_mday)                )
             .Month      ( TimeVal(systime.tm_mon ) +    1         )
             .Year       ( TimeVal(systime.tm_year) + 1900         );
-  #elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
-        defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
+#elif defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || \
+      defined(TIMESTAMP_SYSTIME_TIME_GMTIME  )
     interval.Second(TimeVal(systime.tm_sec )       )
             .Minute(TimeVal(systime.tm_min )       )
             .Hour  (TimeVal(systime.tm_hour)       )
             .Day   (TimeVal(systime.tm_mday)       )
             .Month (TimeVal(systime.tm_mon ) +    1)
             .Year  (TimeVal(systime.tm_year) + 1900);
-  #endif
+#endif
     
     // Set the new time.
     newtime.setGMT(interval);
@@ -245,7 +240,6 @@ namespace DAC {
     _cache_valid = false;
     _jd          = newtime._jd;
     return *this;
-#endif
     
   }
   
@@ -359,7 +353,7 @@ namespace DAC {
         
         // No dangling escape character.
         if (++i == fmt->end()) {
-          throw Errors::BadFormat().Problem("Dangling escape character").Position(i - 1 - fmt->begin()).Format(fmt);
+          throw Errors::BadFormat().Problem("Dangling escape character").Position(i - 1 - fmt->begin());
         }
         
         // Modifiers.
@@ -371,7 +365,7 @@ namespace DAC {
         
         // No dangling modifier.
         if (i == fmt->end()) {
-          throw Errors::BadFormat().Problem("Dangling modifier").Position(i - 1 - fmt->begin()).Format(fmt);
+          throw Errors::BadFormat().Problem("Dangling modifier").Position(i - 1 - fmt->begin());
         }
         
         // Next character is a format option.
@@ -612,7 +606,7 @@ namespace DAC {
           
           // Unknown option.
           default: {
-            throw Errors::BadFormat().Problem("Invalid character").Position(i - fmt->begin()).Format(fmt);
+            throw Errors::BadFormat().Problem("Invalid character").Position(i - fmt->begin());
           } break;
           
         }
@@ -795,13 +789,7 @@ namespace DAC {
         !settime.Second     ().isInteger() || (settime.Second     () <  0) || (settime.Second     () > 59 + ((settime.Hour() == 23 && settime.Minute() == 59) ? _leapSecond(settime.Year(), settime.Month(), settime.Day()) : 0)) ||
         !settime.Millisecond().isInteger() || (settime.Millisecond() <  0) || (settime.Millisecond() > 999                                                                                                                      )
     ) {
-      throw Errors::InvalidTime().Year       (settime.Year       ())
-                                 .Month      (settime.Month      ())
-                                 .Day        (settime.Month      ())
-                                 .Hour       (settime.Hour       ())
-                                 .Minute     (settime.Minute     ())
-                                 .Second     (settime.Second     ())
-                                 .Millisecond(settime.Millisecond());
+      throw Errors::InvalidTime();
     }
     
     // Invalidate the cache.

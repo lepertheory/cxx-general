@@ -23,15 +23,16 @@ namespace DAC {
   template <class NumT, class ExpT> SafeInt<NumT> rppower (NumT          const x, SafeInt<ExpT> const y);
   #endif
   
-}
+  /***************************************************************************
+   * Inline and template definitions.
+   ***************************************************************************/
   
-/*****************************************************************************
- * Inline and template definitions.
- *****************************************************************************/
-
-namespace DAC {
+  /***************************************************************************/
+  // Functions.
   
-  // Raise an integral type.
+  /*
+   * Raise an integral type.
+   */
   template <class NumT, class ExpT> NumT rppower (NumT const x, ExpT const y) {
     
     // Work area.
@@ -69,7 +70,9 @@ namespace DAC {
   }
   /*************************************************************************/
   
-  // Raise a SafeInt.
+  /*
+   * Raise a SafeInt.
+   */
   #if defined(SAFEINT_3k54kbuihub7hbh0)
   template <class NumT, class ExpT> SafeInt<NumT> rppower (SafeInt<NumT> const x, SafeInt<ExpT> const y) {
     SafeInt<ExpT> tmp_y(y);

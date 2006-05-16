@@ -14,8 +14,18 @@
 // Contain in namespace.
 namespace DAC {
   
-  // Declaration.
+  /***************************************************************************/
+  // Functions.
+  
+  // Find the least common multiple of two numbers.
   template <class T> T lcm (T const& n1, T const& n2);
+  
+  /***************************************************************************
+   * Inline and template definitions.
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Functions.
   
   // Definition.
   template <class T> T lcm (T const& n1, T const& n2) {

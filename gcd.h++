@@ -11,10 +11,22 @@
 // Contain in namespace.
 namespace DAC {
   
-  // Declaration
+  /***************************************************************************/
+  // Functions.
+  
+  // Find the greatest common divisor of two numbers.
   template <class T> T gcd (T const& n1, T const& n2);
   
-  // Definition
+  /***************************************************************************
+   * Inline and template definitions.
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Functions.
+  
+  /*
+   * Find the greatest common divisor of two numbers.
+   */
   template <class T> T gcd (T const& n1, T const& n2) {
     
     // Return value.

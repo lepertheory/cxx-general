@@ -44,7 +44,7 @@ namespace DAC {
       virtual char const* what () const throw();
       
       // Get the type of this error.
-      std::string type () const throw();
+      std::string& type (std::string& buffer) const throw();
       
       // Reset to just-constructed state.
       virtual Exception& clear () throw();
@@ -88,7 +88,7 @@ namespace DAC {
   
   inline char const* Exception::what () const throw() { return "Undefined error."; }
   
-  inline std::string Exception::type() const throw() { return demangle(*this); }
+  inline std::string& Exception::type(std::string& buffer) const throw() { return demangle(buffer, *this); }
   
   inline Exception& Exception::clear() throw() { return *this; }
   

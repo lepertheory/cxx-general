@@ -14,6 +14,7 @@
 #include <tokenize.h++>
 #include <AutoArray.h++>
 #include <trim.h++>
+#include <demangle.h++>
 
 // Class include.
 #include "INIFile.h++"
@@ -215,7 +216,8 @@ namespace DAC {
       
     // Error during file operation.
     } catch (exception& e) {
-      throw Errors::FileUnexpectedError().Type(demangle(e)).Message(e.what());
+      string errtype;
+      throw Errors::FileUnexpectedError().Type(demangle(errtype, e)).Message(e.what());
     } catch (...) {
       throw Errors::FileUnexpectedError().Type("-Unknown-").Message("-Unknown-");
     }

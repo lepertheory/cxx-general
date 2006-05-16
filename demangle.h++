@@ -12,49 +12,55 @@
   #include <string>
 
 // Compiler includes.
-  #if defined(CC_CL)
-    #include <typeinfo.h>
-  #elif defined(CC_GCC)
+  #include <typeinfo>
+  #if defined(CC_GCC)
     #include <cxxabi.h>
   #endif
 
 // Namespace wrapping.
 namespace DAC {
   
-  // Prototype.
-  template <class T> std::string demangle (T const& thing);
+  /***************************************************************************/
+  // Functions.
   
-  // Implementation.
-  template <class T> std::string demangle (T const& thing) {
+  // Get the type of an object.
+  template <class T> std::string& demangle (std::string& buffer, T const& thing = T());
+  
+  /***************************************************************************
+   * Inline and template definitions.
+   ***************************************************************************/
+  
+  /***************************************************************************/
+  // Functions.
+  
+  /*
+   * Get the type of an object.
+   */
+  template <class T> std::string& demangle (std::string& buffer, T const& thing) {
     
-    // Return value.
-    std::string retval;
-  
+    // Shut up the compiler.
+    if (&thing) {};
+    
   #if defined(CC_CL)
-    // Win32 version.
-    
     // typeid operator throws an exception if there is a failure.
     try {
-      retval = typeid(thing).name();
+      buffer = typeid(thing).name();
     } catch (...) {
-      retval = "Unable to demangle type name.";
+      buffer = "Unable to demangle type name.";
     }
-    
   #elif defined(CC_GCC)
-    // Posix version.
-    
     // Work area.
-    int   status    = 0;
-    char* demangled = 0;
+    int   status   (0);
+    char* demangled(0);
     
     // Demangle the name. If an error is encountered, set the name to the
     // mangled version.
     if (!(demangled = abi::__cxa_demangle(typeid(thing).name(), 0, 0, &status))) {
-      retval = typeid(thing).name();
+      buffer = typeid(thing).name();
     } else if (status != 0) {
-      retval = typeid(thing).name();
+      buffer = typeid(thing).name();
     } else {
-      retval = demangled;
+      buffer = demangled;
     }
     
     // If demangled is not a null pointer, free it and set to null.
@@ -62,15 +68,13 @@ namespace DAC {
       free(demangled);
       demangled = 0;
     }
-    
   #else
-    
-    retval = "Unable to determine compiler, cannot demangle.";
-    
+    // Unknown compiler.
+    buffer = "Unable to determine compiler, cannot demangle.";
   #endif
     
     // We done, return.
-    return retval;
+    return buffer;
     
   }
   

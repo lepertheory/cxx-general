@@ -111,12 +111,14 @@ int main () {
     
   } catch (Exception& e) {
     
-    cout << "Exception (" << e.type() << "): " << e << endl;
+    string errtype;
+    cout << "Exception (" << e.type(errtype) << "): " << e << endl;
     exit(1);
     
   } catch (exception& e) {
     
-    cout << "Exception (" << demangle(e) << "): " << e.what() << endl;
+    string errtype;
+    cout << "Exception (" << demangle(errtype, e) << "): " << e.what() << endl;
     exit(1);
     
   } catch (...) {
@@ -217,10 +219,12 @@ bool testOp (ArbInt const& l, Operation const op, ArbInt const& r) {
       //*/
     }
   } catch (Exception& e) {
-    output += "Exception (" + e.type() + "): " + string(e.what());
+    string errtype;
+    output += "Exception (" + e.type(errtype) + "): " + string(e.what());
     retval = false;
   } catch (exception& e) {
-    output += "Exception (" + demangle(e) + "): " + string(e.what());
+    string errtype;
+    output += "Exception (" + demangle(errtype, e) + "): " + string(e.what());
     retval = false;
   } catch (...) {
     output += "Unexpected exception caught.";
