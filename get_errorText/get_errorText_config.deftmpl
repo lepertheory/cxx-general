@@ -1,0 +1,15 @@
+/*****************************************************************************
+ * get_errorText_config.deftmpl
+ *****************************************************************************
+ * Defines for compiling get_errorText.
+ *****************************************************************************/
+
+// Include guard.
+#if !defined(GET_ERRORTEXT_CONFIG_98hu4h980u4)
+  #define GET_ERRORTEXT_CONFIG_98hu4h980u4
+
+// The defines.
+  /*<:DEFINES:GET_ERRORTEXT_:>*/
+
+// End include guard.
+#endif
