@@ -16,9 +16,9 @@ KEYWORDS="~x86"
 
 IUSE=""
 
-DEPEND="                        \
-  >=dev-python/sconsgeneral-0.3 \
-  !>=dev-python/sconsgeneral-1  \
+DEPEND="                          \
+  >=dev-python/sconsgeneral-0.3.1 \
+  !>=dev-python/sconsgeneral-1    \
 "
 
 src_compile() {
