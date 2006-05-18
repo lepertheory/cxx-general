@@ -22,7 +22,7 @@ namespace DAC {
   /*
    * Trim whitespace from the beginning of a string.
    */
-  inline string& ltrim (string& text, string const& whitespace) {
+  string& ltrim (string& text, string const& whitespace) {
     
     // Don't work on an empty string.
     if (text.empty()) {
@@ -53,7 +53,7 @@ namespace DAC {
   /*
    * Trim whitespace from the end of a string.
    */
-  inline string& rtrim (string& text, string const& whitespace) {
+  string& rtrim (string& text, string const& whitespace) {
     
     // Don't work on an empty string.
     if (text.empty()) {
