@@ -286,7 +286,7 @@ namespace DAC {
       
       // Properties.
       INIFile& Filename (std::string const& filename);
-      std::string& Filename (std::string& buffer) const;
+      std::string Filename () const;
       
       // Reset to just-constructed state.
       void clear ();
@@ -457,7 +457,7 @@ namespace DAC {
   /*
    * Properties.
    */
-  inline std::string& INIFile::Filename (std::string& buffer) const { buffer = _data->filename; return buffer; }
+  inline std::string INIFile::Filename () const { return _data->filename; }
   
   /***************************************************************************
    * Class INIFile::Section.
