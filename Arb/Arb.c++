@@ -98,46 +98,56 @@ namespace DAC {
    */
   Arb& Arb::Base (BaseT const base) {
     if (base != _data->base) {
-      _data = new _Data(*_data);
-      _data->base = base;
-      if (_data->fix && _data->fixtype == FIX_RADIX) {
-        _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
-        _reduce();
+      Arb new_num(*this, true);
+      new_num._data->base = base;
+      if (new_num._data->fix && new_num._data->fixtype == FIX_RADIX) {
+        new_num._data->fixq = _DigsT(new_num._data->base).pow(new_num._data->pointpos);
+        new_num._reduce();
       }
+      _data = new_num._data;
+    }
+    return *this;
+  }
+  Arb& Arb::MaxRadix (std::string::size_type const maxradix) {
+    if (maxradix != _data->maxradix) {
+      Arb new_num(*this, true);
+      new_num._data->maxradix = maxradix;
+      _data = new_num._data;
     }
     return *this;
   }
   Arb& Arb::PointPos (PointPosT const pointpos) {
     if (pointpos != _data->pointpos) {
-      _data = new _Data(*_data);
-      _data->pointpos = pointpos;
-      if (_data->fix && _data->fixtype == FIX_RADIX) {
-        _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
-        _reduce();
+      Arb new_num(*this, true);
+      new_num._data->pointpos = pointpos;
+      if (new_num._data->fix && new_num._data->fixtype == FIX_RADIX) {
+        new_num._data->fixq = _DigsT(new_num._data->base).pow(new_num._data->pointpos);
+        new_num._reduce();
       }
+      _data = new_num._data;
     }
     return *this;
   }
   Arb& Arb::Fixed (bool const fixed) {
     if (fixed != _data->fix) {
-      _data = new _Data(*_data);
-      _data->fix = fixed;
-      if (_data->fix) {
-        if (_data->fixtype == FIX_RADIX) {
-          _data->fixq = _DigsT(_data->base).pow(_data->pointpos);
-        }
+      Arb new_num(*this, true);
+      new_num._data->fix = fixed;
+      if (new_num._data->fix && new_num._data->fixtype == FIX_RADIX) {
+        new_num._data->fixq = _DigsT(new_num._data->base).pow(new_num._data->pointpos);
       }
-      _reduce();
+      new_num._reduce();
+      _data = new_num._data;
     }
     return *this;
   }
   Arb& Arb::Fix (FixType const fix) {
     if (fix != _data->fixtype) {
-      _data = new _Data(*_data);
-      _data->fixtype = fix;
-      if (_data->fix) {
-        _reduce();
+      Arb new_num(*this, true);
+      new_num._data->fixtype = fix;
+      if (new_num._data->fix) {
+        new_num._reduce();
       }
+      _data = new_num._data;
     }
     return *this;
   }
@@ -146,12 +156,29 @@ namespace DAC {
       if (!fixq.isInteger()) {
         throw Arb::Errors::NonInteger();
       }
-      _data = new _Data(*_data);
-      _data->fixq    = fixq._data->p;
-      _data->fixtype = FIX_DENOM;
-      if (_data->fix) {
-        _reduce();
+      Arb new_num(*this, true);
+      new_num._data->fixq    = fixq._data->p;
+      new_num._data->fixtype = FIX_DENOM;
+      if (new_num._data->fix) {
+        new_num._reduce();
       }
+      _data = new_num._data;
+    }
+    return *this;
+  }
+  Arb& Arb::Format (OutputFormat const format) {
+    if (format != FMT_DEFAULT && format != _data->format) {
+      Arb new_num(*this, true);
+      new_num._data->format = format;
+      _data = new_num._data;
+    }
+    return *this;
+  }
+  Arb& Arb::Round (RoundMethod const round) {
+    if (round != ROUND_DEFAULT && round != _data->round) {
+      Arb new_num(*this, true);
+      new_num._data->round = round;
+      _data = new_num._data;
     }
     return *this;
   }
@@ -167,11 +194,6 @@ namespace DAC {
     // data. This is to allow COW.
     _data = new _Data;
     
-    // These instructions cannot throw, so they come last.
-    _maxradix = 10;
-    _format   = FMT_RADIX;
-    _round    = ROUND_EVEN;
-    
     // We done.
     return *this;
     
@@ -183,10 +205,7 @@ namespace DAC {
   Arb& Arb::copy (Arb const& number) throw() {
     
     // Copy. Easy.
-    _maxradix = number._maxradix;
-    _format   = number._format;
-    _round    = number._round;
-    _data     = number._data;
+    _data = number._data;
     
     // We done.
     return *this;
@@ -202,10 +221,7 @@ namespace DAC {
     _DataPT new_data(new _Data(*(number._data)));
     
     // Now do non-throwing operations.
-    _maxradix = number._maxradix;
-    _format   = number._format;
-    _round    = number._round;
-    _data     = new_data;
+    _data = new_data;
     
     // We done.
     return *this;
@@ -221,23 +237,19 @@ namespace DAC {
     string retval;
     
     // Determine the output format.
-    OutputFormat fmt = (format == FMT_DEFAULT) ? _format : format;
+    OutputFormat fmt = (format == FMT_DEFAULT) ? _data->format : format;
     
     // Choose the output format.
     switch (fmt) {
       
       // Output both notations.
       case FMT_BOTH: {
-        
-        string tmpstr;
-        retval += to_string(tmpstr, FMT_RADIX   ) + " ";
-        retval += to_string(tmpstr, FMT_FRACTION)      ;
-        
+        retval += to_string(FMT_RADIX   ) + " " = to_string(FMT_FRACTION)      ;
       } break;
       
       // Output in radix notation.
       case FMT_DEFAULT:
-      case FMT_RADIX: {
+      case FMT_RADIX  : {
         
         // Work area.
         _DigsT numeric;
@@ -261,7 +273,7 @@ namespace DAC {
           std::string::size_type sigdigs  = 0;
           bool                   sigstart = (numeric != 0);
           _DigsT                 digit;
-          while ((sigdigs < _maxradix) && (remainder != 0)) {
+          while ((sigdigs < _data->maxradix) && (remainder != 0)) {
             
             // Push one base digit to a whole number.
             remainder *= _data->base;
@@ -286,7 +298,7 @@ namespace DAC {
           
           // Round.
           if (remainder != 0) {
-            switch (_round) {
+            switch (_data->round) {
               case ROUND_UP: {
                 if (_data->positive) {
                   ++numeric;
@@ -336,8 +348,7 @@ namespace DAC {
         // Convert the number to a string. Make sure that numeric is in the
         // desired base before this line.
         {
-          string tmpstr;
-          retval += numeric.to_string(tmpstr);
+          retval += numeric.to_string();
         }
         
         // Add placeholder zeros.
@@ -370,12 +381,7 @@ namespace DAC {
       
       // Output in fractional format.
       case FMT_FRACTION: {
-        
-        // Easy, output p/q.
-        string tmpstr;
-        retval += _data->p.Base(_data->base).to_string(tmpstr) + "/";
-        retval += _data->q.Base(_data->base).to_string(tmpstr)      ;
-        
+        retval = _data->p.Base(_data->base).to_string() + "/" + _data->q.Base(_data->base).to_string();
       } break;
       
     }
@@ -1304,7 +1310,7 @@ namespace DAC {
       
       // Work area.
       Arb lastguess;
-      Arb accuracy(Arb(_data->base).pow(-Arb(_maxradix)));
+      Arb accuracy(Arb(_data->base).pow(-Arb(_data->maxradix)));
       
       // Create an initial guess, will be within at least one ^2, so Newton's
       // algorithm should begin converging by doubling correct # of bits each
@@ -1454,7 +1460,7 @@ namespace DAC {
       // Round.
       remainder *= 2;
       if (remainder != 0) {
-        switch (_round) {
+        switch (_data->round) {
           case ROUND_UP: {
             if (_data->positive) {
               ++_data->p;
@@ -1894,6 +1900,10 @@ namespace DAC {
     fix      = false;
     fixtype  = FIX_RADIX;
     base     = 10;
+    
+    maxradix = 10;
+    format   = FMT_RADIX;
+    round    = ROUND_EVEN;
     
     // We done.
     return *this;

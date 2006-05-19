@@ -259,7 +259,8 @@ namespace DAC {
       template <class T> Arb& set (T           const  number                            );
       
       // Convert to string.
-      std::string& to_string (std::string& buffer, OutputFormat const format = FMT_DEFAULT) const;
+      std::string      & to_string (std::string& buffer, OutputFormat const format = FMT_DEFAULT) const;
+      std::string const& to_string (                     OutputFormat const format = FMT_DEFAULT) const;
       
       // Arithmetic operator backends.
                          Arb& op_mul (Arb        const& number);
@@ -528,15 +529,19 @@ namespace DAC {
           /*****************************************************************/
           // Data members.
           
-          _DigsT p;    // Numerator.
-          _DigsT q;    // Denominator.
+          _DigsT p   ; // Numerator.
+          _DigsT q   ; // Denominator.
           _DigsT fixq; // Fixed denominator.
           
           bool      positive; // True if the number is positive.
           PointPosT pointpos; // Radix point position.
-          bool      fix;      // If true, fix the radix point.
-          FixType   fixtype;  // What to fix on, radix points or denominator.
-          BaseT     base;     // The base of the number.
+          bool      fix     ; // If true, fix the radix point.
+          FixType   fixtype ; // What to fix on, radix points or denominator.
+          BaseT     base    ; // The base of the number.
+          
+          std::string::size_type maxradix; // Radix digits to output.
+          OutputFormat           format  ; // Format to output this number.
+          RoundMethod            round   ; // Rounding method.
           
           /*****************************************************************/
           // Function members.
@@ -575,10 +580,8 @@ namespace DAC {
       // The number.
       _DataPT _data;
       
-      // Properties.
-      std::string::size_type _maxradix; // Radix digits to output.
-      OutputFormat           _format;   // Format to output this number.
-      RoundMethod            _round;    // Rounding method.
+      // Temporary buffer for string output.
+      mutable std::string _strbuf;
       
       /*********************************************************************/
       // Function members.
@@ -843,12 +846,7 @@ namespace DAC {
   /*
    * Get the maximum number of radix digits to output.
    */
-  inline std::string::size_type Arb::MaxRadix () const { return _maxradix; }
-  
-  /*
-   * Set the maximum number of radix digits to output.
-   */
-  inline Arb& Arb::MaxRadix (std::string::size_type const maxradix) { _maxradix = maxradix; return *this; }
+  inline std::string::size_type Arb::MaxRadix () const { return _data->maxradix; }
   
   /*
    * Get the point position of a fixed-point number.
@@ -868,22 +866,12 @@ namespace DAC {
   /*
    * Get the output format of this number.
    */
-  inline Arb::OutputFormat Arb::Format () const { return _format; }
-  
-  /*
-   * Set the output format of this number.
-   */
-  inline Arb& Arb::Format (OutputFormat const format) { _format = (format == FMT_DEFAULT) ? _format : format; return *this; }
+  inline Arb::OutputFormat Arb::Format () const { return _data->format; }
   
   /*
    * Get the round method of this number.
    */
-  inline Arb::RoundMethod Arb::Round () const { return _round; }
-  
-  /*
-   * Set the round method of this number.
-   */
-  inline Arb& Arb::Round (RoundMethod const round) { _round = (round == ROUND_DEFAULT) ? _round : round; return *this; }
+  inline Arb::RoundMethod Arb::Round () const { return _data->round; }
   
   /*
    * Get the fixed quotient of this number.
@@ -905,6 +893,11 @@ namespace DAC {
    */
   template <class T> inline Arb& Arb::set (SafeInt<T> const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   template <class T> inline Arb& Arb::set (T          const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  
+  /*
+   * Convert to a string with automatic buffering.
+   */
+  inline std::string const& Arb::to_string (OutputFormat const format) const { return to_string(_strbuf, format); }
   
   /*
    * Arithmetic operator backends.
@@ -2012,8 +2005,8 @@ namespace DAC {
   /*
    * Stream I/O operators.
    */
-  inline std::ostream&       operator << (std::ostream&       l, Arb  const& r) { std::string tmpstr; l << r.to_string(tmpstr);       return l; }
-  inline std::ostringstream& operator << (std::ostringstream& l, Arb  const& r) { std::string tmpstr; l << r.to_string(tmpstr);       return l; }
+  inline std::ostream&       operator << (std::ostream&       l, Arb  const& r) { l << r.to_string();                                 return l; }
+  inline std::ostringstream& operator << (std::ostringstream& l, Arb  const& r) { l << r.to_string();                                 return l; }
   inline std::istream&       operator >> (std::istream&       l, Arb&        r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   /*

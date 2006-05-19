@@ -460,7 +460,8 @@ namespace DAC {
       
       // Follows the formatting rules at the following URL:
       // http://www.opengroup.org/onlinepubs/009695399/functions/strftime.html
-      std::string& to_string (std::string& buffer, std::string const& format = std::string()) const;
+      std::string      & to_string (std::string& buffer, std::string const& format                ) const;
+      std::string const& to_string (                     std::string const& format = std::string()) const;
       
       // Arithmetic operator backends.
       Timestamp& op_add (TimeVal   const& tv)      ;
@@ -565,6 +566,9 @@ namespace DAC {
       
       // Calendar type of this timestamp.
       CalendarType _caltype;
+      
+      // String return value.
+      mutable std::string _strbuf;
       
       /***********************************************************************/
       // Static data members.
@@ -754,6 +758,13 @@ namespace DAC {
   inline Timestamp::Interval Timestamp::getGMT () const { return _get(); }
   
   /*
+   * Convert to string with internal buffer.
+   */
+  std::string const& Timestamp::to_string (std::string const& format) const {
+    return to_string(_strbuf, format);
+  }
+  
+  /*
    * Arithmetic.
    */
   inline Timestamp&         Timestamp::op_add (TimeVal   const& tv)       { _cache_valid = false; _jd += tv; return *this;  }
@@ -872,7 +883,7 @@ namespace DAC {
   /*
    * Stream I/O operators.
    */
-  inline std::ostream& operator << (std::ostream& l, Timestamp const& r) { std::string tmpstr; l << r.to_string(tmpstr); return l; }
+  inline std::ostream& operator << (std::ostream& l, Timestamp const& r) { l << r.to_string(); return l; }
   
   /*
    * Arithmetic operators.

@@ -228,7 +228,8 @@ namespace DAC {
       template <class T> ArbInt& push_back (T           const  number);
       
       // Convert to string.
-      std::string& to_string (std::string& buffer) const;
+      std::string      & to_string (std::string& buffer) const;
+      std::string const& to_string (                   ) const;
       
       // Arithmetic operator backends.
                          ArbInt& op_mul (ArbInt     const& number);
@@ -454,6 +455,9 @@ namespace DAC {
       
       // The default base of this number.
       _DigT _base;
+      
+      // Temporary buffer for string output.
+      mutable std::string _strbuf;
       
       /***********************************************************************/
       // Static data members.
@@ -788,9 +792,14 @@ namespace DAC {
   /*
    * Push a string onto the back of this number.
    */
-                     inline ArbInt& ArbInt::push_back (ArbInt     const& number) { std::string tmpstr; return push_back(ArbInt(number).Base(_base).to_string(tmpstr)); }
-  template <class T> inline ArbInt& ArbInt::push_back (SafeInt<T> const  number) {                     return push_back(static_cast<T>(number));                       }
-  template <class T> inline ArbInt& ArbInt::push_back (T          const  number) {                     return push_back(DAC::to_string(number));                       }
+                     inline ArbInt& ArbInt::push_back (ArbInt     const& number) { return push_back(ArbInt(number).Base(_base).to_string()); }
+  template <class T> inline ArbInt& ArbInt::push_back (SafeInt<T> const  number) { return push_back(static_cast<T>(number));                 }
+  template <class T> inline ArbInt& ArbInt::push_back (T          const  number) { return push_back(DAC::to_string(number));                 }
+  
+  /*
+   * Convert this number to a string.
+   */
+  inline std::string const& ArbInt::to_string () const { return to_string(_strbuf); }
   
   /*
    * Arithmetic operator backends.
@@ -1949,8 +1958,8 @@ namespace DAC {
   /*
    * Stream I/O operators.
    */
-  inline std::ostream&       operator << (std::ostream&       l, ArbInt const& r) { std::string tmpstr; l << r.to_string(tmpstr);       return l; }
-  inline std::ostringstream& operator << (std::ostringstream& l, ArbInt const& r) { std::string tmpstr; l << r.to_string(tmpstr);       return l; }
+  inline std::ostream&       operator << (std::ostream&       l, ArbInt const& r) { l << r.to_string();                                 return l; }
+  inline std::ostringstream& operator << (std::ostringstream& l, ArbInt const& r) { l << r.to_string();                                 return l; }
   inline std::istream&       operator >> (std::istream&       l, ArbInt&       r) { std::string input; std::cin >> input; r.set(input); return l; }
   
   /*

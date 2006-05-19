@@ -145,10 +145,10 @@ namespace DAC {
                   return "Unexpected error reading INI file. Error creating message string.";
                 }
               };
-              FileUnexpectedError& set_Type    (std::string const& errtype) { _type    = errtype; return *this; };
-              FileUnexpectedError& set_Message (std::string const& message) { _message = message; return *this; };
-              std::string& Type    (std::string& buffer) const { buffer = _type   ; return buffer; };
-              std::string& Message (std::string& buffer) const { buffer = _message; return buffer; };
+              FileUnexpectedError& Type    (std::string const& errtype) { _type    = errtype; return *this; };
+              FileUnexpectedError& Message (std::string const& message) { _message = message; return *this; };
+              std::string Type    () const { return _type   ; };
+              std::string Message () const { return _message; };
             private:
               std::string _type   ;
               std::string _message;
@@ -166,8 +166,8 @@ namespace DAC {
                   return "Multiple definitions of a section. Error creating message string.";
                 }
               };
-              SectionMultiDefine& set_Section (std::string const& section) { _section = section; return *this; };
-              std::string& Section (std::string& buffer) const { buffer = _section; return buffer; };
+              SectionMultiDefine& Section (std::string const& section) { _section = section; return *this; };
+              std::string Section () const { return _section; };
             private:
               std::string _section;
           };
@@ -205,8 +205,8 @@ namespace DAC {
                   return "Key was specified without a section. Error creating message string.";
                 }
               };
-              KeyNoSection& set_Key (std::string const& key) { _key = key; return *this; };
-              std::string& Key (std::string& buffer) const { buffer = _key; return buffer; };
+              KeyNoSection& Key (std::string const& key) { _key = key; return *this; };
+              std::string Key () const { return _key; };
             private:
               std::string _key;
           };
@@ -223,10 +223,10 @@ namespace DAC {
                   return "Multiple definitions of a key within a section. Error creating message string.";
                 }
               };
-              KeyMultiDefine& set_Section (std::string const& section) { _section = section; return *this; };
-              KeyMultiDefine& set_Key     (std::string const& key    ) { _key     = key    ; return *this; };
-              std::string& Section (std::string& buffer) const { buffer = _section; return buffer; };
-              std::string& Key     (std::string& buffer) const { buffer = _key    ; return buffer; };
+              KeyMultiDefine& Section (std::string const& section) { _section = section; return *this; };
+              KeyMultiDefine& Key     (std::string const& key    ) { _key     = key    ; return *this; };
+              std::string Section () const { return _section; };
+              std::string Key     () const { return _key    ; };
             private:
               std::string _section;
               std::string _key    ;

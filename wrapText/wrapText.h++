@@ -96,7 +96,6 @@ namespace DAC {
               virtual ~POIShyOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpstr;
                   std::string tmpmsg("Soft hyphen position " + DAC::to_string(POI()) + " overruns end of string.");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
@@ -111,7 +110,6 @@ namespace DAC {
               virtual ~POINBOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpstr;
                   std::string tmpmsg("Non-break position " + DAC::to_string(POI()) + " overruns end of string.");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
@@ -126,7 +124,6 @@ namespace DAC {
               virtual ~POIZWSOverrun () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpstr;
                   std::string tmpmsg("Zero width space position " + DAC::to_string(POI()) + " overruns end of string.");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
@@ -155,7 +152,8 @@ namespace DAC {
       void clear ();
       
       // Function call operator.
-      std::string& operator () (std::string& buffer, std::string const* const text = 0) const;
+      std::string      & operator () (std::string& buffer, std::string const* const text = 0) const;
+      std::string const& operator () (                     std::string const* const text = 0) const;
       
       // Properties.
       wrapText& Width    (std::string::size_type const width   );
@@ -176,7 +174,8 @@ namespace DAC {
       bool                   Hanging  () const;
       
       // Wrap text.
-      std::string& wrap (std::string& buffer, std::string const* const text = 0) const;
+      std::string      & wrap (std::string& buffer, std::string const* const text = 0) const;
+      std::string const& wrap (                     std::string const* const text = 0) const;
       
     /*
      * Private members.
@@ -224,6 +223,9 @@ namespace DAC {
       // Begin text at this column. Used to determine tab widths.
       std::string::size_type _startcol;
       
+      // String buffer.
+      mutable std::string _strbuf;
+      
   };
   
   /***************************************************************************
@@ -245,7 +247,8 @@ namespace DAC {
   /*
    * Function call operator.
    */
-  inline std::string& wrapText::operator () (std::string& buffer, std::string const* const text) const { return wrap(buffer, text); }
+  inline std::string      & wrapText::operator () (std::string& buffer, std::string const* const text) const { return wrap(buffer, text); }
+  inline std::string const& wrapText::operator () (                     std::string const* const text) const { return wrap(        text); }
   
   /*
    * Properties.
@@ -266,6 +269,11 @@ namespace DAC {
   inline std::string::size_type        wrapText::Indent   () const { return _indent  ; }
   inline bool                          wrapText::Hanging  () const { return _hanging ; }
   inline std::string::size_type        wrapText::StartCol () const { return _startcol; }
+  
+  /*
+   * Wrap text with our own buffer.
+   */
+  inline std::string const& wrapText::wrap (std::string const* const text) const { return wrap(_strbuf, text); }
   
 }
 

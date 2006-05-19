@@ -77,7 +77,8 @@ namespace DAC {
       ValReader (std::string const& value = _BLANK);
       
       // Get value as a string. Returns unmodified value.
-      std::string& to_string (std::string& buffer) const;
+      std::string      & to_string (std::string& buffer) const;
+      std::string const& to_string (                   ) const;
       
       // Get value as a boolean.
       bool to_boolean () const;
@@ -126,7 +127,8 @@ namespace DAC {
   /*
    * Get unmodified value.
    */
-  inline std::string& ValReader::to_string (std::string& buffer) const { buffer = _value; return buffer; }
+  inline std::string      & ValReader::to_string (std::string& buffer) const { buffer = _value; return buffer; }
+  inline std::string const& ValReader::to_string (                   ) const {                  return _value; }
   
   /*
    * Get value as an integer.

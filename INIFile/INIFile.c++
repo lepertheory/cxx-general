@@ -217,9 +217,9 @@ namespace DAC {
     // Error during file operation.
     } catch (exception& e) {
       string errtype;
-      throw Errors::FileUnexpectedError().set_Type(demangle(errtype, e)).set_Message(e.what());
+      throw Errors::FileUnexpectedError().Type(demangle(errtype, e)).Message(e.what());
     } catch (...) {
-      throw Errors::FileUnexpectedError().set_Type("-Unknown-").set_Message("-Unknown-");
+      throw Errors::FileUnexpectedError().Type("-Unknown-").Message("-Unknown-");
     }
     
     // Split each line.
@@ -253,7 +253,7 @@ namespace DAC {
         
         // Make sure this section does not already exist.
         if (newsections.count(section)) {
-          throw Errors::SectionMultiDefine().set_Section(section);
+          throw Errors::SectionMultiDefine().Section(section);
         }
         
         // Create the new section.
@@ -276,12 +276,12 @@ namespace DAC {
         
         // Make sure that we have an active section.
         if (section.empty()) {
-          throw Errors::KeyNoSection().set_Key(key);
+          throw Errors::KeyNoSection().Key(key);
         }
         
         // Make sure this key does not already exist in this section.
         if (newsections[section].count(key)) {
-          throw Errors::KeyMultiDefine().set_Section(section).set_Key(key);
+          throw Errors::KeyMultiDefine().Section(section).Key(key);
         }
         
         // Get the value, trim whitespace from beginning.
