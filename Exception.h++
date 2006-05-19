@@ -44,7 +44,8 @@ namespace DAC {
       virtual char const* what () const throw();
       
       // Get the type of this error.
-      std::string& type (std::string& buffer) const throw();
+      std::string      & type (std::string& buffer) const throw();
+      std::string const& type (                   ) const throw();
       
       // Reset to just-constructed state.
       virtual Exception& clear () throw();
@@ -62,6 +63,9 @@ namespace DAC {
       
       // Buffer for constructed error messages.
       mutable std::string _buffer;
+      
+      // Buffer for other returned strings.
+      mutable std::string _strbuf;
     
   };
   
@@ -88,7 +92,8 @@ namespace DAC {
   
   inline char const* Exception::what () const throw() { return "Undefined error."; }
   
-  inline std::string& Exception::type(std::string& buffer) const throw() { return demangle(buffer, *this); }
+  inline std::string      & Exception::type(std::string& buffer) const throw() { return demangle(buffer, *this); }
+  inline std::string const& Exception::type(                   ) const throw() { return type(_strbuf);           }
   
   inline Exception& Exception::clear() throw() { return *this; }
   
