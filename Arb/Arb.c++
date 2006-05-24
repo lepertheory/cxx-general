@@ -2,6 +2,9 @@
  * Arb.c++
  *****************************************************************************
  * Implementation for class Arb.
+ * FIXME: This COW stuff seemed like a good idea at the time, but it's
+ *        just not thread safe, and making it safe would make this so slow
+ *        its pointless. Fun while it lasted, get rid of it.
  *****************************************************************************/
 
 // STL includes.
