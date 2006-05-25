@@ -1,5 +1,5 @@
 /*****************************************************************************
- * SafeInt-test.c++
+ * SafeInt.c++
  *****************************************************************************
  * Tests the class SafeInt.
  *****************************************************************************/
@@ -12,6 +12,7 @@
 #include "SafeInt.h++"
 #include "Exception.h++"
 #include "to_string.h++"
+#include "demangle.h++"
 
 // Namespace declarations.
 using namespace std;
@@ -39,394 +40,137 @@ enum Op {
   OP_LIO
 };
 
-// This is where it all happens.
-int main ();
+// Relationship types.
+enum RelType {
+  SE_SE, SE_UE, SS_SL, SS_UL, SL_SS, SL_US,
+  UE_UE, UE_SE, US_SL, US_UL, UL_SS, UL_US, INT_ONLY
+};
 
-// Run the gamut on a pair of types.
-template <class T1, class T2> void gamut (char const* const type1, char const* const type2);
+// Determine the relationship between two types.
+template <class T, class U> class Relationship {
+  public:
+    static RelType const value =
+      (numeric_limits<T>::is_integer && numeric_limits<U>::is_integer) ? (
+        (numeric_limits<T>::digits > numeric_limits<U>::digits) ? (
+          numeric_limits<T>::is_signed ? (
+            numeric_limits<U>::is_signed ? (
+              SL_SS
+            ) : (
+              SL_US
+            )
+          ) : (
+            numeric_limits<U>::is_signed ? (
+              UL_SS
+            ) : (
+              UL_US
+            )
+          )
+        ) : (
+          (numeric_limits<T>::digits < numeric_limits<U>::digits) ? (
+            numeric_limits<T>::is_signed ? (
+              numeric_limits<U>::is_signed ? (
+                SS_SL
+              ) : (
+                SS_UL
+              )
+            ) : ( 
+              std::numeric_limits<U>::is_signed ? (
+                US_SL
+              ) : (
+                US_UL
+              )
+            )
+          ) : (
+            numeric_limits<T>::is_signed ? (
+              numeric_limits<U>::is_signed ? (
+                SE_SE
+              ) : (
+                SE_UE
+              )
+            ) : (
+              numeric_limits<U>::is_signed ? (
+                UE_SE
+              ) : (
+                UE_UE
+              )
+            )
+          )
+        )
+      ) : (
+        INT_ONLY
+      )
+    ;
+};
 
-// Test casting a number from one type to another.
-template <class ArgT, class FromT, class ToT> void testVal (ArgT const value);
-
-// Run all tests on two numbers.
-template <class T> void test (T const& l, T const& r);
-
-// Cast.
-template <class T, class U> void castl (char const* const t, T const& l, U const& r);
-template <class T, class U> void castr (char const* const t, T const& l, char const* const u, U const& r);
-
-// Test all know operations.
-template <class T, class U> void testOp (T const& l, Op const op, U const& r);
+// Type 1 tester.
+template <class T, RelType> class T1Tester;
+template <class T> class T1Tester<T, SE_SE> {
+  public:
+    static bool op (string const& name) {
+      
+      cout << "Testing " << name << ":\n";
+      
+      cout << "  Unaray operations:\n";
+      
+      cout << "    Default constructor: ";
+      {
+        SafeInt<T> test;
+        if (test) {
+          cout << "Default constructor creates value other than 0.\n";
+          return false;
+        }
+      }
+      {
+        SafeInt<T> test(numeric_limits<T>::min());
+        if (test != numeric_limits<T>::min()) {
+          cout << "Default constructor does not set min value properly. Min value for type is " << to_string(numeric_limits<T>::min()) << ", set as " << to_string(test) << ".\n";
+          return false;
+        }
+      }
+      {
+        SafeInt<T> test(numeric_limits<T>::min() + 1);
+        if (test != numeric_limits<T>::min() + 1) {
+          cout << "Default constructor does not set min + 1 properly. Min + 1 for type is " << to_string(numeric_limits<T>::min() + 1) << ", set as " << to_string(test) << ".\n";
+          return false;
+        }
+      }
+      cout << "OK\n";
+      
+      return true;
+      
+    };
+};
+template <class T> class T1Tester<T, UE_UE> {
+  public:
+    static bool op (string const& name) {
+      
+      if (name == name) {}
+      
+      return true;
+      
+    };
+};
 
 int main () {
   
-  try {
-    
-    SafeInt<signed long int> test1;
-    SafeInt<signed long int> test2;
-    
-    cout << "test1: ";
-    cin  >> test1;
-    cout << "test1: " << test1 << endl;
-    cout << "test2: ";
-    cin  >> test2;
-    cout << "test2: " << test2 << endl;
-    
-    test(test1, test2);
-    
-  } catch (Exception& e) {
-    
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-    exit(1);
-    
-  } catch (exception& e) {
-    
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-    exit(1);
-    
-  } catch (...) {
-    
-    cout << "Unexpected exception." << endl;
-    exit(1);
-    
-  }
-  
-  return 0;
-  
-}
-
-template <class T1, class T2> void gamut (char const* const type1, char const* const type2) {
-  
-  cout << "Running gamut on " << type1 << " : " << type2 << endl;
-  
-  cout << "  Type 1 range: " << to_string(numeric_limits<T1>::min()) << " to " << to_string(numeric_limits<T1>::max()) << endl;
-  cout << "  Type 2 range: " << to_string(numeric_limits<T2>::min()) << " to " << to_string(numeric_limits<T2>::max()) << endl;
-  
-  if (numeric_limits<T1>::digits >= numeric_limits<T2>::digits) {
-    
-    if (numeric_limits<T1>::is_signed) {
-      if (numeric_limits<T2>::is_signed) {
-        testVal<T2,  T1, T2>(numeric_limits<T2>::min());
-        testVal<int, T1, T2>(-1);
-        testVal<int, T1, T2>(0);
-        testVal<int, T1, T2>(1);
-        testVal<T2,  T1, T2>(numeric_limits<T2>::max());
-      } else {
-        testVal<int, T1, T2>(0);
-        testVal<int, T1, T2>(1);
-        testVal<T2,  T1, T2>(numeric_limits<T2>::max());
-      }
-    } else {
-      if (numeric_limits<T2>::is_signed) {
-        testVal<int, T1, T2>(0);
-        testVal<int, T1, T2>(1);
-        testVal<T2,  T1, T2>(numeric_limits<T2>::max());
-      } else {
-        testVal<int, T1, T2>(0);
-        testVal<int, T1, T2>(1);
-        testVal<T2,  T1, T2>(numeric_limits<T2>::max());
-      }
-    }
-    
+  T1Tester<bool          , Relationship<bool          , bool          >::value>::op("bool"          );
+  if (
+    T1Tester<bool          , Relationship<bool          , bool          >::value>::op("bool"          ) &&
+    T1Tester<char          , Relationship<char          , char          >::value>::op("char"          ) &&
+    T1Tester<signed char   , Relationship<signed char   , signed char   >::value>::op("signed char"   ) &&
+    T1Tester<unsigned char , Relationship<unsigned char , unsigned char >::value>::op("unsigned char" ) &&
+    T1Tester<wchar_t       , Relationship<wchar_t       , wchar_t       >::value>::op("wchar_t"       ) &&
+    T1Tester<short         , Relationship<short         , short         >::value>::op("short"         ) &&
+    T1Tester<unsigned short, Relationship<unsigned short, unsigned short>::value>::op("unsigned short") &&
+    T1Tester<int           , Relationship<int           , int           >::value>::op("int"           ) &&
+    T1Tester<unsigned      , Relationship<unsigned      , unsigned      >::value>::op("unsigned"      ) &&
+    T1Tester<long          , Relationship<long          , long          >::value>::op("long"          ) &&
+    T1Tester<unsigned long , Relationship<unsigned long , unsigned long >::value>::op("unsigned long" )
+  ) {
+    return 0;
   } else {
-    
-    if (numeric_limits<T1>::is_signed) {
-      if (numeric_limits<T2>::is_signed) {
-        testVal<T1,  T1, T2>(numeric_limits<T1>::min());
-        testVal<int, T1, T2>(-1);
-        testVal<int, T1, T2>(0);
-        testVal<int, T1, T2>(1);
-        testVal<T1,  T1, T2>(numeric_limits<T1>::max());
-      } else {
-        testVal<int, T1, T2>(0);
-        testVal<int, T1, T2>(1);
-        testVal<T1,  T1, T2>(numeric_limits<T1>::max());
-      }
-    } else {
-      if (numeric_limits<T2>::is_signed) {
-        testVal<int, T1, T2>(0);
-        testVal<int, T1, T2>(1);
-        testVal<T1,  T1, T2>(numeric_limits<T1>::max());
-      } else {
-        testVal<int, T1, T2>(0);
-        testVal<int, T1, T2>(1);
-        testVal<T1,  T1, T2>(numeric_limits<T1>::max());
-      }
-    }
-    
-  }
-  
-  cout << endl;
-  
-}
-
-template <class ArgT, class FromT, class ToT> void testVal (ArgT const value) {
-  
-  cout << "  " << to_string(value) << ": " << to_string(static_cast<ToT>(static_cast<FromT>(value))) << endl;
-  
-}
-
-template <class T> void test (T const& l, T const& r) {
-  
-  cout << boolalpha;
-  
-  try {
-    castl("bool                  ", SafeInt<bool                  >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castl("signed   char         ", SafeInt<signed   char         >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castl("unsigned char         ", SafeInt<unsigned char         >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castl("signed   short int    ", SafeInt<signed   short int    >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castl("unsigned short int    ", SafeInt<unsigned short int    >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castl("signed   int          ", SafeInt<signed   int          >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castl("unsigned int          ", SafeInt<unsigned int          >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castl("signed   long int     ", SafeInt<signed   long int     >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castl("unsigned long int     ", SafeInt<unsigned long int     >(l), r);
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
+    return 1;
   }
   
 }
 
-template <class T, class U> void castl (char const* const t, T const& l, U const& r) {
-  
-  try {
-    castr(t, l, "bool                  ", SafeInt<bool                  >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castr(t, l, "signed   char         ", SafeInt<signed   char         >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castr(t, l, "unsigned char         ", SafeInt<unsigned char         >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castr(t, l, "signed   short int    ", SafeInt<signed   short int    >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castr(t, l, "unsigned short int    ", SafeInt<unsigned short int    >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castr(t, l, "signed   int          ", SafeInt<signed   int          >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castr(t, l, "unsigned int          ", SafeInt<unsigned int          >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castr(t, l, "signed   long int     ", SafeInt<signed   long int     >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  try {
-    castr(t, l, "unsigned long int     ", SafeInt<unsigned long int     >(r));
-  } catch (Exception& e) {
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-  } catch (exception& e) {
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-  } catch (...) {
-    cout << "Unexpected exception." << endl;
-  }
-  
-}
-
-template <class T, class U> void castr (char const* const t, T const& l, char const* const u, U const& r) {
-  
-  cout << t << " : " << u << endl;
-  
-  testOp(l, OP_MUL, r);
-  testOp(l, OP_DIV, r);
-  testOp(l, OP_MOD, r);
-  testOp(l, OP_ADD, r);
-  testOp(l, OP_SUB, r);
-  testOp(l, OP_SHL, r);
-  testOp(l, OP_SHR, r);
-  testOp(l, OP_CGT, r);
-  testOp(l, OP_CGE, r);
-  testOp(l, OP_CLT, r);
-  testOp(l, OP_CLE, r);
-  testOp(l, OP_CEQ, r);
-  testOp(l, OP_CNE, r);
-  testOp(l, OP_BAN, r);
-  testOp(l, OP_BIO, r);
-  testOp(l, OP_BXO, r);
-  testOp(l, OP_LAN, r);
-  testOp(l, OP_LIO, r);
-  
-  cout << endl;
-  
-}
-
-template <class T, class U> void testOp (T const& l, Op const op, U const& r) {
-  
-  try {
-    
-    cout << "  " << l;
-    switch (op) {
-      case OP_MUL: cout << " *  "; break;
-      case OP_DIV: cout << " /  "; break;
-      case OP_MOD: cout << " %  "; break;
-      case OP_ADD: cout << " +  "; break;
-      case OP_SUB: cout << " -  "; break;
-      case OP_SHL: cout << " << "; break;
-      case OP_SHR: cout << " >> "; break;
-      case OP_CGT: cout << " >  "; break;
-      case OP_CGE: cout << " >= "; break;
-      case OP_CLT: cout << " <  "; break;
-      case OP_CLE: cout << " <= "; break;
-      case OP_CEQ: cout << " == "; break;
-      case OP_CNE: cout << " != "; break;
-      case OP_BAN: cout << " &  "; break;
-      case OP_BIO: cout << " |  "; break;
-      case OP_BXO: cout << " ^  "; break;
-      case OP_LAN: cout << " && "; break;
-      case OP_LIO: cout << " || "; break;
-    }
-    cout << r << " = ";
-    switch (op) {
-      case OP_MUL: cout << (l *  r); break;
-      case OP_DIV: cout << (l /  r); break;
-      case OP_MOD: cout << (l %  r); break;
-      case OP_ADD: cout << (l +  r); break;
-      case OP_SUB: cout << (l -  r); break;
-      case OP_SHL: cout << (l << r); break;
-      case OP_SHR: cout << (l >> r); break;
-      case OP_CGT: cout << (l >  r); break;
-      case OP_CGE: cout << (l >= r); break;
-      case OP_CLT: cout << (l <  r); break;
-      case OP_CLE: cout << (l <= r); break;
-      case OP_CEQ: cout << (l == r); break;
-      case OP_CNE: cout << (l != r); break;
-      case OP_BAN: cout << (l &  r); break;
-      case OP_BIO: cout << (l |  r); break;
-      case OP_BXO: cout << (l ^  r); break;
-      case OP_LAN: cout << (l && r); break;
-      case OP_LIO: cout << (l || r); break;
-    }
-    cout << endl;
-    
-  } catch (Exception& e) {
-    
-    cout << "Exception: [" << e.type() << "]: " << e.what() << endl;
-    
-  } catch (exception& e) {
-    
-    cout << "Unexpected exception: [" << demangle(e) << "]: " << e.what() << endl;
-    
-  } catch (...) {
-    
-    cout << "Unexpected exception." << endl;
-    
-  }
-  
-}

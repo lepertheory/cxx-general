@@ -37,17 +37,89 @@ namespace DAC {
   ArbInt::_DigT const ArbInt::s_digitbase = 1 << (numeric_limits<_DigT>::digits >> 1);
   ArbInt::_DigT const ArbInt::s_bitmask   = (1 << (numeric_limits<_DigT>::digits >> 1)) - 1;
   
-  ArbInt::_NumChrT ArbInt::s_numodigits = 36;
-  ArbInt::_StrChrT ArbInt::s_odigits[]  = {
+  ArbInt::_NumChrT const ArbInt::s_numodigits = 36;
+  ArbInt::_StrChrT const ArbInt::s_odigits[]  = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
     'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
     'U', 'V', 'W', 'X', 'Y', 'Z'
   };
-  ArbInt::_NumChrT         ArbInt::s_numidigits = 36;
-  vector<ArbInt::_NumChrT> ArbInt::s_idigits;
-  
-  bool ArbInt::s_initialized = false;
+  ArbInt::_NumChrT const ArbInt::s_idigits[] = {
+    numeric_limits<_NumChrT>::max(), // 0x00      NUL
+    numeric_limits<_NumChrT>::max(), // 0x01      SOH
+    numeric_limits<_NumChrT>::max(), // 0x02      STX
+    numeric_limits<_NumChrT>::max(), // 0x03      ETX
+    numeric_limits<_NumChrT>::max(), // 0x04      EOT
+    numeric_limits<_NumChrT>::max(), // 0x05      ENQ
+    numeric_limits<_NumChrT>::max(), // 0x06      ACK
+    numeric_limits<_NumChrT>::max(), // 0x07      BEL
+    numeric_limits<_NumChrT>::max(), // 0x08      BS
+    numeric_limits<_NumChrT>::max(), // 0x09      HT
+    numeric_limits<_NumChrT>::max(), // 0x0A      LF
+    numeric_limits<_NumChrT>::max(), // 0x0B      VT
+    numeric_limits<_NumChrT>::max(), // 0x0C      FF
+    numeric_limits<_NumChrT>::max(), // 0x0D      CR
+    numeric_limits<_NumChrT>::max(), // 0x0E      SO
+    numeric_limits<_NumChrT>::max(), // 0x0F      SI
+    numeric_limits<_NumChrT>::max(), // 0x10      DLE
+    numeric_limits<_NumChrT>::max(), // 0x11      DC1
+    numeric_limits<_NumChrT>::max(), // 0x12      DC2
+    numeric_limits<_NumChrT>::max(), // 0x13      DC3
+    numeric_limits<_NumChrT>::max(), // 0x14      DC4
+    numeric_limits<_NumChrT>::max(), // 0x15      NAK
+    numeric_limits<_NumChrT>::max(), // 0x16      SYN
+    numeric_limits<_NumChrT>::max(), // 0x17      ETB
+    numeric_limits<_NumChrT>::max(), // 0x18      CAN
+    numeric_limits<_NumChrT>::max(), // 0x19      EM
+    numeric_limits<_NumChrT>::max(), // 0x1A      SUB
+    numeric_limits<_NumChrT>::max(), // 0x1B      ESC
+    numeric_limits<_NumChrT>::max(), // 0x1C      FS
+    numeric_limits<_NumChrT>::max(), // 0x1D      GS
+    numeric_limits<_NumChrT>::max(), // 0x1E      RS
+    numeric_limits<_NumChrT>::max(), // 0x1F      US
+    numeric_limits<_NumChrT>::max(), // 0x20      SP
+    numeric_limits<_NumChrT>::max(), // 0x21      !
+    numeric_limits<_NumChrT>::max(), // 0x22      "
+    numeric_limits<_NumChrT>::max(), // 0x23      #
+    numeric_limits<_NumChrT>::max(), // 0x24      $
+    numeric_limits<_NumChrT>::max(), // 0x25      %
+    numeric_limits<_NumChrT>::max(), // 0x26      &
+    numeric_limits<_NumChrT>::max(), // 0x27      '
+    numeric_limits<_NumChrT>::max(), // 0x28      (
+    numeric_limits<_NumChrT>::max(), // 0x29      )
+    numeric_limits<_NumChrT>::max(), // 0x2A      *
+    numeric_limits<_NumChrT>::max(), // 0x2B      +
+    numeric_limits<_NumChrT>::max(), // 0x2C      ,
+    numeric_limits<_NumChrT>::max(), // 0x2D      -
+    numeric_limits<_NumChrT>::max(), // 0x2E      .
+    numeric_limits<_NumChrT>::max(), // 0x2F      /
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,    // 0x30-0x39 0-9
+    numeric_limits<_NumChrT>::max(), // 0x3A      :
+    numeric_limits<_NumChrT>::max(), // 0x3B      ;
+    numeric_limits<_NumChrT>::max(), // 0x3C      <
+    numeric_limits<_NumChrT>::max(), // 0x3D      =
+    numeric_limits<_NumChrT>::max(), // 0x3E      >
+    numeric_limits<_NumChrT>::max(), // 0x3F      ?
+    numeric_limits<_NumChrT>::max(), // 0x40      @
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35,          // 0x41-0x5A A-Z
+    numeric_limits<_NumChrT>::max(), // 0x5B      [
+    numeric_limits<_NumChrT>::max(), // 0x5C      BACKSLASH
+    numeric_limits<_NumChrT>::max(), // 0x5D      ]
+    numeric_limits<_NumChrT>::max(), // 0x5E      ^
+    numeric_limits<_NumChrT>::max(), // 0x5F      _
+    numeric_limits<_NumChrT>::max(), // 0x60      `
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35,          // 0x61-0x7A a-z
+    numeric_limits<_NumChrT>::max(), // 0x7B      {
+    numeric_limits<_NumChrT>::max(), // 0x7C      |
+    numeric_limits<_NumChrT>::max(), // 0x7D      }
+    numeric_limits<_NumChrT>::max(), // 0x7E      ~
+    numeric_limits<_NumChrT>::max()  // 0x7F      DEL
+  };
+  ArbInt::_NumChrT         const ArbInt::s_numidigits = 36;
   
   /***************************************************************************/
   // Function members.
@@ -57,21 +129,21 @@ namespace DAC {
    */
   ArbInt::ArbInt () {
     
-    // Call common init.
-    _init();
+    // Initialize.
+    clear();
     
   }
   
   /*
    * Copy constructor.
    */
-  ArbInt::ArbInt (ArbInt const& number, bool const copynow) {
+  ArbInt::ArbInt (ArbInt const& number) {
     
-    // Call common init.
-    _init();
+    // Initialize.
+    clear();
     
     // Set the number.
-    copy(number, copynow);
+    copy(number);
     
   }
   
@@ -80,8 +152,8 @@ namespace DAC {
    */
   ArbInt::ArbInt (string const& number) {
     
-    // Call common init.
-    _init();
+    // Initialize.
+    clear();
     
     // Set the number.
     set(number);
@@ -91,51 +163,37 @@ namespace DAC {
   /*
    * Reset to just-constructed state.
    */
-  ArbInt& ArbInt::clear () {
+  void ArbInt::clear () {
     
-    // Create a new vector, this preserves COW behavior.
-    _digits = new _DigsT;
+    // Clear the digits.
+    _digits.clear();
     
     // Reset the default base.
     _base = 10;
-    
-    // Return self.
-    return *this;
     
   }
   
   /*
    * Make a copy of another number.
    */
-  ArbInt& ArbInt::copy (ArbInt const& number, bool const copynow) {
+  void ArbInt::copy (ArbInt const& number) {
     
-    // Set the new digits. Make a copy if instructed to do so, otherwise
-    // just make a reference and use COW.
-    _DataPT new_digits;
-    if (copynow) {
-      new_digits = new _DigsT(*(number._digits));
-    } else {
-      new_digits = number._digits;
-    }
+    // Set the new digits.
+    _DigsT new_digits(number._digits);
+    _digits.swap(new_digits);
     
     // Set the default base of number.
     _base = number._base;
-    
-    // Swap in the new digits.
-    _digits = new_digits;
-    
-    // Return self.
-    return *this;
     
   }
   
   /*
    * Set this number with a string.
    */
-  ArbInt& ArbInt::set (string const& number, bool const autobase) {
+  void ArbInt::set (string const& number, bool const autobase) {
     
     // Load the number into this for exception safety and COW.
-    _DataPT new_digits(new _DigsT);
+    _DigsT new_digits;
     
     // Parser will load data into here.
     _DigStrT num;
@@ -162,7 +220,7 @@ namespace DAC {
     for (string::size_type i = num_start; i != number.length(); ++i) {
       
       // Get the value of this digit.
-      SafeInt<_NumChrT> digval(s_idigits[number[i]]);
+      SafeInt<_NumChrT> digval(s_idigits[SafeInt<size_t>(number[i])]);
       
       // Make sure this digit is within the number base.
       if ((digval >= num_base || (digval == numeric_limits<_NumChrT>::max()))) {
@@ -178,37 +236,29 @@ namespace DAC {
     s_trimZerosE(num);
     
     // Convert to the native number base.
-    s_baseConv(num, num_base, *new_digits, s_digitbase);
+    s_baseConv(num, num_base, new_digits, s_digitbase);
     
     // The new number has been loaded successfully. Swap it in.
     _digits = new_digits;
-    
-    // We done, return the new number.
-    return *this;
     
   }
   
   /*
    * Push a string onto the back of this number.
    */
-  ArbInt& ArbInt::push_back (string const& number) {
+  void ArbInt::push_back (string const& number) {
     
     // Work area.
-    ArbInt retval(*this, true);
     ArbInt newnum;
     
-    // Move retval up to accomidate the new digits.
-    retval *= ArbInt(_base).pow(number.length());
+    // Move digits up to accomidate the new digits.
+    op_mul(ArbInt(_base).pow(number.length()));
     
     // Convert the new number.
     newnum.Base(_base).set(number);
     
     // Add the new number to this.
-    retval += newnum;
-    
-    // Move the return into place and we're done.
-    _digits = retval._digits;
-    return *this;
+    op_add(newnum);
     
   }
   
@@ -222,7 +272,6 @@ namespace DAC {
     
     // Easy case of 0.
     if (isZero()) {
-      
       retval = "0";
       
     // Otherwise we have work to do.
@@ -230,7 +279,7 @@ namespace DAC {
       
       // Convert to the output base.
       _DigsT num;
-      s_baseConv(*_digits, s_digitbase, num, _base);
+      s_baseConv(_digits, s_digitbase, num, _base);
       
       // Load this into the string. If the base is greater than the number
       // of digits defined, output the raw numbers of each digit.
@@ -271,24 +320,24 @@ namespace DAC {
       ArbInt digproduct;
       
       // Multiply like 3rd grade.
-      for (_DigsT::size_type i = 0; i != number._digits->size(); ++i) {
+      for (_DigsT::size_type i = 0; i != number._digits.size(); ++i) {
         
         // Get the product for a single digit.
-        for (_DigsT::size_type j = 0; j != _digits->size(); ++j) {
+        for (_DigsT::size_type j = 0; j != _digits.size(); ++j) {
           
           // Create a new digit in the digit product if necessary.
-          if (digproduct._digits->size() == j) {
-            digproduct._digits->push_back(0);
+          if (digproduct._digits.size() == j) {
+            digproduct._digits.push_back(0);
           }
           
           // Multiply into the digit product and carry.
-          (*(digproduct._digits))[j] += SafeInt<_DigT>((*(number._digits))[i]) * (*_digits)[j];
+          digproduct._digits[j] += SafeInt<_DigT>(number._digits[i]) * _digits[j];
           digproduct._carry(j);
           
         }
         
         // Offset this digit product and add it to the final product.
-        digproduct._digits->insert(digproduct._digits->begin(), i, 0);
+        digproduct._digits.insert(digproduct._digits.begin(), i, 0);
         retval.op_add(digproduct);
         digproduct.clear();
         
@@ -297,7 +346,7 @@ namespace DAC {
     }
     
     // Swap in the result and return.
-    _digits = retval._digits;
+    _digits.swap(retval._digits);
     return *this;
     
   }
@@ -327,7 +376,7 @@ namespace DAC {
     } else {
       
       // Cache a copy of the high-order digit of the dividend.
-      SafeInt<_DigT> roughdivnd(number._digits->back());
+      SafeInt<_DigT> roughdivnd(number._digits.back());
       
       // Seed the group of digits we will be dividing, then iterate through
       // the divisor. diggroup is set to *this's last number._digits's size
@@ -336,8 +385,8 @@ namespace DAC {
       // digit added to diggroup to the end of _digits, although the
       // iterator is only ever referenced to add one to it.
       ArbInt diggroup;
-      *(diggroup._digits) = _DigsT(_digits->end() - number._digits->size(), _digits->end());
-      for (_DigsT::reverse_iterator i = _digits->rbegin() + (number._digits->size() - 1); i != _digits->rend(); ++i) {
+      diggroup._digits = _DigsT(_digits.end() - number._digits.size(), _digits.end());
+      for (_DigsT::reverse_iterator i = _digits.rbegin() + (number._digits.size() - 1); i != _digits.rend(); ++i) {
         
         // Guess and test. Guess is a single native digit so we can use the
         // computer to do some of our division for us. These need to be set
@@ -359,11 +408,11 @@ namespace DAC {
           // roughdivor can never overflow, since it will always spend at
           // least one iteration greater than roughdivnd but cannot be
           // greater than the type maximum.
-          SafeInt<_DigT> roughdivor(diggroup._digits->back());
+          SafeInt<_DigT> roughdivor(diggroup._digits.back());
           _DigsT::size_type j;
-          for (j = 0; j != (diggroup._digits->size() - number._digits->size()); ++j) {
+          for (j = 0; j != (diggroup._digits.size() - number._digits.size()); ++j) {
             roughdivor *= s_digitbase;
-            roughdivor += (*(diggroup._digits))[diggroup._digits->size() - 1 - (j + 1)];
+            roughdivor += diggroup._digits[diggroup._digits.size() - 1 - (j + 1)];
           }
           guess = roughdivor / roughdivnd;
             
@@ -421,10 +470,10 @@ namespace DAC {
         // and prepare for the next iteration by removing the current digit
         // from the digit group, shift the digit group up one digit, and add
         // the next digit of the divisor.
-        retval._digits->insert(retval._digits->begin(), guess);
+        retval._digits.insert(retval._digits.begin(), guess);
         diggroup -= test;
-        if (i != (_digits->rend() - 1)) {
-          diggroup._digits->insert(diggroup._digits->begin(), *(i + 1));
+        if (i != (_digits.rend() - 1)) {
+          diggroup._digits.insert(diggroup._digits.begin(), *(i + 1));
         }
         
       }
@@ -438,7 +487,7 @@ namespace DAC {
     
     // Clean up, move the result into place and return.
     retval._trimZeros();
-    _digits = retval._digits;
+    _digits.swap(retval._digits);
     return *this;
     
   }
@@ -460,7 +509,7 @@ namespace DAC {
     
     // Do division and return the remainder.
     quotient.op_div(number, &retval);
-    _digits = retval._digits;
+    _digits.swap(retval._digits);
     return *this;
     
   }
@@ -470,25 +519,21 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_add (ArbInt const& number) {
     
-    // Work area.
-    ArbInt retval(*this, true);
-    
     // Add like kindergarten.
-    for (_DigsT::size_type i = 0; i != number._digits->size(); ++i) {
+    for (_DigsT::size_type i = 0; i != number._digits.size(); ++i) {
       
       // Create a new digit if necessary.
-      if (i == retval._digits->size()) {
-        retval._digits->push_back(0);
+      if (i == _digits.size()) {
+        _digits.push_back(0);
       }
       
       // Add this digit and carry.
-      (*(retval._digits))[i] += SafeInt<_DigT>((*(number._digits))[i]);
-      retval._carry(i);
+      _digits[i] += SafeInt<_DigT>(number._digits[i]);
+      _carry(i);
       
     }
     
-    // Move the result into place and return.
-    _digits = retval._digits;
+    // Done.
     return *this;
     
   }
@@ -498,30 +543,26 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_sub (ArbInt const& number) {
     
-    // Work area.
-    ArbInt retval(*this, true);
-    
     // These are unsigned numbers, so if number > this, throw an error.
-    if (number > retval) {
+    if (op_lt(number)) {
       throw ArbInt::Errors::Negative();
     }
     
     // Subtract like kindergarten.
-    for (_DigsT::size_type i = 0; i != number._digits->size(); ++i) {
+    for (_DigsT::size_type i = 0; i != number._digits.size(); ++i) {
       
       // Borrow if necessary and subtract.
-      if ((*(retval._digits))[i] < (*(number._digits))[i]) {
-        retval._borrow(i);
+      if (_digits[i] < number._digits[i]) {
+        _borrow(i);
       }
-      (*(retval._digits))[i] = SafeInt<_DigT>((*(retval._digits))[i]) - (*(number._digits))[i];
+      _digits[i] = SafeInt<_DigT>(_digits[i]) - number._digits[i];
       
     }
     
     // Trim zeros.
-    retval._trimZeros();
+    _trimZeros();
     
-    // Move the result into place and return.
-    _digits = retval._digits;
+    // Done.
     return *this;
     
   }
@@ -541,21 +582,21 @@ namespace DAC {
     }
     
     // Check sizes of containers.
-    if (_digits->size() > number._digits->size()) {
+    if (_digits.size() > number._digits.size()) {
       return true;
     }
-    if (_digits->size() < number._digits->size()) {
+    if (_digits.size() < number._digits.size()) {
       return false;
     }
     
     // Step through each element looking for a difference, start at high-
     // order and work down.
-    for (_DigsT::size_type i = 0; i != _digits->size(); ++i) {
-      _DigsT::size_type j = _digits->size() - 1 - i;
-      if ((*(_digits))[j] > (*(number._digits))[j]) {
+    for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
+      _DigsT::size_type j = _digits.size() - 1 - i;
+      if (_digits[j] > number._digits[j]) {
         return true;
       }
-      if ((*(_digits))[j] < (*(number._digits))[j]) {
+      if (_digits[j] < number._digits[j]) {
         return false;
       }
     }
@@ -580,21 +621,21 @@ namespace DAC {
     }
     
     // Check sizes of containers.
-    if (_digits->size() < number._digits->size()) {
+    if (_digits.size() < number._digits.size()) {
       return true;
     }
-    if (_digits->size() > number._digits->size()) {
+    if (_digits.size() > number._digits.size()) {
       return false;
     }
     
     // Step through each element looking for a difference, start at high-order
     // and work down.
-    for (_DigsT::size_type i = 0; i != _digits->size(); ++i) {
-      _DigsT::size_type j = _digits->size() - 1 - i;
-      if ((*(_digits))[j] < (*(number._digits))[j]) {
+    for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
+      _DigsT::size_type j = _digits.size() - 1 - i;
+      if (_digits[j] < number._digits[j]) {
         return true;
       }
-      if ((*(_digits))[j] > (*(number._digits))[j]) {
+      if (_digits[j] > number._digits[j]) {
         return false;
       }
     }
@@ -619,14 +660,14 @@ namespace DAC {
     }
     
     // Check sizes of containers.
-    if (_digits->size() != number._digits->size()) {
+    if (_digits.size() != number._digits.size()) {
       return false;
     }
     
     // Step through each element looking for a difference, start at low-order
     // and work up, most differences will be in low-order digits.
-    for (_DigsT::size_type i = 0; i != _digits->size(); ++i) {
-      if ((*(_digits))[i] != (*(number._digits))[i]) {
+    for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
+      if (_digits[i] != number._digits[i]) {
         return false;
       }
     }
@@ -641,24 +682,20 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_bit_and (ArbInt const& number) {
     
-    // Work area.
-    ArbInt retval(*this, true);
-    
     // Cut off digits longer than number, they will be 0 anyway.
-    if (retval._digits->size() > number._digits->size()) {
-      retval._digits->resize(number._digits->size());
+    if (_digits.size() > number._digits.size()) {
+      _digits.resize(number._digits.size());
     }
     
-    // AND each digit.
-    for (_DigsT::size_type i = 0; i != retval._digits->size(); ++i) {
-      (*(retval._digits))[i] &= (*(number._digits))[i];
+    // AND each remaining digit.
+    for (_DigsT::size_type i = 0; i != min(_digits.size(), number._digits.size()); ++i) {
+      _digits[i] &= number._digits[i];
     }
     
     // Clean up.
-    retval._trimZeros();
+    _trimZeros();
     
-    // Move the result into place and return.
-    _digits = retval._digits;
+    // Done.
     return *this;
     
   }
@@ -668,26 +705,21 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_bit_ior (ArbInt const& number) {
     
-    // Work area.
-    ArbInt retval(*this, true);
-    
-    // Get the original size of retval, no processing of any of the added
+    // Get the original size of *this, no processing of any of the added
     // digits will be necessary b/c of how | works.
-    _DigsT::size_type origsize = min(retval._digits->size(), number._digits->size());
+    _DigsT::size_type origsize = min(_digits.size(), number._digits.size());
     
     // Directly copy digits longer than *this.
-    if (retval._digits->size() < number._digits->size()) {
-      retval._digits->insert(retval._digits->end(), number._digits->begin() + retval._digits->size(), number._digits->end());
+    if (_digits.size() < number._digits.size()) {
+      _digits.insert(_digits.end(), number._digits.begin() + _digits.size(), number._digits.end());
     }
     
     // Inclusive OR each digit.
     for (_DigsT::size_type i = 0; i != origsize; ++i) {
-      (*(retval._digits))[i] |= (*(number._digits))[i];
+      _digits[i] |= number._digits[i];
     }
     
-    // No need to trim zeros with inclusive OR. Move the result into place
-    // and return.
-    _digits = retval._digits;
+    // No need to trim zeros with inclusive OR. Done.
     return *this;
     
   }
@@ -697,28 +729,24 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_bit_xor (ArbInt const& number) {
     
-    // Work area.
-    ArbInt retval(*this, true);
-    
-    // Get the original size of retval, no processing of any of the added
-    // digits will be necessary b/c of how | works.
-    _DigsT::size_type origsize = min(retval._digits->size(), number._digits->size());
+    // Get the original size of *this, no processing of any of the added
+    // digits will be necessary b/c of how ^ works.
+    _DigsT::size_type origsize = min(_digits.size(), number._digits.size());
     
     // Directly copy digits longer than *this.
-    if (retval._digits->size() < number._digits->size()) {
-      retval._digits->insert(retval._digits->end(), number._digits->begin() + retval._digits->size(), number._digits->end());
+    if (_digits.size() < number._digits.size()) {
+      _digits.insert(_digits.end(), number._digits.begin() + _digits.size(), number._digits.end());
     }
     
     // Exclusive OR each digit.
     for (_DigsT::size_type i = 0; i != origsize; ++i) {
-      (*(retval._digits))[i] ^= (*(number._digits))[i];
+      _digits[i] ^= number._digits[i];
     }
     
     // Clean up.
-    retval._trimZeros();
+    _trimZeros();
     
-    // Move the result into place and return.
-    _digits = retval._digits;
+    // Done.
     return *this;
     
   }
@@ -728,19 +756,15 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_bit_cpm () {
     
-    // Work area.
-    ArbInt retval(*this, true);
-    
     // Apply compliment to each digit.
-    for (_DigsT::size_type i = 0; i != retval._digits->size(); ++i) {
-      (*(retval._digits))[i] = (~((*(retval._digits))[i])) & s_bitmask;
+    for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
+      _digits[i] = ~_digits[i] & s_bitmask;
     }
     
     // Clean up.
-    retval._trimZeros();
+    _trimZeros();
     
-    // Move the result into place and return.
-    _digits = retval._digits;
+    // Done.
     return *this;
     
   }
@@ -754,7 +778,6 @@ namespace DAC {
     ArbInt tmp_base(*this);
     ArbInt tmp_expn(exp);
     ArbInt retval(1);
-    ArbInt one(1);
     
     // Russian peasant power.
     while (!tmp_expn.isZero()) {
@@ -762,7 +785,7 @@ namespace DAC {
         retval *= tmp_base;
       }
       tmp_base *= tmp_base;
-      tmp_expn >>= one;
+      tmp_expn >>= 1;
     }
     
     // Return the result.
@@ -771,56 +794,37 @@ namespace DAC {
   }
   
   /*
-   * Common initialization tasks.
-   */
-  void ArbInt::_init () {
-    
-    // Check that the class constructor was successfully called.
-    if (!s_initialized) {
-      s_classInit();
-    }
-    
-    // Clear.
-    clear();
-    
-  }
-  
-  /*
-   * Perform carry. Only call this on temporary objects that are not copied.
-   * Copy on write is not preserved for this function.
+   * Perform carry.
    */
   ArbInt& ArbInt::_carry (_DigsT::size_type start) {
     
     // Ensure that the start is not beyond the end of the container.
-    if (start >= _digits->size()) {
+    if (start >= _digits.size()) {
       throw ArbInt::Errors::Overrun();
     }
     
     // Loop through the container looking for base overflow.
-    for (_DigsT::size_type i = start; i != _digits->size(); ++i) {
+    for (_DigsT::size_type i = start; i != _digits.size(); ++i) {
       
       // If we find overflow, push it to the next digit.
-      if ((*_digits)[i] >= s_digitbase) {
+      if (_digits[i] >= s_digitbase) {
         
         // Create the next digit if it does not already exist.
-        if ((_digits->size() - 1) <= i) {
-          _digits->push_back(0);
+        if ((_digits.size() - 1) <= i) {
+          _digits.push_back(0);
         }
         
         // Add any overflow to the next digit and remove it from the current
         // digit. No need to check i + 1 for overflow; i is the size_type of
         // _DigsT, and we just added an element, we would have recieved an
         // error when we did that.
-        SafeInt<_DigsT::value_type> overflow = SafeInt<_DigsT::value_type>((*_digits)[i]) / s_digitbase;
-        (*_digits)[i + 1]                    = (*_digits)[i + 1] + overflow;
-        (*_digits)[i]                        = (*_digits)[i] - (overflow * s_digitbase);
+        SafeInt<_DigsT::value_type> overflow = SafeInt<_DigsT::value_type>(_digits[i]) / s_digitbase;
+        _digits[i + 1]                       = _digits[i + 1] + overflow;
+        _digits[i]                           = _digits[i] - (overflow * s_digitbase);
         
       // If there is no overflow now, there will be no more overflow.
       } else {
-        
-        // Simply leave the loop.
         break;
-        
       }
       
     }
@@ -837,25 +841,25 @@ namespace DAC {
   ArbInt& ArbInt::_borrow (_DigsT::size_type start) {
     
     // Ensure that the start is not beyond the end of the container.
-    if (start >= _digits->size()) {
+    if (start >= _digits.size()) {
       throw ArbInt::Errors::Overrun();
     }
     
     // Loop through the container borrowing until we've met our borrow.
-    for (_DigsT::size_type i = start; i != (_digits->size() - 1); ++i) {
+    for (_DigsT::size_type i = start; i != (_digits.size() - 1); ++i) {
       
       // Add base to this digit.
-      (*_digits)[i] = SafeInt<_DigT>((*_digits)[i]) + s_digitbase;
+      _digits[i] = SafeInt<_DigT>(_digits[i]) + s_digitbase;
       
       // If this is not the first digit, we are only here because we
       // borrowed for the previous digit. Subtract one for the borrow.
       if (i != start) {
-        --(*_digits)[i];
+        --_digits[i];
       }
       
       // If the next digit is > 0, subtract 1 and we're done.
-      if ((*_digits)[i + 1] > 0) {
-        --(*_digits)[i + 1];
+      if (_digits[i + 1] > 0) {
+        --_digits[i + 1];
         _trimZeros();
         return *this;
       }
@@ -943,21 +947,21 @@ namespace DAC {
       if (dir == _DIR_L) {
         
         // Check if shift will overrun _DigsT::size_type.
-        if (digits > numeric_limits<_DigsT::size_type>::max() - _digits->size()) {
+        if (digits > numeric_limits<_DigsT::size_type>::max() - _digits.size()) {
           throw ArbInt::Errors::Overrun();
         }
         
         // Insert 0s to shift left.
-        _digits->insert(_digits->begin(), digits, 0);
+        _digits.insert(_digits.begin(), digits, 0);
         
       } else {
         
         // Delete low-order digits to shift right. If the shift will leave no
         // digits, just zero it out.
-        if (digits < _digits->size()) {
-          _digits->erase(_digits->begin(), _digits->begin() + static_cast<_DigsT::size_type>(digits));
+        if (digits < _digits.size()) {
+          _digits.erase(_digits.begin(), _digits.begin() + static_cast<_DigsT::size_type>(digits));
         } else {
-          _digits->clear();
+          _digits.clear();
         }
         
       }
@@ -996,7 +1000,7 @@ namespace DAC {
         // Select shift direction.
         if (dir == _DIR_L) {
           bitmask <<= (s_digitbits - tmp_bits);
-          for (_DigsT::iterator i = _digits->begin(); i != _digits->end(); ++i) {
+          for (_DigsT::iterator i = _digits.begin(); i != _digits.end(); ++i) {
             carry     = *i & bitmask;
             *i       <<= tmp_bits;
             *i        &= s_bitmask;
@@ -1004,10 +1008,10 @@ namespace DAC {
             oldcarry   = carry >> bitdiff;
           }
           if (oldcarry) {
-            _digits->push_back(oldcarry);
+            _digits.push_back(oldcarry);
           }
         } else {
-          for (_DigsT::reverse_iterator i = _digits->rbegin(); i != _digits->rend(); ++i) {
+          for (_DigsT::reverse_iterator i = _digits.rbegin(); i != _digits.rend(); ++i) {
             carry      = *i & bitmask;
             *i       >>= tmp_bits;
             *i        |= oldcarry;
@@ -1021,28 +1025,6 @@ namespace DAC {
     
     // Return.
     return *this;
-    
-  }
-  
-  /*
-   * Class constructor.
-   */
-  void ArbInt::s_classInit () {
-    
-    // Get the input digits. If this changes, you need to update s_numidigits!
-    SafeInt<_NumChrT> j;
-    for (_NumChrT i = 0; i != numeric_limits<_NumChrT>::max(); ++i) {
-      j = i;
-      SafeInt<_NumChrT> digit;
-      if      ((j >= '0') && (j <= '9')) { digit = j - '0';                         }
-      else if ((j >= 'A') && (j <= 'Z')) { digit = j - 'A' + 10;                    }
-      else if ((j >= 'a') && (j <= 'z')) { digit = j - 'a' + 10;                    }
-      else                               { digit = numeric_limits<_NumChrT>::max(); }
-      s_idigits.push_back(digit);
-    }
-    
-    // Class has successfully been initialized.
-    s_initialized = true;
     
   }
   
