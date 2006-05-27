@@ -868,7 +868,6 @@ namespace DAC {
   /*
    * Return the maximum string input base.
    */
-  // FIXME: This should be a const.
   inline ArbInt::value_type ArbInt::max_input_base () { return SafeInt<value_type>(s_numidigits); }
   
   /*

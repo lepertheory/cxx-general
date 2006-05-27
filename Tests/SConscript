@@ -4,6 +4,9 @@ Import('*')
 # Include the parent directory.
 env.Append(CPPPATH = ['..'])
 
+# Define testing environment.
+env.Append(CPPDEFINES = ['TESTING'])
+
 # Create program-specific environments.
 env_ArbInt = env.Copy()
 cArbInt.apply(env_ArbInt)

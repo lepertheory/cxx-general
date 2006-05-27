@@ -83,8 +83,8 @@ namespace DAC {
       SafeInt (SafeInt<T> const& value) throw();
       
       // Conversion constructor.
-      template <class U> explicit SafeInt (U          const value = 0) throw(typename Errors::Overflow);
-      template <class U> explicit SafeInt (SafeInt<U> const value    ) throw(typename Errors::Overflow);
+      template <class U> explicit SafeInt (U          const value) throw(typename Errors::Overflow);
+      template <class U> explicit SafeInt (SafeInt<U> const value) throw(typename Errors::Overflow);
       
       // Increment / decrement operators.
       SafeInt& operator ++ ()    throw(typename Errors::Overflow);
@@ -174,7 +174,7 @@ namespace DAC {
       SafeInt abs () const throw(typename Errors::Overflow);
       
       // Get the number of bits in this number.
-      unsigned int bitsInNumber () const throw();
+      size_t bitsInNumber () const throw();
       
     /*
      * Private members.
@@ -596,6 +596,11 @@ namespace DAC {
     template <class T> class SafeAbs<T, SE_SE> { public: static T op (T const value) throw(typename SafeInt<T>::Errors::Overflow); };
     template <class T> class SafeAbs<T, UE_UE> { public: static T op (T const value) throw(                                     ); };
     
+    // Count minimum bits needed to represent number.
+    template <class T, RelType> class SafeBitCount;
+    template <class T> class SafeBitCount<T, SE_SE> { public: static size_t op (T const value) throw(); };
+    template <class T> class SafeBitCount<T, UE_UE> { public: static size_t op (T const value) throw(); };
+    
   }
   
   /***************************************************************************
@@ -645,9 +650,11 @@ namespace DAC {
   template <class T> inline bool SafeInt<T>::operator ! () const throw() { return !_value; }
   
   /*
-   * Bitwise compliment.
+   * Bitwise compliment. Explicit specialization for bool to handle the fact
+   * that bool is actually an int, or could be anything I suppose.
    */
-  template <class T> inline SafeInt<T> SafeInt<T>::operator ~ () const throw() { return SafeInt<T>(*this).op_bit_cpm(); }
+  template <       > inline SafeInt<bool> SafeInt<bool>::operator ~ () const throw() { return SafeInt<bool>(!*this)             ; }
+  template <class T> inline SafeInt<T   > SafeInt<T   >::operator ~ () const throw() { return SafeInt<T   >(*this ).op_bit_cpm(); }
   
   /*
    * Casting operators.
@@ -741,21 +748,7 @@ namespace DAC {
   /*
    * Get the number of bits in this number.
    */
-  template <class T> inline unsigned int SafeInt<T>::bitsInNumber () const throw() {
-    
-    // Make a bitmask of the highest order digit. Using a SafeInt for its
-    // proper handling of bitwise ops.
-    static SafeInt<T> bitmask = SafeInt<T>(1) << (std::numeric_limits<T>::digits - 1);
-    
-    // Simply step through each bit, stop when we hit a 1.
-    unsigned int firstbit;
-    T            tmpnum = _value;
-    for (firstbit = std::numeric_limits<T>::digits; firstbit != 0 && !(tmpnum & bitmask); --firstbit, tmpnum <<= 1) {}
-    
-    // firstbit is now the highest-order digit.
-    return firstbit;
-    
-  }
+  template <class T> inline size_t SafeInt<T>::bitsInNumber () const throw() { return SafeIntUtil::SafeBitCount<T, SafeIntUtil::Relationship<T, T>::value>::op(_value); }
   
   /***************************************************************************
    * SafeIntUtil.
@@ -2581,6 +2574,36 @@ namespace DAC {
      */
     template <class T> inline T SafeAbs<T, SE_SE>::op (T const value) throw(typename SafeInt<T>::Errors::Overflow) { return (value < 0) ? SafeNegate<T, Relationship<T, T>::value>::op(value) : value; }
     template <class T> inline T SafeAbs<T, UE_UE>::op (T const value) throw(                            ) { return value;                                                                     }
+    
+    /*
+     * Get bit count.
+     */    
+    template <class T> inline size_t SafeBitCount<T, SE_SE>::op (T const value) throw() {
+      
+      // Negative numbers require all available bits plus a sign bit.
+      if (value < static_cast<T>(0)) {
+        return std::numeric_limits<T>::digits + 1;
+      }
+      
+      // Count bits normally otherwise.
+      return SafeBitCount<T, UE_UE>::op(value);
+      
+    }
+    template <class T> size_t SafeBitCount<T, UE_UE>::op (T const value) throw() {
+      
+      // Make a bitmask of the highest order digit. Using a SafeInt for its
+      // proper handling of bitwise ops.
+      static SafeInt<T> bitmask = SafeInt<T>(1) << (std::numeric_limits<T>::digits - 1);
+      
+      // Step through each bit starting at highest, stop when we hit a 1.
+      size_t firstbit       ;
+      T      tmpnum  (value);
+      for (firstbit = std::numeric_limits<T>::digits; firstbit != 0 && !(tmpnum & bitmask); --firstbit, tmpnum <<= 1) {}
+      
+      // firstbit is now the highest-order digit.
+      return firstbit;
+      
+    }
     
     /*************************************************************************
      * Class SafeInt::_Relationship.
