@@ -778,10 +778,10 @@ namespace DAC {
   /*
    * Assignment operator.
    */
-                     inline Arb& Arb::operator = (Arb         const& number) { copy(number); return *this; }
-                     inline Arb& Arb::operator = (std::string const& number) { set(number);  return *this; }
-                     inline Arb& Arb::operator = (ArbInt      const& number) { set(number);  return *this; }
-  template <class T> inline Arb& Arb::operator = (T           const  number) { set(number);  return *this; }
+                     inline Arb& Arb::operator = (Arb         const& number) { set(number); return *this; }
+                     inline Arb& Arb::operator = (std::string const& number) { set(number); return *this; }
+                     inline Arb& Arb::operator = (ArbInt      const& number) { set(number); return *this; }
+  template <class T> inline Arb& Arb::operator = (T           const  number) { set(number); return *this; }
   
   /*
    * The base of this number.

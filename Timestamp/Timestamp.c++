@@ -134,7 +134,7 @@ namespace DAC {
   Timestamp& Timestamp::MJD (unsigned int const mjd) {
     if (mjd > 99999) { throw Errors::MJDMax(); }
     _cache_valid = false;
-    _jd.set(mjd + TimeVal(2400000) - 0.5 - _offset);
+    _jd = mjd + TimeVal(2400000) - 0.5 - _offset;
     return *this;
   }
   Timestamp& Timestamp::Offset (int const offset) {
@@ -677,7 +677,7 @@ namespace DAC {
     
     // Day of week is simply the JD modulo 7 rot 1.
     TimeVal daynum;
-    daynum.set((_jd + 0.5).floor() % 7 + 1);
+    daynum = (_jd + 0.5).floor() % 7 + 1;
     return (daynum > static_cast<unsigned int>(DOW_SATURDAY)) ? daynum - 7 : daynum;
     
   }
@@ -837,7 +837,7 @@ namespace DAC {
       n = y;
       r = 1;
     }
-    _jd.set(1720995 + floor(n * 365.25) + (30.6001 * (settime.Month() + r)).truncate() + settime.Day());
+    _jd = 1720995 + floor(n * 365.25) + (30.6001 * (settime.Month() + r)).truncate() + settime.Day();
     if (caltype == CT_GREGORIAN) {
       TimeVal m = (n / 100).truncate();
       TimeVal q = 2 + 2 * (n / 400).truncate();
@@ -879,8 +879,8 @@ namespace DAC {
     // from picking up _jd's fixed-pointedness. Also create a time only.
     TimeVal cjd;
     TimeVal time;
-    cjd.set((_jd + 0.5).floor());
-    time.set(_jd + 0.5 - cjd);
+    cjd  = (_jd + 0.5).floor();
+    time = _jd + 0.5 - cjd;
     
     // Correct for Julian / Gregorian calendars.
     if (cjd > _lastjulianjd) {

@@ -224,9 +224,8 @@ namespace DAC {
         _DigsT numeric;
         numeric.Base(_base);
         
-        // Get the whole number part. Use set() to avoid overwriting the base
-        // of numeric.
-        numeric.set(_p / _q);
+        // Get the whole number part.
+        numeric = _p / _q;
         
         // This is the number of digits from the end of the string to put
         // the radix point.

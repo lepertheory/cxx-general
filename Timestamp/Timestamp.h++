@@ -698,12 +698,10 @@ namespace DAC {
   // TODO: See if there's a practical way to set this as a JD.
   inline Timestamp& Timestamp::LastJulianDate (YMD const& lastjulian) {
     Timestamp tmp;
-    tmp.set(
-      Interval().Year(lastjulian.Year)
-                .Month(lastjulian.Month)
-                .Day(lastjulian.Day)
-                .Hour(TimeVal(12))
-    );
+    tmp = Interval().Year (lastjulian.Year )
+                    .Month(lastjulian.Month)
+                    .Day  (lastjulian.Day  )
+                    .Hour (TimeVal(12)     );
     _cache_valid   = false;
     _lastjulianymd = lastjulian;
     _lastjulianjd  = tmp.Julian().floor();
@@ -711,12 +709,12 @@ namespace DAC {
   }
   inline Timestamp::YMD Timestamp::LastJulianDate () const { return _lastjulianymd; }
   
-  inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _cache_valid = false; _jd.set(jd); return *this; }
+  inline Timestamp&         Timestamp::Julian (TimeVal const& jd)       { _cache_valid = false; _jd = jd; return *this; }
   inline Timestamp::TimeVal Timestamp::Julian (                 ) const { return _jd;                                      }
   
   inline unsigned int Timestamp::MJD () const { return (_jd - 2400000 + 0.5 + _offset).floor() % 100000; }
   
-  inline Timestamp&         Timestamp::POSIXDate (TimeVal const& posixdate)       { _cache_valid = false; _jd.set(posixdate / 86400 + 2440587.5); return *this; }
+  inline Timestamp&         Timestamp::POSIXDate (TimeVal const& posixdate)       { _cache_valid = false; _jd = posixdate / 86400 + 2440587.5; return *this; }
   inline Timestamp::TimeVal Timestamp::POSIXDate (                        ) const { return (_jd - 2440587.5) * 86400;                                           }
   
   inline Timestamp::TimeVal Timestamp::Year        () const { if (!_cache_valid) { _loadCache(); } return _cache_year       ; }
@@ -784,7 +782,7 @@ namespace DAC {
   /*
    * Get the day only JD.
    */
-  inline Timestamp::TimeVal Timestamp::jdday () const { TimeVal retval; retval.set((_jd + 0.5).floor()); return retval; }
+  inline Timestamp::TimeVal Timestamp::jdday () const { TimeVal retval; retval = (_jd + 0.5).floor(); return retval; }
   
   /*
    * Get whether or not this is a leap year.

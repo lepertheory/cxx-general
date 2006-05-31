@@ -718,9 +718,9 @@ namespace DAC {
   /*
    * Assignment operator.
    */
-                     inline ArbInt& ArbInt::operator = (ArbInt      const& number) { copy(number); return *this; }
-                     inline ArbInt& ArbInt::operator = (std::string const& number) { set(number) ; return *this; }
-  template <class T> inline ArbInt& ArbInt::operator = (T           const  number) { set(number) ; return *this; }
+                     inline ArbInt& ArbInt::operator = (ArbInt      const& number) { set(number); return *this; }
+                     inline ArbInt& ArbInt::operator = (std::string const& number) { set(number); return *this; }
+  template <class T> inline ArbInt& ArbInt::operator = (T           const  number) { set(number); return *this; }
   
   /*
    * Get the base of this number.
