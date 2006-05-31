@@ -202,7 +202,7 @@ namespace DAC {
       // Accessors.
                          value_type Base  () const;
       template <class T> T          Value () const;
-                         ArbInt& Base  (value_type const base);
+                         ArbInt& Base  (value_type const base  );
       template <class T> ArbInt& Value (T          const number);
       
       // Reset to just-constructed state.
@@ -211,15 +211,18 @@ namespace DAC {
       // Copy another number.
       void copy (ArbInt const& number);
       
+      // Swap this number with another number.
+      void swap (ArbInt& number);
+      
       // Set this number.
-                         void set (ArbInt      const& number                            );
-                         void set (std::string const& number, bool const autobase = true);
-      template <class T> void set (SafeInt<T>  const  number                            );
-      template <class T> void set (T           const  number                            );
+                         ArbInt& set (ArbInt      const& number                            );
+                         ArbInt& set (std::string const& number, bool const autobase = true);
+      template <class T> ArbInt& set (SafeInt<T>  const  number                            );
+      template <class T> ArbInt& set (T           const  number                            );
       
       // Set this number with an exact bitwise copy.
-      template <class T> void setBitwise (SafeInt<T> const number);
-      template <class T> void setBitwise (T          const number);
+      template <class T> ArbInt& setBitwise (SafeInt<T> const number);
+      template <class T> ArbInt& setBitwise (T          const number);
       
       // Push digits into this number.
                          void push_back (ArbInt      const& number);
@@ -228,8 +231,8 @@ namespace DAC {
       template <class T> void push_back (T           const  number);
       
       // Convert to string.
-      std::string      & to_string (std::string& buffer) const;
-      std::string const& to_string (                   ) const;
+      std::string      & to_string (std::string& buffer, value_type const base = 0) const;
+      std::string const& to_string (                     value_type const base = 0) const;
       
       // Arithmetic operator backends.
                          ArbInt& op_mul (ArbInt     const& number);
@@ -765,19 +768,19 @@ namespace DAC {
   /*
    * Set this number from another ArbInt.
    */
-  inline void ArbInt::set (ArbInt const& number) { _digits = number._digits; }
+  inline ArbInt& ArbInt::set (ArbInt const& number) { _digits = number._digits; return *this; }
   
   /*
    * Set this number from another number.
    */
-  template <class T> inline void ArbInt::set (SafeInt<T> const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline void ArbInt::set (T          const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline ArbInt& ArbInt::set (SafeInt<T> const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::set (T          const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   /*
    * Make this number an exact bitwise copy.
    */
-  template <class T> void ArbInt::setBitwise (SafeInt<T> const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> void ArbInt::setBitwise (T          const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> ArbInt& ArbInt::setBitwise (SafeInt<T> const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> ArbInt& ArbInt::setBitwise (T          const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   /*
    * Push a string onto the back of this number.
@@ -789,7 +792,7 @@ namespace DAC {
   /*
    * Convert this number to a string.
    */
-  inline std::string const& ArbInt::to_string () const { return to_string(_strbuf); }
+  inline std::string const& ArbInt::to_string (value_type const base) const { return to_string(_strbuf, base); }
   
   /*
    * Arithmetic operator backends.

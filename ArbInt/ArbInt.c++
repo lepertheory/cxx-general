@@ -12,7 +12,6 @@
 
 // System includes.
 #include <SafeInt.h++>
-#include <ReferencePointer.h++>
 #include <to_string.h++>
 #include <rppower.h++>
 #include <CaseConvert.h++>
@@ -188,11 +187,24 @@ namespace DAC {
   }
   
   /*
+   * Swap this number with another number.
+   */
+  void ArbInt::swap (ArbInt& number) {
+    
+    // Nothing to it.
+    _digits.swap(number._digits);
+    _DigT tmpbase(_base);
+    _base        = number._base;
+    number._base = tmpbase     ;
+    
+  }
+  
+  /*
    * Set this number with a string.
    */
-  void ArbInt::set (string const& number, bool const autobase) {
+  ArbInt& ArbInt::set (string const& number, bool const autobase) {
     
-    // Load the number into this for exception safety and COW.
+    // Load the number into this for exception safety.
     _DigsT new_digits;
     
     // Parser will load data into here.
@@ -241,6 +253,9 @@ namespace DAC {
     // The new number has been loaded successfully. Swap it in.
     _digits = new_digits;
     
+    // Done.
+    return *this;
+    
   }
   
   /*
@@ -265,7 +280,7 @@ namespace DAC {
   /*
    * Return a string of this number.
    */
-  string& ArbInt::to_string (string& buffer) const {
+  string& ArbInt::to_string (string& buffer, value_type const base) const {
     
     // This is the string we will return.
     string retval;
@@ -277,13 +292,16 @@ namespace DAC {
     // Otherwise we have work to do.
     } else {
       
+      // Get the base we will be converting to.
+      _DigT tobase(base ? base : _base);
+      
       // Convert to the output base.
       _DigsT num;
-      s_baseConv(_digits, s_digitbase, num, _base);
+      s_baseConv(_digits, s_digitbase, num, tobase);
       
       // Load this into the string. If the base is greater than the number
       // of digits defined, output the raw numbers of each digit.
-      if (SafeInt<_DigT>(_base) > s_numodigits) {
+      if (SafeInt<_DigT>(tobase) > s_numodigits) {
         for (_DigsT::reverse_iterator i = num.rbegin(); i != num.rend(); ++i) {
           retval += "'" + DAC::to_string(*i) + "'";
           if (i != (num.rend() - 1)) {

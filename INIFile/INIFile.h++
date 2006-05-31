@@ -70,7 +70,7 @@ namespace DAC {
           // Function members.
           
           // Constructs with a reference to a section.
-          Section (std::string const& section, _KeyT& keylist) :
+          Section (std::string const& section, _KeyT const& keylist) :
             _section(section),
             _keys   (keylist)
           {};
@@ -96,7 +96,7 @@ namespace DAC {
           std::string _section;
           
           // Reference to the keys in this section.
-          _KeyT& _keys;
+          _KeyT const& _keys;
           
       };
       
@@ -272,7 +272,7 @@ namespace DAC {
       INIFile ();
       
       // Copy constructor.
-      INIFile (INIFile const& inifile, bool const copynow = false);
+      INIFile (INIFile const& inifile);
       
       // Filename constructor.
       INIFile (std::string const& filename);
@@ -293,9 +293,6 @@ namespace DAC {
       
       // Copy a given INIFile object.
       void copy (INIFile const& inifile);
-      
-      // Do a deep copy, no COW.
-      void deepcopy (INIFile const& inifile);
       
       // Determine if a section is defined in this INI file.
       bool section_defined (std::string const& section)      ;
@@ -332,65 +329,18 @@ namespace DAC {
       // Section type.
       typedef std::map<std::string, _KeyT> _SectionT;
       
-      /***********************************************************************
-       * _Data
-       ***********************************************************************
-       * Holds all copy-on-write data for this object.
-       ***********************************************************************/
-      class _Data {
-        
-        /*
-         * Public members.
-         */
-        public:
-          
-          /*******************************************************************/
-          // Data members.
-          
-          // The name of the INI file.
-          std::string filename;
-          
-          // Sections.
-          _SectionT sections;
-          
-          // Track whether INI file was read.
-          bool wasread;
-          
-          /*******************************************************************/
-          // Function members.
-          
-          // Default constructor.
-          _Data ();
-          
-          // Copy constructor.
-          _Data (_Data const& data);
-          
-          // Assignment operator.
-          _Data& operator = (_Data const& data);
-          
-          // Reset to just-constructed state.
-          void clear ();
-          
-          // Copy a given _Data object.
-          void copy (_Data const& data);
-        
-      };
-      
-      // Reference-counted pointer to _Data.
-      typedef ReferencePointer<_Data> _DataPT;
-      
       /***********************************************************************/
       // Data members.
       
-      // All data for this object, to support copy-on-write.
-      _DataPT _data;
+      // The name of the INI file.
+      std::string _filename;
       
-      /***********************************************************************/
-      // Function members.
+      // Sections.
+      _SectionT _sections;
       
-      // Reset file read status. No COW.
-      void _reset ();
-    
+      // Track whether INI file was read.
+      bool _wasread;
+      
   };
   
   /***************************************************************************
@@ -413,29 +363,29 @@ namespace DAC {
    * Determine if a section is defined in this INI file.
    */
   inline bool INIFile::section_defined (std::string const& section) {
-    if (!_data->wasread) {
+    if (!_wasread) {
       read();
     }
     return const_cast<INIFile const*>(this)->section_defined(section);
   }
   inline bool INIFile::section_defined (std::string const& section) const {
-    if (!_data->wasread) {
+    if (!_wasread) {
       throw Errors::NotRead();
     }
-    return _data->sections.count(section);
+    return _sections.count(section);
   }
   
   /*
    * Determine if a key is defined in a given section.
    */
   inline bool INIFile::key_defined (std::string const& section, std::string const& key) {
-    if (!_data->wasread) {
+    if (!_wasread) {
       read();
     }
     return const_cast<INIFile const*>(this)->key_defined(section, key);
   }
   inline bool INIFile::key_defined (std::string const& section, std::string const& key) const {
-    if (!_data->wasread) {
+    if (!_wasread) {
       throw Errors::NotRead();
     }
     if (!section_defined(section)) {
@@ -457,7 +407,8 @@ namespace DAC {
   /*
    * Properties.
    */
-  inline std::string INIFile::Filename () const { return _data->filename; }
+  inline std::string INIFile::Filename (                           ) const { return _filename;                            }
+  inline INIFile&    INIFile::Filename (std::string const& filename)       { clear(); _filename = filename; return *this; }
   
   /***************************************************************************
    * Class INIFile::Section.

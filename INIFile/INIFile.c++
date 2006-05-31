@@ -45,14 +45,10 @@ namespace DAC {
   /*
    * Copy constructor.
    */
-  INIFile::INIFile (INIFile const& inifile, bool const copynow) {
+  INIFile::INIFile (INIFile const& inifile) {
     
     // Copy the given data. No need to init, copy does everything.
-    if (copynow) {
-      deepcopy(inifile);
-    } else {
-      copy(inifile);
-    }
+    copy(inifile);
     
   }
   
@@ -65,7 +61,7 @@ namespace DAC {
     clear();
     
     // Set the filename.
-    _data->filename = filename;
+    _filename = filename;
     
   }
   
@@ -75,7 +71,7 @@ namespace DAC {
   INIFile::Section INIFile::operator [] (string const& section) {
     
     // Read INI file if necessary.
-    if (!_data->wasread) {
+    if (!_wasread) {
       read();
     }
     
@@ -86,7 +82,7 @@ namespace DAC {
   INIFile::Section INIFile::operator [] (string const& section) const {
     
     // Ensure that the INI file has been read.
-    if (!_data->wasread) {
+    if (!_wasread) {
       throw Errors::NotRead();
     }
     
@@ -96,21 +92,7 @@ namespace DAC {
     }
     
     // Return a Section object pointing to this section.
-    return Section(section, _data->sections[section]);
-    
-  }
-  
-  /*
-   * Set the name of the INI file.
-   */
-  INIFile& INIFile::Filename (string const& filename) {
-    
-    // Create a new INIFile with the given filename.
-    INIFile retval(filename);
-    
-    // Swap in the new data and return.
-    _data = retval._data;
-    return *this;
+    return Section(section, _sections.find(section)->second);
     
   }
   
@@ -119,8 +101,11 @@ namespace DAC {
    */
   void INIFile::clear () {
     
-    // Create new data.
-    _data = new _Data;
+    // Non-throw.
+    _wasread = false;
+    
+    _filename.clear();
+    _sections.clear();
     
   }
   
@@ -129,18 +114,11 @@ namespace DAC {
    */
   void INIFile::copy (INIFile const& inifile) {
     
-    // Copy.
-    _data = inifile._data;
+    // Non-throw.
+    _wasread = inifile._wasread;
     
-  }
-  
-  /*
-   * Deep copy, do not wait for COW.
-   */
-  void INIFile::deepcopy (INIFile const& inifile) {
-    
-    // Create new data.
-    _data = new _Data(*(inifile._data));
+    _filename = inifile._filename;
+    _sections = inifile._sections;
     
   }
   
@@ -150,7 +128,7 @@ namespace DAC {
   INIFile::SectionListPT INIFile::get_sections () {
     
     // Read data if needed.
-    if (!_data->wasread) {
+    if (!_wasread) {
       read();
     }
     
@@ -161,7 +139,7 @@ namespace DAC {
   INIFile::SectionListPT INIFile::get_sections () const {
     
     // Make sure data has been read.
-    if (!_data->wasread) {
+    if (!_wasread) {
       throw Errors::NotRead();
     }
     
@@ -169,7 +147,7 @@ namespace DAC {
     SectionListPT retval(new SectionListT);
     
     // Push section names into the section list.
-    for (_SectionT::const_iterator i = _data->sections.begin(); i != _data->sections.end(); ++i) {
+    for (_SectionT::const_iterator i = _sections.begin(); i != _sections.end(); ++i) {
       retval->push_back(i->first);
     }
     
@@ -184,21 +162,20 @@ namespace DAC {
   void INIFile::read () {
     
     // Make sure that the filename is set.
-    if (_data->filename.empty()) {
+    if (_filename.empty()) {
       throw Errors::FileNotSet();
     }
     
     // Work area.
-    AutoArray<char> buffer                        ;
-    vector<string>  lines                         ;
-    _DataPT         retval     (new _Data(*_data));
-    _SectionT&      newsections(retval->sections) ;
+    AutoArray<char> buffer     ;
+    vector<string>  lines      ;
+    _SectionT       newsections;
     
     // Do not allow file errors to propagate.
     try {
       
       // Open the INI file.
-      ifstream file(_data->filename.c_str());
+      ifstream file(_filename.c_str());
       if (!file) {
         throw Errors::FileNoOpen();
       }
@@ -299,11 +276,11 @@ namespace DAC {
       
     }
     
-    // File was successfully read.
-    retval->wasread = true;
+    // Swap in new sections.
+    _sections.swap(newsections);
     
-    // Move the new data into place and return.
-    _data = retval;
+    // File was successfully read.
+    _wasread = true;
     
   }
   
@@ -312,27 +289,11 @@ namespace DAC {
    */
   void INIFile::reset () {
     
-    // Work area.
-    INIFile retval(*this, true);
-    
-    // Reset.
-    retval._reset();
-    
-    // Move data into place.
-    _data = retval._data;
-    
-  }
-  
-  /*
-   * Reset file read status. No COW.
-   */
-  void INIFile::_reset () {
-    
     // Turn off wasread flag.
-    _data->wasread = false;
+    _wasread = false;
     
     // Clear data.
-    _data->sections.clear();
+    _sections.clear();
     
   }
   
@@ -354,7 +315,7 @@ namespace DAC {
     }
     
     // Return the value.
-    return _keys[key];
+    return _keys.find(key)->second;
     
   }
   
@@ -373,59 +334,6 @@ namespace DAC {
     
     // Done.
     return retval;
-    
-  }
-  
-  /***************************************************************************
-   * Class INIFile::_Data.
-   ***************************************************************************/
-  
-  /***************************************************************************/
-  // Function members.
-  
-  /*
-   * Default constructor.
-   */
-  INIFile::_Data::_Data () {
-    
-    // Init.
-    clear();
-    
-  }
-  
-  /*
-   * Copy constructor.
-   */
-  INIFile::_Data::_Data (_Data const& data) {
-    
-    // Copy the given data. No need to init, copy does everything.
-    copy(data);
-    
-  }
-  
-  /*
-   * Reset to just constructed state.
-   */
-  void INIFile::_Data::clear () {
-    
-    // Not read.
-    wasread = false;
-    
-    // Clear.
-    filename.clear();
-    sections.clear();
-    
-  }
-  
-  /*
-   * Copy a given _Data object.
-   */
-  void INIFile::_Data::copy (_Data const& data) {
-    
-    wasread = data.wasread;
-    
-    filename = data.filename;
-    sections = data.sections;
     
   }
   

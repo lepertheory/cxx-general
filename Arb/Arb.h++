@@ -16,7 +16,6 @@
 
 // System includes.
   #include <SafeInt.h++>
-  #include <ReferencePointer.h++>
   #include <to_string.h++>
   #include <ArbInt.h++>
   #include <abs.h++>
@@ -185,7 +184,7 @@ namespace DAC {
       Arb ();
       
       // Copy constructor.
-      Arb (Arb const& number, bool const copynow = false);
+      Arb (Arb const& number);
       
       // Conversion constructor.
                          explicit Arb (std::string const& number);
@@ -245,18 +244,17 @@ namespace DAC {
       template <class T> T                      Value    () const;
       
       // Reset to just-constructed defaults.
-      Arb& clear ();
+      void clear ();
       
       // Copy another number.
-      Arb& copy     (Arb const& number) throw();
-      Arb& deepcopy (Arb const& number)        ;
+      void copy (Arb const& number);
       
       // Set the number.
-                         Arb& set (std::string const& number, bool const autobase = true);
-                         Arb& set (Arb         const& number                            );
-                         Arb& set (ArbInt      const& number                            );
-      template <class T> Arb& set (SafeInt<T>  const  number                            );
-      template <class T> Arb& set (T           const  number                            );
+                         void set (std::string const& number, bool const autobase = true);
+                         void set (Arb         const& number                            );
+                         void set (ArbInt      const& number                            );
+      template <class T> void set (SafeInt<T>  const  number                            );
+      template <class T> void set (T           const  number                            );
       
       // Convert to string.
       std::string      & to_string (std::string& buffer, OutputFormat const format = FMT_DEFAULT) const;
@@ -354,12 +352,8 @@ namespace DAC {
       /*********************************************************************/
       // Typedefs.
       
-      // Forward declarations.
-      class _Data;
-      
-      typedef ArbInt _DigsT; // Native digits type.
-      
-      typedef ReferencePointer<_Data> _DataPT; // Pointer to number data.
+      // Native digits type.
+      typedef ArbInt _DigsT;
       
       /*********************************************************************/
       // Data types.
@@ -513,72 +507,23 @@ namespace DAC {
       template <class T> class _NE<T, _NUM_SINT> { public: static bool op (Arb const& l, SafeInt<T> const r); static bool op (Arb const& l, T const r); };
       template <class T> class _NE<T, _NUM_FLPT> { public:                                                    static bool op (Arb const& l, T const r); };
       
-      /*********************************************************************
-       * _Data
-       *********************************************************************
-       * This holds all data for this number, copying this data structure to
-       * another number will make a perfect copy of this number.
-       *********************************************************************/
-      class _Data {
-        
-        /*
-         * Public members.
-         */
-        public:
-          
-          /*****************************************************************/
-          // Data members.
-          
-          _DigsT p   ; // Numerator.
-          _DigsT q   ; // Denominator.
-          _DigsT fixq; // Fixed denominator.
-          
-          bool      positive; // True if the number is positive.
-          PointPosT pointpos; // Radix point position.
-          bool      fix     ; // If true, fix the radix point.
-          FixType   fixtype ; // What to fix on, radix points or denominator.
-          BaseT     base    ; // The base of the number.
-          
-          std::string::size_type maxradix; // Radix digits to output.
-          OutputFormat           format  ; // Format to output this number.
-          RoundMethod            round   ; // Rounding method.
-          
-          /*****************************************************************/
-          // Function members.
-          
-          // Default constructor.
-          _Data ();
-          
-          // Copy constructor.
-          _Data (_Data const& data);
-          
-          // Assignment operator.
-          _Data& operator = (_Data const& data);
-          
-          // Reset to just-constructed state.
-          _Data& clear ();
-          
-          // Copy a given _Data object.
-          _Data& copy (_Data const& data);
-          
-        /*
-         * Private members.
-         */
-        private:
-          
-          /*****************************************************************/
-          // Function members.
-          
-          // Common initialization routines.
-          void _init ();
-          
-      };
-      
       /*********************************************************************/
       // Data members.
       
-      // The number.
-      _DataPT _data;
+      // The number itself.
+      _DigsT _p       ; // Numerator.
+      _DigsT _q       ; // Denominator.
+      bool   _positive; // True if the number is positive.
+      
+      // Number properties.
+      _DigsT                 _fixq    ; // Fixed denominator.
+      PointPosT              _pointpos; // Radix point position.
+      bool                   _fix     ; // If true, fix the radix point.
+      FixType                _fixtype ; // What to fix on, radix points or denominator.
+      BaseT                  _base    ; // The base of the number.
+      std::string::size_type _maxradix; // Radix digits to output.
+      OutputFormat           _format  ; // Format to output this number.
+      RoundMethod            _round   ; // Rounding method.
       
       // Temporary buffer for string output.
       mutable std::string _strbuf;
@@ -809,8 +754,8 @@ namespace DAC {
   /*
    * Unary sign operators.
    */
-  inline Arb Arb::operator + () const { return *this;                                                                             }
-  inline Arb Arb::operator - () const { Arb retval(*this, true); retval._data->positive = !retval._data->positive; return retval; }
+  inline Arb Arb::operator + () const { return *this;                                                           }
+  inline Arb Arb::operator - () const { Arb retval(*this); retval._positive = !retval._positive; return retval; }
   
   /*
    * Casting operators.
@@ -833,66 +778,65 @@ namespace DAC {
   /*
    * Assignment operator.
    */
-                     inline Arb& Arb::operator = (Arb         const& number) { return copy(number); }
-                     inline Arb& Arb::operator = (std::string const& number) { return set(number);  }
-                     inline Arb& Arb::operator = (ArbInt      const& number) { return set(number);  }
-  template <class T> inline Arb& Arb::operator = (T           const  number) { return set(number);  }
+                     inline Arb& Arb::operator = (Arb         const& number) { copy(number); return *this; }
+                     inline Arb& Arb::operator = (std::string const& number) { set(number);  return *this; }
+                     inline Arb& Arb::operator = (ArbInt      const& number) { set(number);  return *this; }
+  template <class T> inline Arb& Arb::operator = (T           const  number) { set(number);  return *this; }
   
   /*
-   * Get the base of this number.
+   * The base of this number.
    */
-  inline Arb::BaseT Arb::Base () const { return _data->base; }
+  inline Arb::BaseT Arb::Base () const { return _base; }
   
   /*
-   * Get the maximum number of radix digits to output.
+   * The maximum number of radix digits to output.
    */
-  inline std::string::size_type Arb::MaxRadix () const { return _data->maxradix; }
+  inline std::string::size_type Arb::MaxRadix (                                     ) const { return _maxradix;                   }
+  inline Arb&                   Arb::MaxRadix (std::string::size_type const maxradix)       { _maxradix = maxradix; return *this; }
   
   /*
-   * Get the point position of a fixed-point number.
+   * The point position of a fixed-point number.
    */
-  inline Arb::PointPosT Arb::PointPos () const { return _data->pointpos; }
+  inline Arb::PointPosT Arb::PointPos () const { return _pointpos; }
   
   /*
-   * Get whether this is a fixed-point number or not.
+   * Whether this is a fixed-point number or not.
    */
-  inline bool Arb::Fixed () const { return _data->fix; }
+  inline bool Arb::Fixed () const { return _fix; }
   
   /*
-   * Get the fix source for this number.
+   * The fix source for this number.
    */
-  inline Arb::FixType Arb::Fix () const { return _data->fixtype; }
+  inline Arb::FixType Arb::Fix () const { return _fixtype; }
   
   /*
-   * Get the output format of this number.
+   * The output format of this number.
    */
-  inline Arb::OutputFormat Arb::Format () const { return _data->format; }
+  inline Arb::OutputFormat Arb::Format (                         ) const { return _format;                 }
+  inline Arb&              Arb::Format (OutputFormat const format)       { _format = format; return *this; }
   
   /*
-   * Get the round method of this number.
+   * The round method of this number.
    */
-  inline Arb::RoundMethod Arb::Round () const { return _data->round; }
+  inline Arb::RoundMethod Arb::Round (                       ) const { return _round;                }
+  inline Arb&             Arb::Round (RoundMethod const round)       { _round = round; return *this; }
   
   /*
-   * Get the fixed quotient of this number.
+   * The fixed quotient of this number.
    */
-  inline Arb Arb::FixQ () const { return Arb(_data->fixq); }
+  inline Arb Arb::FixQ () const { return Arb(_fixq); }
   
   /*
-   * Get the value of this number.
+   * The value of this number.
    */
-  template <class T> inline T Arb::Value () const { T retval; _Get<T, _GetNumType<T>::value>::op(retval, *this); return retval; }
-  
-  /*
-   * Set the value of this number.
-   */
-  template <class T> inline Arb& Arb::Value (T const number) { return set(number); }
+  template <class T> inline T    Arb::Value (              ) const { T retval; _Get<T, _GetNumType<T>::value>::op(retval, *this); return retval; }
+  template <class T> inline Arb& Arb::Value (T const number)       { set(number); return *this;                                                  }
   
   /*
    * Set from a built-in type.
    */
-  template <class T> inline Arb& Arb::set (SafeInt<T> const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline Arb& Arb::set (T          const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline void Arb::set (SafeInt<T> const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline void Arb::set (T          const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); }
   
   /*
    * Convert to a string with automatic buffering.
@@ -916,14 +860,14 @@ namespace DAC {
   /*
    * Shift left, shift right.
    */
-                     inline Arb& Arb::op_shl (Arb        const& number) { Arb retval(*this, true); retval._shift(number, _DIR_L);                      return copy(retval); }
-                     inline Arb& Arb::op_shl (ArbInt     const& number) { Arb retval(*this, true); retval._shift(number, _DIR_L);                      return copy(retval); }
-  template <class T> inline Arb& Arb::op_shl (SafeInt<T> const  number) { Arb retval(*this, true); _ShL<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
-  template <class T> inline Arb& Arb::op_shl (T          const  number) { Arb retval(*this, true); _ShL<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
-                     inline Arb& Arb::op_shr (Arb        const& number) { Arb retval(*this, true); retval._shift(number, _DIR_R);                      return copy(retval); }
-                     inline Arb& Arb::op_shr (ArbInt     const& number) { Arb retval(*this, true); retval._shift(number, _DIR_R);                      return copy(retval); }
-  template <class T> inline Arb& Arb::op_shr (SafeInt<T> const  number) { Arb retval(*this, true); _ShR<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
-  template <class T> inline Arb& Arb::op_shr (T          const  number) { Arb retval(*this, true); _ShR<T, _GetNumType<T>::value>::op(retval, number); return copy(retval); }
+                     inline Arb& Arb::op_shl (Arb        const& number) { _shift(number, _DIR_L);                            return *this; }
+                     inline Arb& Arb::op_shl (ArbInt     const& number) { _shift(number, _DIR_L);                            return *this; }
+  template <class T> inline Arb& Arb::op_shl (SafeInt<T> const  number) { _ShL<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline Arb& Arb::op_shl (T          const  number) { _ShL<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+                     inline Arb& Arb::op_shr (Arb        const& number) { _shift(number, _DIR_R);                            return *this; }
+                     inline Arb& Arb::op_shr (ArbInt     const& number) { _shift(number, _DIR_R);                            return *this; }
+  template <class T> inline Arb& Arb::op_shr (SafeInt<T> const  number) { _ShR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline Arb& Arb::op_shr (T          const  number) { _ShR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   /*
    * Comparison operator backends.
@@ -950,29 +894,29 @@ namespace DAC {
   /*
    * Return whether this number is an integer.
    */
-  inline bool Arb::isInteger () const { return (_data->q == 1); }
+  inline bool Arb::isInteger () const { return (_q == 1); }
   
   /*
    * Return whether this number is positive.
    */
-  inline bool Arb::isPositive () const { return _data->positive || _data->p == 0; }
-  inline bool Arb::isNegative () const { return !isPositive();                    }
+  inline bool Arb::isPositive () const { return _positive || _p == 0; }
+  inline bool Arb::isNegative () const { return !isPositive();        }
   
   /*
    * Return whether this number is equal to zero.
    */
-  inline bool Arb::isZero () const { return _data->p.isZero(); }
+  inline bool Arb::isZero () const { return _p.isZero(); }
   
   /*
    * Return whether this number is even or odd.
    */
-  inline bool Arb::isOdd  () const { return (isInteger() && _data->p.isOdd());  }
-  inline bool Arb::isEven () const { return (isInteger() && _data->p.isEven()); }
+  inline bool Arb::isOdd  () const { return (isInteger() && _p.isOdd ()); }
+  inline bool Arb::isEven () const { return (isInteger() && _p.isEven()); }
   
   /*
    * Return the integer portion of this number.
    */
-  inline Arb Arb::toInt () const { Arb retval(*this, true); retval._forcereduce(_DigsT(1)); return retval; }
+  inline Arb Arb::toInt () const { Arb retval(*this); retval._forcereduce(_DigsT(1)); return retval; }
   
   /*
    * Raise this number to a given power.
@@ -987,7 +931,7 @@ namespace DAC {
   /*
    * Return the absolute value of this number.
    */
-  inline Arb Arb::abs () const { Arb retval(*this, true); retval._data->positive = true; return retval; }
+  inline Arb Arb::abs () const { Arb retval(*this); retval._positive = true; return retval; }
   
   /*
    * Bit shift this number.
@@ -1007,7 +951,7 @@ namespace DAC {
     // Check for zero.
     if (isZero()) {
       exponent = 0;
-      return tmpnum._data->p;
+      return tmpnum._p;
     }
     
     // Set tmpnum to *this here to avoid carrying over rounding or fixed-point
@@ -1016,13 +960,13 @@ namespace DAC {
     
     // Convert tmpnum to the range of 1 <= tmpnum < 2, save changes in
     // exponent so that tmpnum * 2^exponent == *this.
-    ArbInt bits_p = tmpnum._data->p.bitsInNumber();
-    ArbInt bits_q = tmpnum._data->q.bitsInNumber();
+    ArbInt bits_p(tmpnum._p.bitsInNumber());
+    ArbInt bits_q(tmpnum._q.bitsInNumber());
     bool   denorm = false;
     if (bits_p < bits_q) {
       
       // Get the difference in bits.
-      ArbInt bitdiff = bits_q - bits_p;
+      ArbInt bitdiff(bits_q - bits_p);
       
       // If bitdiff >= bias, try to store this number as a denormalized
       // number.
@@ -1045,16 +989,16 @@ namespace DAC {
       // exponent according to the number of bits shifted. If this is a
       // denormalized number, shift it the max we can with our max exponent.
       if (denorm) {
-        tmpnum._data->p <<= _FloatInfo<T>::bias - 1;
-        tmpexp            = 0;
+        tmpnum._p <<= _FloatInfo<T>::bias - 1;
+        tmpexp      = 0;
       } else {
-        tmpnum._data->p <<= bitdiff;
-        tmpexp            = static_cast<unsigned int>(_FloatInfo<T>::bias - bitdiff);
-        if (tmpnum._data->q > tmpnum._data->p) {
+        tmpnum._p <<= bitdiff;
+        tmpexp      = static_cast<unsigned int>(_FloatInfo<T>::bias - bitdiff);
+        if (tmpnum._q > tmpnum._p) {
           if (tmpexp == 1) {
             --tmpexp;
           } else {
-            tmpnum._data->p <<= 1;
+            tmpnum._p <<= 1;
             --tmpexp;
           }
         }
@@ -1063,7 +1007,7 @@ namespace DAC {
     } else {
       
       // Get the difference in bits.
-      ArbInt bitdiff = bits_p - bits_q;
+      ArbInt bitdiff(bits_p - bits_q);
       
       // If bitdiff > bias, we won't be able to store this number, it will
       // overflow the exponent.
@@ -1077,10 +1021,10 @@ namespace DAC {
       // prevent the rare case of p & q have an equal number of bits to begin
       // with and then losing precision by shifting it down. Should be a very
       // rare occurance.
-      tmpnum._data->q <<= bitdiff;
-      tmpexp            = static_cast<unsigned int>(_FloatInfo<T>::bias + bitdiff);
-      if (tmpnum._data->q > tmpnum._data->p) {
-        tmpnum._data->p <<= 1;
+      tmpnum._q <<= bitdiff;
+      tmpexp      = static_cast<unsigned int>(_FloatInfo<T>::bias + bitdiff);
+      if (tmpnum._q > tmpnum._p) {
+        tmpnum._p <<= 1;
         --tmpexp;
       }
       
@@ -1091,14 +1035,9 @@ namespace DAC {
     
     // We done. Set the exponent and return the fraction.
     exponent = tmpexp;
-    return tmpnum._data->p;
+    return tmpnum._p;
     
   }
-  
-  /*
-   * Assignment operator for _Data.
-   */
-  inline Arb::_Data& Arb::_Data::operator = (_Data const& data) { return copy(data); }
   
   /*
    * Determine number type.
@@ -1124,25 +1063,13 @@ namespace DAC {
    */
   template <class T> void Arb::_Set<T, Arb::_NUM_UINT>::op (Arb& l, SafeInt<T> const r) {
     
-    // Work area.
-    Arb new_num;
-    
-    // Carry over the old fixed-point porperties.
-    new_num._data->fix      = l._data->fix;
-    new_num._data->pointpos = l._data->pointpos;
-    new_num._data->base     = l._data->base;
-    new_num._data->fixq     = l._data->fixq;
-    
     // This number is a whole number.
-    new_num._data->p        = r;
-    new_num._data->q        = 1;
-    new_num._data->positive = true;
+    l._p        = r;
+    l._q        = 1;
+    l._positive = true;
     
     // Reduce the fraction.
-    new_num._reduce();
-    
-    // Move the new data into place and return.
-    l._data = new_num._data;
+    l._reduce();
     
   }
   template <class T> inline void Arb::_Set<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Set<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
@@ -1152,25 +1079,13 @@ namespace DAC {
    */
   template <class T> void Arb::_Set<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
     
-    // Work area.
-    Arb new_num;
-    
-    // Carry over the old fixed-point properties.
-    new_num._data->fix      = l._data->fix;
-    new_num._data->pointpos = l._data->pointpos;
-    new_num._data->base     = l._data->base;
-    new_num._data->fixq     = l._data->fixq;
-    
     // This number is a whole number.
-    new_num._data->p        = r.abs();
-    new_num._data->q        = 1;
-    new_num._data->positive = (r >= 0);
+    l._p        = r.abs();
+    l._q        = 1;
+    l._positive = (r >= 0);
     
     // Reduce the fraction.
-    new_num._reduce();
-    
-    // Move the new data into place and return.
-    l._data = new_num._data;
+    l._reduce();
     
   }
   template <class T> inline void Arb::_Set<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Set<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
@@ -1205,9 +1120,9 @@ namespace DAC {
       // If the number is positive, convert normally. If it is negative,
       // reduce the abs by 1 to avoid errors at ::min() then convert.
       if (r.isPositive()) {
-        l = static_cast<T>(tmp._data->p);
+        l = static_cast<T>(tmp._p);
       } else {
-        l = -SafeInt<T>(static_cast<T>(tmp._data->p - 1)) - 1;
+        l = -SafeInt<T>(static_cast<T>(tmp._p - 1)) - 1;
       }
       
     // Only error that should occur.
@@ -1233,17 +1148,11 @@ namespace DAC {
       return;
     }
     
-    // Work area.
-    Arb retval(l, true);
-    
     // Multiply.
-    retval._data->p *= r;
+    l._p *= r;
     
     // Reduce.
-    retval._reduce();
-    
-    // Move the result in and return.
-    l._data = retval._data;
+    l._reduce();
     
   }
   template <class T> inline void Arb::_Mul<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Mul<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
@@ -1253,21 +1162,15 @@ namespace DAC {
    */
   template <class T> void Arb::_Mul<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
     
-    // Work area.
-    Arb retval(l, true);
-    
     // Multiply by the abs.
     try {
-      Arb::_Mul<T, _NUM_UINT>::op(retval, r.abs());
+      Arb::_Mul<T, _NUM_UINT>::op(l, r.abs());
     } catch (typename SafeInt<T>::Errors::Overflow) {
-      retval.op_mul(ArbInt(~r) + 1);
+      l.op_mul(ArbInt(~r) + 1);
     }
     
     // Set the sign.
-    retval._data->positive = (retval._data->positive == (r > 0));
-    
-    // Move result in and return.
-    l._data = retval._data;
+    l._positive = (l._positive == (r > 0));
     
   }
   template <class T> inline void Arb::_Mul<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Mul<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
@@ -1297,18 +1200,12 @@ namespace DAC {
       return;
     }
     
-    // Work area.
-    Arb retval(l, true);
-    
     // Divide.
-    retval._data->q *= r;
+    l._q *= r;
     
     // Reduce.
-    retval._reduce();
+    l._reduce();
     
-    // Move the result into place and return.
-    l._data = retval._data;
-  
   }
   template <class T> inline void Arb::_Div<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Div<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
@@ -1317,21 +1214,15 @@ namespace DAC {
    */
   template <class T> void Arb::_Div<T, Arb::_NUM_SINT>::op (Arb& l, SafeInt<T> const r) {
     
-    // Work area.
-    Arb retval(l, true);
-    
     // Divide by the abs.
     try {
-      Arb::_Div<T, _NUM_UINT>::op(retval, r.abs());
+      Arb::_Div<T, _NUM_UINT>::op(l, r.abs());
     } catch (typename SafeInt<T>::Errors::Overflow) {
-      retval.op_div(ArbInt(~r) + 1);
+      l.op_div(ArbInt(~r) + 1);
     }
     
     // Set the sign.
-    retval._data->positive = (retval._data->positive == (r > 0));
-    
-    // Move result in and return.
-    l._data = retval._data;
+    l._positive = (l._positive == (r > 0));
     
   }
   template <class T> inline void Arb::_Div<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Div<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
@@ -1361,14 +1252,8 @@ namespace DAC {
       throw Arb::Errors::NonInteger();
     }
     
-    // Work area.
-    Arb retval(l, true);
-    
     // Modulo divide p.
-    retval._data->p %= r;
-    
-    // Done.
-    l._data = retval._data;
+    l._p %= r;
     
   }
   template <class T> inline void Arb::_Mod<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Mod<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
@@ -1400,46 +1285,40 @@ namespace DAC {
       return;
     }
     
-    // Work area.
-    Arb retval(l, true);
-    
     // If l is negative, subtract.
-    if (retval < 0) {
+    if (l < 0) {
       
       // Subtract the easy way if l is an integer, otherwise scale.
-      if (retval.isInteger()) {
-        if (r > retval._data->p) {
-          retval._data->p        = r - retval._data->p;
-          retval._data->positive = true;
+      if (l.isInteger()) {
+        if (r > l._p) {
+          l._p        = r - l._p;
+          l._positive = true    ;
         } else {
-          retval._data->p -= r;
+          l._p -= r;
         }
       } else {
-        ArbInt tmp(r * retval._data->q);
-        if (tmp > retval._data->p) {
-          retval._data->p        = tmp - retval._data->p;
-          retval._data->positive = true;
+        ArbInt tmp(r * l._q);
+        if (tmp > l._p) {
+          l._p        = tmp - l._p;
+          l._positive = true      ;
         } else {
-          retval._data->p -= tmp;
+          l._p -= tmp;
         }
-        retval._reduce();
+        l._reduce();
       }
       
     // Otherwise, add.
     } else {
       
       // Add the easy way if l is an integer, otherwise scale.
-      if (retval.isInteger()) {
-        retval._data->p += r;
+      if (l.isInteger()) {
+        l._p += r;
       } else {
-        retval._data->p += r * retval._data->q;
-        retval._reduce();
+        l._p += r * l._q;
+        l._reduce();
       }
       
     }
-    
-    // Move the data in and return.
-    l._data = retval._data;
     
   }
   template <class T> inline void Arb::_Add<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Add<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
@@ -1460,9 +1339,6 @@ namespace DAC {
       return;
     }
     
-    // Work area.
-    Arb retval(l, true);
-    
     // Get the abs of r to do arithmetic with. In very rare instances, r will
     // be the min of a particular type, and experience overflow when negating.
     // Catch this error and resort to Abs addition.
@@ -1475,46 +1351,43 @@ namespace DAC {
       if (r != std::numeric_limits<T>::min()) {
         throw;
       }
-      retval.op_add(Arb(r));
+      l.op_add(Arb(r));
     }
     
     // If signs do not match, subtract.
-    if ((retval < 0) != (r < 0)) {
+    if ((l < 0) != (r < 0)) {
       
       // Subtract the easy way if l is an integer, otherwise scale.
-      if (retval.isInteger()) {
-        if (rabs > retval._data->p) {
-          retval._data->p        = rabs - retval._data->p;
-          retval._data->positive = !retval._data->positive;
+      if (l.isInteger()) {
+        if (rabs > l._p) {
+          l._p        = rabs - l._p ;
+          l._positive = !l._positive;
         } else {
-          retval._data->p -= rabs;
+          l._p -= rabs;
         }
       } else {
-        ArbInt tmp(rabs * retval._data->q);
-        if (tmp > retval._data->p) {
-          retval._data->p        = tmp - retval._data->p;
-          retval._data->positive = !retval._data->positive;
+        ArbInt tmp(rabs * l._q);
+        if (tmp > l._p) {
+          l._p        = tmp - l._p  ;
+          l._positive = !l._positive;
         } else {
-          retval._data->p -= tmp;
+          l._p -= tmp;
         }
-        retval._reduce();
+        l._reduce();
       }
       
     // Otherwise, add normally.
     } else {
       
       // Add the easy way if l is integer, otherwise scale.
-      if (retval.isInteger()) {
-        retval._data->p += rabs;
+      if (l.isInteger()) {
+        l._p += rabs;
       } else {
-        retval._data->p += rabs * retval._data->q;
-        retval._reduce();
+        l._p += rabs * l._q;
+        l._reduce();
       }
       
     }
-    
-    // Move the data in and return.
-    l._data = retval._data;
     
   }
   template <class T> inline void Arb::_Add<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Add<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
@@ -1536,53 +1409,45 @@ namespace DAC {
     
     // Subtracting from 0 is also easy.
     if (l == 0) {
-      Arb retval(l, true);
-      retval = r;
-      retval._data->positive = !retval._data->positive;
-      l._data = retval._data;
+      l           = r           ;
+      l._positive = !l._positive;
       return;
     }
     
-    // Work area.
-    Arb retval(l, true);
-    
     // If l is negative, this is addition.
-    if (retval < 0) {
+    if (l < 0) {
       
       // Scale if necessary and add.
-      if (retval.isInteger()) {
-        retval._data->p += r;
+      if (l.isInteger()) {
+        l._p += r;
       } else {
-        retval._data->p += r * retval._data->q;
-        retval._reduce();
+        l._p += r * l._q;
+        l._reduce();
       }
     
     // Otherwise, subtract.
     } else {
       
       // Subtract.
-      if (retval.isInteger()) {
-        if (r > retval._data->p) {
-          retval._data->p        = r - retval._data->p;
-          retval._data->positive = !retval._data->positive;
+      if (l.isInteger()) {
+        if (r > l._p) {
+          l._p        = r - l._p    ;
+          l._positive = !l._positive;
         } else {
-          retval._data->p -= r;
+          l._p -= r;
         }
       } else {
-        ArbInt tmp(r * retval._data->q);
-        if (tmp > retval._data->p) {
-          retval._data->p        = tmp - retval._data->p;
-          retval._data->positive = !retval._data->positive;
+        ArbInt tmp(r * l._q);
+        if (tmp > l._p) {
+          l._p        = tmp - l._p  ;
+          l._positive = !l._positive;
         } else {
-          retval._data->p -= tmp;
+          l._p -= tmp;
         }
-        retval._reduce();
+        l._reduce();
       }
       
     }
-    
-    // Move the result in and return.
-    l._data = retval._data;
     
   }
   template <class T> inline void Arb::_Sub<T, Arb::_NUM_UINT>::op (Arb& l, T const r) { Arb::_Sub<T, Arb::_NUM_UINT>::op(l, SafeInt<T>(r)); }
@@ -1599,15 +1464,10 @@ namespace DAC {
     
     // Subtracting from 0 is also easy.
     if (l == 0) {
-      Arb retval(l, true);
-      retval = r;
-      retval._data->positive = !retval._data->positive;
-      l._data = retval._data;
+      l           = r           ;
+      l._positive = !l._positive;
       return;
     }
-    
-    // Work area.
-    Arb retval(l, true);
     
     // Get the abs of r to do arithmetic with. In very rare instances, r will
     // be the min of a particular type, and experience overflow when negating.
@@ -1621,45 +1481,42 @@ namespace DAC {
       if (r != std::numeric_limits<T>::min()) {
         throw;
       }
-      retval.op_sub(Arb(r));
+      l.op_sub(Arb(r));
     }
     
     // If signs do not match, add.
-    if ((retval < 0) != (r < 0)) {
+    if ((l < 0) != (r < 0)) {
       
       // Scale if necessary and add.
-      if (retval.isInteger()) {
-        retval._data->p += rabs;
+      if (l.isInteger()) {
+        l._p += rabs;
       } else {
-        retval._data->p += rabs * retval._data->q;
-        retval._reduce();
+        l._p += rabs * l._q;
+        l._reduce();
       }
       
     } else {
       
       // Subtract.
-      if (retval.isInteger()) {
-        if (rabs > retval._data->p) {
-          retval._data->p        = rabs - retval._data->p;
-          retval._data->positive = !retval._data->positive;
+      if (l.isInteger()) {
+        if (rabs > l._p) {
+          l._p        = rabs - l._p ;
+          l._positive = !l._positive;
         } else {
-          retval._data->p -= rabs;
+          l._p -= rabs;
         }
       } else {
-        ArbInt tmp(rabs * retval._data->q);
-        if (tmp > retval._data->p) {
-          retval._data->p        = tmp - retval._data->p;
-          retval._data->positive = !retval._data->positive;
+        ArbInt tmp(rabs * l._q);
+        if (tmp > l._p) {
+          l._p        = tmp - l._p  ;
+          l._positive = !l._positive;
         } else {
-          retval._data->p -= tmp;
+          l._p -= tmp;
         }
-        retval._reduce();
+        l._reduce();
       }
       
     }
-    
-    // Move the result in and return.
-    l._data = retval._data;
     
   }
   template <class T> inline void Arb::_Sub<T, Arb::_NUM_SINT>::op (Arb& l, T const r) { Arb::_Sub<T, Arb::_NUM_SINT>::op(l, SafeInt<T>(r)); }
@@ -1681,9 +1538,9 @@ namespace DAC {
     
     // Shift left by left-shifting p. Shift right by left-shifting q.
     if (dir == _DIR_L) {
-      l._data->p <<= r;
+      l._p <<= r;
     } else {
-      l._data->q <<= r;
+      l._q <<= r;
     }
     
     // Reduce the fraction and we're done.
@@ -1740,22 +1597,22 @@ namespace DAC {
   template <class T> bool Arb::_GT<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
     
     // Check for zeros.
-    if (l._data->p == 0) {
+    if (l._p == 0) {
       return false;
     } else if (r == 0) {
-      return l._data->positive;
+      return l._positive;
     }
     
     // Check signs.
-    if (!l._data->positive) {
+    if (!l._positive) {
       return false;
     }
     
     // Compare the number.
     if (l.isInteger()) {
-      return (l._data->p > r);
+      return (l._p > r);
     } else {
-      return (l._data->p > r * l._data->q);
+      return (l._p > r * l._q);
     }
     
   }
@@ -1767,18 +1624,18 @@ namespace DAC {
   template <class T> bool Arb::_GT<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
     
     // Check for zeros.
-    if (l._data->p == 0) {
+    if (l._p == 0) {
       if (r == 0) {
         return false;
       } else {
         return (r < 0);
       }
     } else if (r == 0) {
-      return l._data->positive;
+      return l._positive;
     }
     
     // Check signs.
-    if (l._data->positive) {
+    if (l._positive) {
       if (r < 0) {
         return true;
       }
@@ -1790,16 +1647,16 @@ namespace DAC {
     
     // Compare the number.
     if (l.isInteger()) {
-      if (l._data->positive) {
-        return (l._data->p > r);
+      if (l._positive) {
+        return (l._p > r);
       } else {
-        return (l._data->p < r);
+        return (l._p < r);
       }
     } else {
-      if (l._data->positive) {
-        return (l._data->p > r * l._data->q);
+      if (l._positive) {
+        return (l._p > r * l._q);
       } else {
-        return (l._data->p < r * l._data->q);
+        return (l._p < r * l._q);
       }
     }
     
@@ -1834,22 +1691,22 @@ namespace DAC {
   template <class T> bool Arb::_LT<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
     
     // Check for zeros.
-    if (l._data->p == 0) {
+    if (l._p == 0) {
       return (r > 0);
     } else if (r == 0) {
-      return !l._data->positive;
+      return !l._positive;
     }
     
     // Check signs.
-    if (!l._data->positive) {
+    if (!l._positive) {
       return true;
     }
     
     // Compare the number.
     if (l.isInteger()) {
-      return (l._data->p < r);
+      return (l._p < r);
     } else {
-      return (l._data->p < r * l._data->q);
+      return (l._p < r * l._q);
     }
     
   }
@@ -1861,18 +1718,18 @@ namespace DAC {
   template <class T> bool Arb::_LT<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
     
     // Check for zeros.
-    if (l._data->p == 0) {
+    if (l._p == 0) {
       if (r == 0) {
         return false;
       } else {
         return (r > 0);
       }
     } else if (r == 0) {
-      return !l._data->positive;
+      return !l._positive;
     }
     
     // Check signs.
-    if (l._data->positive) {
+    if (l._positive) {
       if (r < 0) {
         return false;
       }
@@ -1884,16 +1741,16 @@ namespace DAC {
     
     // Compare the number.
     if (l.isInteger()) {
-      if (l._data->positive) {
-        return (l._data->p < r);
+      if (l._positive) {
+        return (l._p < r);
       } else {
-        return (l._data->p > r);
+        return (l._p > r);
       }
     } else {
-      if (l._data->positive) {
-        return (l._data->p < r * l._data->q);
+      if (l._positive) {
+        return (l._p < r * l._q);
       } else {
-        return (l._data->p > r * l._data->q);
+        return (l._p > r * l._q);
       }
     }
     
@@ -1928,22 +1785,22 @@ namespace DAC {
   template <class T> bool Arb::_EQ<T, Arb::_NUM_UINT>::op (Arb const& l, SafeInt<T> const r) {
     
     // Check for zeros.
-    if (l._data->p == 0) {
+    if (l._p == 0) {
       return (r == 0);
     } else if (r == 0) {
       return false;
     }
     
     // Neither number is zero, check signs.
-    if (!l._data->positive) {
+    if (!l._positive) {
       return false;
     }
     
     // Check numbers.
     if (l.isInteger()) {
-      return (l._data->p == r);
+      return (l._p == r);
     } else {
-      return (l._data->p == r * l._data->q);
+      return (l._p == r * l._q);
     }
     
   }
@@ -1955,22 +1812,22 @@ namespace DAC {
   template <class T> bool Arb::_EQ<T, Arb::_NUM_SINT>::op (Arb const& l, SafeInt<T> const r) {
     
     // Check for zeros.
-    if (l._data->p == 0) {
+    if (l._p == 0) {
       return (r == 0);
     } else if (r == 0) {
       return false;
     }
     
     // Neither number is zero, check signs.
-    if (l._data->positive != (r > 0)) {
+    if (l._positive != (r > 0)) {
       return false;
     }
     
     // Check numbers.
     if (l.isInteger()) {
-      return (l._data->p == r);
+      return (l._p == r);
     } else {
-      return (l._data->p == r * l._data->q);
+      return (l._p == r * l._q);
     }
     
   }

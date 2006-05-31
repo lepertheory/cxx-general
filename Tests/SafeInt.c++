@@ -489,6 +489,29 @@ template <class T> bool test_charCast (T const value) {
  * Test type operator.
  */
 template <class T, class U> bool test_typeOperator (T const value1, U const value2) {
+  if (value2 == value2) {}
+  SafeInt<T> test(value1);
+  bool threw(false);
+  try {
+    if (static_cast<U>(test) != SafeInt<T>(value1)) {
+      cout << "Values do not agree for " << to_string(value1) << ".\n";
+      return false;
+    }
+  } catch (typename SafeInt<T>::Errors::Overflow) {
+    threw = true;
+  }
+  if (test > numeric_limits<U>::max() || test < numeric_limits<U>::min()) {
+    if (!threw) {
+      cout << "Did not throw overflow for " << to_string(value1) << ".\n";
+      return false;
+    }
+  } else {
+    if (threw) {
+      cout << "Threw overflow for " << to_string(value1) << ".\n";
+      return false;
+    }
+  }
+  return true;
 }
 
 /*
@@ -519,7 +542,7 @@ template <class T> bool do_unaryTest (vector<T> const& values, bool (*test)(T co
 /*
  * Run a binary test.
  */
-template <class T, class U> bool do_binaryTest (vector<T> const& values1, vector<U> const& values2, bool (*test)(T const)) {
+template <class T, class U> bool do_binaryTest (vector<T> const& values1, vector<U> const& values2, bool (*test)(T const, U const)) {
   
   // First test edge cases.
   for (typename vector<T>::const_iterator i = values1.begin(); i != values1.end(); ++i) {
@@ -547,14 +570,58 @@ template <class T, class U> bool do_binaryTest (vector<T> const& values1, vector
 }
 
 /*
+ * Combine edge cases.
+ */
+template <class T, class U, class V> void combine_edges (vector<T>& combined, vector<U> const& values1, vector<V> const& values2) {
+  
+  // Clear combined vector.
+  combined.clear();
+  
+  // Insert all values1 that we can.
+  for (typename vector<U>::const_iterator i = values1.begin(); i != values1.end(); ++i) {
+    if (SafeInt<U>(*i) >= numeric_limits<T>::min() && SafeInt<U>(*i) <= numeric_limits<T>::max()) {
+      combined.push_back(*i);
+    }
+  }
+  
+  // Now do values2. Don't insert duplicates.
+  for (typename vector<V>::const_iterator i = values2.begin(); i != values2.end(); ++i) {
+    if (SafeInt<V>(*i) >= numeric_limits<T>::min() && SafeInt<V>(*i) <= numeric_limits<T>::max()) {
+      bool insertit(true);
+      for (typename vector<T>::const_iterator j = combined.begin(); j != combined.end(); ++j) {
+        if (SafeInt<V>(*i) == SafeInt<T>(*j)) {
+          insertit = false;
+          break;
+        }
+      }
+      if (insertit) {
+        combined.push_back(*i);
+      }
+    }
+  }
+  
+}
+
+/*
  * Test type 2.
  */
-template <class T, class U> bool test_type2 (string const& name, vector<T> const& tests1) {
+template <class T, class U> bool test_type2 (string const& name1, vector<T> const& tests1, string const& name2) {
+ 
+  if (&name1 == &name1) {}
   
+  // Edge cases.
   vector<U> tests2;
+  vector<T> comb_tests1;
+  vector<U> comb_tests2;
+  vector<U> dummy;
   EdgeBuilder<U, Relationship<U, U>::value>::op(tests2);
+  combine_edges(comb_tests1, tests1, tests2);
+  combine_edges(comb_tests2, tests1, tests2);
+  dummy.push_back(0);
   
-  cout << "    " << name << " operator: "; if (!do_binaryTest(tests1, tests2, test_typeOperator)) { return false; } cout << "OK\n";
+  cout << "    ";
+  cout.width(38);
+  cout << left << (name2 + " operator: "); if (!do_binaryTest(comb_tests1, dummy, test_typeOperator)) { return false; } cout << "OK\n";
   
   return true;
   
@@ -590,30 +657,17 @@ template <class T> bool test_type1 (string const& name) {
   cout << "    Unary minus operator:                 "; if (!do_unaryTest(tests, test_unaryMinusOperator         )) { return false; } cout << "OK\n";
   cout << "    Not operator:                         "; if (!do_unaryTest(tests, test_notOperator                )) { return false; } cout << "OK\n";
   cout << "    Bitwise compliment:                   "; if (!do_unaryTest(tests, test_bitwiseCompliment          )) { return false; } cout << "OK\n";
-  /*
-  cout << "    bool cast:                            "; if (!do_unaryTest(tests, test_boolCast                   )) { return false; } cout << "OK\n";
-  cout << "    char cast:                            "; if (!do_unaryTest(tests, test_charCast                   )) { return false; } cout << "OK\n";
-  cout << "    signed char cast:                     "; if (!do_unaryTest(tests, test_signedcharCast             )) { return false; } cout << "OK\n";
-  cout << "    unsigned char cast:                   "; if (!do_unaryTest(tests, test_unsignedcharCast           )) { return false; } cout << "OK\n";
-  cout << "    short cast:                           "; if (!do_unaryTest(tests, test_shortCast                  )) { return false; } cout << "OK\n";
-  cout << "    unsigned short cast:                  "; if (!do_unaryTest(tests, test_unsignedshortCast          )) { return false; } cout << "OK\n";
-  cout << "    int cast:                             "; if (!do_unaryTest(tests, test_intCast                    )) { return false; } cout << "OK\n";
-  cout << "    unsigned cast:                        "; if (!do_unaryTest(tests, test_unsignedintCast            )) { return false; } cout << "OK\n";
-  cout << "    long cast:                            "; if (!do_unaryTest(tests, test_longCast                   )) { return false; } cout << "OK\n";
-  cout << "    unsigned long cast:                   "; if (!do_unaryTest(tests, test_unsignedlongCast           )) { return false; } cout << "OK\n";
-  */
   
-  return test_type2<T, bool          >(name, tests) &&
-         test_type2<T, char          >(name, tests) &&
-         test_type2<T, signed char   >(name, tests) &&
-         test_type2<T, unsigned char >(name, tests) &&
-         test_type2<T, wchar_t       >(name, tests) &&
-         test_type2<T, short         >(name, tests) &&
-         test_type2<T, unsigned short>(name, tests) &&
-         test_type2<T, int           >(name, tests) &&
-         test_type2<T, unsigned      >(name, tests) &&
-         test_type2<T, long          >(name, tests) &&
-         test_type2<T, unsigned long >(name, tests);
+  return test_type2<T, char          >(name, tests, "char"          ) &&
+         test_type2<T, signed char   >(name, tests, "signed char"   ) &&
+         test_type2<T, unsigned char >(name, tests, "unsigned char" ) &&
+         test_type2<T, wchar_t       >(name, tests, "wchar_t"       ) &&
+         test_type2<T, short         >(name, tests, "short"         ) &&
+         test_type2<T, unsigned short>(name, tests, "unsigned short") &&
+         test_type2<T, int           >(name, tests, "int"           ) &&
+         test_type2<T, unsigned      >(name, tests, "unsigned"      ) &&
+         test_type2<T, long          >(name, tests, "long"          ) &&
+         test_type2<T, unsigned long >(name, tests, "unsigned long" );
   
 }
 
@@ -623,7 +677,6 @@ int main () {
   srand(time(0));
   
   if (
-    test_type1<bool          >("bool"          ) &&
     test_type1<char          >("char"          ) &&
     test_type1<signed char   >("signed char"   ) &&
     test_type1<unsigned char >("unsigned char" ) &&

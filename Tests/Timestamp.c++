@@ -133,7 +133,8 @@ int main () {
     
   } catch (exception& e) {
     
-    cout << "Exception (" << demangle(e) << "): " << e.what() << endl;
+    string tmpstr;
+    cout << "Exception (" << demangle(tmpstr, e) << "): " << e.what() << endl;
     exit(1);
     
   } catch (...) {

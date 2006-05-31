@@ -760,7 +760,7 @@ namespace DAC {
   /*
    * Convert to string with internal buffer.
    */
-  std::string const& Timestamp::to_string (std::string const& format) const {
+  inline std::string const& Timestamp::to_string (std::string const& format) const {
     return to_string(_strbuf, format);
   }
   

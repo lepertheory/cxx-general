@@ -102,7 +102,8 @@ int main () {
     
   } catch (exception& e) {
     
-    cout << "Exception (" << demangle(e) << "): " << e.what() << endl;
+    string tmpstr;
+    cout << "Exception (" << demangle(tmpstr, e) << "): " << e.what() << endl;
     exit(1);
     
   } catch (...) {
@@ -152,7 +153,8 @@ bool testOp (Arb const& l, Operation const op, Arb const& r) {
     output += "Exception (" + e.type() + "): " + string(e.what());
     retval = false;
   } catch (exception& e) {
-    output += "Exception (" + demangle(e) + "): " + string(e.what());
+    string tmpstr;
+    output += "Exception (" + demangle(tmpstr, e) + "): " + string(e.what());
     retval = false;
   } catch (...) {
     output += "Unexpected exception caught.";
