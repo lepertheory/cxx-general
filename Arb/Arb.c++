@@ -618,8 +618,12 @@ namespace DAC {
     _q        = number._q;
     _positive = number._positive;
     
-    // Reduce the fraction.
-    _reduce();
+    // Reduce the fraction if setting from a fixed number or if this is a
+    // fixed number, should be no need otherwise.
+    // if it was not fixed point.
+    if (_fix || number._fix) {
+      _reduce();
+    }
     
   }
   
@@ -633,8 +637,10 @@ namespace DAC {
     _q        = 1;
     _positive = true;
     
-    // Reduce the fraction.
-    _reduce();
+    // Reduce if this is a fixed number, otherwise no need.
+    if (_fix) {
+      _reduce();
+    }
     
   }
   
@@ -1021,9 +1027,15 @@ namespace DAC {
     }
     
     // Check the numbers themselves. No need to normalize, if they're not,
-    // they're not equal.
-    // FIXME: What about fixed numbers?
-    return ((_q == number._q) && (_p == number._p));
+    // they're not equal. If one of the numbers is fixed, we need to compare
+    // non-fixed versions, otherwise do it the easy way.
+    if (_fix || number._fix) {
+      Arb tmp_l = *this ;
+      Arb tmp_r = number;
+      return ((tmp_l._q == tmp_r._q) && (tmp_l._p ==tmp_r._p));
+    } else {
+      return ((_q == number._q) && (_p == number._p));
+    }
     
   }
   bool Arb::op_eq (ArbInt const& number) const {
@@ -1041,9 +1053,14 @@ namespace DAC {
     }
     
     // Check the numbers themselves. No need to normalize, if they're not,
-    // they're not equal.
-    // FIXME: What about fixed numbers?
-    return (isInteger() && (_p == number));
+    // they're not equal. If this number is fixed, we need to compare to a
+    // non-fixed version, otherwise do it the easy way.
+    if (_fix) {
+      Arb tmp_l = *this;
+      return (tmp_l.isInteger() && (tmp_l._p == number));
+    } else {
+      return (isInteger() && (_p == number));
+    }
     
   }
   
@@ -1169,7 +1186,6 @@ namespace DAC {
           
           // Raise to the yth power.
           y._p = exp._p;
-          // FIXME: What's up with this line?
           x = pow(y);
           
           // Get the zth root.

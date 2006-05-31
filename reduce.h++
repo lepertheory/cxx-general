@@ -4,8 +4,6 @@
  * Reduce a fraction.
  *****************************************************************************/
 
-// FIXME: Don't use references.
-
 // System includes.
 #include <gcd.h++>
 
