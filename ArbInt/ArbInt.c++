@@ -126,7 +126,7 @@ namespace DAC {
   /*
    * Default constructor.
    */
-  ArbInt::ArbInt () {
+  ArbInt::ArbInt () throw() {
     
     // Initialize.
     clear();
@@ -136,12 +136,9 @@ namespace DAC {
   /*
    * Copy constructor.
    */
-  ArbInt::ArbInt (ArbInt const& number) {
+  ArbInt::ArbInt (ArbInt const& number) throw() {
     
-    // Initialize.
-    clear();
-    
-    // Set the number.
+    // Set the number. No need to clear, copy takes care of everything.
     copy(number);
     
   }
@@ -149,7 +146,7 @@ namespace DAC {
   /*
    * Conversion constructor.
    */
-  ArbInt::ArbInt (string const& number) {
+  ArbInt::ArbInt (string const& number) throw (Errors::BadFormat) {
     
     // Initialize.
     clear();
@@ -162,7 +159,7 @@ namespace DAC {
   /*
    * Reset to just-constructed state.
    */
-  void ArbInt::clear () {
+  void ArbInt::clear () throw() {
     
     // Clear the digits.
     _digits.clear();
@@ -175,11 +172,10 @@ namespace DAC {
   /*
    * Make a copy of another number.
    */
-  void ArbInt::copy (ArbInt const& number) {
+  void ArbInt::copy (ArbInt const& number) throw() {
     
     // Set the new digits.
-    _DigsT new_digits(number._digits);
-    _digits.swap(new_digits);
+    _digits = number._digits;
     
     // Set the default base of number.
     _base = number._base;
@@ -189,7 +185,7 @@ namespace DAC {
   /*
    * Swap this number with another number.
    */
-  void ArbInt::swap (ArbInt& number) {
+  void ArbInt::swap (ArbInt& number) throw() {
     
     // Nothing to it.
     _digits.swap(number._digits);
@@ -202,7 +198,7 @@ namespace DAC {
   /*
    * Set this number with a string.
    */
-  ArbInt& ArbInt::set (string const& number, bool const autobase) {
+  ArbInt& ArbInt::set (string const& number, bool const autobase) throw(Errors::BadFormat) {
     
     // Load the number into this for exception safety.
     _DigsT new_digits;
@@ -236,7 +232,7 @@ namespace DAC {
       
       // Make sure this digit is within the number base.
       if ((digval >= num_base || (digval == numeric_limits<_NumChrT>::max()))) {
-        throw ArbInt::Errors::BadFormat().Problem("Unrecognized character").Position(i);
+        throw Errors::BadFormat().Problem("Unrecognized character").Position(i);
       }
       
       // Add the digit to the digit string.
@@ -261,16 +257,16 @@ namespace DAC {
   /*
    * Push a string onto the back of this number.
    */
-  void ArbInt::push_back (string const& number) {
+  void ArbInt::push_back (string const& number) throw(Errors::BadFormat) {
     
     // Work area.
     ArbInt newnum;
     
-    // Move digits up to accomidate the new digits.
-    op_mul(ArbInt(_base).pow(number.length()));
-    
     // Convert the new number.
     newnum.Base(_base).set(number);
+    
+    // Move digits up to accomidate the new digits.
+    op_mul(ArbInt(_base).pow(number.length()));
     
     // Add the new number to this.
     op_add(newnum);
@@ -280,7 +276,7 @@ namespace DAC {
   /*
    * Return a string of this number.
    */
-  string& ArbInt::to_string (string& buffer, value_type const base) const {
+  string& ArbInt::to_string (string& buffer, value_type const base) const throw() {
     
     // This is the string we will return.
     string retval;
@@ -325,7 +321,7 @@ namespace DAC {
   /*
    * Multiply.
    */
-  ArbInt& ArbInt::op_mul (ArbInt const& number) {
+  ArbInt& ArbInt::op_mul (ArbInt const& number) throw() {
     
     // Work area.
     ArbInt retval;
@@ -372,11 +368,11 @@ namespace DAC {
   /*
    * Divide.
    */
-  ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* const remainder) {
+  ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* const remainder) throw(Errors::DivByZero) {
     
     // If number is zero, throw error.
     if (number.isZero()) {
-      throw ArbInt::Errors::DivByZero();
+      throw Errors::DivByZero();
     }
     
     // Work area.
@@ -513,7 +509,7 @@ namespace DAC {
   /*
    * Modulo division.
    */
-  ArbInt& ArbInt::op_mod (ArbInt const& number) {
+  ArbInt& ArbInt::op_mod (ArbInt const& number) throw(Errors::DivByZero) {
     
     // Cannot divide by zero. check is redundant, but needed for exception to
     // report proper operator.
@@ -535,7 +531,7 @@ namespace DAC {
   /*
    * Add.
    */
-  ArbInt& ArbInt::op_add (ArbInt const& number) {
+  ArbInt& ArbInt::op_add (ArbInt const& number) throw() {
     
     // Add like kindergarten.
     for (_DigsT::size_type i = 0; i != number._digits.size(); ++i) {
@@ -559,11 +555,11 @@ namespace DAC {
   /*
    * Subtract.
    */
-  ArbInt& ArbInt::op_sub (ArbInt const& number) {
+  ArbInt& ArbInt::op_sub (ArbInt const& number) throw(Errors::Negative) {
     
     // These are unsigned numbers, so if number > this, throw an error.
     if (op_lt(number)) {
-      throw ArbInt::Errors::Negative();
+      throw Errors::Negative();
     }
     
     // Subtract like kindergarten.
@@ -588,7 +584,7 @@ namespace DAC {
   /*
    * Greater than.
    */
-  bool ArbInt::op_gt (ArbInt const& number) const {
+  bool ArbInt::op_gt (ArbInt const& number) const throw() {
     
     // Check zeros.
     if (isZero()) {
@@ -627,7 +623,7 @@ namespace DAC {
   /*
    * Less than.
    */
-  bool ArbInt::op_lt (ArbInt const& number) const {
+  bool ArbInt::op_lt (ArbInt const& number) const throw () {
     
     // Check zeros.
     if (number.isZero()) {
@@ -666,7 +662,7 @@ namespace DAC {
   /*
    * Equal to.
    */
-  bool ArbInt::op_eq (ArbInt const& number) const {
+  bool ArbInt::op_eq (ArbInt const& number) const throw() {
     
     // Check zeros.
     if (isZero()) {
@@ -698,7 +694,7 @@ namespace DAC {
   /*
    * Bitwise AND.
    */
-  ArbInt& ArbInt::op_bit_and (ArbInt const& number) {
+  ArbInt& ArbInt::op_bit_and (ArbInt const& number) throw() {
     
     // Cut off digits longer than number, they will be 0 anyway.
     if (_digits.size() > number._digits.size()) {
@@ -721,7 +717,7 @@ namespace DAC {
   /*
    * Bitwise inclusive OR.
    */
-  ArbInt& ArbInt::op_bit_ior (ArbInt const& number) {
+  ArbInt& ArbInt::op_bit_ior (ArbInt const& number) throw() {
     
     // Get the original size of *this, no processing of any of the added
     // digits will be necessary b/c of how | works.
@@ -745,7 +741,7 @@ namespace DAC {
   /*
    * Bitwise exclusive OR.
    */
-  ArbInt& ArbInt::op_bit_xor (ArbInt const& number) {
+  ArbInt& ArbInt::op_bit_xor (ArbInt const& number) throw() {
     
     // Get the original size of *this, no processing of any of the added
     // digits will be necessary b/c of how ^ works.
@@ -772,7 +768,7 @@ namespace DAC {
   /*
    * Bitwise compliment.
    */
-  ArbInt& ArbInt::op_bit_cpm () {
+  ArbInt& ArbInt::op_bit_cpm () throw() {
     
     // Apply compliment to each digit.
     for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
@@ -790,7 +786,7 @@ namespace DAC {
   /*
    * Raise this number to a power.
    */
-  ArbInt ArbInt::pow (ArbInt const& exp) {
+  ArbInt ArbInt::pow (ArbInt const& exp) throw() {
     
     // Work area.
     ArbInt tmp_base(*this);
@@ -814,12 +810,7 @@ namespace DAC {
   /*
    * Perform carry.
    */
-  ArbInt& ArbInt::_carry (_DigsT::size_type start) {
-    
-    // Ensure that the start is not beyond the end of the container.
-    if (start >= _digits.size()) {
-      throw ArbInt::Errors::Overrun();
-    }
+  ArbInt& ArbInt::_carry (_DigsT::size_type start) throw() {
     
     // Loop through the container looking for base overflow.
     for (_DigsT::size_type i = start; i != _digits.size(); ++i) {
@@ -856,12 +847,7 @@ namespace DAC {
    * Perform borrow. Only call this on temporary objects that are not
    * copied. Copy on write is not preserved for this function.
    */
-  ArbInt& ArbInt::_borrow (_DigsT::size_type start) {
-    
-    // Ensure that the start is not beyond the end of the container.
-    if (start >= _digits.size()) {
-      throw ArbInt::Errors::Overrun();
-    }
+  ArbInt& ArbInt::_borrow (_DigsT::size_type start) throw() {
     
     // Loop through the container borrowing until we've met our borrow.
     for (_DigsT::size_type i = start; i != (_digits.size() - 1); ++i) {
@@ -884,15 +870,17 @@ namespace DAC {
       
     }
     
-    // If we get here, we have not paid for our borrow.
-    throw ArbInt::Errors::Overrun();
+    // If we get here, we have not paid for our borrow. This should never ever
+    // happen, but do not allow silent bugs to appear. Will cause an invalid
+    // throw.
+    throw Errors::Overrun();
     
   }
   
   /*
    * Bitwise shift by ArbInt.
    */
-  ArbInt& ArbInt::_shift (ArbInt const& bits, _Dir const dir) {
+  ArbInt& ArbInt::_shift (ArbInt const& bits, _Dir const dir) throw(Errors::Overrun) {
     
     // Only shift if it is needed.
     if (*this && bits) {
@@ -904,8 +892,8 @@ namespace DAC {
       if (bits >= s_digitbits) {
         try {
           tmp_digits = static_cast<_DigsT::size_type>(bits / s_digitbits);
-        } catch (ArbInt::Errors::ScalarOverflow) {
-          throw ArbInt::Errors::ShiftTooLarge();
+        } catch (Errors::ScalarOverflow) {
+          throw Errors::Overrun();
         }
         tmp_bits = static_cast<unsigned int>(bits - tmp_digits * s_digitbits);
       } else {
@@ -926,7 +914,7 @@ namespace DAC {
   /*
    * Bitwise shift.
    */
-  ArbInt& ArbInt::_shift (SafeInt<_DigsT::size_type> const digits, SafeInt<unsigned int> const bits, _Dir const dir) {
+  ArbInt& ArbInt::_shift (SafeInt<_DigsT::size_type> const digits, SafeInt<unsigned int> const bits, _Dir const dir) throw(Errors::Overrun) {
     
     // Only shift if it is needed.
     if (*this && (digits || bits)) {
@@ -956,7 +944,7 @@ namespace DAC {
   /*
    * Bitwise shift entire digits.
    */
-  ArbInt& ArbInt::_shiftDigits (SafeInt<_DigsT::size_type> const digits, _Dir const dir) {
+  ArbInt& ArbInt::_shiftDigits (SafeInt<_DigsT::size_type> const digits, _Dir const dir) throw(Errors::Overrun) {
     
     // Only shift if it is needed.
     if (*this && digits) {
@@ -966,7 +954,7 @@ namespace DAC {
         
         // Check if shift will overrun _DigsT::size_type.
         if (digits > numeric_limits<_DigsT::size_type>::max() - _digits.size()) {
-          throw ArbInt::Errors::Overrun();
+          throw Errors::Overrun();
         }
         
         // Insert 0s to shift left.
@@ -994,7 +982,7 @@ namespace DAC {
   /*
    * Bitwise shift by bits.
    */
-  ArbInt& ArbInt::_shiftBits (SafeInt<unsigned int> const bits, _Dir const dir) {
+  ArbInt& ArbInt::_shiftBits (SafeInt<unsigned int> const bits, _Dir const dir) throw(Errors::Overrun) {
     
     // Only shift if it is needed.
     if (*this && bits) {

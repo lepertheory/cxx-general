@@ -23,8 +23,8 @@ namespace DAC {
   // Additional namespace, hide utility functions.
   namespace absUtils {
     template <class T, bool>  class AbsSplit;
-    template <class T> class AbsSplit<T, false> { public: static T op (T const value); };
-    template <class T> class AbsSplit<T, true > { public: static T op (T const value); };
+    template <class T> class AbsSplit<T, false> { public: static T op (T const value) throw(); };
+    template <class T> class AbsSplit<T, true > { public: static T op (T const value)        ; };
   }
   
   /***************************************************************************
@@ -46,8 +46,8 @@ namespace DAC {
    * unsigned values.
    */
   namespace absUtils {
-    template <class T> inline T AbsSplit<T, false>::op (T const value) { return value; }
-    template <class T> inline T AbsSplit<T, true >::op (T const value) {
+    template <class T> inline T AbsSplit<T, false>::op (T const value) throw() { return value; }
+    template <class T> inline T AbsSplit<T, true >::op (T const value)         {
       return (value > 0) ? value : ~value + 1;
     }
   }
