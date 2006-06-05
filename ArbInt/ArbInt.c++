@@ -118,7 +118,7 @@ namespace DAC {
     numeric_limits<_NumChrT>::max(), // 0x7E      ~
     numeric_limits<_NumChrT>::max()  // 0x7F      DEL
   };
-  ArbInt::_NumChrT const ArbInt::s_numidigits = 36;
+  ArbInt::value_type const ArbInt::max_input_base = 36;
   
   /***************************************************************************/
   // Function members.
