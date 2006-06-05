@@ -18,7 +18,7 @@ namespace DAC {
   // Functions.
   
   // Get the logarithm of a number in a given base.
-  template <class NumT, class BaseT> long double logBase (NumT const& number, BaseT const& base) throw();
+  template <class NumT, class BaseT> long double logBase (NumT const& number, BaseT const& base);
   
   /***************************************************************************
    * Inline and template definitions.
@@ -30,7 +30,7 @@ namespace DAC {
   /*
    * Find the logarithm of a number in a given base.
    */
-  template <class NumT, class BaseT> inline long double logBase (NumT const& number, BaseT const& base) throw() {
+  template <class NumT, class BaseT> inline long double logBase (NumT const& number, BaseT const& base) {
     return std::log(static_cast<long double>(number)) / std::log(static_cast<long double>(base));
   }
   

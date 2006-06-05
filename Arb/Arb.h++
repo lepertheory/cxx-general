@@ -80,11 +80,7 @@ namespace DAC {
         public:
     
           // All Arb errors are based off of this.
-          class Base : public Exception {
-            public:
-              virtual char const* what () const throw() { return "Undefined error in Arb."; };
-              virtual ~Base () throw() {};
-          };
+          class Base : public Exception { public: virtual char const* what () const throw() { return "Undefined error in Arb."; }; };
           
           // Bad format.
           class BadFormat : public Base {
@@ -98,76 +94,36 @@ namespace DAC {
                 }
               };
               virtual ~BadFormat () throw() {};
-              BadFormat& Problem  (char const*            const problem ) throw() { _problem  = problem ; return *this; };
-              BadFormat& Position (std::string::size_type const position) throw() { _position = position; return *this; };
-              char const*            Problem  () const throw() { return _problem.c_str(); };
-              std::string::size_type Position () const throw() { return _position       ; };
+              BadFormat& Problem  (char const*            const problem ) { _problem  = problem ; return *this; };
+              BadFormat& Position (std::string::size_type const position) { _position = position; return *this; };
+              char const*            Problem  () const { return _problem.c_str(); };
+              std::string::size_type Position () const { return _position       ; };
             private:
               std::string            _problem;
               std::string::size_type _position;
           };
           
           // Divide by zero.
-          class DivByZero : public Base {
-            public:
-              virtual ~DivByZero () throw() {};
-              virtual char const* what () const throw() { return "Divide by zero."; };
-          };
+          class DivByZero : public Base { public: virtual char const* what () const throw() { return "Divide by zero."; }; };
           
           // Operation results in a complex number.
-          class Complex : public Base {
-            public:
-              virtual ~Complex () throw() {};
-              virtual char const* what () const throw() { return "Even roots of negative numbers can only be complex numbers."; };
-          };
+          class Complex : public Base { public: virtual char const* what () const throw() { return "Even roots of negative numbers can only be complex numbers."; }; };
           
           // Integer-only operation attempted on a non-integer.
-          class NonInteger : public Base {
-            public:
-              virtual ~NonInteger () throw() {};
-              virtual char const* what () const throw() { return "An integer operation was attempted on a non-integer number."; };
-          };
+          class NonInteger : public Base { public: virtual char const* what () const throw() { return "An integer operation was attempted on a non-integer number."; }; };
           
           // Attempt to stuff Arb into a type that will not fit.
-          class ScalarOverflow : public Base {
-            public:
-              virtual ~ScalarOverflow () throw() {};
-              virtual char const* what () const throw() { return "Arb overflows requested scalar type."; };
-          };
+          class ScalarOverflow : public Base { public: virtual char const* what () const throw() { return "Arb overflows requested scalar type."; }; };
           
           // Attempt to move Arb into a number that won't see it.
-          class ScalarUnderflow : public Base {
-            public:
-              virtual ~ScalarUnderflow () throw() {};
-              virtual char const* what () const throw() { return "Arb underflows requested scalar type."; };
-          };
+          class ScalarUnderflow : public Base { public: virtual char const* what () const throw() { return "Arb underflows requested scalar type."; }; };
           
           // Attempt to set Arb with an invalid floating-point number.
-          class InvalidFloat : public Base {
-            public:
-              virtual ~InvalidFloat () throw() {};
-              virtual char const* what () const throw() { return "Attempt to set Arb from an invalid floating-point number."; };
-          };
-          class Infinity : public InvalidFloat {
-            public:
-              virtual ~Infinity () throw() {};
-              virtual char const* what () const throw() { return "Attempt to set Arb to infinity."; };
-          };
-          class PositiveInfinity : public Infinity {
-            public:
-              virtual ~PositiveInfinity () throw() {};
-              virtual char const* what () const throw() { return "Attempt to set Arb to positive infinity."; };
-          };
-          class NegativeInfinity : public Infinity {
-            public:
-              virtual ~NegativeInfinity () throw() {};
-              virtual char const* what () const throw() { return "Attempt to set Arb to negative infinity."; };
-          };
-          class NaN : public InvalidFloat {
-            public:
-              virtual ~NaN () throw() {};
-              virtual char const* what () const throw() { return "Attempt to set Arb to NaN."; };
-          };
+          class InvalidFloat     : public Base         { public: virtual char const* what () const throw() { return "Attempt to set Arb from an invalid floating-point number."; }; };
+          class Infinity         : public InvalidFloat { public: virtual char const* what () const throw() { return "Attempt to set Arb to infinity.";                           }; };
+          class PositiveInfinity : public Infinity     { public: virtual char const* what () const throw() { return "Attempt to set Arb to positive infinity.";                  }; };
+          class NegativeInfinity : public Infinity     { public: virtual char const* what () const throw() { return "Attempt to set Arb to negative infinity.";                  }; };
+          class NaN              : public InvalidFloat { public: virtual char const* what () const throw() { return "Attempt to set Arb to NaN.";                                }; };
         
         // Private constructor so this cannot be instantiated.
         private:

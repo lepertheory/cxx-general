@@ -38,11 +38,7 @@ namespace DAC {
         public:
           
           // All errors are based off this.
-          class Base : public Exception {
-            public:
-              virtual ~Base () throw() {};
-              virtual char const* what () const throw() { return "Unspecified error in ValReader."; };
-          };
+          class Base : public Exception { public: virtual char const* what () const throw() { return "Unspecified error in ValReader."; }; };
           
           // Error converting number.
           class BadNum : public Base {
@@ -56,8 +52,8 @@ namespace DAC {
                   return "Could not convert value to requested type. Error creating message string.";
                 }
               };
-              BadNum& set_ErrText (std::string const& errtext) throw() { _errtext = errtext; return *this; };
-              std::string& ErrText (std::string& buffer) const throw() { buffer = _errtext; return buffer; };
+              BadNum& set_ErrText (std::string const& errtext) { _errtext = errtext; return *this; };
+              std::string& ErrText (std::string& buffer) const { buffer = _errtext; return buffer; };
             private:
               std::string _errtext;
           };

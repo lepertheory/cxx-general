@@ -24,7 +24,7 @@ namespace DAC {
   // Functions.
   
   // Get the type of an object.
-  template <class T> std::string& demangle (std::string& buffer, T const& thing = T()) throw();
+  template <class T> std::string& demangle (std::string& buffer, T const& thing = T());
   
   /***************************************************************************
    * Inline and template definitions.
@@ -36,7 +36,7 @@ namespace DAC {
   /*
    * Get the type of an object.
    */
-  template <class T> std::string& demangle (std::string& buffer, T const& thing) throw() {
+  template <class T> std::string& demangle (std::string& buffer, T const& thing) {
     
     // Shut up the compiler.
     if (&thing) {};

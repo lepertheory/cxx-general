@@ -106,32 +106,16 @@ namespace DAC {
         public:
           
           // All INIFile errors are based off on this.
-          class Base : public Exception {
-            public:
-              virtual ~Base () throw() {};
-              virtual char const* what () const throw() { return "Undefined error in INIFile."; };
-          };
+          class Base : public Exception { public: virtual char const* what () const throw() { return "Undefined error in INIFile."; }; };
           
           // INI file has not been read.
-          class NotRead : public Base {
-            public:
-              virtual ~NotRead () throw() {};
-              virtual char const* what () const throw() { return "INI file has not yet been read."; };
-          };
+          class NotRead : public Base { public: virtual char const* what () const throw() { return "INI file has not yet been read."; }; };
           
           // Filename was not specified.
-          class FileNotSet : public Base {
-            public:
-              virtual ~FileNotSet () throw() {};
-              virtual char const* what () const throw() { return "Cannot perform requested operation, filename is not set."; };
-          };
+          class FileNotSet : public Base { public: virtual char const* what () const throw() { return "Cannot perform requested operation, filename is not set."; }; };
           
           // File could not be opened.
-          class FileNoOpen : public Base {
-            public:
-              virtual ~FileNoOpen () throw() {};
-              virtual char const* what () const throw() { return "INI file could not be opened."; }
-          };
+          class FileNoOpen : public Base { public: virtual char const* what () const throw() { return "INI file could not be opened."; } };
           
           // Unexpected file error.
           class FileUnexpectedError : public Base {
@@ -173,25 +157,13 @@ namespace DAC {
           };
           
           // Section is undefined.
-          class SectionUndefined : public Base {
-            public:
-              virtual ~SectionUndefined () throw() {};
-              virtual char const* what () const throw() { return "Section is undefined."; };
-          };
+          class SectionUndefined : public Base { public: virtual char const* what () const throw() { return "Section is undefined."; }; };
           
           // Section title is blank.
-          class SectionBlank : public Base {
-            public:
-              virtual ~SectionBlank () throw() {};
-              virtual char const* what () const throw() { return "Section title is blank."; };
-          };
+          class SectionBlank : public Base { public: virtual char const* what () const throw() { return "Section title is blank."; }; };
           
           // Value without a key.
-          class ValueNoKey : public Base {
-            public:
-              virtual ~ValueNoKey () throw() {};
-              virtual char const* what () const throw() { return "Value specified without a key."; };
-          };
+          class ValueNoKey : public Base { public: virtual char const* what () const throw() { return "Value specified without a key."; }; };
           
           // Key without a section.
           class KeyNoSection : public Base {
@@ -233,11 +205,7 @@ namespace DAC {
           };
           
           // Key is undefined.
-          class KeyUndefined : public Base {
-            public:
-              virtual ~KeyUndefined () throw() {};
-              virtual char const* what () const throw() { return "Key is undefined."; };
-          };
+          class KeyUndefined : public Base { public: virtual char const* what () const throw() { return "Key is undefined."; }; };
           
           // Unable to parse line.
           class ParseError : public Base {

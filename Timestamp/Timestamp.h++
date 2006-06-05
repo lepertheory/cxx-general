@@ -203,11 +203,7 @@ namespace DAC {
         public:
           
           // All Timestamp errors are based off of this.
-          class Base : public Exception {
-            public:
-              virtual char const* what () const throw() { return "Undefined error in Timestamp."; };
-              virtual ~Base () throw() {};
-          };
+          class Base : public Exception { public: virtual char const* what () const throw() { return "Undefined error in Timestamp."; }; };
           
           // Bad format.
           class BadFormat : public Base {
@@ -221,63 +217,32 @@ namespace DAC {
                 }
               };
               virtual ~BadFormat () throw() {};
-              BadFormat& Problem  (char const*            const problem ) throw() { _problem  = problem ; return *this; };
-              BadFormat& Position (std::string::size_type const position) throw() { _position = position; return *this; };
-              char const*            Problem  () const throw() { return _problem.c_str(); }
-              std::string::size_type Position () const throw() { return _position       ; }
+              BadFormat& Problem  (char const*            const problem ) { _problem  = problem ; return *this; };
+              BadFormat& Position (std::string::size_type const position) { _position = position; return *this; };
+              char const*            Problem  () const { return _problem.c_str(); }
+              std::string::size_type Position () const { return _position       ; }
             private:
               std::string            _problem ;
               std::string::size_type _position;
           };
           
           // Bad value.
-          class BadValue : public Base {
-            public:
-              virtual char const* what () const throw() { return "Bad value passed."; };
-          };
+          class BadValue : public Base { public: virtual char const* what () const throw() { return "Bad value passed."; }; };
           
           // Invalid MJD sent.
-          class BadMJD : public BadValue {
-            public:
-              virtual ~BadMJD () throw() {};
-              virtual char const* what () const throw() { return "Invalid Modified Julian Date sent."; };
-          };
-          class MJDMax : public BadMJD {
-            public:
-              virtual ~MJDMax () throw() {};
-              virtual char const* what () const throw() { return "Modified Julian Date exceeds 99999."; };
-          };
+          class BadMJD : public BadValue { public: virtual char const* what () const throw() { return "Invalid Modified Julian Date sent." ; }; };
+          class MJDMax : public BadMJD   { public: virtual char const* what () const throw() { return "Modified Julian Date exceeds 99999."; }; };
           
           // Invalid offset.
-          class BadOffset : public BadValue {
-            public:
-              virtual ~BadOffset () throw() {};
-              virtual char const* what () const throw() { return "Invalid offset."; };
-          };
-          class OffsetMin : public BadOffset {
-            public:
-              virtual ~OffsetMin () throw() {};
-              virtual char const* what () const throw() { return "Offset is below minimum of -720."; };
-          };
-          class OffsetMax : public BadOffset {
-            public:
-              virtual ~OffsetMax () throw() {};
-              virtual char const* what () const throw() { return "Offset is above maximum of 720."; };
-          };
+          class BadOffset : public BadValue  { public: virtual char const* what () const throw() { return "Invalid offset."                 ; }; };
+          class OffsetMin : public BadOffset { public: virtual char const* what () const throw() { return "Offset is below minimum of -720."; }; };
+          class OffsetMax : public BadOffset { public: virtual char const* what () const throw() { return "Offset is above maximum of 720." ; }; };
           
           // Invalid time.
-          class InvalidTime : public BadValue {
-            public:
-              virtual ~InvalidTime () throw() {};
-              virtual char const* what () const throw() { return "Invalid time specified."; };
-          };
+          class InvalidTime : public BadValue { public: virtual char const* what () const throw() { return "Invalid time specified."; }; };
           
           // The year zero does not exist.
-          class NoYearZero : public InvalidTime {
-            public:
-              virtual ~NoYearZero () throw() {};
-              virtual char const* what () const throw() { return "There is no year 0."; }
-          };
+          class NoYearZero : public InvalidTime { public: virtual char const* what () const throw() { return "There is no year 0."; } };
           
           // Error making a system call.
           class SysCallError : public Base {
@@ -292,8 +257,8 @@ namespace DAC {
                   return "Error making the requested system call. Error creating message string.";
                 }
               };
-              virtual SysCallError& Errno (int const errnum) throw() { _errnum = errnum; return *this; };
-              int Errno () const throw() { return _errnum; };
+              virtual SysCallError& Errno (int const errnum) { _errnum = errnum; return *this; };
+              int Errno () const { return _errnum; };
             private:
               int _errnum;
           };
@@ -310,7 +275,7 @@ namespace DAC {
                   return "Error calling gettimeofday(). Error creating message string.";
                 }
               };
-              virtual SysCall_gettimeofday& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
+              virtual SysCall_gettimeofday& Errno (int const errnum) { SysCallError::Errno(errnum); return *this; };
           };
   #endif
   #if defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
@@ -326,7 +291,7 @@ namespace DAC {
                   return "Error calling time(). Error creating message string.";
                 }
               };
-              virtual SysCall_time& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
+              virtual SysCall_time& Errno (int const errnum) { SysCallError::Errno(errnum); return *this; };
           };
   #endif
   #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME_R) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME_R)
@@ -342,7 +307,7 @@ namespace DAC {
                   return "Error calling gmtime_r(). Error creating message string.";
                 }
               };
-              virtual SysCall_gmtime_r& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
+              virtual SysCall_gmtime_r& Errno (int const errnum) { SysCallError::Errno(errnum); return *this; };
           };
   #endif
   #if defined(TIMESTAMP_SYSTIME_GETTIMEOFDAY_GMTIME) || defined(TIMESTAMP_SYSTIME_TIME_GMTIME)
@@ -358,7 +323,7 @@ namespace DAC {
                   return "Error calling gmtime(). Error creating message string.";
                 }
               };
-              virtual SysCall_gmtime& Errno (int const errnum) throw() { SysCallError::Errno(errnum); return *this; };
+              virtual SysCall_gmtime& Errno (int const errnum) { SysCallError::Errno(errnum); return *this; };
           };
   #endif
           

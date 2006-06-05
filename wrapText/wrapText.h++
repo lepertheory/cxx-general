@@ -47,32 +47,16 @@ namespace DAC {
         public:
           
           // All errors are based off this.
-          class Base : public Exception {
-            public:
-              virtual ~Base () throw() {};
-              virtual char const* what () const throw() { return "Unknown error in wrapText()."; };
-          };
+          class Base : public Exception { public: virtual char const* what () const throw() { return "Unknown error in wrapText()."; }; };
           
           // No pointer to text to wrap was provided.
-          class NullText : public Base {
-            public:
-              virtual ~NullText () throw() {};
-              virtual char const* what () const throw() { return "No pointer to text to wrap was provided."; };
-          };
+          class NullText : public Base { public: virtual char const* what () const throw() { return "No pointer to text to wrap was provided."; }; };
           
           // Cannot wrap to zero width.
-          class ZeroWidth : public Base {
-            public:
-              virtual ~ZeroWidth () throw() {};
-              virtual char const* what () const throw() { return "Cannot wrap to zero width."; };
-          };
+          class ZeroWidth : public Base { public: virtual char const* what () const throw() { return "Cannot wrap to zero width."; }; };
           
           // Indent greater than wrap width.
-          class IndentOverrun : public Base {
-            public:
-              virtual ~IndentOverrun () throw() {};
-              virtual char const* what () const throw() { return "Indent leaves no room for text."; };
-          };
+          class IndentOverrun : public Base { public: virtual char const* what () const throw() { return "Indent leaves no room for text."; }; };
           
           // POI past end of string.
           class POIOverrun : public Base {

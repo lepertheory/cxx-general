@@ -23,19 +23,19 @@ namespace DAC {
   // Functions.
   
   // Convert a string to uppercase.
-  std::string& uppercase (std::string& text) throw();
+  std::string& uppercase (std::string& text);
   
   // Convert a string to lowercase.
-  std::string& lowercase (std::string& text) throw();
+  std::string& lowercase (std::string& text);
   
   // Convert a string.
-  std::string& convert_string (std::string& text, char (*char_conversion) (char const)) throw();
+  std::string& convert_string (std::string& text, char (*char_conversion) (char const));
   
   // Convert a single character to uppercase.
-  char char_uppercase (char const character) throw();
+  char char_uppercase (char const character);
   
   // Convert a single character to lowercase.
-  char char_lowercase (char const character) throw();
+  char char_lowercase (char const character);
   
   /***************************************************************************
    * Inline and template definitions.
@@ -44,17 +44,17 @@ namespace DAC {
   /*
    * Convert a string to uppercase.
    */
-  inline std::string& uppercase (std::string& text) throw() { return convert_string(text, char_uppercase); }
+  inline std::string& uppercase (std::string& text) { return convert_string(text, char_uppercase); }
   
   /*
    * Convert a string to lowercase.
    */
-  inline std::string& lowercase (std::string& text) throw() { return convert_string(text, char_lowercase); }
+  inline std::string& lowercase (std::string& text) { return convert_string(text, char_lowercase); }
   
   /*
    * Convert a string.
    */
-  inline std::string& convert_string (std::string& text, char (*char_conversion) (char const)) throw() {
+  inline std::string& convert_string (std::string& text, char (*char_conversion) (char const)) {
     
     // Apply the conversion character by character.
     for (std::string::iterator i = text.begin(); i != text.end(); ++i) {
@@ -69,12 +69,12 @@ namespace DAC {
   /*
    * Convert a single character to uppercase.
    */
-  inline char char_uppercase (char const character) throw() { return std::toupper(character); }
+  inline char char_uppercase (char const character) { return std::toupper(character); }
   
   /*
    * Convert a single character to lowercase.
    */
-  inline char char_lowercase (char const character) throw() { return std::tolower(character); }
+  inline char char_lowercase (char const character) { return std::tolower(character); }
   
 }
 

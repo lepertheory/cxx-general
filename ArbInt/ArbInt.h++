@@ -68,12 +68,13 @@ namespace DAC {
         public:
           
           // All ArbInt errors are based off of this.
-          class Base : public Exception { public: virtual char const* what () const { return "Undefined error in ArbInt."; }; };
+          class Base : public Exception { public: virtual char const* what () const throw() { return "Undefined error in ArbInt."; }; };
           
           // Bad format.
           class BadFormat : public Base {
             public:
-              virtual char const* what () const {
+              virtual ~BadFormat () throw() {};
+              virtual char const* what () const throw() {
                 try {
                   std::string tmpmsg(std::string(_problem) + " at position " + DAC::to_string(SafeInt<std::string::size_type>(_position) + 1) + ".");
                   return Exception::buffer_message(tmpmsg);
@@ -91,22 +92,22 @@ namespace DAC {
           };
           
           // Attempt to set ArbInt to a negative number.
-          class Negative : public Base { public: virtual char const* what () const { return "Attempt to set ArbInt to a negative number."; }; };
+          class Negative : public Base { public: virtual char const* what () const throw() { return "Attempt to set ArbInt to a negative number."; }; };
           
           // Operation overruns container size. Generic version first for easy
           // catching, then specialized version based off that.
-          class Overrun : public Base { public: virtual char const* what () const { return "Instruction overruns end of container."; }; };
+          class Overrun : public Base { public: virtual char const* what () const throw() { return "Instruction overruns end of container."; }; };
           
           // Divide by zero.
-          class DivByZero : public Base { public: virtual char const* what () const { return "Divide by zero."; }; };
+          class DivByZero : public Base { public: virtual char const* what () const throw() { return "Divide by zero."; }; };
           
           // Overflow converting to a scalar type.
-          class ScalarOverflow : public Base { public: virtual char const* what () const { return "Number overflows requested scalar type."; }; };
+          class ScalarOverflow : public Base { public: virtual char const* what () const throw() { return "Number overflows requested scalar type."; }; };
           
           // Requested base is out of range.
-          class BaseOutOfRange    : public Base           { public: virtual char const* what () const { return "Requested base is out of range.";  }; };
-          class BaseOutOfRangeMin : public BaseOutOfRange { public: virtual char const* what () const { return "Requested base is below minimum."; }; };
-          class BaseOutOfRangeMax : public BaseOutOfRange { public: virtual char const* what () const { return "Requested base is above maximum."; }; };
+          class BaseOutOfRange    : public Base           { public: virtual char const* what () const throw() { return "Requested base is out of range.";  }; };
+          class BaseOutOfRangeMin : public BaseOutOfRange { public: virtual char const* what () const throw() { return "Requested base is below minimum."; }; };
+          class BaseOutOfRangeMax : public BaseOutOfRange { public: virtual char const* what () const throw() { return "Requested base is above maximum."; }; };
         
         // Private constructor, cannot instantiate this class.
         private:
@@ -521,31 +522,31 @@ namespace DAC {
       // Function members.
       
       // Perform carry or borrow.
-      ArbInt& _carry  (_DigsT::size_type start) throw();
-      ArbInt& _borrow (_DigsT::size_type start) throw();
+      ArbInt& _carry  (_DigsT::size_type start);
+      ArbInt& _borrow (_DigsT::size_type start);
       
       // Trim insignificant zeros.
-      ArbInt& _trimZeros () throw();
+      ArbInt& _trimZeros ();
       
       // Bit shift this number.
-      ArbInt& _shift       (ArbInt                     const& bits,                                     _Dir const dir) throw(Errors::Overrun);
-      ArbInt& _shift       (SafeInt<_DigsT::size_type> const  digits, SafeInt<unsigned int> const bits, _Dir const dir) throw(Errors::Overrun);
-      ArbInt& _shiftDigits (SafeInt<_DigsT::size_type> const  digits,                                   _Dir const dir) throw(Errors::Overrun);
-      ArbInt& _shiftBits   (                                          SafeInt<unsigned int> const bits, _Dir const dir) throw(Errors::Overrun);
+      ArbInt& _shift       (ArbInt                     const& bits,                                     _Dir const dir);
+      ArbInt& _shift       (SafeInt<_DigsT::size_type> const  digits, SafeInt<unsigned int> const bits, _Dir const dir);
+      ArbInt& _shiftDigits (SafeInt<_DigsT::size_type> const  digits,                                   _Dir const dir);
+      ArbInt& _shiftBits   (                                          SafeInt<unsigned int> const bits, _Dir const dir);
       
       /***********************************************************************/
       // Static function members.
       
       // Trim zeros from a given container.
-      template <class T> static void s_trimZerosB (T& c) throw();
-      template <class T> static void s_trimZerosE (T& c) throw();
-      template <class T> static void s_trimZeros  (T& c) throw();
+      template <class T> static void s_trimZerosB (T& c);
+      template <class T> static void s_trimZerosE (T& c);
+      template <class T> static void s_trimZeros  (T& c);
       
       // Do long division on a given container. Returns the remainder.
-      template <class DivndT, class DivorT> static DivorT s_longDiv (DivndT& divnd, DivorT const divor, value_type const base) throw();
+      template <class DivndT, class DivorT> static DivorT s_longDiv (DivndT& divnd, DivorT const divor, value_type const base);
       
       // Convert a container from one base to another.
-      template <class FT, class TT> static void s_baseConv (FT const& from, value_type const frombase, TT& to, value_type const tobase) throw();
+      template <class FT, class TT> static void s_baseConv (FT const& from, value_type const frombase, TT& to, value_type const tobase);
       
   };
   
@@ -559,7 +560,7 @@ namespace DAC {
   std::istream&       operator >> (std::istream&       l, ArbInt&       r);
   
   // Arithmetic operators.
-                     ArbInt operator * (ArbInt     const& l, ArbInt     const& r) throw();
+                     ArbInt operator * (ArbInt     const& l, ArbInt     const& r);
   template <class T> ArbInt operator * (ArbInt     const& l, SafeInt<T> const  r);
   template <class T> ArbInt operator * (SafeInt<T> const  l, ArbInt     const& r);
   template <class T> ArbInt operator * (ArbInt     const& l, T          const  r);
@@ -591,7 +592,7 @@ namespace DAC {
   template <class T> ArbInt operator << (SafeInt<T> const  l, ArbInt     const& r);
   template <class T> ArbInt operator << (ArbInt     const& l, T          const  r);
   template <class T> ArbInt operator << (T          const  l, ArbInt     const& r);
-                     ArbInt operator >> (ArbInt     const& l, ArbInt     const& r) throw(ArbInt::Errors::Overrun);
+                     ArbInt operator >> (ArbInt     const& l, ArbInt     const& r);
   template <class T> ArbInt operator >> (ArbInt     const& l, SafeInt<T> const  r);
   template <class T> ArbInt operator >> (SafeInt<T> const  l, ArbInt     const& r);
   template <class T> ArbInt operator >> (ArbInt     const& l, T          const  r);
@@ -679,7 +680,7 @@ namespace DAC {
   template <class T> SafeInt<T>& operator <<= (SafeInt<T>& l, ArbInt     const& r);
   template <class T> ArbInt&     operator <<= (ArbInt&     l, T          const  r);
   template <class T> T&          operator <<= (T&          l, ArbInt     const& r);
-                     ArbInt&     operator >>= (ArbInt&     l, ArbInt     const& r) throw(ArbInt::Errors::Overrun);
+                     ArbInt&     operator >>= (ArbInt&     l, ArbInt     const& r);
   template <class T> ArbInt&     operator >>= (ArbInt&     l, SafeInt<T> const  r);
   template <class T> SafeInt<T>& operator >>= (SafeInt<T>& l, ArbInt     const& r);
   template <class T> ArbInt&     operator >>= (ArbInt&     l, T          const  r);
@@ -712,7 +713,7 @@ namespace DAC {
   /*
    * Conversion constructor.
    */
-  template <class T> ArbInt::ArbInt (T const number) throw(Errors::Negative) {
+  template <class T> ArbInt::ArbInt (T const number) {
     
     // Initialize.
     clear();
@@ -725,53 +726,53 @@ namespace DAC {
   /*
    * Increment / decrement operators.
    */
-  inline ArbInt& ArbInt::operator ++ (   ) throw(                ) { return op_add(1);                               }
-  inline ArbInt  ArbInt::operator ++ (int) throw(                ) { ArbInt retval(*this); op_add(1); return retval; }
-  inline ArbInt& ArbInt::operator -- (   ) throw(Errors::Negative) { return op_sub(1);                               }
-  inline ArbInt  ArbInt::operator -- (int) throw(Errors::Negative) { ArbInt retval(*this); op_sub(1); return retval; }
+  inline ArbInt& ArbInt::operator ++ (   ) { return op_add(1);                               }
+  inline ArbInt  ArbInt::operator ++ (int) { ArbInt retval(*this); op_add(1); return retval; }
+  inline ArbInt& ArbInt::operator -- (   ) { return op_sub(1);                               }
+  inline ArbInt  ArbInt::operator -- (int) { ArbInt retval(*this); op_sub(1); return retval; }
   
   /*
    * Unary sign operators.
    */
-  inline ArbInt ArbInt::operator + () const throw(                ) { return *this;             }
-  inline ArbInt ArbInt::operator - () const throw(Errors::Negative) { throw Errors::Negative(); }
+  inline ArbInt ArbInt::operator + () const { return *this;             }
+  inline ArbInt ArbInt::operator - () const { throw Errors::Negative(); }
   
   /*
    * Bitwise compliment.
    */
-  inline ArbInt ArbInt::operator ~ () const throw() { return ArbInt(*this).op_bit_cpm(); }
+  inline ArbInt ArbInt::operator ~ () const { return ArbInt(*this).op_bit_cpm(); }
   
   /*
    * Casting operators.
    */
-  inline ArbInt::operator bool           () const throw(                      ) { return !isZero();                   }
-  inline ArbInt::operator char           () const throw(Errors::ScalarOverflow) { return Value<char              >(); }
-  inline ArbInt::operator signed   char  () const throw(Errors::ScalarOverflow) { return Value<signed   char     >(); }
-  inline ArbInt::operator unsigned char  () const throw(Errors::ScalarOverflow) { return Value<unsigned char     >(); }
-  inline ArbInt::operator wchar_t        () const throw(Errors::ScalarOverflow) { return Value<wchar_t           >(); }
-  inline ArbInt::operator short          () const throw(Errors::ScalarOverflow) { return Value<signed   short int>(); }
-  inline ArbInt::operator unsigned short () const throw(Errors::ScalarOverflow) { return Value<unsigned short int>(); }
-  inline ArbInt::operator int            () const throw(Errors::ScalarOverflow) { return Value<signed   int      >(); }
-  inline ArbInt::operator unsigned       () const throw(Errors::ScalarOverflow) { return Value<unsigned int      >(); }
-  inline ArbInt::operator long           () const throw(Errors::ScalarOverflow) { return Value<signed   long int >(); }
-  inline ArbInt::operator unsigned long  () const throw(Errors::ScalarOverflow) { return Value<unsigned long int >(); }
+  inline ArbInt::operator bool           () const { return !isZero();                   }
+  inline ArbInt::operator char           () const { return Value<char              >(); }
+  inline ArbInt::operator signed   char  () const { return Value<signed   char     >(); }
+  inline ArbInt::operator unsigned char  () const { return Value<unsigned char     >(); }
+  inline ArbInt::operator wchar_t        () const { return Value<wchar_t           >(); }
+  inline ArbInt::operator short          () const { return Value<signed   short int>(); }
+  inline ArbInt::operator unsigned short () const { return Value<unsigned short int>(); }
+  inline ArbInt::operator int            () const { return Value<signed   int      >(); }
+  inline ArbInt::operator unsigned       () const { return Value<unsigned int      >(); }
+  inline ArbInt::operator long           () const { return Value<signed   long int >(); }
+  inline ArbInt::operator unsigned long  () const { return Value<unsigned long int >(); }
   
   /*
    * Assignment operator.
    */
-                     inline ArbInt& ArbInt::operator = (ArbInt      const& number) throw(                 ) { set(number); return *this; }
-                     inline ArbInt& ArbInt::operator = (std::string const& number) throw(Errors::BadFormat) { set(number); return *this; }
-  template <class T> inline ArbInt& ArbInt::operator = (T           const  number) throw(Errors::Negative ) { set(number); return *this; }
+                     inline ArbInt& ArbInt::operator = (ArbInt      const& number) { set(number); return *this; }
+                     inline ArbInt& ArbInt::operator = (std::string const& number) { set(number); return *this; }
+  template <class T> inline ArbInt& ArbInt::operator = (T           const  number) { set(number); return *this; }
   
   /*
    * Get the base of this number.
    */
-  inline ArbInt::value_type ArbInt::Base () const throw() { return _base; }
+  inline ArbInt::value_type ArbInt::Base () const { return _base; }
   
   /*
    * Get the value of this number.
    */
-  template <class T> T ArbInt::Value () const throw(Errors::ScalarOverflow) {
+  template <class T> T ArbInt::Value () const {
     SafeInt<T> retval   ;
     SafeInt<T> mag   (1);
     for (typename _DigsT::const_iterator i = _digits.begin(); i != _digits.end(); ++i) {
@@ -790,7 +791,7 @@ namespace DAC {
   /*
    * Set the base of this number.
    */
-  inline ArbInt& ArbInt::Base (value_type const base) throw(Errors::BaseOutOfRangeMin, Errors::BaseOutOfRangeMax) {
+  inline ArbInt& ArbInt::Base (value_type const base) {
     if (base < 2) {
       throw Errors::BaseOutOfRangeMin();
     }
@@ -804,126 +805,126 @@ namespace DAC {
   /*
    * Set the value of this number.
    */
-  template <class T> inline ArbInt& ArbInt::Value (T const number) throw(Errors::Negative) { set(number); return *this; }
+  template <class T> inline ArbInt& ArbInt::Value (T const number) { set(number); return *this; }
   
   /*
    * Set this number from another ArbInt.
    */
-  inline ArbInt& ArbInt::set (ArbInt const& number) throw() { _digits = number._digits; return *this; }
+  inline ArbInt& ArbInt::set (ArbInt const& number) { _digits = number._digits; return *this; }
   
   /*
    * Set this number from another number.
    */
-  template <class T> inline ArbInt& ArbInt::set (SafeInt<T> const number) throw(Errors::Negative) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::set (T          const number) throw(Errors::Negative) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::set (SafeInt<T> const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::set (T          const number) { _Set<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   /*
    * Make this number an exact bitwise copy.
    */
-  template <class T> ArbInt& ArbInt::setBitwise (SafeInt<T> const number) throw() { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> ArbInt& ArbInt::setBitwise (T          const number) throw() { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> ArbInt& ArbInt::setBitwise (SafeInt<T> const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> ArbInt& ArbInt::setBitwise (T          const number) { _SetBitwise<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   /*
    * Push a string onto the back of this number.
    */
   // FIXME: Make this actually check for negatives.
-                     inline void ArbInt::push_back (ArbInt     const& number) throw(                ) { push_back(ArbInt(number).Base(_base).to_string()); }
-  template <class T> inline void ArbInt::push_back (SafeInt<T> const  number) throw(Errors::Negative) { push_back(static_cast<T>(number));                 }
-  template <class T> inline void ArbInt::push_back (T          const  number) throw(Errors::Negative) { push_back(DAC::to_string(number));                 }
+                     inline void ArbInt::push_back (ArbInt     const& number) { push_back(ArbInt(number).Base(_base).to_string()); }
+  template <class T> inline void ArbInt::push_back (SafeInt<T> const  number) { push_back(static_cast<T>(number));                 }
+  template <class T> inline void ArbInt::push_back (T          const  number) { push_back(DAC::to_string(number));                 }
   
   /*
    * Convert this number to a string.
    */
-  inline std::string const& ArbInt::to_string (value_type const base) const throw() { return to_string(_strbuf, base); }
+  inline std::string const& ArbInt::to_string (value_type const base) const { return to_string(_strbuf, base); }
   
   /*
    * Arithmetic operator backends.
    */
-  template <class T> inline ArbInt& ArbInt::op_mul (SafeInt<T> const number)                          throw(Errors::Negative                   ) { _Mul<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_mul (T          const number)                          throw(Errors::Negative                   ) { _Mul<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_div (SafeInt<T> const number, ArbInt* const remainder) throw(Errors::Negative, Errors::DivByZero) { _Div<T, _GetNumType<T>::value>::op(*this, number, remainder); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_div (T          const number, ArbInt* const remainder) throw(Errors::Negative, Errors::DivByZero) { _Div<T, _GetNumType<T>::value>::op(*this, number, remainder); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_mod (SafeInt<T> const number)                          throw(Errors::DivByZero                  ) { _Mod<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_mod (T          const number)                          throw(Errors::DivByZero                  ) { _Mod<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_add (SafeInt<T> const number)                          throw(Errors::Negative                   ) { _Add<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_add (T          const number)                          throw(Errors::Negative                   ) { _Add<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_sub (SafeInt<T> const number)                          throw(Errors::Negative                   ) { _Sub<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_sub (T          const number)                          throw(Errors::Negative                   ) { _Sub<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_mul (SafeInt<T> const number)                          { _Mul<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_mul (T          const number)                          { _Mul<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_div (SafeInt<T> const number, ArbInt* const remainder) { _Div<T, _GetNumType<T>::value>::op(*this, number, remainder); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_div (T          const number, ArbInt* const remainder) { _Div<T, _GetNumType<T>::value>::op(*this, number, remainder); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_mod (SafeInt<T> const number)                          { _Mod<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_mod (T          const number)                          { _Mod<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_add (SafeInt<T> const number)                          { _Add<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_add (T          const number)                          { _Add<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_sub (SafeInt<T> const number)                          { _Sub<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_sub (T          const number)                          { _Sub<T, _GetNumType<T>::value>::op(*this, number);            return *this; }
   
   /*
    * Shift left, shift right.
    */
-                     inline ArbInt& ArbInt::op_shl (ArbInt     const& number) throw(Errors::Overrun) { _shift(number, _DIR_L);                            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_shl (SafeInt<T> const  number) throw(Errors::Overrun) { _ShL<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_shl (T          const  number) throw(Errors::Overrun) { _ShL<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-                     inline ArbInt& ArbInt::op_shr (ArbInt     const& number) throw(Errors::Overrun) { _shift(number, _DIR_R);                            return *this; }
-  template <class T> inline ArbInt& ArbInt::op_shr (SafeInt<T> const  number) throw(Errors::Overrun) { _ShR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_shr (T          const  number) throw(Errors::Overrun) { _ShR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+                     inline ArbInt& ArbInt::op_shl (ArbInt     const& number) { _shift(number, _DIR_L);                            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_shl (SafeInt<T> const  number) { _ShL<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_shl (T          const  number) { _ShL<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+                     inline ArbInt& ArbInt::op_shr (ArbInt     const& number) { _shift(number, _DIR_R);                            return *this; }
+  template <class T> inline ArbInt& ArbInt::op_shr (SafeInt<T> const  number) { _ShR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_shr (T          const  number) { _ShR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   /*
    * Comparison operators.
    */
-  template <class T> inline bool ArbInt::op_gt (SafeInt<T> const  number) const throw() { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_gt (T          const  number) const throw() { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
-                     inline bool ArbInt::op_ge (ArbInt     const& number) const throw() { return !op_lt(number);                                   }
-  template <class T> inline bool ArbInt::op_ge (SafeInt<T> const  number) const throw() { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_ge (T          const  number) const throw() { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_lt (SafeInt<T> const  number) const throw() { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_lt (T          const  number) const throw() { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
-                     inline bool ArbInt::op_le (ArbInt     const& number) const throw() { return !op_gt(number);                                   }
-  template <class T> inline bool ArbInt::op_le (SafeInt<T> const  number) const throw() { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_le (T          const  number) const throw() { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_eq (SafeInt<T> const  number) const throw() { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_eq (T          const  number) const throw() { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
-                     inline bool ArbInt::op_ne (ArbInt     const& number) const throw() { return !op_eq(number);                                   }
-  template <class T> inline bool ArbInt::op_ne (SafeInt<T> const  number) const throw() { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline bool ArbInt::op_ne (T          const  number) const throw() { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_gt (SafeInt<T> const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_gt (T          const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
+                     inline bool ArbInt::op_ge (ArbInt     const& number) const { return !op_lt(number);                                   }
+  template <class T> inline bool ArbInt::op_ge (SafeInt<T> const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_ge (T          const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_lt (SafeInt<T> const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_lt (T          const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
+                     inline bool ArbInt::op_le (ArbInt     const& number) const { return !op_gt(number);                                   }
+  template <class T> inline bool ArbInt::op_le (SafeInt<T> const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_le (T          const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_eq (SafeInt<T> const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_eq (T          const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
+                     inline bool ArbInt::op_ne (ArbInt     const& number) const { return !op_eq(number);                                   }
+  template <class T> inline bool ArbInt::op_ne (SafeInt<T> const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_ne (T          const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
   
   /*
    * Bitwise operator backends.
    */
-  template <class T> inline ArbInt& ArbInt::op_bit_and (SafeInt<T> const number) throw() { _Bit_AND<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_and (T          const number) throw() { _Bit_AND<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_ior (SafeInt<T> const number) throw() { _Bit_IOR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_ior (T          const number) throw() { _Bit_IOR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_xor (SafeInt<T> const number) throw() { _Bit_XOR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_xor (T          const number) throw() { _Bit_XOR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_and (SafeInt<T> const number) { _Bit_AND<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_and (T          const number) { _Bit_AND<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_ior (SafeInt<T> const number) { _Bit_IOR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_ior (T          const number) { _Bit_IOR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_xor (SafeInt<T> const number) { _Bit_XOR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_xor (T          const number) { _Bit_XOR<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   /*
    * Tests if this number is equal to zero.
    */
-  inline bool ArbInt::isZero () const throw() { return _digits.empty(); }
+  inline bool ArbInt::isZero () const { return _digits.empty(); }
   
   /*
    * Tests if this number is odd or even.
    */
-  inline bool ArbInt::isOdd  () const throw() { return !isZero() && (_digits.front() & 1); }
-  inline bool ArbInt::isEven () const throw() { return !isOdd();                            }
+  inline bool ArbInt::isOdd  () const { return !isZero() && (_digits.front() & 1); }
+  inline bool ArbInt::isEven () const { return !isOdd();                            }
   
   /*
    * Get the number of bits in this number.
    */
-  inline ArbInt ArbInt::bitsInNumber () const throw() { return (_digits.empty() ? ArbInt(0) : ArbInt(_digits.size()) * s_digitbits - (s_digitbits - SafeInt<_DigT>(_digits.back()).bitsInNumber())); }
+  inline ArbInt ArbInt::bitsInNumber () const { return (_digits.empty() ? ArbInt(0) : ArbInt(_digits.size()) * s_digitbits - (s_digitbits - SafeInt<_DigT>(_digits.back()).bitsInNumber())); }
   
   /*
    * Placeholder for automatic pow conversion.
    */
-  template <class T> inline ArbInt ArbInt::pow (T const exp) throw(Errors::Negative) { return pow(ArbInt(exp)); }
+  template <class T> inline ArbInt ArbInt::pow (T const exp) { return pow(ArbInt(exp)); }
   
   /*
    * Trim insignificant zeros.
    */
-  inline ArbInt& ArbInt::_trimZeros () throw() { s_trimZerosE(_digits); return *this; }
+  inline ArbInt& ArbInt::_trimZeros () { s_trimZerosE(_digits); return *this; }
   
   /*
    * Trim leading and trailing zeros from a given container.
    */
-  template <class T> inline void ArbInt::s_trimZeros (T& c) throw() { s_trimZerosB(c); s_trimZerosE(c); }
+  template <class T> inline void ArbInt::s_trimZeros (T& c) { s_trimZerosB(c); s_trimZerosE(c); }
   
   /*
    * Trim leading zeros from a given container.
    */
-  template <class T> void ArbInt::s_trimZerosB (T& c) throw() {
+  template <class T> void ArbInt::s_trimZerosB (T& c) {
     
     // Nothing to do if empty.
     if (!c.empty()) {
@@ -944,7 +945,7 @@ namespace DAC {
   /*
    * Trim trailing zeros from a given container.
    */
-  template <class T> void ArbInt::s_trimZerosE (T& c) throw() {
+  template <class T> void ArbInt::s_trimZerosE (T& c) {
     
     // Nothing to do if empty.
     if (!c.empty()) {
@@ -966,7 +967,7 @@ namespace DAC {
    * Do long division on a given container in the specified base. Divisor
    * type must be 2x base. This is not checked, so be careful!
    */
-  template <class DivndT, class DivorT> DivorT ArbInt::s_longDiv (DivndT& divnd, DivorT const divor, value_type const base) throw() {
+  template <class DivndT, class DivorT> DivorT ArbInt::s_longDiv (DivndT& divnd, DivorT const divor, value_type const base) {
     
     // Group of digits to divide.
     SafeInt<DivorT> dgroup;
@@ -1009,7 +1010,7 @@ namespace DAC {
    * 2^(bits/2) of from or smaller, tobase must be 2^(bits/2) of to or
    * smaller.
    */
-  template <class FT, class TT> void ArbInt::s_baseConv (FT const& from, value_type const frombase, TT& to, value_type const tobase) throw() {
+  template <class FT, class TT> void ArbInt::s_baseConv (FT const& from, value_type const frombase, TT& to, value_type const tobase) {
     
     // Empty out target container.
     to.clear();
@@ -1048,7 +1049,7 @@ namespace DAC {
   /*
    * Set from an unsigned integer type.
    */
-  template <class T> void ArbInt::_Set<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Set<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // Work area.
     ArbInt::_DigsT new_digits;
@@ -1079,12 +1080,12 @@ namespace DAC {
     l._digits.swap(new_digits);
     
   }
-  template <class T> inline void ArbInt::_Set<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) throw() { ArbInt::_Set<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Set<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_Set<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Set from a signed integer type.
    */
-  template <class T> void ArbInt::_Set<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Negative) {
+  template <class T> void ArbInt::_Set<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If we were sent a negative number, error.
     if (r < 0) {
@@ -1095,12 +1096,12 @@ namespace DAC {
     ArbInt::_Set<T, ArbInt::_NUM_UINT>::op(l, r);
     
   }
-  template <class T> inline void ArbInt::_Set<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) throw(Errors::Negative) { ArbInt::_Set<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Set<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_Set<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Set from a floating-point type.
    */
-  template <class T> void ArbInt::_Set<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) throw(Errors::Negative) {
+  template <class T> void ArbInt::_Set<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
     
     // Round to the nearest whole number.
     T tmp = floor(r + 0.5);
@@ -1118,13 +1119,13 @@ namespace DAC {
   /*
    * Set a bitwise copy from an unsigned integer type.
    */
-  template <class T> inline void ArbInt::_SetBitwise<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw() { ArbInt::_Set<T, ArbInt::_NUM_UINT>::op(l, r);                    }
-  template <class T> inline void ArbInt::_SetBitwise<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T          const r) throw() { ArbInt::_SetBitwise<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_SetBitwise<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Set<T, ArbInt::_NUM_UINT>::op(l, r);                    }
+  template <class T> inline void ArbInt::_SetBitwise<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T          const r) { ArbInt::_SetBitwise<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Set a bitwise copy from a signed integer type.
    */
-  template <class T> void ArbInt::_SetBitwise<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_SetBitwise<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     if (r >= 0) {
       ArbInt::_Set<T, ArbInt::_NUM_UINT>::op(l, r);
@@ -1154,12 +1155,12 @@ namespace DAC {
     l._digits = new_digits;
     
   }
-  template <class T> inline void ArbInt::_SetBitwise<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) throw() { ArbInt::_SetBitwise<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_SetBitwise<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_SetBitwise<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Multiply by an unsigned integer type.
    */
-  template <class T> void ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If the number is too large to do in one step, resort to conversion to
     // ArbInt then multiply.
@@ -1200,12 +1201,12 @@ namespace DAC {
     l._digits.swap(retval._digits);
     
   }
-  template <class T> inline void ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) throw() { ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Multiply by a signed integer type.
    */
-  template <class T> void ArbInt::_Mul<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Negative) {
+  template <class T> void ArbInt::_Mul<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If we were sent a negative number, error.
     if (r < 0) {
@@ -1216,17 +1217,17 @@ namespace DAC {
     ArbInt::_Mul<T, ArbInt::_NUM_UINT>::op(l, r);
     
   }
-  template <class T> inline void ArbInt::_Mul<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) throw(Errors::Negative) { ArbInt::_Mul<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Mul<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_Mul<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Multiply by a floating-point type.
    */
-  template <class T> inline void ArbInt::_Mul<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) throw(Errors::Negative) { l.op_mul(ArbInt(r)); }
+  template <class T> inline void ArbInt::_Mul<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) { l.op_mul(ArbInt(r)); }
   
   /*
    * Divide by an unsigned integer type.
    */
-  template <class T> void ArbInt::_Div<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r, ArbInt* const remainder) throw(Errors::DivByZero) {
+  template <class T> void ArbInt::_Div<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r, ArbInt* const remainder) {
     
     // Cannot divide by zero.
     if (r == 0) {
@@ -1257,12 +1258,12 @@ namespace DAC {
     }
     
   }
-  template <class T> inline void ArbInt::_Div<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r, ArbInt* const remainder) throw(Errors::DivByZero) { ArbInt::_Div<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r), remainder); }
+  template <class T> inline void ArbInt::_Div<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r, ArbInt* const remainder) { ArbInt::_Div<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r), remainder); }
   
   /*
    * Divide by a signed integer type.
    */
-  template <class T> void ArbInt::_Div<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r, ArbInt* const remainder) throw(Errors::DivByZero, Errors::Negative) {
+  template <class T> void ArbInt::_Div<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r, ArbInt* const remainder) {
     
     // Cannot return a negative number.
     if (r < 0) {
@@ -1273,17 +1274,17 @@ namespace DAC {
     ArbInt::_Div<T, ArbInt::_NUM_UINT>::op(l, r, remainder);
     
   }
-  template <class T> inline void ArbInt::_Div<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r, ArbInt* const remainder) throw(Errors::DivByZero, Errors::Negative) { ArbInt::_Div<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r), remainder); }
+  template <class T> inline void ArbInt::_Div<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r, ArbInt* const remainder) { ArbInt::_Div<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r), remainder); }
   
   /*
    * Divide by a floating-point type.
    */
-  template <class T> inline void ArbInt::_Div<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r, ArbInt* const remainder) throw(Errors::DivByZero, Errors::Negative) { l.op_div(Arbint(r)); }
+  template <class T> inline void ArbInt::_Div<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r, ArbInt* const remainder) { l.op_div(Arbint(r)); }
   
   /*
    * Modulo divide by an unsigned integer type.
    */
-  template <class T> void ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::DivByZero) {
+  template <class T> void ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // Work area.
     ArbInt retval;
@@ -1296,12 +1297,12 @@ namespace DAC {
     l._digits = retval._digits;
     
   }
-  template <class T> inline void ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) throw(Errors::DivByZero) { ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_Mod<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Modulo divide by a signed integer type.
    */
-  template <class T> void ArbInt::_Mod<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::DivByZero) {
+  template <class T> void ArbInt::_Mod<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // Modulo division by a negative number does not affect the sign of the
     // result, so use the absolute value. Catch the rare circumstance where
@@ -1320,13 +1321,13 @@ namespace DAC {
     }
     
   }
-  template <class T> inline void ArbInt::_Mod<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) throw(Errors::DivByZero) { ArbInt::_Mod<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Mod<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_Mod<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Modulo divide by a floating-point type.
    */
   // FIXME: See if all this is necessary.
-  template <class T> void ArbInt::_Mod<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) throw(Errors::DivByZero) {
+  template <class T> void ArbInt::_Mod<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
     
     // Round to the nearest whole number.
     T tmp = floor(r + 0.5);
@@ -1344,7 +1345,7 @@ namespace DAC {
   /*
    * Add an unsigned integer type.
    */
-  template <class T> void ArbInt::_Add<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Add<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If the number is too large to add directly, resort to conversion to
     // ArbInt then add.
@@ -1367,12 +1368,12 @@ namespace DAC {
     }
     
   }
-  template <class T> inline void ArbInt::_Add<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) throw() { ArbInt::_Add<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Add<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_Add<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Add a signed integer type.
    */
-  template <class T> void ArbInt::_Add<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Negative) {
+  template <class T> void ArbInt::_Add<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If adding a negative, subtract the opposite. Use the same trick as in
     // _Mod to convert to a positive number.
@@ -1389,13 +1390,13 @@ namespace DAC {
     }
     
   }
-  template <class T> inline void ArbInt::_Add<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) throw(Errors::Negative) { ArbInt::_Add<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Add<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_Add<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Add a floating-point type.
    */
   // FIXME: See if this is necessary.
-  template <class T> void ArbInt::_Add<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) throw(Errors::Negative) {
+  template <class T> void ArbInt::_Add<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
     
     // Round to the nearest whole number.
     T tmp = floor(r + 0.5);
@@ -1414,7 +1415,7 @@ namespace DAC {
   /*
    * Subtract an unsigned integer type.
    */
-  template <class T> void ArbInt::_Sub<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Negative) {
+  template <class T> void ArbInt::_Sub<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If the number is too large to subtract directly, resort to conversion
     // to ArbInt then subtract. Convert any errors thrown.
@@ -1443,12 +1444,12 @@ namespace DAC {
     l._trimZeros();
     
   }
-  template <class T> inline void ArbInt::_Sub<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) throw(Errors::Negative) { ArbInt::_Sub<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Sub<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_Sub<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Subtract a signed integer type.
    */
-  template <class T> void ArbInt::_Sub<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Negative) {
+  template <class T> void ArbInt::_Sub<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
         
     // If subtracting a negative, add the opposite.
     if (r < 0) {
@@ -1466,13 +1467,13 @@ namespace DAC {
     }
     
   }
-  template <class T> inline void ArbInt::_Sub<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) throw(Errors::Negative) { ArbInt::_Sub<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Sub<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_Sub<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Subtract a floating-point type.
    */
   // FIXME: See if this is necessary.
-  template <class T> void ArbInt::_Sub<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) throw(Errors::Negative) {
+  template <class T> void ArbInt::_Sub<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
     
     // Round to the nearest whole number.
     T tmp = floor(r + 0.5);
@@ -1490,7 +1491,7 @@ namespace DAC {
   /*
    * Shift by an unsigned integer type.
    */
-  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r, _Dir const dir) throw(Errors::Overrun) {
+  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r, _Dir const dir) {
     
     // Only shift if it is needed.
     if (l && r) {
@@ -1521,12 +1522,12 @@ namespace DAC {
     }
     
   }
-  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r, _Dir const dir) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r), dir); }
+  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r, _Dir const dir) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r), dir); }
   
   /*
    * Shift by a signed integer type.
    */
-  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r, _Dir const dir) throw(Errors::Overrun) {
+  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r, _Dir const dir) {
     
     // If shifting a negative, shift abs in the opposite direction.
     if (r < 0) {
@@ -1543,13 +1544,13 @@ namespace DAC {
     }
     
   }
-  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r, _Dir const dir) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r), dir); }
+  template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r, _Dir const dir) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r), dir); }
   
   /*
    * Shift by a floating-point type.
    */
   // FIXME: See if this is necessary.
-  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r, _Dir const dir) throw(Errors::Overrun) {
+  template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r, _Dir const dir) {
     
     // Round to the nearest whole number.
     T tmp = floor(r + 0.5);
@@ -1566,25 +1567,25 @@ namespace DAC {
   /*
    * Shift left.
    */
-  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, _DIR_L); }
-  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T          const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, _DIR_L); }
-  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, r, _DIR_L); }
-  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T          const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, r, _DIR_L); }
-  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T          const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, r, _DIR_L); }
+  template <class T> inline void ArbInt::_ShL<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op(l, r, _DIR_L); }
   
   /*
    * Shift right.
    */
-  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, _DIR_R); }
-  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T          const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, _DIR_R); }
-  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, r, _DIR_R); }
-  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T          const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, r, _DIR_R); }
-  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T          const r) throw(Errors::Overrun) { ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_SINT>::op(l, r, _DIR_R); }
+  template <class T> inline void ArbInt::_ShR<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T          const r) { ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op(l, r, _DIR_R); }
   
   /*
    * Greater than an unsigned integer type.
    */
-  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) throw() {
+  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) {
     
     // If the number is too large to compare directly, resort to conversion to
     // ArbInt then compare.
@@ -1607,12 +1608,12 @@ namespace DAC {
     return l._digits[0] > r;
     
   }
-  template <class T> inline bool ArbInt::_GT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T const r) throw() { return ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline bool ArbInt::_GT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T const r) { return ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Greater than a signed integer type.
    */
-  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) throw() {
+  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) {
     
     // Always greater than negative numbers.
     if (r < 0) {
@@ -1623,12 +1624,12 @@ namespace DAC {
     return ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, r);
     
   }
-  template <class T> inline bool ArbInt::_GT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T const r) throw() { return ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline bool ArbInt::_GT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T const r) { return ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Greater than a floating-point type.
    */
-  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T const r) throw() {
+  template <class T> bool ArbInt::_GT<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T const r) {
     
     // Round to the nearest whole number.
     T tmp = floor(r + 0.5);
@@ -1646,16 +1647,16 @@ namespace DAC {
   /*
    * Greater than or equal to.
    */
-  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) throw() { return !ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) throw() { return !ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_LT<T, ArbInt::_NUM_FLPT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_GE<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T          const r) { return !ArbInt::_LT<T, ArbInt::_NUM_FLPT>::op(l, r); }
   
   /*
    * Less than an unsigned integer type.
    */
-  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) throw() {
+  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) {
     
     // If the number is too large to compare directly, resort to conversion to
     // ArbInt then compare.
@@ -1677,12 +1678,12 @@ namespace DAC {
     return l._digits[0] < r;
     
   }
-  template <class T> inline bool ArbInt::_LT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T const r) throw() { return ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline bool ArbInt::_LT<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T const r) { return ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Less than a signed integer type.
    */
-  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) throw() {
+  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) {
     
     // Never less than negative numbers.
     if (r < 0) {
@@ -1693,12 +1694,12 @@ namespace DAC {
     return ArbInt::_LT<T, ArbInt::_NUM_UINT>::op(l, r);
     
   }
-  template <class T> inline bool ArbInt::_LT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T const r) throw() { return ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline bool ArbInt::_LT<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T const r) { return ArbInt::_LT<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Less than a floating-point type.
    */
-  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T const r) throw() {
+  template <class T> bool ArbInt::_LT<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T const r) {
     
     // Round to the nearest whole number.
     T tmp = floor(r + 0.5);
@@ -1716,16 +1717,16 @@ namespace DAC {
   /*
    * Less than or equal to.
    */
-  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) throw() { return !ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) throw() { return !ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_GT<T, ArbInt::_NUM_FLPT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_GT<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_GT<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_LE<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T          const r) { return !ArbInt::_GT<T, ArbInt::_NUM_FLPT>::op(l, r); }
   
   /*
    * Equal to an unsigned integer type.
    */
-  template <class T> bool ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) throw() {
+  template <class T> bool ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) {
     
     // If the number is too large to compare directly, resort to conversion to
     // ArbInt then compare.
@@ -1747,12 +1748,12 @@ namespace DAC {
     return l._digits[0] == r;
     
   }
-  template <class T> inline bool ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T const r) throw() { return ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline bool ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T const r) { return ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Equal to a signed integer type.
    */
-  template <class T> bool ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) throw() {
+  template <class T> bool ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) {
     
     // Never equal to negative numbers.
     if (r < 0) {
@@ -1763,12 +1764,12 @@ namespace DAC {
     return ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op(l, r);
     
   }
-  template <class T> inline bool ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T const r) throw() { return ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline bool ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T const r) { return ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Equal to a floating-point type.
    */
-  template <class T> bool ArbInt::_EQ<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T const r) throw() {
+  template <class T> bool ArbInt::_EQ<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T const r) {
     
     // Round to the nearest whole number.
     T tmp = floor(r + 0.5);
@@ -1786,16 +1787,16 @@ namespace DAC {
   /*
    * Not equal.
    */
-  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) throw() { return !ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) throw() { return !ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op(l, r); }
-  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T          const r) throw() { return !ArbInt::_EQ<T, ArbInt::_NUM_FLPT>::op(l, r); }
+  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_UINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_EQ<T, ArbInt::_NUM_UINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, SafeInt<T> const r) { return !ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_SINT>::op (ArbInt const& l, T          const r) { return !ArbInt::_EQ<T, ArbInt::_NUM_SINT>::op(l, r); }
+  template <class T> inline bool ArbInt::_NE<T, ArbInt::_NUM_FLPT>::op (ArbInt const& l, T          const r) { return !ArbInt::_EQ<T, ArbInt::_NUM_FLPT>::op(l, r); }
   
   /*
    * Bitwise AND with an unsigned integer type.
    */
-  template <class T> void ArbInt::_Bit_AND<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Bit_AND<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If the number is too large to AND directly, resort to conversion to
     // ArbInt then AND.
@@ -1814,12 +1815,12 @@ namespace DAC {
     l._digits[0] &= r;
     
   }
-  template <class T> inline void ArbInt::_Bit_AND<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) throw() { ArbInt::_Bit_AND<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Bit_AND<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_Bit_AND<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Bitwise AND with a signed integer type.
    */
-  template <class T> void ArbInt::_Bit_AND<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Bit_AND<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If negative, convert to ArbInt and AND.
     if (r < 0) {
@@ -1831,12 +1832,12 @@ namespace DAC {
     ArbInt::_Bit_AND<T, ArbInt::_NUM_UINT>::op(l, r);
     
   }
-  template <class T> inline void ArbInt::_Bit_AND<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) throw() { ArbInt::_Bit_AND<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Bit_AND<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_Bit_AND<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Bitwise inclusive OR with an unsigned integer type.
    */
-  template <class T> void ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If the number is too large to OR directly, resort to conversion to
     // ArbInt then OR.
@@ -1855,12 +1856,12 @@ namespace DAC {
     l._digits[0] |= r;
     
   }
-  template <class T> inline void ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) throw() { ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Bitwise inclusive OR with a signed integer type.
    */
-  template <class T> void ArbInt::_Bit_IOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Bit_IOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If negative, convert to ArbInt and OR.
     if (r < 0) {
@@ -1872,12 +1873,12 @@ namespace DAC {
     ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op(l, r);
     
   }
-  template <class T> inline void ArbInt::_Bit_IOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) throw() { ArbInt::_Bit_IOR<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Bit_IOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { ArbInt::_Bit_IOR<T, ArbInt::_NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Bitwise exclusive OR with an unsigned integer type.
    */
-  template <class T> void ArbInt::_Bit_XOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Bit_XOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If the number is too large to OR directly, resort to conversion to
     // ArbInt then OR.
@@ -1896,12 +1897,12 @@ namespace DAC {
     l._digits[0] ^= r;
     
   }
-  template <class T> inline void ArbInt::_Bit_XOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) throw() { ArbInt::_Bit_XOR<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> inline void ArbInt::_Bit_XOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { ArbInt::_Bit_XOR<T, ArbInt::_NUM_UINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Bitwise exclusive OR with a signed integer type.
    */
-  template <class T> void ArbInt::_Bit_XOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) throw() {
+  template <class T> void ArbInt::_Bit_XOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     
     // If negative, convert to ArbInt and XOR.
     if (r < 0) {
@@ -1928,160 +1929,160 @@ namespace DAC {
   /*
    * Arithmetic operators.
    */
-                     inline ArbInt operator * (ArbInt     const& l, ArbInt     const& r) throw(                                                   ) { return ArbInt(l).op_mul(r); }
-  template <class T> inline ArbInt operator * (ArbInt     const& l, SafeInt<T> const  r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_mul(r); }
-  template <class T> inline ArbInt operator * (SafeInt<T> const  l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(r).op_mul(l); }
-  template <class T> inline ArbInt operator * (ArbInt     const& l, T          const  r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_mul(r); }
-  template <class T> inline ArbInt operator * (T          const  l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(r).op_mul(l); }
-                     inline ArbInt operator / (ArbInt     const& l, ArbInt     const& r) throw(                          ArbInt::Errors::DivByZero) { return ArbInt(l).op_div(r); }
-  template <class T> inline ArbInt operator / (ArbInt     const& l, SafeInt<T> const  r) throw(ArbInt::Errors::Negative, ArbInt::Errors::DivByZero) { return ArbInt(l).op_div(r); }
-  template <class T> inline ArbInt operator / (SafeInt<T> const  l, ArbInt     const& r) throw(ArbInt::Errors::Negative, ArbInt::Errors::DivByZero) { return ArbInt(l).op_div(r); }
-  template <class T> inline ArbInt operator / (ArbInt     const& l, T          const  r) throw(ArbInt::Errors::Negative, ArbInt::Errors::DivByZero) { return ArbInt(l).op_div(r); }
-  template <class T> inline ArbInt operator / (T          const  l, ArbInt     const& r) throw(ArbInt::Errors::Negative, ArbInt::Errors::DivByZero) { return ArbInt(l).op_div(r); }
-                     inline ArbInt operator % (ArbInt     const& l, ArbInt     const& r) throw(                          ArbInt::Errors::DivByZero) { return ArbInt(l).op_mod(r); }
-  template <class T> inline ArbInt operator % (ArbInt     const& l, SafeInt<T> const  r) throw(                          ArbInt::Errors::DivByZero) { return ArbInt(l).op_mod(r); }
-  template <class T> inline ArbInt operator % (SafeInt<T> const  l, ArbInt     const& r) throw(                          ArbInt::Errors::DivByZero) { return ArbInt(l).op_mod(r); }
-  template <class T> inline ArbInt operator % (ArbInt     const& l, T          const  r) throw(                          ArbInt::Errors::DivByZero) { return ArbInt(l).op_mod(r); }
-  template <class T> inline ArbInt operator % (T          const  l, ArbInt     const& r) throw(                          ArbInt::Errors::DivByZero) { return ArbInt(l).op_mod(r); }
-                     inline ArbInt operator + (ArbInt     const& l, ArbInt     const& r) throw(                                                   ) { return ArbInt(l).op_add(r); }
-  template <class T> inline ArbInt operator + (ArbInt     const& l, SafeInt<T> const  r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_add(r); }
-  template <class T> inline ArbInt operator + (SafeInt<T> const  l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(r).op_add(l); }
-  template <class T> inline ArbInt operator + (ArbInt     const& l, T          const  r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_add(r); }
-  template <class T> inline ArbInt operator + (T          const  l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(r).op_add(l); }
-                     inline ArbInt operator - (ArbInt     const& l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_sub(r); }
-  template <class T> inline ArbInt operator - (ArbInt     const& l, SafeInt<T> const  r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_sub(r); }
-  template <class T> inline ArbInt operator - (SafeInt<T> const  l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_sub(r); }
-  template <class T> inline ArbInt operator - (ArbInt     const& l, T          const  r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_sub(r); }
-  template <class T> inline ArbInt operator - (T          const  l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { return ArbInt(l).op_sub(r); }
+                     inline ArbInt operator * (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_mul(r); }
+  template <class T> inline ArbInt operator * (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_mul(r); }
+  template <class T> inline ArbInt operator * (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_mul(l); }
+  template <class T> inline ArbInt operator * (ArbInt     const& l, T          const  r) { return ArbInt(l).op_mul(r); }
+  template <class T> inline ArbInt operator * (T          const  l, ArbInt     const& r) { return ArbInt(r).op_mul(l); }
+                     inline ArbInt operator / (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_div(r); }
+  template <class T> inline ArbInt operator / (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_div(r); }
+  template <class T> inline ArbInt operator / (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_div(r); }
+  template <class T> inline ArbInt operator / (ArbInt     const& l, T          const  r) { return ArbInt(l).op_div(r); }
+  template <class T> inline ArbInt operator / (T          const  l, ArbInt     const& r) { return ArbInt(l).op_div(r); }
+                     inline ArbInt operator % (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_mod(r); }
+  template <class T> inline ArbInt operator % (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_mod(r); }
+  template <class T> inline ArbInt operator % (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_mod(r); }
+  template <class T> inline ArbInt operator % (ArbInt     const& l, T          const  r) { return ArbInt(l).op_mod(r); }
+  template <class T> inline ArbInt operator % (T          const  l, ArbInt     const& r) { return ArbInt(l).op_mod(r); }
+                     inline ArbInt operator + (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_add(r); }
+  template <class T> inline ArbInt operator + (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_add(r); }
+  template <class T> inline ArbInt operator + (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_add(l); }
+  template <class T> inline ArbInt operator + (ArbInt     const& l, T          const  r) { return ArbInt(l).op_add(r); }
+  template <class T> inline ArbInt operator + (T          const  l, ArbInt     const& r) { return ArbInt(r).op_add(l); }
+                     inline ArbInt operator - (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_sub(r); }
+  template <class T> inline ArbInt operator - (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_sub(r); }
+  template <class T> inline ArbInt operator - (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_sub(r); }
+  template <class T> inline ArbInt operator - (ArbInt     const& l, T          const  r) { return ArbInt(l).op_sub(r); }
+  template <class T> inline ArbInt operator - (T          const  l, ArbInt     const& r) { return ArbInt(l).op_sub(r); }
   
   /*
    * Bit shift operators.
    */
-                     inline ArbInt operator << (ArbInt     const& l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shl(r); }
-  template <class T> inline ArbInt operator << (ArbInt     const& l, SafeInt<T> const  r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shl(r); }
-  template <class T> inline ArbInt operator << (SafeInt<T> const  l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shl(r); }
-  template <class T> inline ArbInt operator << (ArbInt     const& l, T          const  r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shl(r); }
-  template <class T> inline ArbInt operator << (T          const  l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shl(r); }
-                     inline ArbInt operator >> (ArbInt     const& l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shr(r); }
-  template <class T> inline ArbInt operator >> (ArbInt     const& l, SafeInt<T> const  r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shr(r); }
-  template <class T> inline ArbInt operator >> (SafeInt<T> const  l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shr(r); }
-  template <class T> inline ArbInt operator >> (ArbInt     const& l, T          const  r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shr(r); }
-  template <class T> inline ArbInt operator >> (T          const  l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { return ArbInt(l).op_shr(r); }
+                     inline ArbInt operator << (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_shl(r); }
+  template <class T> inline ArbInt operator << (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_shl(r); }
+  template <class T> inline ArbInt operator << (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_shl(r); }
+  template <class T> inline ArbInt operator << (ArbInt     const& l, T          const  r) { return ArbInt(l).op_shl(r); }
+  template <class T> inline ArbInt operator << (T          const  l, ArbInt     const& r) { return ArbInt(l).op_shl(r); }
+                     inline ArbInt operator >> (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_shr(r); }
+  template <class T> inline ArbInt operator >> (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_shr(r); }
+  template <class T> inline ArbInt operator >> (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(l).op_shr(r); }
+  template <class T> inline ArbInt operator >> (ArbInt     const& l, T          const  r) { return ArbInt(l).op_shr(r); }
+  template <class T> inline ArbInt operator >> (T          const  l, ArbInt     const& r) { return ArbInt(l).op_shr(r); }
   
   /*
    * Comparsion operators.
    */
-                     inline bool operator >  (ArbInt     const& l, ArbInt     const& r) throw() { return  l.op_gt(r); }
-  template <class T> inline bool operator >  (ArbInt     const& l, SafeInt<T> const  r) throw() { return  l.op_gt(r); }
-  template <class T> inline bool operator >  (SafeInt<T> const  l, ArbInt     const& r) throw() { return !r.op_ge(l); }
-  template <class T> inline bool operator >  (ArbInt     const& l, T          const  r) throw() { return  l.op_gt(r); }
-  template <class T> inline bool operator >  (T          const  l, ArbInt     const& r) throw() { return !r.op_ge(l); }
-                     inline bool operator >= (ArbInt     const& l, ArbInt     const& r) throw() { return  l.op_ge(r); }
-  template <class T> inline bool operator >= (ArbInt     const& l, SafeInt<T> const  r) throw() { return  l.op_ge(r); }
-  template <class T> inline bool operator >= (SafeInt<T> const  l, ArbInt     const& r) throw() { return !r.op_gt(l); }
-  template <class T> inline bool operator >= (ArbInt     const& l, T          const  r) throw() { return  l.op_ge(r); }
-  template <class T> inline bool operator >= (T          const  l, ArbInt     const& r) throw() { return !r.op_gt(l); }
-                     inline bool operator <  (ArbInt     const& l, ArbInt     const& r) throw() { return  l.op_lt(r); }
-  template <class T> inline bool operator <  (ArbInt     const& l, SafeInt<T> const  r) throw() { return  l.op_lt(r); }
-  template <class T> inline bool operator <  (SafeInt<T> const  l, ArbInt     const& r) throw() { return !r.op_le(l); }
-  template <class T> inline bool operator <  (ArbInt     const& l, T          const  r) throw() { return  l.op_lt(r); }
-  template <class T> inline bool operator <  (T          const  l, ArbInt     const& r) throw() { return !r.op_le(l); }
-                     inline bool operator <= (ArbInt     const& l, ArbInt     const& r) throw() { return  l.op_le(r); }
-  template <class T> inline bool operator <= (ArbInt     const& l, SafeInt<T> const  r) throw() { return  l.op_le(r); }
-  template <class T> inline bool operator <= (SafeInt<T> const  l, ArbInt     const& r) throw() { return !r.op_lt(l); }
-  template <class T> inline bool operator <= (ArbInt     const& l, T          const  r) throw() { return  l.op_le(r); }
-  template <class T> inline bool operator <= (T          const  l, ArbInt     const& r) throw() { return !r.op_lt(l); }
-                     inline bool operator == (ArbInt     const& l, ArbInt     const& r) throw() { return  l.op_eq(r); }
-  template <class T> inline bool operator == (ArbInt     const& l, SafeInt<T> const  r) throw() { return  l.op_eq(r); }
-  template <class T> inline bool operator == (SafeInt<T> const  l, ArbInt     const& r) throw() { return  r.op_eq(l); }
-  template <class T> inline bool operator == (ArbInt     const& l, T          const  r) throw() { return  l.op_eq(r); }
-  template <class T> inline bool operator == (T          const  l, ArbInt     const& r) throw() { return  r.op_eq(l); }
-                     inline bool operator != (ArbInt     const& l, ArbInt     const& r) throw() { return  l.op_ne(r); }
-  template <class T> inline bool operator != (ArbInt     const& l, SafeInt<T> const  r) throw() { return  l.op_ne(r); }
-  template <class T> inline bool operator != (SafeInt<T> const  l, ArbInt     const& r) throw() { return  r.op_ne(l); }
-  template <class T> inline bool operator != (ArbInt     const& l, T          const  r) throw() { return  l.op_ne(r); }
-  template <class T> inline bool operator != (T          const  l, ArbInt     const& r) throw() { return  r.op_ne(l); }
+                     inline bool operator >  (ArbInt     const& l, ArbInt     const& r) { return  l.op_gt(r); }
+  template <class T> inline bool operator >  (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_gt(r); }
+  template <class T> inline bool operator >  (SafeInt<T> const  l, ArbInt     const& r) { return !r.op_ge(l); }
+  template <class T> inline bool operator >  (ArbInt     const& l, T          const  r) { return  l.op_gt(r); }
+  template <class T> inline bool operator >  (T          const  l, ArbInt     const& r) { return !r.op_ge(l); }
+                     inline bool operator >= (ArbInt     const& l, ArbInt     const& r) { return  l.op_ge(r); }
+  template <class T> inline bool operator >= (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_ge(r); }
+  template <class T> inline bool operator >= (SafeInt<T> const  l, ArbInt     const& r) { return !r.op_gt(l); }
+  template <class T> inline bool operator >= (ArbInt     const& l, T          const  r) { return  l.op_ge(r); }
+  template <class T> inline bool operator >= (T          const  l, ArbInt     const& r) { return !r.op_gt(l); }
+                     inline bool operator <  (ArbInt     const& l, ArbInt     const& r) { return  l.op_lt(r); }
+  template <class T> inline bool operator <  (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_lt(r); }
+  template <class T> inline bool operator <  (SafeInt<T> const  l, ArbInt     const& r) { return !r.op_le(l); }
+  template <class T> inline bool operator <  (ArbInt     const& l, T          const  r) { return  l.op_lt(r); }
+  template <class T> inline bool operator <  (T          const  l, ArbInt     const& r) { return !r.op_le(l); }
+                     inline bool operator <= (ArbInt     const& l, ArbInt     const& r) { return  l.op_le(r); }
+  template <class T> inline bool operator <= (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_le(r); }
+  template <class T> inline bool operator <= (SafeInt<T> const  l, ArbInt     const& r) { return !r.op_lt(l); }
+  template <class T> inline bool operator <= (ArbInt     const& l, T          const  r) { return  l.op_le(r); }
+  template <class T> inline bool operator <= (T          const  l, ArbInt     const& r) { return !r.op_lt(l); }
+                     inline bool operator == (ArbInt     const& l, ArbInt     const& r) { return  l.op_eq(r); }
+  template <class T> inline bool operator == (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_eq(r); }
+  template <class T> inline bool operator == (SafeInt<T> const  l, ArbInt     const& r) { return  r.op_eq(l); }
+  template <class T> inline bool operator == (ArbInt     const& l, T          const  r) { return  l.op_eq(r); }
+  template <class T> inline bool operator == (T          const  l, ArbInt     const& r) { return  r.op_eq(l); }
+                     inline bool operator != (ArbInt     const& l, ArbInt     const& r) { return  l.op_ne(r); }
+  template <class T> inline bool operator != (ArbInt     const& l, SafeInt<T> const  r) { return  l.op_ne(r); }
+  template <class T> inline bool operator != (SafeInt<T> const  l, ArbInt     const& r) { return  r.op_ne(l); }
+  template <class T> inline bool operator != (ArbInt     const& l, T          const  r) { return  l.op_ne(r); }
+  template <class T> inline bool operator != (T          const  l, ArbInt     const& r) { return  r.op_ne(l); }
   
   /*
    * Bitwise operators.
    */
-                     inline ArbInt operator & (ArbInt     const& l, ArbInt     const& r) throw() { return ArbInt(l).op_bit_and(r); }
-  template <class T> inline ArbInt operator & (ArbInt     const& l, SafeInt<T> const  r) throw() { return ArbInt(l).op_bit_and(r); }
-  template <class T> inline ArbInt operator & (SafeInt<T> const  l, ArbInt     const& r) throw() { return ArbInt(r).op_bit_and(l); }
-  template <class T> inline ArbInt operator & (ArbInt     const& l, T          const  r) throw() { return ArbInt(l).op_bit_and(r); }
-  template <class T> inline ArbInt operator & (T          const  l, ArbInt     const& r) throw() { return ArbInt(r).op_bit_and(l); }
-                     inline ArbInt operator | (ArbInt     const& l, ArbInt     const& r) throw() { return ArbInt(l).op_bit_ior(r); }
-  template <class T> inline ArbInt operator | (ArbInt     const& l, SafeInt<T> const  r) throw() { return ArbInt(l).op_bit_ior(r); }
-  template <class T> inline ArbInt operator | (SafeInt<T> const  l, ArbInt     const& r) throw() { return ArbInt(r).op_bit_ior(l); }
-  template <class T> inline ArbInt operator | (ArbInt     const& l, T          const  r) throw() { return ArbInt(l).op_bit_ior(r); }
-  template <class T> inline ArbInt operator | (T          const  l, ArbInt     const& r) throw() { return ArbInt(r).op_bit_ior(l); }
-                     inline ArbInt operator ^ (ArbInt     const& l, ArbInt     const& r) throw() { return ArbInt(l).op_bit_xor(r); }
-  template <class T> inline ArbInt operator ^ (ArbInt     const& l, SafeInt<T> const  r) throw() { return ArbInt(l).op_bit_xor(r); }
-  template <class T> inline ArbInt operator ^ (SafeInt<T> const  l, ArbInt     const& r) throw() { return ArbInt(r).op_bit_xor(l); }
-  template <class T> inline ArbInt operator ^ (ArbInt     const& l, T          const  r) throw() { return ArbInt(l).op_bit_xor(r); }
-  template <class T> inline ArbInt operator ^ (T          const  l, ArbInt     const& r) throw() { return ArbInt(r).op_bit_xor(l); }
+                     inline ArbInt operator & (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_bit_and(r); }
+  template <class T> inline ArbInt operator & (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_bit_and(r); }
+  template <class T> inline ArbInt operator & (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_bit_and(l); }
+  template <class T> inline ArbInt operator & (ArbInt     const& l, T          const  r) { return ArbInt(l).op_bit_and(r); }
+  template <class T> inline ArbInt operator & (T          const  l, ArbInt     const& r) { return ArbInt(r).op_bit_and(l); }
+                     inline ArbInt operator | (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_bit_ior(r); }
+  template <class T> inline ArbInt operator | (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_bit_ior(r); }
+  template <class T> inline ArbInt operator | (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_bit_ior(l); }
+  template <class T> inline ArbInt operator | (ArbInt     const& l, T          const  r) { return ArbInt(l).op_bit_ior(r); }
+  template <class T> inline ArbInt operator | (T          const  l, ArbInt     const& r) { return ArbInt(r).op_bit_ior(l); }
+                     inline ArbInt operator ^ (ArbInt     const& l, ArbInt     const& r) { return ArbInt(l).op_bit_xor(r); }
+  template <class T> inline ArbInt operator ^ (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt(l).op_bit_xor(r); }
+  template <class T> inline ArbInt operator ^ (SafeInt<T> const  l, ArbInt     const& r) { return ArbInt(r).op_bit_xor(l); }
+  template <class T> inline ArbInt operator ^ (ArbInt     const& l, T          const  r) { return ArbInt(l).op_bit_xor(r); }
+  template <class T> inline ArbInt operator ^ (T          const  l, ArbInt     const& r) { return ArbInt(r).op_bit_xor(l); }
   
   /*
    * Arithmetic assignment operators.
    */
-                     inline ArbInt&     operator *= (ArbInt&     l, ArbInt     const& r) throw(                                                   ) { return l.op_mul(r);                }
-  template <class T> inline ArbInt&     operator *= (ArbInt&     l, SafeInt<T> const  r) throw(ArbInt::Errors::Negative                           ) { return l.op_mul(r);                }
-  template <class T> inline SafeInt<T>& operator *= (SafeInt<T>& l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { l = ArbInt(l).op_mul(r); return l; }
-  template <class T> inline ArbInt&     operator *= (ArbInt&     l, T          const  r) throw(ArbInt::Errors::Negative                           ) { return l.op_mul(r);                }
-  template <class T> inline T&          operator *= (T&          l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { l = ArbInt(l).op_mul(r); return l; }
-                     inline ArbInt&     operator /= (ArbInt&     l, ArbInt     const& r) throw(                          ArbInt::Errors::DivByZero) { return l.op_div(r);                }
-  template <class T> inline ArbInt&     operator /= (ArbInt&     l, SafeInt<T> const  r) throw(ArbInt::Errors::Negative, ArbInt::Errors::DivByZero) { return l.op_div(r);                }
-  template <class T> inline SafeInt<T>& operator /= (SafeInt<T>& l, ArbInt     const& r) throw(ArbInt::Errors::Negative, ArbInt::Errors::DivByZero) { l = ArbInt(l).op_div(r); return l; }
-  template <class T> inline ArbInt&     operator /= (ArbInt&     l, T          const  r) throw(ArbInt::Errors::Negative, ArbInt::Errors::DivByZero) { return l.op_div(r);                }
-  template <class T> inline T&          operator /= (T&          l, ArbInt     const& r) throw(ArbInt::Errors::Negative, ArbInt::Errors::DivByZero) { l = ArbInt(l).op_div(r); return l; }
-                     inline ArbInt&     operator %= (ArbInt&     l, ArbInt     const& r) throw(                          ArbInt::Errors::DivByZero) { return l.op_mod(r);                }
-  template <class T> inline ArbInt&     operator %= (ArbInt&     l, SafeInt<T> const  r) throw(                          ArbInt::Errors::DivByZero) { return l.op_mod(r);                }
-  template <class T> inline SafeInt<T>& operator %= (SafeInt<T>& l, ArbInt     const& r) throw(                          ArbInt::Errors::DivByZero) { l = ArbInt(l).op_mod(r); return l; }
-  template <class T> inline ArbInt&     operator %= (ArbInt&     l, T          const  r) throw(                          ArbInt::Errors::DivByZero) { return l.op_mod(r);                }
-  template <class T> inline T&          operator %= (T&          l, ArbInt     const& r) throw(                          ArbInt::Errors::DivByZero) { l = ArbInt(l).op_mod(r); return l; }
-                     inline ArbInt&     operator += (ArbInt&     l, ArbInt     const& r) throw(                                                   ) { return l.op_add(r);                }
-  template <class T> inline ArbInt&     operator += (ArbInt&     l, SafeInt<T> const  r) throw(ArbInt::Errors::Negative                           ) { return l.op_add(r);                }
-  template <class T> inline SafeInt<T>& operator += (SafeInt<T>& l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { l = ArbInt(l).op_add(r); return l; }
-  template <class T> inline ArbInt&     operator += (ArbInt&     l, T          const  r) throw(ArbInt::Errors::Negative                           ) { return l.op_add(r);                }
-  template <class T> inline T&          operator += (T&          l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { l = ArbInt(l).op_add(r); return l; }
-                     inline ArbInt&     operator -= (ArbInt&     l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { return l.op_sub(r);                }
-  template <class T> inline ArbInt&     operator -= (ArbInt&     l, SafeInt<T> const  r) throw(ArbInt::Errors::Negative                           ) { return l.op_sub(r);                }
-  template <class T> inline SafeInt<T>& operator -= (SafeInt<T>& l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { l = ArbInt(l).op_sub(r); return l; }
-  template <class T> inline ArbInt&     operator -= (ArbInt&     l, T          const  r) throw(ArbInt::Errors::Negative                           ) { return l.op_sub(r);                }
-  template <class T> inline T&          operator -= (T&          l, ArbInt     const& r) throw(ArbInt::Errors::Negative                           ) { l = ArbInt(l).op_sub(r); return l; }
+                     inline ArbInt&     operator *= (ArbInt&     l, ArbInt     const& r) { return l.op_mul(r);                }
+  template <class T> inline ArbInt&     operator *= (ArbInt&     l, SafeInt<T> const  r) { return l.op_mul(r);                }
+  template <class T> inline SafeInt<T>& operator *= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_mul(r); return l; }
+  template <class T> inline ArbInt&     operator *= (ArbInt&     l, T          const  r) { return l.op_mul(r);                }
+  template <class T> inline T&          operator *= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_mul(r); return l; }
+                     inline ArbInt&     operator /= (ArbInt&     l, ArbInt     const& r) { return l.op_div(r);                }
+  template <class T> inline ArbInt&     operator /= (ArbInt&     l, SafeInt<T> const  r) { return l.op_div(r);                }
+  template <class T> inline SafeInt<T>& operator /= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_div(r); return l; }
+  template <class T> inline ArbInt&     operator /= (ArbInt&     l, T          const  r) { return l.op_div(r);                }
+  template <class T> inline T&          operator /= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_div(r); return l; }
+                     inline ArbInt&     operator %= (ArbInt&     l, ArbInt     const& r) { return l.op_mod(r);                }
+  template <class T> inline ArbInt&     operator %= (ArbInt&     l, SafeInt<T> const  r) { return l.op_mod(r);                }
+  template <class T> inline SafeInt<T>& operator %= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_mod(r); return l; }
+  template <class T> inline ArbInt&     operator %= (ArbInt&     l, T          const  r) { return l.op_mod(r);                }
+  template <class T> inline T&          operator %= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_mod(r); return l; }
+                     inline ArbInt&     operator += (ArbInt&     l, ArbInt     const& r) { return l.op_add(r);                }
+  template <class T> inline ArbInt&     operator += (ArbInt&     l, SafeInt<T> const  r) { return l.op_add(r);                }
+  template <class T> inline SafeInt<T>& operator += (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_add(r); return l; }
+  template <class T> inline ArbInt&     operator += (ArbInt&     l, T          const  r) { return l.op_add(r);                }
+  template <class T> inline T&          operator += (T&          l, ArbInt     const& r) { l = ArbInt(l).op_add(r); return l; }
+                     inline ArbInt&     operator -= (ArbInt&     l, ArbInt     const& r) { return l.op_sub(r);                }
+  template <class T> inline ArbInt&     operator -= (ArbInt&     l, SafeInt<T> const  r) { return l.op_sub(r);                }
+  template <class T> inline SafeInt<T>& operator -= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_sub(r); return l; }
+  template <class T> inline ArbInt&     operator -= (ArbInt&     l, T          const  r) { return l.op_sub(r);                }
+  template <class T> inline T&          operator -= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_sub(r); return l; }
   
   /*
    * Bit shift assignment operators.
    */
-                     inline ArbInt&     operator <<= (ArbInt&     l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { return l.op_shl(r);                }
-  template <class T> inline ArbInt&     operator <<= (ArbInt&     l, SafeInt<T> const  r) throw(ArbInt::Errors::Overrun) { return l.op_shl(r);                }
-  template <class T> inline SafeInt<T>& operator <<= (SafeInt<T>& l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { l = ArbInt(l).op_shl(r); return l; }
-  template <class T> inline ArbInt&     operator <<= (ArbInt&     l, T          const  r) throw(ArbInt::Errors::Overrun) { return l.op_shl(r);                }
-  template <class T> inline T&          operator <<= (T&          l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { l = ArbInt(l).op_shl(r); return l; }
-                     inline ArbInt&     operator >>= (ArbInt&     l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { return l.op_shr(r);                }
-  template <class T> inline ArbInt&     operator >>= (ArbInt&     l, SafeInt<T> const  r) throw(ArbInt::Errors::Overrun) { return l.op_shr(r);                }
-  template <class T> inline SafeInt<T>& operator >>= (SafeInt<T>& l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { l = ArbInt(l).op_shr(r); return l; }
-  template <class T> inline ArbInt&     operator >>= (ArbInt&     l, T          const  r) throw(ArbInt::Errors::Overrun) { return l.op_shr(r);                }
-  template <class T> inline T&          operator >>= (T&          l, ArbInt     const& r) throw(ArbInt::Errors::Overrun) { l = ArbInt(l).op_shr(r); return l; }
+                     inline ArbInt&     operator <<= (ArbInt&     l, ArbInt     const& r) { return l.op_shl(r);                }
+  template <class T> inline ArbInt&     operator <<= (ArbInt&     l, SafeInt<T> const  r) { return l.op_shl(r);                }
+  template <class T> inline SafeInt<T>& operator <<= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_shl(r); return l; }
+  template <class T> inline ArbInt&     operator <<= (ArbInt&     l, T          const  r) { return l.op_shl(r);                }
+  template <class T> inline T&          operator <<= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_shl(r); return l; }
+                     inline ArbInt&     operator >>= (ArbInt&     l, ArbInt     const& r) { return l.op_shr(r);                }
+  template <class T> inline ArbInt&     operator >>= (ArbInt&     l, SafeInt<T> const  r) { return l.op_shr(r);                }
+  template <class T> inline SafeInt<T>& operator >>= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_shr(r); return l; }
+  template <class T> inline ArbInt&     operator >>= (ArbInt&     l, T          const  r) { return l.op_shr(r);                }
+  template <class T> inline T&          operator >>= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_shr(r); return l; }
   
   /*
    * Bitwise assignment operators.
    */
-                     inline ArbInt&     operator &= (ArbInt&     l, ArbInt     const& r) throw() { return l.op_bit_and(r);                }
-  template <class T> inline ArbInt&     operator &= (ArbInt&     l, SafeInt<T> const  r) throw() { return l.op_bit_and(r);                }
-  template <class T> inline SafeInt<T>& operator &= (SafeInt<T>& l, ArbInt     const& r) throw() { l = ArbInt(l).op_bit_and(r); return l; }
-  template <class T> inline ArbInt&     operator &= (ArbInt&     l, T          const  r) throw() { return l.op_bit_and(r);                }
-  template <class T> inline T&          operator &= (T&          l, ArbInt     const& r) throw() { l = ArbInt(l).op_bit_and(r); return l; }
-                     inline ArbInt&     operator |= (ArbInt&     l, ArbInt     const& r) throw() { return l.op_bit_ior(r);                }
-  template <class T> inline ArbInt&     operator |= (ArbInt&     l, SafeInt<T> const  r) throw() { return l.op_bit_ior(r);                }
-  template <class T> inline SafeInt<T>& operator |= (SafeInt<T>& l, ArbInt     const& r) throw() { l = ArbInt(l).op_bit_ior(r); return l; }
-  template <class T> inline ArbInt&     operator |= (ArbInt&     l, T          const  r) throw() { return l.op_bit_ior(r);                }
-  template <class T> inline T&          operator |= (T&          l, ArbInt     const& r) throw() { l = ArbInt(l).op_bit_ior(r); return l; }
-                     inline ArbInt&     operator ^= (ArbInt&     l, ArbInt     const& r) throw() { return l.op_bit_xor(r);                }
-  template <class T> inline ArbInt&     operator ^= (ArbInt&     l, SafeInt<T> const  r) throw() { return l.op_bit_xor(r);                }
-  template <class T> inline SafeInt<T>& operator ^= (SafeInt<T>& l, ArbInt     const& r) throw() { l = ArbInt(l).op_bit_xor(r); return l; }
-  template <class T> inline ArbInt&     operator ^= (ArbInt&     l, T          const  r) throw() { return l.op_bit_xor(r);                }
-  template <class T> inline T&          operator ^= (T&          l, ArbInt     const& r) throw() { l = ArbInt(l).op_bit_xor(r); return l; }
+                     inline ArbInt&     operator &= (ArbInt&     l, ArbInt     const& r) { return l.op_bit_and(r);                }
+  template <class T> inline ArbInt&     operator &= (ArbInt&     l, SafeInt<T> const  r) { return l.op_bit_and(r);                }
+  template <class T> inline SafeInt<T>& operator &= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_bit_and(r); return l; }
+  template <class T> inline ArbInt&     operator &= (ArbInt&     l, T          const  r) { return l.op_bit_and(r);                }
+  template <class T> inline T&          operator &= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_bit_and(r); return l; }
+                     inline ArbInt&     operator |= (ArbInt&     l, ArbInt     const& r) { return l.op_bit_ior(r);                }
+  template <class T> inline ArbInt&     operator |= (ArbInt&     l, SafeInt<T> const  r) { return l.op_bit_ior(r);                }
+  template <class T> inline SafeInt<T>& operator |= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_bit_ior(r); return l; }
+  template <class T> inline ArbInt&     operator |= (ArbInt&     l, T          const  r) { return l.op_bit_ior(r);                }
+  template <class T> inline T&          operator |= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_bit_ior(r); return l; }
+                     inline ArbInt&     operator ^= (ArbInt&     l, ArbInt     const& r) { return l.op_bit_xor(r);                }
+  template <class T> inline ArbInt&     operator ^= (ArbInt&     l, SafeInt<T> const  r) { return l.op_bit_xor(r);                }
+  template <class T> inline SafeInt<T>& operator ^= (SafeInt<T>& l, ArbInt     const& r) { l = ArbInt(l).op_bit_xor(r); return l; }
+  template <class T> inline ArbInt&     operator ^= (ArbInt&     l, T          const  r) { return l.op_bit_xor(r);                }
+  template <class T> inline T&          operator ^= (T&          l, ArbInt     const& r) { l = ArbInt(l).op_bit_xor(r); return l; }
   
 }
 

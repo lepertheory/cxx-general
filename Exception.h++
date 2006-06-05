@@ -35,23 +35,23 @@ namespace DAC {
       // Function members.
       
       // Constructor.
-      Exception () throw();
+      Exception ();
       
-      // Destructor.
-      virtual ~Exception () throw();
+      // Descructor.
+      ~Exception () throw();
       
       // Get the cause of this error.
       virtual char const* what () const throw();
       
       // Get the type of this error.
-      std::string      & type (std::string& buffer) const throw();
-      std::string const& type (                   ) const throw();
+      std::string      & type (std::string& buffer) const;
+      std::string const& type (                   ) const;
       
       // Reset to just-constructed state.
-      virtual Exception& clear () throw();
+      virtual Exception& clear ();
       
       // Buffer a temporary string.
-      char const* buffer_message (std::string& message) const throw();
+      char const* buffer_message (std::string& message) const;
       
     /*
      * Private members.
@@ -86,21 +86,21 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  inline Exception::Exception () throw() { clear(); }
+  inline Exception::Exception () { clear(); }
   
-  inline Exception::~Exception () throw() { /* Nothing. */ }
+  inline Exception::~Exception () throw() { /* Da nada. */ }
   
   inline char const* Exception::what () const throw() { return "Undefined error."; }
   
-  inline std::string      & Exception::type(std::string& buffer) const throw() { return demangle(buffer, *this); }
-  inline std::string const& Exception::type(                   ) const throw() { return type(_strbuf);           }
+  inline std::string      & Exception::type(std::string& buffer) const { return demangle(buffer, *this); }
+  inline std::string const& Exception::type(                   ) const { return type(_strbuf);           }
   
-  inline Exception& Exception::clear() throw() { return *this; }
+  inline Exception& Exception::clear() { return *this; }
   
   /*
    * Buffer a temporary string.
    */
-  inline char const* Exception::buffer_message (std::string& message) const throw() {
+  inline char const* Exception::buffer_message (std::string& message) const {
     
     // Swap the contents of the message with the buffer.
     _buffer.swap(message);
