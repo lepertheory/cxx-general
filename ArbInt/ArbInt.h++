@@ -827,7 +827,6 @@ namespace DAC {
   /*
    * Push a string onto the back of this number.
    */
-  // FIXME: Make this actually check for negatives.
                      inline void ArbInt::push_back (ArbInt     const& number) { push_back(ArbInt(number).Base(_base).to_string()); }
   template <class T> inline void ArbInt::push_back (SafeInt<T> const  number) { push_back(static_cast<T>(number));                 }
   template <class T> inline void ArbInt::push_back (T          const  number) { push_back(DAC::to_string(number));                 }
@@ -1326,19 +1325,14 @@ namespace DAC {
   /*
    * Modulo divide by a floating-point type.
    */
-  // FIXME: See if all this is necessary.
   template <class T> void ArbInt::_Mod<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
     
-    // Round to the nearest whole number.
-    T tmp = floor(r + 0.5);
-    
-    // Sign does not matter, so get abs.
+    // Sign does not matter, so use abs.
     if (tmp < 0) {
-      tmp = -tmp;
+      l.op_mod(ArbInt(-tmp));
+    } else {
+      l.op_mod(ArbInt(tmp));
     }
-    
-    // Now convert to ArbInt and divide.
-    l.op_mod(ArbInt(tmp));
     
   }
   
@@ -1395,11 +1389,7 @@ namespace DAC {
   /*
    * Add a floating-point type.
    */
-  // FIXME: See if this is necessary.
   template <class T> void ArbInt::_Add<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
-    
-    // Round to the nearest whole number.
-    T tmp = floor(r + 0.5);
     
     // If adding a negative, subtract the opposite.
     if (tmp < 0) {
@@ -1472,11 +1462,7 @@ namespace DAC {
   /*
    * Subtract a floating-point type.
    */
-  // FIXME: See if this is necessary.
   template <class T> void ArbInt::_Sub<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
-    
-    // Round to the nearest whole number.
-    T tmp = floor(r + 0.5);
     
     // If subtracting a negative, add the opposite, otherwise subtract
     // normally.
@@ -1549,11 +1535,7 @@ namespace DAC {
   /*
    * Shift by a floating-point type.
    */
-  // FIXME: See if this is necessary.
   template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r, _Dir const dir) {
-    
-    // Round to the nearest whole number.
-    T tmp = floor(r + 0.5);
     
     // If shifting by a negative, shift the opposite direction.
     if (tmp < 0) {

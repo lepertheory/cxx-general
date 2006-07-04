@@ -202,6 +202,8 @@ namespace DAC {
    */
   string& Arb::to_string (string& buffer, OutputFormat const format) const {
     
+    // TODO: 0 fill.
+    
     // This is the string we will be returning.
     string retval;
     
