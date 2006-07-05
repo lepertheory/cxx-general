@@ -124,39 +124,6 @@ namespace DAC {
   // Function members.
   
   /*
-   * Default constructor.
-   */
-  ArbInt::ArbInt () {
-    
-    // Initialize.
-    clear();
-    
-  }
-  
-  /*
-   * Copy constructor.
-   */
-  ArbInt::ArbInt (ArbInt const& number) {
-    
-    // Set the number. No need to clear, copy takes care of everything.
-    copy(number);
-    
-  }
-  
-  /*
-   * Conversion constructor.
-   */
-  ArbInt::ArbInt (string const& number) {
-    
-    // Initialize.
-    clear();
-    
-    // Set the number.
-    set(number);
-    
-  }
-  
-  /*
    * Reset to just-constructed state.
    */
   void ArbInt::clear () {

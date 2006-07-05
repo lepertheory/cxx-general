@@ -711,17 +711,24 @@ namespace DAC {
   // Function members.
   
   /*
+   * Default constructor.
+   */
+  inline ArbInt::ArbInt () : _base(10) {}
+  
+  /*
+   * Copy constructor.
+   */
+  inline ArbInt::ArbInt (ArbInt const& number) { copy(number); }
+  
+  /*
    * Conversion constructor.
    */
-  template <class T> ArbInt::ArbInt (T const number) {
-    
-    // Initialize.
-    clear();
-    
-    // Set the number.
-    set(number);
-    
-  }
+  inline ArbInt::ArbInt (std::string const& number) : _base(10) { set(number); }
+  
+  /*
+   * Conversion constructor.
+   */
+  template <class T> inline ArbInt::ArbInt (T const number) : _base(10) { set(number); }
   
   /*
    * Increment / decrement operators.
