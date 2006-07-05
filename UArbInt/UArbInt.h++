@@ -5,8 +5,8 @@
  *****************************************************************************/
 
 // Include guard.
-#if !defined(ARBINT_7b2y3kb789f2u3du)
-  #define ARBINT_7b2y3kb789f2u3du
+#if !defined(UARBINT_7b2y3kb789f2u3du)
+  #define UARBINT_7b2y3kb789f2u3du
 
 // STL includes.
   #include <iostream>
@@ -76,13 +76,13 @@ namespace DAC {
               virtual ~BadFormat () throw() {};
               virtual char const* what () const throw() {
                 try {
-                  std::string tmpmsg(std::string(_problem) + " at position " + DAC::to_string(SafeInt<std::string::size_type>(_position) + 1) + ".");
+                  std::string tmpmsg(_problem + " at position " + DAC::to_string(SafeInt<std::string::size_type>(_position) + 1) + ".");
                   return Exception::buffer_message(tmpmsg);
                 } catch (...) {
                   return "Bad format. Error creating message string.";
                 }
               };
-              BadFormat& Problem  (char const*            const problem)  { _problem  = problem ; return *this; };
+              BadFormat& Problem  (char const*            const problem ) { _problem  = problem ; return *this; };
               BadFormat& Position (std::string::size_type const position) { _position = position; return *this; };
               char const*            Problem  () const { return _problem.c_str(); };
               std::string::size_type Position () const { return _position       ; };
@@ -131,9 +131,9 @@ namespace DAC {
       template <class T> explicit UArbInt (T           const  number);
       
       // Increment / decrement operators.
-      UArbInt& operator ++ ()   ;
+      UArbInt& operator ++ (   );
       UArbInt  operator ++ (int);
-      UArbInt& operator -- ()   ;
+      UArbInt& operator -- (   );
       UArbInt  operator -- (int);
       
       // Unary sign operators.
@@ -197,21 +197,21 @@ namespace DAC {
       std::string const& to_string (                     value_type const base = 0) const;
       
       // Arithmetic operator backends.
-                         UArbInt& op_mul (UArbInt    const& number)                              ;
-      template <class T> UArbInt& op_mul (SafeInt<T> const  number)                              ;
-      template <class T> UArbInt& op_mul (T          const  number)                              ;
+                         UArbInt& op_mul (UArbInt    const& number                              );
+      template <class T> UArbInt& op_mul (SafeInt<T> const  number                              );
+      template <class T> UArbInt& op_mul (T          const  number                              );
                          UArbInt& op_div (UArbInt    const& number, UArbInt* const remainder = 0);
       template <class T> UArbInt& op_div (SafeInt<T> const  number, UArbInt* const remainder = 0);
       template <class T> UArbInt& op_div (T          const  number, UArbInt* const remainder = 0);
-                         UArbInt& op_mod (UArbInt    const& number)                              ;
-      template <class T> UArbInt& op_mod (SafeInt<T> const  number)                              ;
-      template <class T> UArbInt& op_mod (T          const  number)                              ;
-                         UArbInt& op_add (UArbInt    const& number)                              ;
-      template <class T> UArbInt& op_add (SafeInt<T> const  number)                              ;
-      template <class T> UArbInt& op_add (T          const  number)                              ;
-                         UArbInt& op_sub (UArbInt    const& number)                              ;
-      template <class T> UArbInt& op_sub (SafeInt<T> const  number)                              ;
-      template <class T> UArbInt& op_sub (T          const  number)                              ;
+                         UArbInt& op_mod (UArbInt    const& number                              );
+      template <class T> UArbInt& op_mod (SafeInt<T> const  number                              );
+      template <class T> UArbInt& op_mod (T          const  number                              );
+                         UArbInt& op_add (UArbInt    const& number                              );
+      template <class T> UArbInt& op_add (SafeInt<T> const  number                              );
+      template <class T> UArbInt& op_add (T          const  number                              );
+                         UArbInt& op_sub (UArbInt    const& number                              );
+      template <class T> UArbInt& op_sub (SafeInt<T> const  number                              );
+      template <class T> UArbInt& op_sub (T          const  number                              );
       
       // Bit shift operator backends.
                          UArbInt& op_shl (UArbInt    const& number);
