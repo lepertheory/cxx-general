@@ -601,18 +601,18 @@ namespace DAC {
   /*
    * Default constructor.
    */
-  template <class T> inline SafeInt<T>::SafeInt (T const value) { _value = value; }
+  template <class T> inline SafeInt<T>::SafeInt (T const value) : _value(value) {}
   
   /*
    * Copy constructor.
    */
-  template <class T> inline SafeInt<T>::SafeInt (SafeInt<T> const& value) { _value = value._value; }
+  template <class T> inline SafeInt<T>::SafeInt (SafeInt<T> const& value) : _value(value._value) {}
   
   /*
    * Conversion constructor.
    */
-  template <class T> template <class U> inline SafeInt<T>::SafeInt (U          const value) { _value = SafeIntUtil::SafeCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(value); }
-  template <class T> template <class U> inline SafeInt<T>::SafeInt (SafeInt<U> const value) { _value = static_cast<T>(value);                                                          }
+  template <class T> template <class U> inline SafeInt<T>::SafeInt (U          const value) : _value(SafeIntUtil::SafeCast<U, T, SafeIntUtil::Relationship<U, T>::value>::op(value)) {}
+  template <class T> template <class U> inline SafeInt<T>::SafeInt (SafeInt<U> const value) : _value(static_cast<T>(value)                                                         ) {}
   
   /*
    * Increment / decrement operators.

@@ -1328,10 +1328,10 @@ namespace DAC {
   template <class T> void ArbInt::_Mod<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
     
     // Sign does not matter, so use abs.
-    if (tmp < 0) {
-      l.op_mod(ArbInt(-tmp));
+    if (r < 0) {
+      l.op_mod(ArbInt(-r));
     } else {
-      l.op_mod(ArbInt(tmp));
+      l.op_mod(ArbInt(r));
     }
     
   }
@@ -1392,12 +1392,12 @@ namespace DAC {
   template <class T> void ArbInt::_Add<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r) {
     
     // If adding a negative, subtract the opposite.
-    if (tmp < 0) {
-      l.op_sub(ArbInt(-tmp));
+    if (r < 0) {
+      l.op_sub(ArbInt(-r));
       
     // Otherwise add normally.
     } else {
-      l.op_add(ArbInt(tmp));
+      l.op_add(ArbInt(r));
     }
     
   }
@@ -1466,10 +1466,10 @@ namespace DAC {
     
     // If subtracting a negative, add the opposite, otherwise subtract
     // normally.
-    if (tmp < 0) {
-      l.op_add(ArbInt(-tmp));
+    if (r < 0) {
+      l.op_add(ArbInt(-r));
     } else {
-      l.op_sub(ArbInt(tmp));
+      l.op_sub(ArbInt(r));
     }
     
   }
@@ -1538,10 +1538,10 @@ namespace DAC {
   template <class T> void ArbInt::_Shift<T, ArbInt::_NUM_FLPT>::op (ArbInt& l, T const r, _Dir const dir) {
     
     // If shifting by a negative, shift the opposite direction.
-    if (tmp < 0) {
-      l._shiftBits(ArbInt(-tmp), (dir == _DIR_L) ? _DIR_R : _DIR_L);
+    if (r < 0) {
+      l._shiftBits(ArbInt(-r), (dir == _DIR_L) ? _DIR_R : _DIR_L);
     } else {
-      l._shiftBits(ArbInt(tmp), dir);
+      l._shiftBits(ArbInt(r), dir);
     }
     
   }
