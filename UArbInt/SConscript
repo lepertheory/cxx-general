@@ -8,17 +8,17 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Create our module definition.
-cArbInt = Module()
+cUArbInt = Module()
 
 # Headers.
-cArbInt.own_include = 'ArbInt'
-cArbInt.own_headers = ['ArbInt.h++']
+cUArbInt.own_include = 'UArbInt'
+cUArbInt.own_headers = ['UArbInt.h++']
 
 # Object files.
-o_ArbInt = env.Object      (target = 'ArbInt', source = ['ArbInt.c++'])
-s_ArbInt = env.SharedObject(target = 'ArbInt', source = ['ArbInt.c++'])
-cArbInt.own_objects        = [o_ArbInt]
-cArbInt.own_shared_objects = [s_ArbInt]
+o_UArbInt = env.Object      (target = 'UArbInt', source = ['UArbInt.c++'])
+s_UArbInt = env.SharedObject(target = 'UArbInt', source = ['UArbInt.c++'])
+cUArbInt.own_objects        = [o_UArbInt]
+cUArbInt.own_shared_objects = [s_UArbInt]
 
 # Return.
-Return('cArbInt')
+Return('cUArbInt')

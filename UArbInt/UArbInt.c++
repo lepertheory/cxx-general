@@ -1,7 +1,7 @@
 /*****************************************************************************
- * ArbInt.c++
+ * UArbInt.c++
  *****************************************************************************
- * Implementation for class ArbInt.
+ * Implementation for class UArbInt.
  *****************************************************************************/
 
 // STL includes.
@@ -17,7 +17,7 @@
 #include <CaseConvert.h++>
 
 // Class include.
-#include "ArbInt.h++"
+#include "UArbInt.h++"
 
 // Namespaces used.
 using namespace std;
@@ -26,24 +26,24 @@ using namespace std;
 namespace DAC {
   
   /***************************************************************************
-   * Class ArbInt.
+   * Class UArbInt.
    ***************************************************************************/
   
   /***************************************************************************/
   // Data members.
   
-  unsigned int  const ArbInt::s_digitbits = numeric_limits<_DigT>::digits >> 1;
-  ArbInt::_DigT const ArbInt::s_digitbase = 1 << (numeric_limits<_DigT>::digits >> 1);
-  ArbInt::_DigT const ArbInt::s_bitmask   = (1 << (numeric_limits<_DigT>::digits >> 1)) - 1;
+  unsigned int   const UArbInt::s_digitbits = numeric_limits<_DigT>::digits >> 1;
+  UArbInt::_DigT const UArbInt::s_digitbase = 1 << (numeric_limits<_DigT>::digits >> 1);
+  UArbInt::_DigT const UArbInt::s_bitmask   = (1 << (numeric_limits<_DigT>::digits >> 1)) - 1;
   
-  ArbInt::_NumChrT const ArbInt::s_numodigits = 36;
-  ArbInt::_StrChrT const ArbInt::s_odigits[]  = {
+  UArbInt::_NumChrT const UArbInt::s_numodigits = 36;
+  UArbInt::_StrChrT const UArbInt::s_odigits[]  = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
     'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
     'U', 'V', 'W', 'X', 'Y', 'Z'
   };
-  ArbInt::_NumChrT const ArbInt::s_idigits[] = {
+  UArbInt::_NumChrT const UArbInt::s_idigits[] = {
     numeric_limits<_NumChrT>::max(), // 0x00      NUL
     numeric_limits<_NumChrT>::max(), // 0x01      SOH
     numeric_limits<_NumChrT>::max(), // 0x02      STX
@@ -118,7 +118,7 @@ namespace DAC {
     numeric_limits<_NumChrT>::max(), // 0x7E      ~
     numeric_limits<_NumChrT>::max()  // 0x7F      DEL
   };
-  ArbInt::value_type const ArbInt::max_input_base = 36;
+  UArbInt::value_type const UArbInt::max_input_base = 36;
   
   /***************************************************************************/
   // Function members.
@@ -126,7 +126,7 @@ namespace DAC {
   /*
    * Reset to just-constructed state.
    */
-  void ArbInt::clear () {
+  void UArbInt::clear () {
     
     // Clear the digits.
     _digits.clear();
@@ -139,7 +139,7 @@ namespace DAC {
   /*
    * Make a copy of another number.
    */
-  void ArbInt::copy (ArbInt const& number) {
+  void UArbInt::copy (UArbInt const& number) {
     
     // Set the new digits.
     _digits = number._digits;
@@ -152,7 +152,7 @@ namespace DAC {
   /*
    * Swap this number with another number.
    */
-  void ArbInt::swap (ArbInt& number) {
+  void UArbInt::swap (UArbInt& number) {
     
     // Nothing to it.
     _digits.swap(number._digits);
@@ -165,7 +165,7 @@ namespace DAC {
   /*
    * Set this number with a string.
    */
-  ArbInt& ArbInt::set (string const& number, bool const autobase) {
+  UArbInt& UArbInt::set (string const& number, bool const autobase) {
     
     // Load the number into this for exception safety.
     _DigsT new_digits;
@@ -224,16 +224,16 @@ namespace DAC {
   /*
    * Push a string onto the back of this number.
    */
-  void ArbInt::push_back (string const& number) {
+  void UArbInt::push_back (string const& number) {
     
     // Work area.
-    ArbInt newnum;
+    UArbInt newnum;
     
     // Convert the new number.
     newnum.Base(_base).set(number);
     
     // Move digits up to accomidate the new digits.
-    op_mul(ArbInt(_base).pow(number.length()));
+    op_mul(UArbInt(_base).pow(number.length()));
     
     // Add the new number to this.
     op_add(newnum);
@@ -243,7 +243,7 @@ namespace DAC {
   /*
    * Return a string of this number.
    */
-  string& ArbInt::to_string (string& buffer, value_type const base) const {
+  string& UArbInt::to_string (string& buffer, value_type const base) const {
     
     // This is the string we will return.
     string retval;
@@ -288,17 +288,17 @@ namespace DAC {
   /*
    * Multiply.
    */
-  ArbInt& ArbInt::op_mul (ArbInt const& number) {
+  UArbInt& UArbInt::op_mul (UArbInt const& number) {
     
     // Work area.
-    ArbInt retval;
+    UArbInt retval;
     
     // If either number is zero, no multiplying to be done.
     if (!isZero() && !number.isZero()) {
       
       // Create a digit product and make a reference its digits to reduce
       // typing.
-      ArbInt digproduct;
+      UArbInt digproduct;
       
       // Multiply like 3rd grade.
       for (_DigsT::size_type i = 0; i != number._digits.size(); ++i) {
@@ -335,7 +335,7 @@ namespace DAC {
   /*
    * Divide.
    */
-  ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* const remainder) {
+  UArbInt& UArbInt::op_div (UArbInt const& number, UArbInt* const remainder) {
     
     // If number is zero, throw error.
     if (number.isZero()) {
@@ -343,7 +343,7 @@ namespace DAC {
     }
     
     // Work area.
-    ArbInt retval;
+    UArbInt retval;
     
     // If number > this, result is zero, remainder is this.
     if (number > *this) {
@@ -365,7 +365,7 @@ namespace DAC {
       // succeed. The loop iterates backwards from the least significant
       // digit added to diggroup to the end of _digits, although the
       // iterator is only ever referenced to add one to it.
-      ArbInt diggroup;
+      UArbInt diggroup;
       diggroup._digits = _DigsT(_digits.end() - number._digits.size(), _digits.end());
       for (_DigsT::reverse_iterator i = _digits.rbegin() + (number._digits.size() - 1); i != _digits.rend(); ++i) {
         
@@ -373,7 +373,7 @@ namespace DAC {
         // computer to do some of our division for us. These need to be set
         // to zero at each iteration, possible cause of bug if they are not.
         SafeInt<_DigT> guess;
-        ArbInt         test;
+        UArbInt        test;
         
         // Make sure that the digit group is greater than or equal to the
         // dividend. If not, the quotient for this digit is zero, move on.
@@ -476,17 +476,17 @@ namespace DAC {
   /*
    * Modulo division.
    */
-  ArbInt& ArbInt::op_mod (ArbInt const& number) {
+  UArbInt& UArbInt::op_mod (UArbInt const& number) {
     
     // Cannot divide by zero. check is redundant, but needed for exception to
     // report proper operator.
     if (number.isZero()) {
-      throw ArbInt::Errors::DivByZero();
+      throw UArbInt::Errors::DivByZero();
     }
     
     // Work area.
-    ArbInt retval;
-    ArbInt quotient(*this);
+    UArbInt retval;
+    UArbInt quotient(*this);
     
     // Do division and return the remainder.
     quotient.op_div(number, &retval);
@@ -498,7 +498,7 @@ namespace DAC {
   /*
    * Add.
    */
-  ArbInt& ArbInt::op_add (ArbInt const& number) {
+  UArbInt& UArbInt::op_add (UArbInt const& number) {
     
     // Add like kindergarten.
     for (_DigsT::size_type i = 0; i != number._digits.size(); ++i) {
@@ -522,7 +522,7 @@ namespace DAC {
   /*
    * Subtract.
    */
-  ArbInt& ArbInt::op_sub (ArbInt const& number) {
+  UArbInt& UArbInt::op_sub (UArbInt const& number) {
     
     // These are unsigned numbers, so if number > this, throw an error.
     if (op_lt(number)) {
@@ -551,7 +551,7 @@ namespace DAC {
   /*
    * Greater than.
    */
-  bool ArbInt::op_gt (ArbInt const& number) const {
+  bool UArbInt::op_gt (UArbInt const& number) const {
     
     // Check zeros.
     if (isZero()) {
@@ -590,7 +590,7 @@ namespace DAC {
   /*
    * Less than.
    */
-  bool ArbInt::op_lt (ArbInt const& number) const {
+  bool UArbInt::op_lt (UArbInt const& number) const {
     
     // Check zeros.
     if (number.isZero()) {
@@ -629,7 +629,7 @@ namespace DAC {
   /*
    * Equal to.
    */
-  bool ArbInt::op_eq (ArbInt const& number) const {
+  bool UArbInt::op_eq (UArbInt const& number) const {
     
     // Check zeros.
     if (isZero()) {
@@ -661,7 +661,7 @@ namespace DAC {
   /*
    * Bitwise AND.
    */
-  ArbInt& ArbInt::op_bit_and (ArbInt const& number) {
+  UArbInt& UArbInt::op_bit_and (UArbInt const& number) {
     
     // Cut off digits longer than number, they will be 0 anyway.
     if (_digits.size() > number._digits.size()) {
@@ -684,7 +684,7 @@ namespace DAC {
   /*
    * Bitwise inclusive OR.
    */
-  ArbInt& ArbInt::op_bit_ior (ArbInt const& number) {
+  UArbInt& UArbInt::op_bit_ior (UArbInt const& number) {
     
     // Get the original size of *this, no processing of any of the added
     // digits will be necessary b/c of how | works.
@@ -708,7 +708,7 @@ namespace DAC {
   /*
    * Bitwise exclusive OR.
    */
-  ArbInt& ArbInt::op_bit_xor (ArbInt const& number) {
+  UArbInt& UArbInt::op_bit_xor (UArbInt const& number) {
     
     // Get the original size of *this, no processing of any of the added
     // digits will be necessary b/c of how ^ works.
@@ -735,7 +735,7 @@ namespace DAC {
   /*
    * Bitwise compliment.
    */
-  ArbInt& ArbInt::op_bit_cpm () {
+  UArbInt& UArbInt::op_bit_cpm () {
     
     // Apply compliment to each digit.
     for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
@@ -753,12 +753,12 @@ namespace DAC {
   /*
    * Raise this number to a power.
    */
-  ArbInt ArbInt::pow (ArbInt const& exp) {
+  UArbInt UArbInt::pow (UArbInt const& exp) {
     
     // Work area.
-    ArbInt tmp_base(*this);
-    ArbInt tmp_expn(exp);
-    ArbInt retval(1);
+    UArbInt tmp_base(*this);
+    UArbInt tmp_expn(exp);
+    UArbInt retval(1);
     
     // Russian peasant power.
     while (!tmp_expn.isZero()) {
@@ -777,7 +777,7 @@ namespace DAC {
   /*
    * Perform carry.
    */
-  ArbInt& ArbInt::_carry (_DigsT::size_type start) {
+  UArbInt& UArbInt::_carry (_DigsT::size_type start) {
     
     // Loop through the container looking for base overflow.
     for (_DigsT::size_type i = start; i != _digits.size(); ++i) {
@@ -814,7 +814,7 @@ namespace DAC {
    * Perform borrow. Only call this on temporary objects that are not
    * copied. Copy on write is not preserved for this function.
    */
-  ArbInt& ArbInt::_borrow (_DigsT::size_type start) {
+  UArbInt& UArbInt::_borrow (_DigsT::size_type start) {
     
     // Loop through the container borrowing until we've met our borrow.
     for (_DigsT::size_type i = start; i != (_digits.size() - 1); ++i) {
@@ -845,9 +845,9 @@ namespace DAC {
   }
   
   /*
-   * Bitwise shift by ArbInt.
+   * Bitwise shift by UArbInt.
    */
-  ArbInt& ArbInt::_shift (ArbInt const& bits, _Dir const dir) {
+  UArbInt& UArbInt::_shift (UArbInt const& bits, _Dir const dir) {
     
     // Only shift if it is needed.
     if (*this && bits) {
@@ -881,7 +881,7 @@ namespace DAC {
   /*
    * Bitwise shift.
    */
-  ArbInt& ArbInt::_shift (SafeInt<_DigsT::size_type> const digits, SafeInt<unsigned int> const bits, _Dir const dir) {
+  UArbInt& UArbInt::_shift (SafeInt<_DigsT::size_type> const digits, SafeInt<unsigned int> const bits, _Dir const dir) {
     
     // Only shift if it is needed.
     if (*this && (digits || bits)) {
@@ -911,7 +911,7 @@ namespace DAC {
   /*
    * Bitwise shift entire digits.
    */
-  ArbInt& ArbInt::_shiftDigits (SafeInt<_DigsT::size_type> const digits, _Dir const dir) {
+  UArbInt& UArbInt::_shiftDigits (SafeInt<_DigsT::size_type> const digits, _Dir const dir) {
     
     // Only shift if it is needed.
     if (*this && digits) {
@@ -949,7 +949,7 @@ namespace DAC {
   /*
    * Bitwise shift by bits.
    */
-  ArbInt& ArbInt::_shiftBits (SafeInt<unsigned int> const bits, _Dir const dir) {
+  UArbInt& UArbInt::_shiftBits (SafeInt<unsigned int> const bits, _Dir const dir) {
     
     // Only shift if it is needed.
     if (*this && bits) {

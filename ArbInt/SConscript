@@ -1,0 +1,24 @@
+# Imports.
+from sconsgeneral import Module
+
+# Imports from caller.
+Import('*')
+
+# Include the parent directory.
+env.Append(CPPPATH = ['..'])
+
+# Create our module definition.
+cArbInt = Module()
+
+# Headers.
+cArbInt.own_include = 'ArbInt'
+cArbInt.own_headers = ['ArbInt.h++']
+
+# Object files.
+o_ArbInt = env.Object      (target = 'ArbInt', source = ['ArbInt.c++'])
+s_ArbInt = env.SharedObject(target = 'ArbInt', source = ['ArbInt.c++'])
+cArbInt.own_objects        = [o_ArbInt]
+cArbInt.own_shared_objects = [s_ArbInt]
+
+# Return.
+Return('cArbInt')

@@ -8,13 +8,13 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Bring in dependencies.
-cArbInt.apply(env)
-cArb   .apply(env)
+cUArbInt.apply(env)
+cArb    .apply(env)
 
 # Create our module definition.
 cValReader = Module()
-cValReader.take(cArbInt)
-cValReader.take(cArb   )
+cValReader.take(cUArbInt)
+cValReader.take(cArb    )
 
 # Headers.
 cValReader.own_include = 'ValReader'

@@ -79,7 +79,7 @@ namespace DAC {
     set(number);
     
   }
-  Arb::Arb (ArbInt const& number) {
+  Arb::Arb (UArbInt const& number) {
     
     // Call common init.
     _init();
@@ -516,7 +516,7 @@ namespace DAC {
     // Load the number.
     try {
       _p.Base(num_base).set(num, false);
-    } catch (ArbInt::Errors::BadFormat& e) {
+    } catch (UArbInt::Errors::BadFormat& e) {
       if (e.Position() < numstart + numlen) {
         throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart                      );
       } else {
@@ -533,7 +533,7 @@ namespace DAC {
       _DigsT expr(nexp);
       try {
         expn.Base(num_base).set(exp, false);
-      } catch (ArbInt::Errors::BadFormat& e) {
+      } catch (UArbInt::Errors::BadFormat& e) {
         throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + expstart);
       }
       if (p_exp) {
@@ -630,9 +630,9 @@ namespace DAC {
   }
   
   /*
-   * Set from an ArbInt.
+   * Set from a UArbInt.
    */
-  void Arb::set (ArbInt const& number) {
+  void Arb::set (UArbInt const& number) {
     
     // Set the number.
     _p        = number;
@@ -665,7 +665,7 @@ namespace DAC {
     return *this;
     
   }
-  Arb& Arb::op_mul (ArbInt const& number) {
+  Arb& Arb::op_mul (UArbInt const& number) {
     
     // Multiply.
     _p *= number;
@@ -702,7 +702,7 @@ namespace DAC {
     return *this;
     
   }
-  Arb& Arb::op_div (ArbInt const& number) {
+  Arb& Arb::op_div (UArbInt const& number) {
     
     // Throw an error on divide by zero.
     if (number == 0) {
@@ -742,7 +742,7 @@ namespace DAC {
     return *this;
     
   }
-  Arb& Arb::op_mod (ArbInt const& number) {
+  Arb& Arb::op_mod (UArbInt const& number) {
     
     // Throw an error on divide by zero.
     if (number == 0) {
@@ -792,10 +792,10 @@ namespace DAC {
     return *this;
     
   }
-  Arb& Arb::op_add (ArbInt const& number) {
+  Arb& Arb::op_add (UArbInt const& number) {
     
     // Work area.
-    ArbInt tmp(number);
+    UArbInt tmp(number);
     
     // Normalize.
     tmp *= _q;
@@ -850,10 +850,10 @@ namespace DAC {
     return *this;
     
   }
-  Arb& Arb::op_sub (ArbInt const& number) {
+  Arb& Arb::op_sub (UArbInt const& number) {
     
     // Work area.
-    ArbInt tmp(number);
+    UArbInt tmp(number);
     
     // Normalize.
     tmp *= _q;
@@ -918,7 +918,7 @@ namespace DAC {
     }
     
   }
-  bool Arb::op_gt (ArbInt const& number) const {
+  bool Arb::op_gt (UArbInt const& number) const {
     
     // If one or both numbers are zero, compare is easy.
     if (_p.isZero()) {
@@ -935,7 +935,7 @@ namespace DAC {
     
     // Signs are the same, we will have to compare numbers. Copy numbers since
     // we will be modifying them.
-    ArbInt tmp(number);
+    UArbInt tmp(number);
     
     // Normalize.
     tmp *= _q;
@@ -984,7 +984,7 @@ namespace DAC {
     }
     
   }
-  bool Arb::op_lt (ArbInt const& number) const {
+  bool Arb::op_lt (UArbInt const& number) const {
     
     // If one or both numbers are zero, compare is easy.
     if (_p.isZero()) {
@@ -1001,7 +1001,7 @@ namespace DAC {
     
     // Signs are the same, we will have to compare numbers. Copy numbers since
     // we will be modifying them.
-    ArbInt tmp(number);
+    UArbInt tmp(number);
     
     // Normalize.
     tmp *= _q;
@@ -1040,7 +1040,7 @@ namespace DAC {
     }
     
   }
-  bool Arb::op_eq (ArbInt const& number) const {
+  bool Arb::op_eq (UArbInt const& number) const {
     
     // Check for 0.
     if (_p.isZero()) {
@@ -1349,7 +1349,7 @@ namespace DAC {
     return *this;
     
   }
-  Arb& Arb::_shift (ArbInt const& bits, _Dir const dir) {
+  Arb& Arb::_shift (UArbInt const& bits, _Dir const dir) {
     
     // Only work if necessary.
     if (!*this || !bits) {
@@ -1579,14 +1579,14 @@ namespace DAC {
     }
     
     // Fraction is always x over 2^one bit less than mantissa.
-    l._q = ArbInt(1) << _FloatInfo<double>::mantissabits - 1;
+    l._q = UArbInt(1) << _FloatInfo<double>::mantissabits - 1;
     
     // Denormalized numbers.
     if (converter.bits.exponent == 0) {
       
       // Load the mantissa as a fraction. Denormalized numbers do not have a
       // hidden bit.
-      l._p = converter.bits.mantissal + converter.bits.mantissah * (ArbInt(1) << 32);
+      l._p = converter.bits.mantissal + converter.bits.mantissah * (UArbInt(1) << 32);
       
       // Correct the exponent.
       converter.bits.exponent = 1;
@@ -1595,7 +1595,7 @@ namespace DAC {
     } else {
       
       // Load the mantissa as a fraction. Add in the hidden bit.
-      l._p = l._q + converter.bits.mantissal + converter.bits.mantissah * (ArbInt(1) << 32);
+      l._p = l._q + converter.bits.mantissal + converter.bits.mantissah * (UArbInt(1) << 32);
       
     }
     
@@ -1658,7 +1658,7 @@ namespace DAC {
     }
     
     // Fraction is always x/2^one bit less than mantissa.
-    l._q = ArbInt(1) << _FloatInfo<long double>::mantissabits - 1;
+    l._q = UArbInt(1) << _FloatInfo<long double>::mantissabits - 1;
     
     // In long double, normalized and denormalized are handled basically the
     // same. Correct the exponent, but that's all we need to do because the
@@ -1668,7 +1668,7 @@ namespace DAC {
     }
     
     // Load the mantissa as a fraction.
-    l._p = converter.bits.mantissal + converter.bits.mantissah * (ArbInt(1) << 32);
+    l._p = converter.bits.mantissal + converter.bits.mantissah * (UArbInt(1) << 32);
     
     // Multiply by the exponent to get the actual number. Exponent has a bias
     // of 16383.
@@ -1688,7 +1688,7 @@ namespace DAC {
   template <> void Arb::_Get<float, Arb::_NUM_FLPT>::op (float& l, Arb const& r) {
     
     // Work area.
-    ArbInt       tmpnum;
+    UArbInt      tmpnum;
     unsigned int exponent;
     
     // Convert to floating-point format.
@@ -1697,7 +1697,7 @@ namespace DAC {
     // Truncate to 23 bits or less. _toFloat should never return more than 24
     // bits, and bit 24 is discarded.
     if (tmpnum.bitsInNumber() > _FloatInfo<float>::mantissabits - 1) {
-      tmpnum &= (ArbInt(1) << (_FloatInfo<float>::mantissabits - 1)) - 1;
+      tmpnum &= (UArbInt(1) << (_FloatInfo<float>::mantissabits - 1)) - 1;
     }
     
     // Set the number.
@@ -1715,7 +1715,7 @@ namespace DAC {
   template <> void Arb::_Get<double, Arb::_NUM_FLPT>::op (double& l, Arb const& r) {
     
     // Work area.
-    ArbInt       tmpnum;
+    UArbInt      tmpnum;
     unsigned int exponent;
     
     // Convert to floating-point format.
@@ -1724,7 +1724,7 @@ namespace DAC {
     // Truncate to 53 bits or less. _toFloat should never return more than 54
     // bits, and bit 54 is discarded.
     if (tmpnum.bitsInNumber() > _FloatInfo<double>::mantissabits - 1) {
-      tmpnum &= (ArbInt(1) << (_FloatInfo<double>::mantissabits - 1)) - 1;
+      tmpnum &= (UArbInt(1) << (_FloatInfo<double>::mantissabits - 1)) - 1;
     }
     
     // Set the number.
@@ -1743,7 +1743,7 @@ namespace DAC {
   template <> void Arb::_Get<long double, Arb::_NUM_FLPT>::op (long double& l, Arb const& r) {
     
     // Work area.
-    ArbInt       tmpnum;
+    UArbInt      tmpnum;
     unsigned int exponent;
     
     // Convert to floating-point format.

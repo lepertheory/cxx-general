@@ -13,7 +13,7 @@
 
 // System includes.
   #include <demangle.h++>
-  #include <ArbInt.h++>
+  #include <UArbInt.h++>
   #include <Arb.h++>
   #include <Exception.h++>
 
@@ -135,11 +135,11 @@ namespace DAC {
     T retval;
     
     // Wrap in try blocks to catch any failure of conversion and throw an
-    // an error that hides implementation details. Rely on ArbInt to do the
+    // an error that hides implementation details. Rely on UArbInt to do the
     // conversion.
     try {
-      retval = ArbInt(_value);
-    } catch (ArbInt::Errors::Base& e) {
+      retval = UArbInt(_value);
+    } catch (UArbInt::Errors::Base& e) {
       throw Errors::BadNum().set_ErrText(e.what());
     }
     

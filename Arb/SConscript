@@ -8,11 +8,11 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Bring in dependencies.
-cArbInt.apply(env)
+cUArbInt.apply(env)
 
 # Create our module definition.
 cArb = Module()
-cArb.take(cArbInt)
+cArb.take(cUArbInt)
 
 # Headers.
 cArb.own_include = 'Arb'
