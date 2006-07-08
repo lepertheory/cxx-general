@@ -248,6 +248,10 @@ namespace DAC {
       template <class T> Arb& op_shr (SafeInt<T> const  number);
       template <class T> Arb& op_shr (T          const  number);
       
+      // Master comparison operator.
+      //int op_compare (Arb const& number) const;
+      //int op_compare (UArbInt const& number) const;
+      
       // Comparison operator backends.
                          bool op_gt (Arb        const& number) const;
                          bool op_gt (UArbInt    const& number) const;

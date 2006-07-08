@@ -16,6 +16,7 @@
 // System includes.
   #include <to_string.h++>
   #include <Exception.h++>
+  #include <abs.h++>
 
 // Namespace wrapper.
 namespace DAC {
@@ -274,7 +275,16 @@ namespace DAC {
   template <class T, class U> SafeInt<T>& operator ^= (SafeInt<T>& l, U          const r);
   template <class T, class U> T&          operator ^= (T&          l, SafeInt<U> const r);
   
-  /**************************************************************************
+  /***************************************************************************
+   * Global functions.
+   ***************************************************************************/
+  
+  /*
+   * Get absolute value.
+   */
+  template <class T> SafeInt<T> abs (SafeInt<T> const value);
+  
+  /***************************************************************************
    * SafeInt utilities.
    ***************************************************************************
    * If it weren't for some extremely tricky template stuff, this would all be
@@ -733,6 +743,15 @@ namespace DAC {
    * Get the number of bits in this number.
    */
   template <class T> inline size_t SafeInt<T>::bitsInNumber () const { return SafeIntUtil::SafeBitCount<T, SafeIntUtil::Relationship<T, T>::value>::op(_value); }
+  
+  /***************************************************************************
+   * Global functions.
+   ***************************************************************************/
+  
+  /*
+   * Get absolute value.
+   */
+  template <class T> inline SafeInt<T> abs (SafeInt<T> const value) { return value.abs(); }
   
   /***************************************************************************
    * SafeIntUtil.

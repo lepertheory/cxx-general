@@ -167,6 +167,12 @@ namespace DAC {
    */
   UArbInt& UArbInt::set (string const& number, bool const autobase) {
     
+    // Empty string is 0.
+    if (number.empty()) {
+      _digits.clear();
+      return *this;
+    }
+    
     // Load the number into this for exception safety.
     _DigsT new_digits;
     
@@ -549,112 +555,36 @@ namespace DAC {
   }
   
   /*
-   * Greater than.
+   * Master comparison operator.
    */
-  bool UArbInt::op_gt (UArbInt const& number) const {
+  int UArbInt::op_compare (UArbInt const& number) const {
     
-    // Check zeros.
-    if (isZero()) {
-      return false;
-    } else {
-      if (number.isZero()) {
-        return true;
-      }
-    }
-    
-    // Check sizes of containers.
+    // Check sizes of containers. Final check for zero is necessary to avoid
+    // overflow in detail check loop below.
     if (_digits.size() > number._digits.size()) {
-      return true;
+      return 1;
     }
     if (_digits.size() < number._digits.size()) {
-      return false;
+      return -1;
     }
-    
-    // Step through each element looking for a difference, start at high-
-    // order and work down.
-    for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
-      _DigsT::size_type j = _digits.size() - 1 - i;
-      if (_digits[j] > number._digits[j]) {
-        return true;
-      }
-      if (_digits[j] < number._digits[j]) {
-        return false;
-      }
-    }
-    
-    // No difference was found, is not greater.
-    return false;
-    
-  }
-  
-  /*
-   * Less than.
-   */
-  bool UArbInt::op_lt (UArbInt const& number) const {
-    
-    // Check zeros.
-    if (number.isZero()) {
-      return false;
-    } else {
-      if (isZero()) {
-        return true;
-      }
-    }
-    
-    // Check sizes of containers.
-    if (_digits.size() < number._digits.size()) {
-      return true;
-    }
-    if (_digits.size() > number._digits.size()) {
-      return false;
+    if (_digits.size() == 0) {
+      return 0;
     }
     
     // Step through each element looking for a difference, start at high-order
-    // and work down.
+    // and work down so that we can immedately return an answer on difference.
     for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
       _DigsT::size_type j = _digits.size() - 1 - i;
-      if (_digits[j] < number._digits[j]) {
-        return true;
-      }
       if (_digits[j] > number._digits[j]) {
-        return false;
+        return 1;
+      }
+      if (_digits[j] < number._digits[j]) {
+        return -1;
       }
     }
     
-    // No difference was found, is not less.
-    return false;
-    
-  }
-  
-  /*
-   * Equal to.
-   */
-  bool UArbInt::op_eq (UArbInt const& number) const {
-    
-    // Check zeros.
-    if (isZero()) {
-      return number.isZero();
-    } else {
-      if (number.isZero()) {
-        return false;
-      }
-    }
-    
-    // Check sizes of containers.
-    if (_digits.size() != number._digits.size()) {
-      return false;
-    }
-    
-    // Step through each element looking for a difference, start at low-order
-    // and work up, most differences will be in low-order digits.
-    for (_DigsT::size_type i = 0; i != _digits.size(); ++i) {
-      if (_digits[i] != number._digits[i]) {
-        return false;
-      }
-    }
-    
-    // No difference was found, is equal.
-    return true;
+    // Numbers are equal.
+    return 0;
     
   }
   
