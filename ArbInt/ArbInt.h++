@@ -2398,8 +2398,42 @@ namespace DAC {
   /*
    * Master comparison operator.
    */
-  template <class T> inline int ArbInt::op_compare (SafeInt<T> const number)  { return _Compare<T, _GetNumType<T>::value>::op(*this, number); }
-  template <class T> inline int ArbInt::op_compare (T          const number)  { return _Compare<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline int ArbInt::op_compare (SafeInt<T> const number) const { return _Compare<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline int ArbInt::op_compare (T          const number) const { return _Compare<T, _GetNumType<T>::value>::op(*this, number); }
+  
+  /*
+   * Comparison operator backends.
+   */
+                     inline bool ArbInt::op_gt (ArbInt     const& number) const { return op_compare(number) > 0;                           }
+                     inline bool ArbInt::op_gt (UArbInt    const& number) const { return op_compare(number) > 0;                           }
+  template <class T> inline bool ArbInt::op_gt (SafeInt<T> const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_gt (T          const  number) const { return _GT<T, _GetNumType<T>::value>::op(*this, number); }
+                     inline bool ArbInt::op_ge (ArbInt     const& number) const { return !op_lt(number);                                   }
+                     inline bool ArbInt::op_ge (UArbInt    const& number) const { return !op_lt(number);                                   }
+  template <class T> inline bool ArbInt::op_ge (SafeInt<T> const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_ge (T          const  number) const { return _GE<T, _GetNumType<T>::value>::op(*this, number); }
+                     inline bool ArbInt::op_lt (ArbInt     const& number) const { return op_compare(number) < 0;                           }
+                     inline bool ArbInt::op_lt (UArbInt    const& number) const { return op_compare(number) < 0;                           }
+  template <class T> inline bool ArbInt::op_lt (SafeInt<T> const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_lt (T          const  number) const { return _LT<T, _GetNumType<T>::value>::op(*this, number); }
+                     inline bool ArbInt::op_le (ArbInt     const& number) const { return !op_gt(number);                                   }
+                     inline bool ArbInt::op_le (UArbInt    const& number) const { return !op_gt(number);                                   }
+  template <class T> inline bool ArbInt::op_le (SafeInt<T> const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_le (T          const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
+                     inline bool ArbInt::op_eq (ArbInt     const& number) const { return op_compare(number) =- 0;                          }
+                     inline bool ArbInt::op_eq (UArbInt    const& number) const { return op_compare(number) == 0;                          }
+  template <class T> inline bool ArbInt::op_eq (SafeInt<T> const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_eq (T          const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
+                     inline bool ArbInt::op_ne (ArbInt     const& number) const { return !op_eq(number);                                   }
+                     inline bool ArbInt::op_ne (UArbInt    const& number) const { return !op_eq(number);                                   }
+  template <class T> inline bool ArbInt::op_ne (SafeInt<T> const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
+  template <class T> inline bool ArbInt::op_ne (T          const  number) const { return _NE<T, _GetNumType<T>::value>::op(*this, number); }
+  
+  /*
+   * Bitwise operator backends.
+   */
+  template <class T> inline ArbInt& op_bit_and (SafeInt<T> const  number) { return _Bit_AND<T, _GetNumType<T>::value>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& op_bit_and (T          const  number) { return _Bit_AND<T, _GetNumType<T>::value>::op(*this, number); return *this; }
   
   /***************************************************************************
    * Operators.

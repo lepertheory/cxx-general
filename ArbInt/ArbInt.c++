@@ -1193,4 +1193,25 @@ namespace DAC {
     
   }
   
+  /*
+   * Bitwise AND.
+   */
+  ArbInt& ArbInt::op_bit_and (ArbInt const& number) {
+    
+    // Operate on the digits first.
+    _digits &= number._digits;
+    
+    // Then signs.
+    _positive = _positive && number._positive;
+    
+    // Done.
+    return *this;
+    
+  }
+  ArbInt& ArbInt::op_bit_and (UArbInt const& number) {
+    
+    
+    
+  }
+  
 }

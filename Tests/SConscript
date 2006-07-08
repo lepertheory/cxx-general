@@ -8,8 +8,8 @@ env.Append(CPPPATH = ['..'])
 env.Append(CPPDEFINES = ['TESTING'])
 
 # Create program-specific environments.
-env_UArbInt = env.Copy()
-cUArbInt.apply(env_UArbInt)
+env_ArbInt = env.Copy()
+cArbInt.apply(env_ArbInt)
 env_Arb = env.Copy()
 cArb.apply(env_Arb)
 env_Timestamp = env.Copy()
@@ -19,14 +19,14 @@ cINIFile.apply(env_INIFile)
 
 # Object files.
 o_SafeInt   = env          .Object(target = 'SafeInt'  , source = ['SafeInt.c++'  ])
-o_UArbInt   = env_UArbInt  .Object(target = 'UArbInt'  , source = ['UArbInt.c++'  ])
+o_ArbInt    = env_ArbInt   .Object(target = 'ArbInt'   , source = ['ArbInt.c++'   ])
 o_Arb       = env_Arb      .Object(target = 'Arb'      , source = ['Arb.c++'      ])
 o_Timestamp = env_Timestamp.Object(target = 'Timestamp', source = ['Timestamp.c++'])
 o_INIFile   = env_INIFile  .Object(target = 'INIFile'  , source = ['INIFile.c++'  ])
 
 # Programs.
 env          .Program(target = 'SafeInt'  , source =                            [o_SafeInt  ])
-env_UArbInt  .Program(target = 'UArbInt'  , source = cUArbInt  .get_objects() + [o_UArbInt  ])
+env_ArbInt   .Program(target = 'ArbInt'   , source = cArbInt   .get_objects() + [o_ArbInt   ])
 env_Arb      .Program(target = 'Arb'      , source = cArb      .get_objects() + [o_Arb      ])
 env_Timestamp.Program(target = 'Timestamp', source = cTimestamp.get_objects() + [o_Timestamp])
 env_INIFile  .Program(target = 'INIFile'  , source = cINIFile  .get_objects() + [o_INIFile  ])
