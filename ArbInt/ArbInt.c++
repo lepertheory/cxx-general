@@ -683,7 +683,7 @@ namespace DAC {
   /*
    * Raise this number to a power.
    */
-  UArbInt UArbInt::pow (UArbInt const& exp) {
+  UArbInt UArbInt::pow (UArbInt const& exp) const {
     
     // Work area.
     UArbInt tmp_base(*this);
@@ -945,8 +945,8 @@ namespace DAC {
     
     // Empty string is zero.
     if (number.empty()) {
-      _digits   =    0;
-      _positive = true;
+      _digits =     0;
+      _sign   = false;
       return *this;
     }
     
@@ -954,7 +954,7 @@ namespace DAC {
     if (number.length() > 1 && (number[0] == '+' || number[0] == '-')) {
       try {
         _digits.set(number.substr(1), autobase);
-        _positive = number[0] == '+';
+        _sign = number[0] == '-';
       } catch (UArbInt::Errors::BadFormat& e) {
         throw Errors::BadFormat().Problem(e.Problem()).Position(SafeInt<string::size_type>(e.Position()) + 1);
       }
@@ -963,7 +963,7 @@ namespace DAC {
     } else {
       try {
         _digits.set(number, autobase);
-        _positive = true;
+        _sign = false;
       } catch (UArbInt::Errors::BadFormat& e) {
         throw Errors::BadFormat().Problem(e.Problem()).Position(e.Position());
       }
@@ -980,8 +980,8 @@ namespace DAC {
   ArbInt& ArbInt::op_mul (ArbInt const& number) {
     
     // Mulitply values and set sign.
-    _digits   *= number._digits;
-    _positive  = _positive == number._positive;
+    _digits *= number._digits;
+    _sign    = _sign != number._sign;
     
     // Done.
     return *this;
@@ -1009,7 +1009,7 @@ namespace DAC {
       } catch (UArbInt::Errors::DivByZero&) {
         throw Errors::DivByZero;
       }
-      remainder->_positive = _positive;
+      remainder->_sign = _sign;
     } else {
       try {
         _digits /= number._digits;
@@ -1017,7 +1017,7 @@ namespace DAC {
         throw Errors::DivByZero;
       }
     }
-    _positive = _positive == number._positive;
+    _sign = _sign != number._sign;
     
     // Done.
     return *this;
@@ -1032,7 +1032,7 @@ namespace DAC {
       } catch (UArbInt::Errors::DivByZero&) {
         throw Errors::DivByZero;
       }
-      remainder->_positive = _positive;
+      remainder->_sign = _sign;
     } else {
       try {
         _digits /= number;
@@ -1082,14 +1082,14 @@ namespace DAC {
   ArbInt& ArbInt::op_add (ArbInt const& number) {
     
     // Add or subtract based on signs.
-    if (number._positive == _positive) {
+    if (number._sign == _sign) {
       _digits += number._digits;
     } else {
       if (_digits >= number._digits) {
         _digits -= number._digits;
       } else {
         _digits = number._digits - _digits;
-        _positive = !_positive;
+        _sign = !_sign;
       }
     }
     
@@ -1100,14 +1100,14 @@ namespace DAC {
   ArbInt& ArbInt::op_add (UArbInt const& number) {
     
     // Add or subtract based on signs.
-    if (_positive) {
+    if (!_sign) {
       _digits += number;
     } else {
       if (_digits >= number) {
         _digits -= number;
       } else {
         _digits = number - _digits;
-        _positive = !_positive;
+        _sign = !_sign;
       }
     }
     
@@ -1122,12 +1122,12 @@ namespace DAC {
   ArbInt& ArbInt::op_sub (ArbInt const& number) {
     
     // Subtract or add based on signs.
-    if (number._positive == _positive) {
+    if (number._sign == _sign) {
       if (_digits >= number._digits) {
         _digits -= number._digits;
       } else {
         _digits = number._digits - _digits;
-        _positive = !_positive;
+        _sign   = !_sign;
       }
     } else {
       _digits += number._digits;
@@ -1140,12 +1140,12 @@ namespace DAC {
   ArbInt& ArbInt::op_sub (UArbInt const& number) {
     
     // Subtract or add based on signs.
-    if (_positive) {
+    if (!_sign) {
       if (_digits >= number._digits) {
         _digits -= number;
       } else {
         _digits = number - _digits;
-        _positive = !_positive;
+        _sign = !_sign;
       }
     } else {
       _digits += number;
@@ -1162,28 +1162,28 @@ namespace DAC {
   int ArbInt::op_compare (ArbInt const& number) {
     
     // Check signs first.
-    if (_positive) {
-      if (!number._positive) {
-        return 1;
+    if (_sign) {
+      if (number._sign) {
+        return -1;
       }
     } else {
-      if (number._positive) {
-        return -1;
+      if (!number._sign) {
+        return 1;
       }
     }
     
     // Signs are the same, compare numbers.
     switch (_digits.op_compare(number._digits)) {
-      case -1: return _positive ? return -1 : return  1;
+      case -1: return _sign ? return  1 : return -1;
       case  0; return 0;
-      case  1; return _positive ? return  1 : return -1;
+      case  1; return _sign ? return -1 : return  1;
     }
     
   }
   int ArbInt::op_compare (UArbInt const& number) {
     
     // Check signs first.
-    if (!_positive) {
+    if (_sign) {
       return -1;
     }
     
@@ -1202,7 +1202,7 @@ namespace DAC {
     _digits &= number._digits;
     
     // Then signs.
-    _positive = _positive && number._positive;
+    _sign = _sign && number._sign;
     
     // Done.
     return *this;
@@ -1210,7 +1210,88 @@ namespace DAC {
   }
   ArbInt& ArbInt::op_bit_and (UArbInt const& number) {
     
+    // AND the digits.
+    _digits &= number;
     
+    // Sign will always be 0.
+    _sign = false;
+    
+    // Done.
+    return *this;
+    
+  }
+  
+  /*
+   * Bitwise inclusive OR.
+   */
+  ArbInt& ArbInt::op_bit_ior (ArbInt const& number) {
+    
+    // Operate on the digits first.
+    _digits |= number._digits;
+    
+    // Then signs.
+    _sign = _sign || number._sign;
+    
+    // Done.
+    return *this;
+    
+  }
+  ArbInt& ArbInt::op_bit_ior (UArbInt const& number) {
+    
+    // IOR the digits. Sign is not changed.
+    _digits |= number;
+    
+    // Done.
+    return *this;
+    
+  }
+  
+  /*
+   * Bitwise exclusive OR.
+   */
+  ArbInt& ArbInt::op_bit_xor (ArbInt const& number) {
+    
+    // XOR the digits. Sign is not changed.
+    _digits ^= number._digits;
+    
+    // Done.
+    return *this;
+    
+  }
+  
+  /*
+   * Access a specific bit.
+   */
+  bool ArbInt::get_bit (UArbInt const& bit) const {
+    
+    // Get the number of bits in the number.
+    UArbInt numbits(_digits.bitsInNumber());
+    
+    // If a nonexistant bit was requested, return it.
+    if (bit > numbits) {
+      return false;
+    }
+    
+    // Return the bit. Sign is the highest-order bit.
+    if (bit == numbits) {
+      return _sign;
+    }
+    return _digits.get_bit(bit);
+    
+  }
+  bool ArbInt::get_bit (size_t const digit, size_t const bit) const {
+    
+    // If a nonexistant bit was requested, return it.
+    if (digit > _digits.digits()) {
+      return false;
+    }
+    
+    // Return the bit. Sign is the highest-order bit.
+    SafeInt<UArbInt::value_type> reqdigit(_digits.digit(digit));
+    if (bit == reqdigit.bitsInNumber()) {
+      return _sign;
+    }
+    return reqdigit & 1 << bit - 1;
     
   }
   
