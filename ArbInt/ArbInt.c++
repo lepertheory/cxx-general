@@ -969,6 +969,9 @@ namespace DAC {
       }
     }
     
+    // Make sure we don't try to set -0.
+    _check_sign();
+    
     // Done.
     return *this;
     
@@ -982,6 +985,7 @@ namespace DAC {
     // Mulitply values and set sign.
     _digits *= number._digits;
     _sign    = _sign != number._sign;
+    _check_sign();
     
     // Done.
     return *this;
@@ -991,6 +995,7 @@ namespace DAC {
     
     // Multiply values, sign does not change.
     _digits *= number;
+    _check_sign();
     
     // Done.
     return *this;
@@ -1002,22 +1007,21 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_div (ArbInt const& number, ArbInt* const remainder) {
     
+    // No divide by zero.
+    if (!number) {
+      throw Errors::DivByZero;
+    }
+    
     // Divide values and set signs.
     if (remainder) {
-      try {
-        _digits.op_div(number._digits, remainder->_digits);
-      } catch (UArbInt::Errors::DivByZero&) {
-        throw Errors::DivByZero;
-      }
+      _digits.op_div(number._digits, remainder->_digits);
       remainder->_sign = _sign;
+      remainder->_check_sign();
     } else {
-      try {
-        _digits /= number._digits;
-      } catch (UArbInt::Errors::DivByZero&) {
-        throw Errors::DivByZero;
-      }
+      _digits /= number._digits;
     }
     _sign = _sign != number._sign;
+    _check_sign();
     
     // Done.
     return *this;
@@ -1025,21 +1029,20 @@ namespace DAC {
   }
   ArbInt& ArbInt::op_div (UArbInt const& number, ArbInt* const remainder) {
     
+    // No divide by zero.
+    if (!number) {
+      throw Errors::DivByZero;
+    }
+    
     // Divide values. Set the sign on the remainder.
     if (remainder) {
-      try {
-        _digits.op_div(number, remainder->_digits);
-      } catch (UArbInt::Errors::DivByZero&) {
-        throw Errors::DivByZero;
-      }
+      _digits.op_div(number, remainder->_digits);
       remainder->_sign = _sign;
+      remainder->_check_sign();
     } else {
-      try {
-        _digits /= number;
-      } catch (UArbInt::Errors::DivByZero&) {
-        throw Errors::DivByZero;
-      }
+      _digits /= number;
     }
+    _check_sign();
     
     // Done.
     return *this;
@@ -1051,12 +1054,14 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_mod (ArbInt const& number) {
     
-    // Modulo divide. Sign remains the same.
-    try {
-      _digits %= number._digits;
-    } catch (UArbInt::Errors::DivByZero&) {
+    // No divide by zero.
+    if (!_number) {
       throw Errors::DivByZero;
     }
+    
+    // Modulo divide. Sign remains the same.
+    _digits %= number._digits;
+    _check_sign();
     
     // Done.
     return *this;
@@ -1064,12 +1069,14 @@ namespace DAC {
   }
   ArbInt& ArbInt::op_mod (UArbInt const& number) {
     
-    // Modulo divide.
-    try {
-      _digits %= number;
-    } catch (UArbInt::Errors::DivByZero&) {
+    // No divide by zero.
+    if (!_number) {
       throw Errors::DivByZero;
     }
+    
+    // Modulo divide.
+    _digits %= number;
+    _check_sign();
     
     // Done.
     return *this;
@@ -1092,6 +1099,7 @@ namespace DAC {
         _sign = !_sign;
       }
     }
+    _check_sign();
     
     // Done.
     return *this;
@@ -1100,16 +1108,17 @@ namespace DAC {
   ArbInt& ArbInt::op_add (UArbInt const& number) {
     
     // Add or subtract based on signs.
-    if (!_sign) {
-      _digits += number;
-    } else {
+    if (_sign) {
       if (_digits >= number) {
         _digits -= number;
       } else {
         _digits = number - _digits;
         _sign = !_sign;
       }
+    } else {
+      _digits += number;
     }
+    _check_sign();
     
     // Done.
     return *this;
@@ -1132,6 +1141,7 @@ namespace DAC {
     } else {
       _digits += number._digits;
     }
+    _check_sign();
     
     // Done.
     return *this;
@@ -1140,16 +1150,17 @@ namespace DAC {
   ArbInt& ArbInt::op_sub (UArbInt const& number) {
     
     // Subtract or add based on signs.
-    if (!_sign) {
+    if (_sign) {
+      _digits += number;
+    } else {
       if (_digits >= number._digits) {
         _digits -= number;
       } else {
         _digits = number - _digits;
         _sign = !_sign;
       }
-    } else {
-      _digits += number;
     }
+    _check_sign();
     
     // Done.
     return *this;
@@ -1203,6 +1214,7 @@ namespace DAC {
     
     // Then signs.
     _sign = _sign && number._sign;
+    _check_sign();
     
     // Done.
     return *this;
@@ -1231,6 +1243,7 @@ namespace DAC {
     
     // Then signs.
     _sign = _sign || number._sign;
+    _check_sign();
     
     // Done.
     return *this;
@@ -1240,6 +1253,7 @@ namespace DAC {
     
     // IOR the digits. Sign is not changed.
     _digits |= number;
+    _check_sign();
     
     // Done.
     return *this;
@@ -1251,8 +1265,37 @@ namespace DAC {
    */
   ArbInt& ArbInt::op_bit_xor (ArbInt const& number) {
     
+    // Operate on the digits first.
+    _digits ^= number._digits;
+    
+    // Then signs.
+    _sign = _sign != number._sign;
+    _check_sign();
+    
+    // Done.
+    return *this;
+    
+  }
+  ArbInt& ArbInt::op_bit_xor (UArbInt const& number) {
+    
     // XOR the digits. Sign is not changed.
     _digits ^= number._digits;
+    _check_sign();
+    
+    // Done.
+    return *this;
+    
+  }
+  
+  /*
+   * Bitwise compliment.
+   */
+  ArbInt& ArbInt::op_bit_cpm () {
+    
+    // Do it.
+    _digits.op_bit_cpm();
+    _sign = !_sign;
+    _check_sign();
     
     // Done.
     return *this;
