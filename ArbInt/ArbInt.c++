@@ -1009,12 +1009,12 @@ namespace DAC {
     
     // No divide by zero.
     if (!number) {
-      throw Errors::DivByZero;
+      throw Errors::DivByZero();
     }
     
     // Divide values and set signs.
     if (remainder) {
-      _digits.op_div(number._digits, remainder->_digits);
+      _digits.op_div(number._digits, &remainder->_digits);
       remainder->_sign = _sign;
       remainder->_check_sign();
     } else {
@@ -1031,12 +1031,12 @@ namespace DAC {
     
     // No divide by zero.
     if (!number) {
-      throw Errors::DivByZero;
+      throw Errors::DivByZero();
     }
     
     // Divide values. Set the sign on the remainder.
     if (remainder) {
-      _digits.op_div(number, remainder->_digits);
+      _digits.op_div(number, &remainder->_digits);
       remainder->_sign = _sign;
       remainder->_check_sign();
     } else {
@@ -1055,8 +1055,8 @@ namespace DAC {
   ArbInt& ArbInt::op_mod (ArbInt const& number) {
     
     // No divide by zero.
-    if (!_number) {
-      throw Errors::DivByZero;
+    if (!number) {
+      throw Errors::DivByZero();
     }
     
     // Modulo divide. Sign remains the same.
@@ -1070,8 +1070,8 @@ namespace DAC {
   ArbInt& ArbInt::op_mod (UArbInt const& number) {
     
     // No divide by zero.
-    if (!_number) {
-      throw Errors::DivByZero;
+    if (!number) {
+      throw Errors::DivByZero();
     }
     
     // Modulo divide.
@@ -1153,7 +1153,7 @@ namespace DAC {
     if (_sign) {
       _digits += number;
     } else {
-      if (_digits >= number._digits) {
+      if (_digits >= number) {
         _digits -= number;
       } else {
         _digits = number - _digits;
@@ -1170,7 +1170,7 @@ namespace DAC {
   /*
    * Master comparison operator.
    */
-  int ArbInt::op_compare (ArbInt const& number) {
+  int ArbInt::op_compare (ArbInt const& number) const {
     
     // Check signs first.
     if (_sign) {
@@ -1185,13 +1185,16 @@ namespace DAC {
     
     // Signs are the same, compare numbers.
     switch (_digits.op_compare(number._digits)) {
-      case -1: return _sign ? return  1 : return -1;
-      case  0; return 0;
-      case  1; return _sign ? return -1 : return  1;
+      case -1: return _sign ?  1 : -1;
+      case  0: return 0;
+      case  1: return _sign ? -1 :  1;
     }
     
+    // Error.
+    return numeric_limits<int>::min();
+
   }
-  int ArbInt::op_compare (UArbInt const& number) {
+  int ArbInt::op_compare (UArbInt const& number) const {
     
     // Check signs first.
     if (_sign) {
@@ -1279,7 +1282,7 @@ namespace DAC {
   ArbInt& ArbInt::op_bit_xor (UArbInt const& number) {
     
     // XOR the digits. Sign is not changed.
-    _digits ^= number._digits;
+    _digits ^= number;
     _check_sign();
     
     // Done.
@@ -1325,12 +1328,12 @@ namespace DAC {
   bool ArbInt::get_bit (size_t const digit, size_t const bit) const {
     
     // If a nonexistant bit was requested, return it.
-    if (digit > _digits.digits()) {
+    if (digit > _digits.numDigits()) {
       return false;
     }
     
     // Return the bit. Sign is the highest-order bit.
-    SafeInt<UArbInt::value_type> reqdigit(_digits.digit(digit));
+    SafeInt<UArbInt::value_type> reqdigit(_digits.get_digit(digit));
     if (bit == reqdigit.bitsInNumber()) {
       return _sign;
     }

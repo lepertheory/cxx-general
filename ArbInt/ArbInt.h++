@@ -262,7 +262,7 @@ namespace DAC {
       bool    isEven       () const;
       bool    isZero       () const;
       bool    isOdd        () const;
-      size_t  digits       () const;
+      size_t  numDigits    () const;
       UArbInt bitsInNumber () const;
       
       // Raise this number to a power.
@@ -700,7 +700,7 @@ namespace DAC {
       bool   isZero       () const;
       bool   isPositive   () const;
       bool   isNegative   () const;
-      size_t digits       () const;
+      size_t numDigits    () const;
       size_t bitsInNumber () const;
       
       // Convert. Drops sign, does not check.
@@ -709,6 +709,9 @@ namespace DAC {
       // Raise this number to a power.
                          ArbInt pow (UArbInt const& exp) const;
       template <class T> ArbInt pow (T       const  exp) const;
+      
+      // Access a specific digit.
+      value_type get_digit (size_t const digit) const;
       
       // Access a specific bit. A bit index that does not exist is always 0.
       bool get_bit(UArbInt const& bit                  ) const;
@@ -765,11 +768,6 @@ namespace DAC {
       template <class T, _NumType> class _Sub;
       template <class T> class _Sub<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
       template <class T> class _Sub<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
-      
-      // Shift.
-      template <class T, _NumType> class _Shift;
-      template <class T> class _Shift<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const r, _Dir const dir); static void op (ArbInt& l, T const r); };
-      template <class T> class _Shift<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const r, _Dir const dir); static void op (ArbInt& l, T const r); };
       
       // Shift left.
       template <class T, _NumType> class _ShL;
@@ -1409,7 +1407,7 @@ namespace DAC {
   /*
    * Get the number of digits in this number.
    */
-  inline size_t UArbInt::digits () const { return _digits.size(); }
+  inline size_t UArbInt::numDigits () const { return _digits.size(); }
   
   /*
    * Get the number of bits in this number.
@@ -2287,7 +2285,7 @@ namespace DAC {
   inline ArbInt::operator short          () const { return Value<short         >(); }
   inline ArbInt::operator unsigned short () const { return Value<unsigned short>(); }
   inline ArbInt::operator int            () const { return Value<int           >(); }
-  inline ArbInt::operator unsigned       () const { return Value<unsigned      >(); }
+  
   inline ArbInt::operator long           () const { return Value<long          >(); }
   inline ArbInt::operator unsigned long  () const { return Value<unsigned long >(); }
   
@@ -2384,10 +2382,10 @@ namespace DAC {
   /*
    * Push a string onto the back of this number.
    */
-                     inline void ArbInt::push_back (ArbInt     const& number) { push_back(ArbInt(number).Base(_base).to_string() ); }
-                     inline void ArbInt::push_back (UArbInt    const& number) { push_back(UArbInt(number).Base(_base).to_string()); }
-  template <class T> inline void ArbInt::push_back (SafeInt<T> const  number) { push_back(static_cast<T>(number)                 ); }
-  template <class T> inline void ArbInt::push_back (T          const  number) { push_back(DAC::to_string(number)                 ); }
+                     inline void ArbInt::push_back (ArbInt     const& number) { push_back(ArbInt (number).Base(_digits.Base()).to_string()); }
+                     inline void ArbInt::push_back (UArbInt    const& number) { push_back(UArbInt(number).Base(_digits.Base()).to_string()); }
+  template <class T> inline void ArbInt::push_back (SafeInt<T> const  number) { push_back(static_cast<T>(number)                          ); }
+  template <class T> inline void ArbInt::push_back (T          const  number) { push_back(DAC::to_string(number)                          ); }
   inline void ArbInt::push_back (std::string const& number) {
     if (number.length() > 1 && (number[0] == '-' || number[0] == '+')) {
       _digits.push_back(number.substr(1));
@@ -2399,14 +2397,14 @@ namespace DAC {
   /*
    * Convert to string.
    */
-  inline std::string& to_string (std::string& buffer, value_type const base = 0) const {
-    digits.to_string(buffer, base);
+  inline std::string& ArbInt::to_string (std::string& buffer, value_type const base) const {
+    _digits.to_string(buffer, base);
     if (_sign) {
       buffer.insert(0, 1, '-');
     }
     return buffer;
   }
-  inline std::string const& to_string (value_type const base = 0) const { return to_string(_strbuf, base); }
+  inline std::string const& ArbInt::to_string (value_type const base) const { return to_string(_strbuf, base); }
   
   /*
    * Arithmetic operator backends.
@@ -2420,17 +2418,17 @@ namespace DAC {
   template <class T> inline ArbInt& ArbInt::op_add (SafeInt<T> const number                         ) { _Add<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
   template <class T> inline ArbInt& ArbInt::op_add (T          const number                         ) { _Add<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
   template <class T> inline ArbInt& ArbInt::op_sub (SafeInt<T> const number                         ) { _Sub<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_sub (T          const number                         ) { _Sum<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_sub (T          const number                         ) { _Sub<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
   
   /*
    * Bit shift operator backends.
    */
                      inline ArbInt& ArbInt::op_shl (ArbInt     const& number) { if (number < 0) { op_shr(number._digits); } else { op_shl(number._digits); } return *this; }
-                     inline ArbInt& ArbInt::op_shl (UArbInt    const& number) { _shift(number, _DIR_L);                                                      return *this; }
+                     inline ArbInt& ArbInt::op_shl (UArbInt    const& number) { _digits <<= number;                                                          return *this; }
   template <class T> inline ArbInt& ArbInt::op_shl (SafeInt<T> const  number) { _ShL<T, _GetNumType<T>::value>::op(*this, number);                           return *this; }
   template <class T> inline ArbInt& ArbInt::op_shl (T          const  number) { _ShL<T, _GetNumType<T>::value>::op(*this, number);                           return *this; }
                      inline ArbInt& ArbInt::op_shr (ArbInt     const& number) { if (number < 0) { op_shl(number._digits); } else { op_shr(number._digits); } return *this; }
-                     inline ArbInt& ArbInt::op_shr (UArbInt    const& number) { _shift(number, _DIR_R);                                                      return *this; }
+                     inline ArbInt& ArbInt::op_shr (UArbInt    const& number) { _digits >>= number;                                                          return *this; }
   template <class T> inline ArbInt& ArbInt::op_shr (SafeInt<T> const  number) { _ShR<T, _GetNumType<T>::value>::op(*this, number);                           return *this; }
   template <class T> inline ArbInt& ArbInt::op_shr (T          const  number) { _ShR<T, _GetNumType<T>::value>::op(*this, number);                           return *this; }
   
@@ -2459,7 +2457,7 @@ namespace DAC {
                      inline bool ArbInt::op_le (UArbInt    const& number) const { return !op_gt(number);                                   }
   template <class T> inline bool ArbInt::op_le (SafeInt<T> const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool ArbInt::op_le (T          const  number) const { return _LE<T, _GetNumType<T>::value>::op(*this, number); }
-                     inline bool ArbInt::op_eq (ArbInt     const& number) const { return op_compare(number) =- 0;                          }
+                     inline bool ArbInt::op_eq (ArbInt     const& number) const { return op_compare(number) == 0;                          }
                      inline bool ArbInt::op_eq (UArbInt    const& number) const { return op_compare(number) == 0;                          }
   template <class T> inline bool ArbInt::op_eq (SafeInt<T> const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
   template <class T> inline bool ArbInt::op_eq (T          const  number) const { return _EQ<T, _GetNumType<T>::value>::op(*this, number); }
@@ -2481,38 +2479,38 @@ namespace DAC {
   /*
    * Return information about this number.
    */
-  inline bool ArbInt::isEven     () const { return _digits.isEven(); }
-  inline bool ArbInt::isOdd      () const { return _digits.isOdd (); }
-  inline bool ArbInt::isZero     () const { return _digits.isZero(); }
-  inline bool ArbInt::isPositive () const { return !_sign;           }
-  inline bool ArbInt::isNegative () const { return _sign;            }
-  inline bool ArbInt::digits     () const { return _digits.digits(); }
+  inline bool   ArbInt::isEven     () const { return _digits.isEven();    }
+  inline bool   ArbInt::isOdd      () const { return _digits.isOdd ();    }
+  inline bool   ArbInt::isZero     () const { return _digits.isZero();    }
+  inline bool   ArbInt::isPositive () const { return !_sign;              }
+  inline bool   ArbInt::isNegative () const { return _sign;               }
+  inline size_t ArbInt::numDigits  () const { return _digits.numDigits(); }
   
   /*
    * Convert to UArbInt.
    */
-  UArbInt toUArbInt () const { return _digits; }
+  UArbInt ArbInt::toUArbInt () const { return _digits; }
   
   /*
    * Raise this number to a power.
    */
   ArbInt ArbInt::pow (UArbInt const& exp) const {
-    ArbInt retval();
-    retval._digits.swap(_digits.pow(exp));
-    _sign = _sign && exp & 1U;
+    ArbInt retval;
+    retval._digits = _digits.pow(exp);
+    retval._sign   = _sign && exp & 1U;
     return retval;
   }
-  template <class T ArbInt ArbInt::pow (T const exp) const {
-    ArbInt retval();
-    retval._digits.swap(_digits.pow(exp));
-    _sign = _sign && exp & 1U;
+  template <class T> ArbInt ArbInt::pow (T const exp) const {
+    ArbInt retval;
+    retval._digits = _digits.pow(exp);
+    retval._sign   = _sign && exp & 1U;
     return retval;
   }
   
   /*
    * Access a specific digit.
    */
-  inline value_type ArbInt::get_digit (size_t const digit) { return _digits.get_digit(digit); }
+  inline ArbInt::value_type ArbInt::get_digit (size_t const digit) const { return _digits.get_digit(digit); }
   
   /*
    * Make sure we are not attempting to set -0.
@@ -2650,6 +2648,7 @@ namespace DAC {
   /*
    * Shift.
    */
+  /*
   template <class T> inline void ArbInt::_Shift<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r, _Dir const dir) {
     switch (dir) {
       case _DIR_L: l <<= r; break;
@@ -2663,6 +2662,7 @@ namespace DAC {
       case _DIR_R: l >>= r; break;
     }
   }
+  */
   
   /*
    * Shift left.
@@ -2785,11 +2785,12 @@ namespace DAC {
     _check_sign();
   }
   template <class T> inline void ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { _Bit_IOR<T, _NUM_UINT>::op(l, SafeInt<T>(r)); }
-  template <class T> inline void ArbInt::_Bit_IOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
+  template <class T> inline void ArbInt::_Bit_IOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     l._digits |= r.abs();
     l._sign    = r._sign || r < 0;
     _check_sign();
   }
+  template <class T> inline void ArbInt::_Bit_IOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { _Bit_IOR<T, _NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Bitwise exclusive OR.
@@ -2799,11 +2800,12 @@ namespace DAC {
     _check_sign();
   }
   template <class T> inline void ArbInt::_Bit_XOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, T const r) { _Bit_XOR<T, _NUM_UINT>::op(l, SafeInt<T>(r)); }
-  template <class T> inline void ArbInt::_Bit_XOR<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
+  template <class T> inline void ArbInt::_Bit_XOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, SafeInt<T> const r) {
     l._digits ^= r.abs();
     l._sign    = r._sign != r < 0;
     _check_sign();
   }
+  template <class T> inline void ArbInt::_Bit_XOR<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { _Bit_XOR<T, _NUM_SINT>::op(l, SafeInt<T>(r)); }
   
   /***************************************************************************
    * Operators.
@@ -2993,7 +2995,7 @@ namespace DAC {
                      inline UArbInt operator & (UArbInt    const& l, UArbInt    const& r) { return UArbInt(l).op_bit_and(r); }
                      inline ArbInt  operator & (ArbInt     const& l, ArbInt     const& r) { return ArbInt (l).op_bit_and(r); }
                      inline ArbInt  operator & (UArbInt    const& l, ArbInt     const& r) { return ArbInt (l).op_bit_and(r); }
-                     inline ArbInt  operator & (ArbInt     const& l, UArbInt    const& r) { return UArbInt(l).op_bit_and(r); }
+                     inline ArbInt  operator & (ArbInt     const& l, UArbInt    const& r) { return ArbInt (l).op_bit_and(r); }
   template <class T> inline UArbInt operator & (UArbInt    const& l, SafeInt<T> const  r) { return UArbInt(l).op_bit_and(r); }
   template <class T> inline ArbInt  operator & (ArbInt     const& l, SafeInt<T> const  r) { return ArbInt (l).op_bit_and(r); }
   template <class T> inline UArbInt operator & (SafeInt<T> const  l, UArbInt    const& r) { return UArbInt(r).op_bit_and(l); }
