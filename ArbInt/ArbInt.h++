@@ -21,6 +21,7 @@
   #include <to_string.h++>
   #include <rppower.h++>
   #include <Exception.h++>
+  #include <NumInfo.h++>
 
 // Namespace wrapping.
 namespace DAC {
@@ -760,9 +761,14 @@ namespace DAC {
       template <class T> class _Mod<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
       
       // Add.
+      /*
       template <class T, _NumType> class _Add;
       template <class T> class _Add<T, _NUM_UINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
       template <class T> class _Add<T, _NUM_SINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
+      */
+      template <class T, NumTypes::Type> class _Add;
+      template <class T> class _Add<T, NumTypes::UINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
+      template <class T> class _Add<T, NumTypes::SINT> { public: static void op (ArbInt& l, SafeInt<T> const r); static void op (ArbInt& l, T const r); };
       
       // Subtract.
       template <class T, _NumType> class _Sub;
@@ -2416,7 +2422,8 @@ namespace DAC {
   template <class T> inline ArbInt& ArbInt::op_mod (SafeInt<T> const number                         ) { _Mod<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
   template <class T> inline ArbInt& ArbInt::op_mod (T          const number                         ) { _Mod<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
   template <class T> inline ArbInt& ArbInt::op_add (SafeInt<T> const number                         ) { _Add<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_add (T          const number                         ) { _Add<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
+  //template <class T> inline ArbInt& ArbInt::op_add (T          const number                         ) { _Add<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_add (T          const number                         ) { _Add<T, NumType<T>::type>::op(*this, number           ); return *this; }
   template <class T> inline ArbInt& ArbInt::op_sub (SafeInt<T> const number                         ) { _Sub<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
   template <class T> inline ArbInt& ArbInt::op_sub (T          const number                         ) { _Sub<T, _GetNumType<T>::value>::op(*this, number           ); return *this; }
   
@@ -2584,6 +2591,7 @@ namespace DAC {
   /*
    * Add.
    */
+  /*
   template <class T> void ArbInt::_Add<T, ArbInt::_NUM_UINT>::op (ArbInt& l, SafeInt<T> const r) {
     if (l._sign) {
       if (r > l._digits) {
@@ -2612,6 +2620,35 @@ namespace DAC {
     l._check_sign();
   }
   template <class T> inline void ArbInt::_Add<T, ArbInt::_NUM_SINT>::op (ArbInt& l, T const r) { _Add<T, _NUM_SINT>::op(l, SafeInt<T>(r)); }
+  */
+  template <class T> void ArbInt::_Add<T, NumTypes::UINT>::op (ArbInt& l, SafeInt<T> const r) {
+    if (l._sign) {
+      if (r > l._digits) {
+        l._digits = r - l._digits;
+        l._sign   = !l._sign;
+      } else {
+        l._digits -= r;
+      }
+    } else {
+      l._digits += r;
+    }
+    l._check_sign();
+  }
+  template <class T> inline void ArbInt::_Add<T, NumTypes::UINT>::op (ArbInt& l, T const r) { _Add<T, NumTypes::UINT>::op(l, SafeInt<T>(r)); }
+  template <class T> void ArbInt::_Add<T, NumTypes::SINT>::op (ArbInt& l, SafeInt<T> const r) {
+    if (l._sign == r < 0) {
+      l._digits += r.abs();
+    } else {
+      if (r.abs() > l._digits) {
+        l._digits = r.abs() - l._digits();
+        l._sign   = !l._sign;
+      } else {
+        l._digits -= r.abs();
+      }
+    }
+    l._check_sign();
+  }
+  template <class T> inline void ArbInt::_Add<T, NumTypes::SINT>::op (ArbInt& l, T const r) { _Add<T, NumTypes::SINT>::op(l, SafeInt<T>(r)); }
   
   /*
    * Subtract.
