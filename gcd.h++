@@ -33,6 +33,7 @@ namespace DAC {
     T retval;
     
     // Work area. tmp_n1 must be > tmp_n2.
+    // FIXME: What about negatives?
     T tmp_n1(n1);
     T tmp_n2(n2);
     if (tmp_n1 < tmp_n2) {

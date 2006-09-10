@@ -80,6 +80,15 @@ namespace DAC {
     set(number);
     
   }
+  Arb::Arb (ArbInt const& number) {
+    
+    // Call common init.
+    _init();
+    
+    // Set the number.
+    set(number);
+    
+  }
   Arb::Arb (UArbInt const& number) {
     
     // Call common init.
@@ -97,7 +106,7 @@ namespace DAC {
     if (base != _base) {
       _base = base;
       if (_fix && _fixtype == FIX_RADIX) {
-        _fixq = _DigsT(_base).pow(_pointpos);
+        _fixq = UArbInt(_base).pow(_pointpos);
         _reduce();
       }
     }
@@ -107,7 +116,7 @@ namespace DAC {
     if (pointpos != _pointpos) {
       _pointpos = pointpos;
       if (_fix && _fixtype == FIX_RADIX) {
-        _fixq = _DigsT(_base).pow(_pointpos);
+        _fixq = UArbInt(_base).pow(_pointpos);
         _reduce();
       }
     }
@@ -117,7 +126,7 @@ namespace DAC {
     if (fixed != _fix) {
       _fix = fixed;
       if (_fix && _fixtype == FIX_RADIX) {
-        _fixq = _DigsT(_base).pow(_pointpos);
+        _fixq = UArbInt(_base).pow(_pointpos);
       }
       _reduce();
     }
@@ -135,9 +144,10 @@ namespace DAC {
   Arb& Arb::FixQ (Arb const& fixq) {
     if (fixq != _fixq) {
       if (!fixq.isInteger()) {
-        throw Arb::Errors::NonInteger();
+        throw Errors::NonInteger();
       }
-      _fixq    = fixq._p;
+      // FIXME: Check for signs.
+      _fixq    = fixq._p.toUArbInt();
       _fixtype = FIX_DENOM;
       if (_fix) {
         _reduce();
@@ -152,9 +162,9 @@ namespace DAC {
   void Arb::clear () {
     
     // Operations that may throw, but do not change the number.
-    _DigsT new_p;
-    _DigsT new_q;
-    _DigsT new_fixq;
+    ArbInt  new_p;
+    UArbInt new_q;
+    UArbInt new_fixq;
     new_q    = 1;
     new_fixq = 1;
     
@@ -162,7 +172,6 @@ namespace DAC {
     _p   .swap(new_p   );
     _q   .swap(new_q   );
     _fixq.swap(new_fixq);
-    _positive = true      ;
     _pointpos =          0;
     _fix      = false     ;
     _fixtype  = FIX_RADIX ;
@@ -179,15 +188,14 @@ namespace DAC {
   void Arb::copy (Arb const& number) {
     
     // Operations that may throw, but do not change the number.
-    _DigsT new_p   (number._p   );
-    _DigsT new_q   (number._q   );
-    _DigsT new_fixq(number._fixq);
+    ArbInt  new_p   (number._p   );
+    UArbInt new_q   (number._q   );
+    UArbInt new_fixq(number._fixq);
     
     // Operations that never throw.
     _p   .swap(new_p   );
     _q   .swap(new_q   );
     _fixq.swap(new_fixq);
-    _positive = number._positive;
     _pointpos = number._pointpos;
     _fix      = number._fix     ;
     _fixtype  = number._fixtype ;
@@ -224,18 +232,18 @@ namespace DAC {
       case FMT_RADIX  : {
         
         // Work area.
-        _DigsT numeric;
+        UArbInt numeric;
         numeric.Base(_base);
         
         // Get the whole number part.
-        numeric = _p / _q;
+        numeric = _p.abs().toUArbInt() / _q;
         
         // This is the number of digits from the end of the string to put
         // the radix point.
         std::string::size_type radixpos = 0;
         
         // Create the radix part.
-        _DigsT remainder(_p % _q);
+        UArbInt remainder(_p.abs().toUArbInt() % _q);
         if ((_fix && _fixq != 1) || (!_fix && remainder)) {
           
           // Get the radix digits, one by one. Output digits until the entire
@@ -243,7 +251,7 @@ namespace DAC {
           // are output.
           std::string::size_type sigdigs  = 0;
           bool                   sigstart = (numeric != 0);
-          _DigsT                 digit;
+          UArbInt                digit;
           while ((sigdigs < _maxradix) && (remainder != 0)) {
             
             // Push one base digit to a whole number.
@@ -271,12 +279,12 @@ namespace DAC {
           if (remainder != 0) {
             switch (_round) {
               case ROUND_UP: {
-                if (_positive) {
+                if (isPositive()) {
                   ++numeric;
                 }
               } break;
               case ROUND_DOWN: {
-                if (!_positive) {
+                if (isPositive()) {
                   ++numeric;
                 }
               } break;
@@ -308,7 +316,7 @@ namespace DAC {
           
             // Pad with zeros.
             if (radixpos < _pointpos) {
-              numeric  *= _DigsT(_base).pow(_pointpos - radixpos);
+              numeric  *= UArbInt(_base).pow(_pointpos - radixpos);
               radixpos  = _pointpos;
             }
             
@@ -358,7 +366,7 @@ namespace DAC {
     }
         
     // Output the sign if negative, unless outputting both formats.
-    if ((fmt != FMT_BOTH) && !(_positive) && (_p != 0)) {
+    if ((fmt != FMT_BOTH) && isNegative() && (_p != 0)) {
       retval.insert(0, 1, '-');
     }
     
@@ -517,7 +525,7 @@ namespace DAC {
     // Load the number.
     try {
       _p.Base(num_base).set(num, false);
-    } catch (UArbInt::Errors::BadFormat& e) {
+    } catch (ArbInt::Errors::BadFormat& e) {
       if (e.Position() < numstart + numlen) {
         throw Arb::Errors::BadFormat().Problem(e.Problem()).Position(e.Position() + numstart                      );
       } else {
@@ -530,8 +538,8 @@ namespace DAC {
     {
       
       // Determine the exponent given.
-      _DigsT expn;
-      _DigsT expr(nexp);
+      UArbInt expn;
+      UArbInt expr(nexp);
       try {
         expn.Base(num_base).set(exp, false);
       } catch (UArbInt::Errors::BadFormat& e) {
@@ -554,7 +562,7 @@ namespace DAC {
         // This calculation will be needed whether exponent is positive or
         // negative. If positive, multiply p by it and clear, thus bringing p
         // down to 1s. If negative, leave as it is, it is already accurate.
-        _q = _DigsT(num_base).pow(expn);
+        _q = UArbInt(num_base).pow(expn);
         if (p_exp) {
           _p   *= _q;
           _q    = 1;
@@ -577,18 +585,18 @@ namespace DAC {
           // If the exponent is positive, it is a simple case of increasing the
           // number of radix digits, this is a number represented by 1s by now.
           if (p_exp) {
-            _q  = _DigsT(_base).pow(_DigsT(_pointpos));
+            _q  = UArbInt(_base).pow(UArbInt(_pointpos));
             _p *= _q;
           
           // If the exponent is negative, we must add or subtract the difference
           // in digits.
           } else {
-            if (_DigsT(_pointpos) >= expn) {
-              _DigsT mod(_DigsT(_base).pow(_DigsT(_pointpos) - expn));
+            if (UArbInt(_pointpos) >= expn) {
+              UArbInt mod(UArbInt(_base).pow(UArbInt(_pointpos) - expn));
               _p *= mod;
               _q *= mod;
             } else {
-              _DigsT mod(_DigsT(_base).pow(expn - _DigsT(_pointpos)));
+              UArbInt mod(UArbInt(_base).pow(expn - UArbInt(_pointpos)));
               _p /= mod;
               _q /= mod;
             }
@@ -604,7 +612,9 @@ namespace DAC {
     }
     
     // Set the sign.
-    _positive = p_num;
+    if (!p_num) {
+      _p *= -1;
+    }
     
     // Reduce the number.
     _reduce();
@@ -617,9 +627,8 @@ namespace DAC {
   void Arb::set (Arb const& number) {
     
     // Set the new number.
-    _p        = number._p;
-    _q        = number._q;
-    _positive = number._positive;
+    _p = number._p;
+    _q = number._q;
     
     // Reduce the fraction if setting from a fixed number or if this is a
     // fixed number, should be no need otherwise.
@@ -631,14 +640,29 @@ namespace DAC {
   }
   
   /*
+   * Set from an ArbInt.
+   */
+  void Arb::set (ArbInt const& number) {
+    
+    // Set the number.
+    _p = number;
+    _q = 1;
+    
+    // Reduce if this is a fixed number, otherwise no need.
+    if (_fix) {
+      _reduce();
+    }
+    
+  }
+  
+  /*
    * Set from a UArbInt.
    */
   void Arb::set (UArbInt const& number) {
     
     // Set the number.
-    _p        = number;
-    _q        = 1;
-    _positive = true;
+    _p = number;
+    _q = 1;
     
     // Reduce if this is a fixed number, otherwise no need.
     if (_fix) {
@@ -656,8 +680,17 @@ namespace DAC {
     _p *= number._p;
     _q *= number._q;
     
-    // Set the sign.
-    _positive = (_positive == number._positive);
+    // Reduce the fraction.
+    _reduce();
+    
+    // Done.
+    return *this;
+    
+  }
+  Arb& Arb::op_mul (ArbInt const& number) {
+    
+    // Multiply.
+    _p *= number;
     
     // Reduce the fraction.
     _reduce();
@@ -686,15 +719,32 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw Arb::Errors::DivByZero();
+      throw Errors::DivByZero();
     }
     
     // Divide the numbers, multiply by the inverse.
     _p *= number._q;
     _q *= number._p;
     
-    // Set the sign.
-    _positive = (_positive == number._positive);
+    // Reduce the fraction.
+    _reduce();
+    
+    // Done.
+    return *this;
+    
+  }
+  Arb& Arb::op_div (ArbInt const& number) {
+    
+    // Throw an error on divide by zero.
+    if (number == 0) {
+      throw Errors::DivByZero();
+    }
+    
+    // Divide the numbers, multiply by the inverse.
+    _q *= number.abs();
+    if (number < 0) {
+      _p *= -1;
+    }
     
     // Reduce the fraction.
     _reduce();
@@ -707,7 +757,7 @@ namespace DAC {
     
     // Throw an error on divide by zero.
     if (number == 0) {
-      throw Arb::Errors::DivByZero();
+      throw Errors::DivByZero();
     }
     
     // Divide the numbers, multiply by the inverse.
@@ -738,6 +788,25 @@ namespace DAC {
     
     // Simple, just modulo divide p's.
     _p %= number._p;
+    
+    // We done, return.
+    return *this;
+    
+  }
+  Arb& Arb::op_mod (ArbInt const& number) {
+    
+    // Throw an error on divide by zero.
+    if (number == 0) {
+      throw Arb::Errors::DivByZero();
+    }
+    
+    // Throw an error if this number is not integer.
+    if (!isInteger()) {
+      throw Arb::Errors::NonInteger();
+    }
+    
+    // Modulo divide p.
+    _p %= number;
     
     // We done, return.
     return *this;
@@ -774,17 +843,26 @@ namespace DAC {
     // Numbers must have the same denominator to add.
     _normalize(tmp_r);
     
-    // If signs are same add, otherwise subtract.
-    if (*this < 0 == number < 0) {
-      _p += tmp_r._p;
-    } else {
-      if (tmp_r._p > _p) {
-        _p        = tmp_r._p - _p;
-        _positive = !_positive;
-      } else {
-        _p -= tmp_r._p;
-      }
-    }
+    // Add.
+    _p += tmp_r._p;
+    
+    // Reduce the fraction.
+    _reduce();
+    
+    // We done.
+    return *this;
+    
+  }
+  Arb& Arb::op_add (ArbInt const& number) {
+    
+    // Work area.
+    ArbInt tmp(number);
+    
+    // Normalize.
+    tmp *= _q;
+    
+    // Add.
+    _p += tmp;
     
     // Reduce the fraction.
     _reduce();
@@ -801,17 +879,8 @@ namespace DAC {
     // Normalize.
     tmp *= _q;
     
-    // If signs are same add, otherwise subtract.
-    if (*this < 0) {
-      if (tmp > _p) {
-        _p        = tmp - _p;
-        _positive = !_positive;
-      } else {
-        _p -= tmp;
-      }
-    } else {
-      _p += tmp;
-    }
+    // Add.
+    _p += tmp;
     
     // Reduce the fraction.
     _reduce();
@@ -832,17 +901,26 @@ namespace DAC {
     // Numbers must have the same denominator to subtract.
     _normalize(tmp_r);
     
-    // If signs are same subtract, otherwise add.
-    if (*this < 0 == tmp_r < 0) {
-      if (tmp_r._p > _p) {
-        _p        = tmp_r._p - _p;
-        _positive = !_positive;
-      } else {
-        _p -= tmp_r._p;
-      }
-    } else {
-      _p += tmp_r._p;
-    }
+    // Subtract.
+    _p -= tmp_r._p;
+    
+    // Reduce the fraction.
+    _reduce();
+    
+    // We done.
+    return *this;
+    
+  }
+  Arb& Arb::op_sub (ArbInt const& number) {
+    
+    // Work area.
+    ArbInt tmp(number);
+    
+    // Normalize.
+    tmp *= _q;
+    
+    // Subtract.
+    _p -= tmp;
     
     // Reduce the fraction.
     _reduce();
@@ -859,17 +937,8 @@ namespace DAC {
     // Normalize.
     tmp *= _q;
     
-    // If signs are same subtract, otherwise add.
-    if (*this < 0) {
-      _p += tmp;
-    } else {
-      if (tmp > _p) {
-        _p        = tmp - _p;
-        _positive = !_positive;
-      } else {
-        _p -= tmp;
-      }
-    }
+    // Subtract.
+    _p -= tmp;
     
     // Reduce the fraction.
     _reduce();
@@ -880,193 +949,81 @@ namespace DAC {
   }
   
   /*
-   * Greater-than operator backend.
+   * Master comparison operator.
    */
-  bool Arb::op_gt (Arb const& number) const {
+  int Arb::op_compare (Arb const& number) const {
     
     // If one or both numbers are zero, compare is easy.
-    if (_p.isZero()) {
-      if (number._p.isZero()) {
-        return false;
+    if (_p == 0) {
+      if (number._p == 0) {
+        return 0;
       } else {
-        return !number._positive;
+        return (number._p > 0) ? -1 : 1;
       }
-    } else if (number._p.isZero()) {
-      return _positive;
+    } else if (number._p == 0) {
+      return (_p > 0) ? 1 : -1;
     }
     
-    // Neither number is zero. If signs are different, they are sufficient
-    // for this test.
-    if (_positive && !number._positive) {
-      return true;
-    } else if (!_positive && number._positive) {
-      return false;
+    // Neither number is zero, check signs.
+    if (_p > 0 && number._p < 0) {
+      return 1;
+    } else if (_p < 0 && number._p > 0) {
+      return -1;
     }
     
-    // Signs are the same, we will have to compare numbers. Copy numbers since
-    // we will be modifying them.
+    // Signs are the same, we will have to compare numbers. Normalize and
+    // compare.
     Arb tmp_l(*this );
     Arb tmp_r(number);
-    
-    // Numbers must have the same denomiator to compare.
     tmp_l._normalize(tmp_r);
-    
-    // If numbers are negative, comparison is reversed.
-    if (_positive) {
-      return (tmp_l._p > tmp_r._p);
-    } else {
-      return (tmp_l._p < tmp_r._p);
-    }
+    return _p.op_compare(number._p);
     
   }
-  bool Arb::op_gt (UArbInt const& number) const {
+  int Arb::op_compare (ArbInt const& number) const {
     
     // If one or both numbers are zero, compare is easy.
-    if (_p.isZero()) {
-      return false;
-    } else if (number == 0) {
-      return _positive;
-    }
-    
-    // Neither number is zero. If signs are different, they are sufficient
-    // for this test.
-    if (!_positive) {
-      return false;
-    }
-    
-    // Signs are the same, we will have to compare numbers. Copy numbers since
-    // we will be modifying them.
-    UArbInt tmp(number);
-    
-    // Normalize.
-    tmp *= _q;
-    
-    // Compare.
-    return _p > tmp;
-    
-  }
-  
-  /*
-   * Less-than operator backend.
-   */
-  bool Arb::op_lt (Arb const& number) const {
-    
-    // If one or both numbers are zero, compare is easy.
-    if (_p.isZero()) {
-      if (number._p.isZero()) {
-        return false;
+    if (_p == 0) {
+      if (number == 0) {
+        return 0;
       } else {
-        return number._positive;
+        return (number > 0) ? -1 : 1;
       }
-    } else if (number._p.isZero()) {
-      return !_positive;
+    } else if (number == 0) {
+      return (_p > 0) ? 1 : -1;
     }
     
-    // Neither number is zero. If signs are different, they are sufficient for
-    // this test.
-    if (_positive && !number._positive) {
-      return false;
-    } else if (!_positive && number._positive) {
-      return true;
+    // Neither number is zero, check signs.
+    if (_p > 0 && number < 0) {
+      return 1;
+    } else if (_p < 0 && number > 0) {
+      return -1;
     }
     
-    // Signs are the same, we will have to compare numbers.
-    Arb tmp_l(*this );
-    Arb tmp_r(number);
-    
-    // Numbers must have the same denominator to compare.
-    tmp_l._normalize(tmp_r);
-    
-    // If numbers are negative, comparison is reversed.
-    if (_positive) {
-      return (tmp_l._p < tmp_r._p);
-    } else {
-      return (tmp_l._p > tmp_r._p);
-    }
+    // Signs are the same, we will have to compare numbers. Normalize and
+    // compare.
+    return _p.op_compare(number * _q);
     
   }
-  bool Arb::op_lt (UArbInt const& number) const {
+  int Arb::op_compare (UArbInt const& number) const {
     
     // If one or both numbers are zero, compare is easy.
-    if (_p.isZero()) {
-      return number > 0;
+    if (_p == 0) {
+      return (number == 0) ? 0 : -1;
     } else if (number == 0) {
-      return !_positive;
+      return (_p > 0) ? 1 : -1;
     }
     
-    // Neither number is zero. If signs are different, they are sufficient
-    // for this test.
-    if (!_positive) {
-      return true;
+    // Neither number is zero, check signs.
+    if (_p < 0) {
+      return -1;
     }
     
-    // Signs are the same, we will have to compare numbers. Copy numbers since
-    // we will be modifying them.
-    UArbInt tmp(number);
-    
-    // Normalize.
-    tmp *= _q;
-    
-    // Compare.
-    return _p < tmp;
+    // Signs are the same, we will have to compare numbers. Normalize and
+    // compare.
+    return _p.op_compare(number * _q);
     
   }
-  
-  /*
-   * Equal-to operator backend.
-   */
-  bool Arb::op_eq (Arb const& number) const {
-    
-    // Check for 0.
-    if (_p.isZero()) {
-      return number._p.isZero();
-    } else if (number._p.isZero()) {
-      return false;
-    }
-    
-    // Neither number is zero. Check signs.
-    if (_positive != number._positive) {
-      return false;
-    }
-    
-    // Check the numbers themselves. No need to normalize, if they're not,
-    // they're not equal. If one of the numbers is fixed, we need to compare
-    // non-fixed versions, otherwise do it the easy way.
-    if (_fix || number._fix) {
-      Arb tmp_l = *this ;
-      Arb tmp_r = number;
-      return ((tmp_l._q == tmp_r._q) && (tmp_l._p ==tmp_r._p));
-    } else {
-      return ((_q == number._q) && (_p == number._p));
-    }
-    
-  }
-  bool Arb::op_eq (UArbInt const& number) const {
-    
-    // Check for 0.
-    if (_p.isZero()) {
-      return number == 0;
-    } else if (number == 0) {
-      return false;
-    }
-    
-    // Neither number is zero. Check signs.
-    if (!_positive) {
-      return false;
-    }
-    
-    // Check the numbers themselves. No need to normalize, if they're not,
-    // they're not equal. If this number is fixed, we need to compare to a
-    // non-fixed version, otherwise do it the easy way.
-    if (_fix) {
-      Arb tmp_l = *this;
-      return (tmp_l.isInteger() && (tmp_l._p == number));
-    } else {
-      return (isInteger() && (_p == number));
-    }
-    
-  }
-  
+
   /*
    * Get the ceiling of this fractional number.
    */
@@ -1078,14 +1035,17 @@ namespace DAC {
     // Only work if we have to.
     if (!isInteger()) {
       
+      // Save the sign in case of 0.
+      bool waspositive = _p.isPositive();
+
       // Easy, p/q.
-      _DigsT remainder(retval._p % retval._q);
+      ArbInt remainder(retval._p % retval._q);
       retval._p /= retval._q;
       retval._q  = 1;
       
       // If the number was positive and there was a remainder, we need to add
       // 1.
-      if (isPositive() && remainder) {
+      if (waspositive && remainder) {
         ++retval._p;
       }
       
@@ -1107,15 +1067,18 @@ namespace DAC {
     // Only work if we have to.
     if (!isInteger()) {
       
+      // Save the sign in case of 0.
+      bool wasnegative = _p.isNegative();
+      
       // Easy, p/q.
-      _DigsT remainder(retval._p % retval._q);
+      ArbInt remainder(retval._p % retval._q);
       retval._p /= retval._q;
       retval._q  = 1;
       
       // If the number was negative and there was a remainder, we need to
-      // subtract 1. Since the number is negative, adding is subtracting.
-      if (!isPositive() && (remainder != 0)) {
-        ++retval._p;
+      // subtract 1.
+      if (wasnegative && (remainder != 0)) {
+        --retval._p;
       }
       
     }
@@ -1156,7 +1119,7 @@ namespace DAC {
     Arb retval(*this);
     
     // No work if this is zero or if we are raising to the 1.
-    if (!isZero() || (exp == 1)) {
+    if (!isZero() && (exp != 1)) {
       
       // Only raise if we have to.
       if (exp != 0) {
@@ -1168,17 +1131,14 @@ namespace DAC {
           if ((retval.abs() != 1) && (exp.abs() != 1)) {
             
             // Raise p & q.
-            retval._p = retval._p.pow(exp._p);
-            retval._q = retval._q.pow(exp._p);
+            retval._p = retval._p.pow(exp._p.abs().toUArbInt());
+            retval._q = retval._q.pow(exp._p.abs().toUArbInt());
             
             // Reduce
             retval._reduce();
             
           }
           
-          // The number is positive if it began positive or the exponent is even.
-          retval._positive = retval._positive || exp.isEven();
-        
         // Raising to a fraction.
         } else {
           
@@ -1198,7 +1158,7 @@ namespace DAC {
         }
         
         // If exp is negative, 1/pow.
-        if (!exp.isPositive()) {
+        if (exp < 0) {
           retval = 1 / retval;
         }
         
@@ -1222,8 +1182,8 @@ namespace DAC {
   Arb Arb::root (Arb const& n) const {
     
     // No divide by zero.
-    if (n.isZero()) {
-      throw Arb::Errors::DivByZero();
+    if (n == 0) {
+      throw Errors::DivByZero();
     }
     
     // This is a rational number class, not complex.
@@ -1308,7 +1268,14 @@ namespace DAC {
       
     // Floating-point numbers are simply reduced.
     } else {
-      reduce(_p, _q);
+      UArbInt tmp(_p.abs().toUArbInt());
+      reduce(tmp, _q);
+      if (_p < 0) {
+        _p  = tmp;
+        _p *= -1;
+      } else {
+        _p = tmp;
+      }
     }
     
     // We done.
@@ -1328,11 +1295,7 @@ namespace DAC {
     
     // Number of bits to shift must be integer.
     if (!bits.isInteger()) {
-      if (dir == _DIR_L) {
-        throw Arb::Errors::NonInteger();
-      } else {
-        throw Arb::Errors::NonInteger();
-      }
+      throw Errors::NonInteger();
     }
     
     // Shift left by left-shifting p. Shift right by left-shifting q. Shift
@@ -1341,6 +1304,27 @@ namespace DAC {
       _p << bits._p;
     } else {
       _q << bits._p;
+    }
+    
+    // Reduce the fraction.
+    _reduce();
+    
+    // We done.
+    return *this;
+    
+  }
+  Arb& Arb::_shift (ArbInt const& bits, _Dir const dir) {
+    
+    // Only work if necessary.
+    if (!*this || !bits) {
+      return *this;
+    }
+    
+    // Shift left by left-shifting p. Shift right by left-shifting q.
+    if ((dir == _DIR_L && bits > 0) || (dir == _DIR_R && bits < 0)) {
+      _p << bits;
+    } else {
+      _q << bits;
     }
     
     // Reduce the fraction.
@@ -1375,7 +1359,7 @@ namespace DAC {
   /*
    * Reduce the number to a specific q.
    */
-  Arb& Arb::_forcereduce (_DigsT const& q) {
+  Arb& Arb::_forcereduce (UArbInt const& q) {
     
     // Only work if we have to.
     if (_q != q) {
@@ -1383,39 +1367,52 @@ namespace DAC {
       //  p       x
       // --- == ------
       //  q      fixq
-      _DigsT remainder(_p * q % _q);
+      bool   waspositive = _p > 0;
+      ArbInt remainder(_p * q % _q);
       _p = _p * q / _q;
       
       // Round.
-      remainder *= 2;
       if (remainder != 0) {
         switch (_round) {
           case ROUND_UP: {
-            if (_positive) {
+            if (waspositive) {
               ++_p;
             }
           } break;
           case ROUND_DOWN: {
-            if (!_positive) {
-              ++_p;
+            if (!waspositive) {
+              --_p;
             }
           } break;
           case ROUND_TOWARD_ZERO: {
           } break;
           case ROUND_FROM_ZERO: {
-            ++_p;
+            if (waspositive) {
+              ++_p;
+            } else {
+              --_p;
+            }
           } break;
           case ROUND_NORMAL: {
-            if (remainder >= _q) {
-              ++_p;
+            if (remainder.abs() * 2 >= _q) {
+              if (waspositive) {
+                ++_p;
+              } else {
+                --_p;
+              }
             }
           } break;
           case ROUND_DEFAULT:
           case ROUND_EVEN: {
             // If odd, round, otherwise drop remainder. This will implement
             // round-to-even.
+            remainder = remainder.abs() * 2;
             if (remainder > _q || (remainder == _q && _p & 1)) {
-              ++_p;
+              if (waspositive) {
+                ++_p;
+              } else {
+                --_p;
+              }
             }
           } break;
         }
@@ -1440,8 +1437,8 @@ namespace DAC {
     if (_q != number._q) {
       
       // Raise each number's q to their LCM, bring p along.
-      _DigsT qgcd(gcd(_q, number._q));
-      _DigsT qlcm((_q / qgcd) * number._q);
+      UArbInt qgcd(gcd(_q, number._q));
+      UArbInt qlcm((_q / qgcd) * number._q);
       _p        *= number._q / qgcd;
       number._p *= _q        / qgcd;
       _q         = qlcm;
@@ -1473,9 +1470,8 @@ namespace DAC {
       return;
     }
     if (r == -1.0) {
-      l._p        =     1;
-      l._q        =     1;
-      l._positive = false;
+      l._p = -1;
+      l._q =  1;
       l._reduce();
       return;
     }
@@ -1489,14 +1485,14 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissa == 0) {
         if (converter.bits.sign == 0) {
-          throw Arb::Errors::PositiveInfinity();
+          throw Errors::PositiveInfinity();
         } else {
-          throw Arb::Errors::NegativeInfinity();
+          throw Errors::NegativeInfinity();
         }
       }
       
       // NaN.
-      throw Arb::Errors::NaN();
+      throw Errors::NaN();
       
     }
     
@@ -1526,7 +1522,9 @@ namespace DAC {
     l *= Arb(1) << SafeInt<int>(converter.bits.exponent) - _FloatInfo<float>::bias;
     
     // Set the sign.
-    l._positive = !converter.bits.sign;
+    if (converter.bits.sign) {
+      l *= -1;
+    }
     
     // Reduce.
     l._reduce();
@@ -1552,9 +1550,8 @@ namespace DAC {
       return;
     }
     if (r == -1.0) {
-      l._p        =     1;
-      l._q        =     1;
-      l._positive = false;
+      l._p = -1;
+      l._q =  1;
       l._reduce();
       return;
     }
@@ -1568,9 +1565,9 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
         if (converter.bits.sign == 0) {
-          throw Arb::Errors::PositiveInfinity();
+          throw Errors::PositiveInfinity();
         } else {
-          throw Arb::Errors::NegativeInfinity();
+          throw Errors::NegativeInfinity();
         }
       }
       
@@ -1605,7 +1602,9 @@ namespace DAC {
     l *= Arb(1) << SafeInt<int>(converter.bits.exponent) - _FloatInfo<double>::bias;
     
     // Set the sign.
-    l._positive = !converter.bits.sign;
+    if (converter.bits.sign) {
+      l *= -1;
+    }
     
     // Reduce.
     l._reduce();
@@ -1631,9 +1630,8 @@ namespace DAC {
       return;
     }
     if (r == -1.0) {
-      l._p        =     1;
-      l._q        =     1;
-      l._positive = false;
+      l._p = -1;
+      l._q =  1;
       l._reduce();
       return;
     }
@@ -1647,14 +1645,14 @@ namespace DAC {
       // Infinity.
       if (converter.bits.mantissah == 0 && converter.bits.mantissal == 0) {
         if (converter.bits.sign == 0) {
-          throw Arb::Errors::PositiveInfinity();
+          throw Errors::PositiveInfinity();
         } else {
-          throw Arb::Errors::NegativeInfinity();
+          throw Errors::NegativeInfinity();
         }
       }
       
       // NaN.
-      throw Arb::Errors::NaN();
+      throw Errors::NaN();
       
     }
     
@@ -1676,7 +1674,9 @@ namespace DAC {
     l *= Arb(1) << (SafeInt<int>(converter.bits.exponent) - _FloatInfo<long double>::bias);
     
     // Set the sign.
-    l._positive = !converter.bits.sign;
+    if (converter.bits.sign) {
+      l *= -1;
+    }
     
     // Reduce.
     l._reduce();
@@ -1703,7 +1703,7 @@ namespace DAC {
     
     // Set the number.
     _FloatParts converter;
-    converter.bits.sign     = !r._positive;
+    converter.bits.sign     = r < 0;
     converter.bits.exponent = exponent;
     converter.bits.mantissa = tmpnum;
     l = converter.number;
@@ -1730,7 +1730,7 @@ namespace DAC {
     
     // Set the number.
     _DoubleParts converter;
-    converter.bits.sign      = !r._positive;
+    converter.bits.sign      = r < 0;
     converter.bits.exponent  = exponent;
     converter.bits.mantissah = tmpnum >> std::numeric_limits<unsigned int>::digits;
     converter.bits.mantissal = tmpnum  & std::numeric_limits<unsigned int>::max();
@@ -1753,7 +1753,7 @@ namespace DAC {
     // Set the number. We did not truncate because j, the explicit leading bit
     // is also in the long double.
     _LongDoubleParts converter;
-    converter.bits.sign      = !r._positive;
+    converter.bits.sign      = r < 0;
     converter.bits.exponent  = exponent;
     converter.bits.mantissah = tmpnum >> std::numeric_limits<unsigned int>::digits;
     converter.bits.mantissal = tmpnum  & std::numeric_limits<unsigned int>::max();

@@ -707,6 +707,9 @@ namespace DAC {
                          ArbInt pow (UArbInt const& exp) const;
       template <class T> ArbInt pow (T       const  exp) const;
       
+      // Get the absolute value.
+      ArbInt abs () const;
+      
       // Access a specific digit.
       value_type get_digit (size_t const digit) const;
       
@@ -2448,12 +2451,12 @@ namespace DAC {
   /*
    * Bitwise operator backends.
    */
-  template <class T> inline ArbInt& ArbInt::op_bit_and (SafeInt<T> const  number) { return _Bit_AND<T, NumType<T>::type>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_and (T          const  number) { return _Bit_AND<T, NumType<T>::type>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_ior (SafeInt<T> const  number) { return _Bit_IOR<T, NumType<T>::type>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_ior (T          const  number) { return _Bit_IOR<T, NumType<T>::type>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_xor (SafeInt<T> const  number) { return _Bit_XOR<T, NumType<T>::type>::op(*this, number); return *this; }
-  template <class T> inline ArbInt& ArbInt::op_bit_xor (T          const  number) { return _Bit_XOR<T, NumType<T>::type>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_and (SafeInt<T> const  number) { _Bit_AND<T, NumType<T>::type>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_and (T          const  number) { _Bit_AND<T, NumType<T>::type>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_ior (SafeInt<T> const  number) { _Bit_IOR<T, NumType<T>::type>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_ior (T          const  number) { _Bit_IOR<T, NumType<T>::type>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_xor (SafeInt<T> const  number) { _Bit_XOR<T, NumType<T>::type>::op(*this, number); return *this; }
+  template <class T> inline ArbInt& ArbInt::op_bit_xor (T          const  number) { _Bit_XOR<T, NumType<T>::type>::op(*this, number); return *this; }
   
   /*
    * Return information about this number.
@@ -2491,6 +2494,11 @@ namespace DAC {
     retval._sign   = _sign && exp & 1U;
     return retval;
   }
+  
+  /*
+   * Get the absolute value.
+   */
+  inline ArbInt ArbInt::abs () const { ArbInt retval(*this); retval._sign = false; return retval; }
   
   /*
    * Access a specific digit.
@@ -2618,7 +2626,7 @@ namespace DAC {
       l._digits += r.abs();
     } else {
       if (r.abs() > l._digits) {
-        l._digits = r.abs() - l._digits();
+        l._digits = r.abs() - l._digits;
         l._sign   = !l._sign;
       } else {
         l._digits -= r.abs();
@@ -2788,7 +2796,7 @@ namespace DAC {
   template <class T> inline void ArbInt::_Bit_AND<T, NumTypes::SINT>::op (ArbInt& l, SafeInt<T> const r) {
     l._digits &= r.abs();
     l._sign    = l._sign && r < 0;
-    _check_sign();
+    l._check_sign();
   }
   template <class T> inline void ArbInt::_Bit_AND<T, NumTypes::SINT>::op (ArbInt& l, T const r) { _Bit_AND<T, NumTypes::SINT>::op(l, SafeInt<T>(r)); }
   
@@ -2797,13 +2805,13 @@ namespace DAC {
    */
   template <class T> inline void ArbInt::_Bit_IOR<T, NumTypes::UINT>::op (ArbInt& l, SafeInt<T> const r) {
     l._digits |= r;
-    _check_sign();
+    l._check_sign();
   }
   template <class T> inline void ArbInt::_Bit_IOR<T, NumTypes::UINT>::op (ArbInt& l, T const r) { _Bit_IOR<T, NumTypes::UINT>::op(l, SafeInt<T>(r)); }
   template <class T> inline void ArbInt::_Bit_IOR<T, NumTypes::SINT>::op (ArbInt& l, SafeInt<T> const r) {
     l._digits |= r.abs();
     l._sign    = r._sign || r < 0;
-    _check_sign();
+    l._check_sign();
   }
   template <class T> inline void ArbInt::_Bit_IOR<T, NumTypes::SINT>::op (ArbInt& l, T const r) { _Bit_IOR<T, NumTypes::SINT>::op(l, SafeInt<T>(r)); }
   
@@ -2812,13 +2820,13 @@ namespace DAC {
    */
   template <class T> inline void ArbInt::_Bit_XOR<T, NumTypes::UINT>::op (ArbInt& l, SafeInt<T> const r) {
     l._digits ^= r;
-    _check_sign();
+    l._check_sign();
   }
   template <class T> inline void ArbInt::_Bit_XOR<T, NumTypes::UINT>::op (ArbInt& l, T const r) { _Bit_XOR<T, NumTypes::UINT>::op(l, SafeInt<T>(r)); }
   template <class T> inline void ArbInt::_Bit_XOR<T, NumTypes::SINT>::op (ArbInt& l, SafeInt<T> const r) {
     l._digits ^= r.abs();
     l._sign    = r._sign != r < 0;
-    _check_sign();
+    l._check_sign();
   }
   template <class T> inline void ArbInt::_Bit_XOR<T, NumTypes::SINT>::op (ArbInt& l, T const r) { _Bit_XOR<T, NumTypes::SINT>::op(l, SafeInt<T>(r)); }
   

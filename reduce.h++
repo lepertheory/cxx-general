@@ -33,7 +33,7 @@ namespace DAC {
   template <class T> void reduce (T& p, T& q) {
     
     // Get the greatest common divisor.
-    T tmp = gcd(p, q);
+    T tmp = gcd(abs(p), abs(q));
     
     // Reduce.
     p /= tmp;
