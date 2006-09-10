@@ -13,6 +13,7 @@
   #include <to_string.h++>
   #include <reduce.h++>
   #include <CaseConvert.h++>
+  #include <NumInfo.h++>
 
 // Class include.
   #include "Arb.h++"
@@ -1456,7 +1457,7 @@ namespace DAC {
   /*
    * Set from a float.
    */
-  template <> void Arb::_Set<float, Arb::_NUM_FLPT>::op (Arb& l, float const r) {
+  template <> void Arb::_Set<float, NumTypes::FLPT>::op (Arb& l, float const r) {
     
     // Easy common cases.
     if (r == 0.0) {
@@ -1535,7 +1536,7 @@ namespace DAC {
   /*
    * Set from a double.
    */
-  template <> void Arb::_Set<double, Arb::_NUM_FLPT>::op (Arb& l, double const r) {
+  template <> void Arb::_Set<double, NumTypes::FLPT>::op (Arb& l, double const r) {
     
     // Easy common cases.
     if (r == 0.0) {
@@ -1614,7 +1615,7 @@ namespace DAC {
   /*
    * Set from a long double.
    */
-  template <> void Arb::_Set<long double, Arb::_NUM_FLPT>::op (Arb& l, long double const r) {
+  template <> void Arb::_Set<long double, NumTypes::FLPT>::op (Arb& l, long double const r) {
     
     // Easy common cases.
     if (r == 0.0) {
@@ -1685,7 +1686,7 @@ namespace DAC {
   /*
    * Get as a float.
    */
-  template <> void Arb::_Get<float, Arb::_NUM_FLPT>::op (float& l, Arb const& r) {
+  template <> void Arb::_Get<float, NumTypes::FLPT>::op (float& l, Arb const& r) {
     
     // Work area.
     UArbInt      tmpnum;
@@ -1712,7 +1713,7 @@ namespace DAC {
   /*
    * Get as a double.
    */
-  template <> void Arb::_Get<double, Arb::_NUM_FLPT>::op (double& l, Arb const& r) {
+  template <> void Arb::_Get<double, NumTypes::FLPT>::op (double& l, Arb const& r) {
     
     // Work area.
     UArbInt      tmpnum;
@@ -1740,7 +1741,7 @@ namespace DAC {
   /*
    * Get as a long double.
    */
-  template <> void Arb::_Get<long double, Arb::_NUM_FLPT>::op (long double& l, Arb const& r) {
+  template <> void Arb::_Get<long double, NumTypes::FLPT>::op (long double& l, Arb const& r) {
     
     // Work area.
     UArbInt      tmpnum;

@@ -37,7 +37,8 @@ Help(opts.GenerateHelpText(env))
 
 # Set compiler options.
 if env['CC'] == 'gcc' :
-  env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wshadow -Wpointer-arith -Wredundant-decls -Wunreachable-code -Winline -Werror -pipe')
+  #env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wshadow -Wpointer-arith -Wredundant-decls -Wunreachable-code -Winline -Werror -pipe')
+  env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wsign-promo -Wshadow -Wpointer-arith -Wredundant-decls -Winline -Werror -pipe')
   env.Append(CPPDEFINES = 'CC_GCC')
 if env['CC'] == 'cl' :
   env.Append(CCFLAGS    = '/GR /EHsc /Od /Wp64 /Za')
@@ -69,6 +70,7 @@ h_reduce           = env.File('reduce.h++'          ) ; headers += [h_reduce    
 h_rppower          = env.File('rppower.h++'         ) ; headers += [h_rppower         ]
 h_to_string        = env.File('to_string.h++'       ) ; headers += [h_to_string       ]
 h_CaseConvert      = env.File('CaseConvert.h++'     ) ; headers += [h_CaseConvert     ]
+h_NumInfo          = env.File('NumInfo.h++'         ) ; headers += [h_NumInfo         ]
 
 # Modules.
 modules = []
