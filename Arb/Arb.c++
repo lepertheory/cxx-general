@@ -146,8 +146,10 @@ namespace DAC {
       if (!fixq.isInteger()) {
         throw Errors::NonInteger();
       }
-      // FIXME: Check for signs.
-      _fixq    = fixq._p.toUArbInt();
+      if (fixq._p < 1) {
+        throw Errors::OOBDenom();
+      }
+      _fixq    = fixq._p.abs_UArbInt();
       _fixtype = FIX_DENOM;
       if (_fix) {
         _reduce();
@@ -211,8 +213,6 @@ namespace DAC {
    */
   string& Arb::to_string (string& buffer, OutputFormat const format) const {
     
-    // TODO: 0 fill.
-    
     // This is the string we will be returning.
     string retval;
     
@@ -236,14 +236,14 @@ namespace DAC {
         numeric.Base(_base);
         
         // Get the whole number part.
-        numeric = _p.abs().toUArbInt() / _q;
+        numeric = _p.abs_UArbInt() / _q;
         
         // This is the number of digits from the end of the string to put
         // the radix point.
         std::string::size_type radixpos = 0;
         
         // Create the radix part.
-        UArbInt remainder(_p.abs().toUArbInt() % _q);
+        UArbInt remainder(_p.abs_UArbInt() % _q);
         if ((_fix && _fixq != 1) || (!_fix && remainder)) {
           
           // Get the radix digits, one by one. Output digits until the entire
@@ -1131,8 +1131,8 @@ namespace DAC {
           if ((retval.abs() != 1) && (exp.abs() != 1)) {
             
             // Raise p & q.
-            retval._p = retval._p.pow(exp._p.abs().toUArbInt());
-            retval._q = retval._q.pow(exp._p.abs().toUArbInt());
+            retval._p = retval._p.pow(exp._p.abs_UArbInt());
+            retval._q = retval._q.pow(exp._p.abs_UArbInt());
             
             // Reduce
             retval._reduce();
@@ -1268,7 +1268,7 @@ namespace DAC {
       
     // Floating-point numbers are simply reduced.
     } else {
-      UArbInt tmp(_p.abs().toUArbInt());
+      UArbInt tmp(_p.abs_UArbInt());
       reduce(tmp, _q);
       if (_p < 0) {
         _p  = tmp;

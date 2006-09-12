@@ -11,6 +11,7 @@
 // STL includes.
   #include <sstream>
   #include <limits>
+  #include <string>
 
 // Contain in namespace.
 namespace DAC {

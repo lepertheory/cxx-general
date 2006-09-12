@@ -21,8 +21,6 @@ namespace DAC {
     
 #if defined(GET_ERRORTEXT_REENTRANT)
     // Work area.
-    // TODO: Find a way to get the maximum error message length. The current
-    // value should be fine, but I don't like this.
     char  buf[1024];
   #if _XOPEN_SOURCE >= 600
     int   retval;
@@ -42,8 +40,8 @@ namespace DAC {
       buffer = buf;
     } else {
       switch (retval) {
-        case EINVAL: buffer = "Error number is invalid."                                        ; break;
-        case ERANGE: buffer = "Buffer too small for error text."                                ; break;
+        case EINVAL: buffer = "Error number is invalid."                                         ; break;
+        case ERANGE: buffer = "Buffer too small for error text."                                 ; break;
         default    : buffer = "Unexpected error " + to_string(retval) + " retrieving error text."; break;
       };
     }

@@ -104,6 +104,9 @@ namespace DAC {
               std::string::size_type _position;
           };
           
+          // Denominator is out of bounds.
+          class OOBDenom : public Base { public: virtual char const* what () const throw() { return "Denominator must be greater than 0."; }; };
+
           // Divide by zero.
           class DivByZero : public Base { public: virtual char const* what () const throw() { return "Divide by zero."; }; };
           

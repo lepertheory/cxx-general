@@ -660,7 +660,6 @@ namespace DAC {
   /*
    * Properties.
    */
-  // TODO: See if there's a practical way to set this as a JD.
   inline Timestamp& Timestamp::LastJulianDate (YMD const& lastjulian) {
     Timestamp tmp;
     tmp = Interval().Year (lastjulian.Year )

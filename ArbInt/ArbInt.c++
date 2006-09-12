@@ -1098,8 +1098,8 @@ namespace DAC {
         _digits = number._digits - _digits;
         _sign = !_sign;
       }
+      _check_sign();
     }
-    _check_sign();
     
     // Done.
     return *this;
@@ -1115,10 +1115,10 @@ namespace DAC {
         _digits = number - _digits;
         _sign = !_sign;
       }
+      _check_sign();
     } else {
       _digits += number;
     }
-    _check_sign();
     
     // Done.
     return *this;
@@ -1138,10 +1138,10 @@ namespace DAC {
         _digits = number._digits - _digits;
         _sign   = !_sign;
       }
+      _check_sign();
     } else {
       _digits += number._digits;
     }
-    _check_sign();
     
     // Done.
     return *this;
@@ -1159,8 +1159,8 @@ namespace DAC {
         _digits = number - _digits;
         _sign = !_sign;
       }
+      _check_sign();
     }
-    _check_sign();
     
     // Done.
     return *this;
