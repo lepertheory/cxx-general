@@ -31,7 +31,11 @@ namespace DAC {
   
   template <> inline std::string to_string<char> (char const& from) {
     std::ostringstream os;
-    os << static_cast<int>(from);
+    if (std::numeric_limits<char>::is_signed) {
+      os << static_cast<int>(from);
+    } else {
+      os << static_cast<unsigned int>(from);
+    }
     return os.str();
   }
   

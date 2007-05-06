@@ -1,7 +1,7 @@
 /*****************************************************************************
- * SafeInt.c++
+ * demangle.c++
  *****************************************************************************
- * Unit tests the SafeInt class.
+ * Unit tests for the demangle header.
  *****************************************************************************/
 
 // Standard includes.
@@ -9,21 +9,27 @@
 #include <iostream>
 
 // Testing include.
-#include <SafeInt.h++>
+#include <demangle.h++>
 
 // Bring in namespaces.
 using namespace std;
+using namespace DAC;
 
 /*
- * Test a given type.
+ * Run a test.
  */
 template <typename T> int test (string const& type) {
   
-  // Output the test.
-  cout << "Testing type " << type << "..." << endl;
+  // Work area.
+  string buffer;
   
-  // Test SafeIntUtils first.
-  cout << "  Testing SafeIntUtils::
+  // Output the type being tested.
+  cout << "  Testing type " << type << "... ";
+  if (demangle<T>(buffer) == type) {
+    cout << buffer << " OK!" << endl;
+  } else {
+    cout << buffer << " **********WARNING**********" << endl;
+  }
   
   // All tests passed.
   return 0;
@@ -31,14 +37,13 @@ template <typename T> int test (string const& type) {
 }
 
 /*
- * Here we go.
+ * This is it.
  */
-int main (int argc, char** argv) {
+int main () {
   
-  // Ignore argc and argv.
-  if (argc && argv) {}
-  
-  // Test every possible type.
+  // Impossible to test all possible types, and it doesn't matter, just make
+  // sure it mostly works or at least fails gracefully.
+  cout << "Testing built-in types..." << endl;
   if (test<bool          >("bool"          )) { return 1; }
   if (test<char          >("char"          )) { return 1; }
   if (test<signed char   >("signed char"   )) { return 1; }
@@ -50,8 +55,15 @@ int main (int argc, char** argv) {
   if (test<unsigned int  >("unsigned int"  )) { return 1; }
   if (test<long          >("long"          )) { return 1; }
   if (test<unsigned long >("unsigned long" )) { return 1; }
+  if (test<float         >("float"         )) { return 1; }
+  if (test<double        >("double"        )) { return 1; }
+  if (test<long double   >("long double"   )) { return 1; }
+  if (test<void*         >("void*"         )) { return 1; }
+  if (test<void const*   >("void const*"   )) { return 1; }
+  if (test<std::string   >("std::string"   )) { return 1; }
   
   // All tests passed.
+  cout << "OK!" << endl;
   return 0;
   
 }

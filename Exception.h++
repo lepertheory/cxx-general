@@ -50,7 +50,10 @@ namespace DAC {
       // Reset to just-constructed state.
       virtual Exception& clear ();
       
-      // Buffer a temporary string.
+      // Buffer a temporary string. This is a general enough task that it
+      // shouldn't even necessarily be in this class, however it is so
+      // frequently needed in conjunction with exceptions (and so rarely
+      // needed in other places) that it just makes sense.
       char const* buffer_message (std::string& message) const;
       
     /*
@@ -86,7 +89,7 @@ namespace DAC {
   /***************************************************************************/
   // Function members.
   
-  inline Exception::Exception () { clear(); }
+  inline Exception::Exception () : std::exception() {}
   
   inline Exception::~Exception () throw() { /* Da nada. */ }
   
