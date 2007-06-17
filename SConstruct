@@ -17,7 +17,7 @@ import os
 # Create options.
 opts = Options('custom.py')
 opts.AddOptions(
-  BoolOption('DEBUG'  , 'Set for a debug build.'                                                          , default = 0                                       ),
+  BoolOption('DEBUG'  , 'Set for a debug build.'                                                          , default = 1                                       ),
   PathOption('PREFIX' , 'Prefix of hardcoded paths. Set this to the prefix the program will be run from.' , default = '/usr', validator = PathOption.PathIsDir),
   PathOption('DESTDIR', 'Install destination directory. Use this to install to a place other than PREFIX.', default = '/usr', validator = PathOption.PathIsDir)
 )
@@ -37,8 +37,12 @@ Help(opts.GenerateHelpText(env))
 
 # Set compiler options.
 if env['CC'] == 'gcc' :
-  #env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wshadow -Wpointer-arith -Wredundant-decls -Wunreachable-code -Winline -Werror -pipe')
-  env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wsign-promo -Wshadow -Wpointer-arith -Wredundant-decls -Winline -Werror -pipe')
+  #env.Append(CCFLAGS    = '-g -O0 -ansi -pedantic-errors -Wall -Wextra -Wshadow -Wpointer-arith -Wredundant-decls -Wunreachable-code -Winline -Werror -pipe'
+  if env['DEBUG'] :
+    env.Append(CCFLAGS = '-g -O0 -fprofile-arcs -ftest-coverage -ansi -pedantic-errors -Wall -Wextra -Wsign-promo -Wshadow -Wpointer-arith -Wredundant-decls -Winline -Werror -pipe')
+    env.Append(LINKFLAGS = '-fprofile-arcs')
+  else :
+    env.Append(CCFLAGS = '-O2 -pipe')
   env.Append(CPPDEFINES = 'CC_GCC')
 if env['CC'] == 'cl' :
   env.Append(CCFLAGS    = '/GR /EHsc /Od /Wp64 /Za')

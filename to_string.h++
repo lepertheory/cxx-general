@@ -17,6 +17,16 @@
 namespace DAC {
   
   /***************************************************************************/
+  // Types
+  
+  // Helper class for char conversion.
+  namespace To_String_Util {
+    template <class T, bool> class CharCast;
+    template <class T> class CharCast<T, false> { public: static std::ostringstream& op (T const& from, std::ostringstream& to); };
+    template <class T> class CharCast<T, true > { public: static std::ostringstream& op (T const& from, std::ostringstream& to); };
+  }
+  
+  /***************************************************************************/
   // Functions.
   
   // Convert the number to a string.
@@ -29,13 +39,20 @@ namespace DAC {
    * Inline and template definitions.
    ***************************************************************************/
   
+  namespace To_String_Util {
+    template <class T> inline std::ostringstream& CharCast<T, false>::op (T const& from, std::ostringstream& to) {
+      to << static_cast<unsigned int>(from);
+      return to;
+    }
+    template <class T> inline std::ostringstream& CharCast<T, true >::op (T const& from, std::ostringstream& to) {
+      to << static_cast<int>(from);
+      return to;
+    }
+  }
+  
   template <> inline std::string to_string<char> (char const& from) {
     std::ostringstream os;
-    if (std::numeric_limits<char>::is_signed) {
-      os << static_cast<int>(from);
-    } else {
-      os << static_cast<unsigned int>(from);
-    }
+    To_String_Util::CharCast<char, std::numeric_limits<char>::is_signed>::op(from, os);
     return os.str();
   }
   
