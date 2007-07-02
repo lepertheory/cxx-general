@@ -856,17 +856,12 @@ template <class T, class U> int Test_SafeCast<T, U, RelTypes::SS_SL>::op (vector
  */
 template <class T, class U> int Test_RawCast<T, U, RelTypes::UE_UE>::op (vector<T> const& edges) {
   
-  // Hush compiler warnings.
-  if (&edges) {}
-  
-  /*
   cout << "    Testing SafeIntUtil::RawCast..." << endl;
   
   for (typename vector<T>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
     U val;
-    cout << "      Testing " << *i << " 
+    cout << "      Testing " << to_string(*i) << " 
   }
-  */
   
   // All tests passed.
   return 0;
