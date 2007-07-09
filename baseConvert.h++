@@ -29,6 +29,9 @@ namespace DAC {
         // All baseConvert() errors are based off if this.
         class Base : public Exception { public: virtual char const* what () const throw() { return "Undefined error in baseConvert()."; }; };
         
+        // Divide by zero.
+        class DivideByZero : public Base { public: virtual char const* what () const throw() { return "Attempted to divide by zero."; }; };
+        
         // Overflow... somewhere.
         class Overflow : public Base { public: virtual char const* what () const throw() { return "Overflow."; }; };
         
@@ -47,19 +50,20 @@ namespace DAC {
               } catch (...) {
                 return "Digit overflows given base. Error creating message string.";
               }
-            OverflowDigit& Digit (size_t const digit) { _digit = digit; return *this; };
+            };
+            DigitOverflow& Digit (size_t const digit) { _digit = digit; return *this; };
             size_t         Digit (                  ) { return _digit;                };
-          private
+          private:
             size_t _digit;
         };
       
+      // Do not allow instantiation.
       private:
         Errors ();
         Errors (Errors const&);
         Errors& operator = (Errors const&);
       
     };
-    
   }
   
   /***************************************************************************
@@ -76,7 +80,7 @@ namespace DAC {
   // Functions.
   
   // Convert a native type to another base.
-  template <class T> std::vector<T>& baseConvert (T const& from, std::vector<U>& to, size_t const tobase);
+  template <class T> std::vector<T>& baseConvert (T const& from, std::vector<T>& to, size_t const tobase);
   
   // Convert a based number to another base.
   template <class T> std::vector<T>& baseConvert (std::vector<T> const& from, size_t const frombase, std::vector<T>& to, size_t const tobase);
@@ -88,56 +92,63 @@ namespace DAC {
    * Inline and template definitions.
    ***************************************************************************/
   
-  /*
-   * Long division of a container.
-   */
-  template <class T> T longDiv (std::vector<T>& dividend, T const divisor, T const base) {
-    
-    // Work area.
-    std::vector<T> quotient ;
-    T              candidate;
-    T              cquotient;
-    
-    // Divide like 1st grade.
-    for (std::vector<T>::const_reverse_iterator i = dividend.rbegin(); i != dividend.rend(); ++i) {
+  namespace BaseConvertUtil {
+    /*
+    * Long division of a container.
+    */
+    template <class T> T longDiv (std::vector<T>& dividend, T const divisor, T const base) {
       
-      if (*i >= base) {
-        throw BaseConvert::Errors::OverflowDigit(i - dividend.rbegin() + 1);
+      // Work area.
+      std::vector<T> quotient ;
+      T              candidate;
+      T              cquotient;
+      
+      // Make sure somebody's not trying to divide by zero.
+      if (divisor == 0) {
+        throw BaseConvert::Errors::DivideByZero();
       }
       
-      // Add this digit to the division candidate.
-      candidate += *i;
+      // Divide like 1st grade.
+      for (typename std::vector<T>::const_reverse_iterator i = dividend.rbegin(); i != dividend.rend(); ++i) {
+        
+        if (*i >= base) {
+          throw BaseConvert::Errors::DigitOverflow().Digit(i - dividend.rbegin() + 1);
+        }
+        
+        // Add this digit to the division candidate.
+        candidate += *i;
+        
+        // Divide the group and add the result to the quotient.
+        cquotient = candidate / divisor;
+        quotient.insert(quotient.begin(), cquotient);
+        
+        // Take out what we've divided.
+        candidate -= cquotient * divisor;
+        
+        // Move the remainder up to the next digit.
+        candidate *= base;
+        
+      }
       
-      // Divide the group and add the result to the quotient.
-      cquotient = candidate / divisor;
-      quotient.insert(quotient.begin(), cquotient);
+      // Trim insignificant zeros from the quotient.
+      while (quotient.back() == 0) {
+        quotient.resize(quotient.size() - 1);
+      }
       
-      // Take out what we've divided.
-      candidate -= cquotient * divisor;
+      // Put the result in place. There can be no errors after this, or we will
+      // leave invalid data.
+      dividend.swap(quotient);
       
-      // Move the remainder up to the next digit.
-      candidate *= base;
+      // Return the remainder. We need to undo the last move up.
+      return candidate / base;
       
     }
-    
-    // Trim insignificant zeros from the quotient.
-    while (quotient.back() == 0) {
-      quotient.resize(quotient.size() - 1);
-    }
-    
-    // Put the result in place. There can be no errors after this, or we will
-    // leave invalid data.
-    dividend.swap(quotient);
-    
-    // Return the remainder. We need to undo the last move up.
-    return candidate / base;
-    
   }
   
   /*
    * Convert a native type to another base.
    */
-  template <class T, class U> std::vector<T>& baseConvert<T> (T const& from, std::vector<T>& to, int const tobase) {
+  template <class T> std::vector<T>& baseConvert (T const& from, std::vector<T>& to, int const tobase) {
     
     // Make sure that we will not be overflowing.
     if (tobase >= std::numeric_limits<T>::max() / 2) {
