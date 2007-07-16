@@ -10,9 +10,11 @@
 
 // Standard includes.
 #include <string>
+#include <limits>
 
 // Internal includes.
 #include <Exception.h++>
+#include <NumInfo.h++>
 
 // Contain in namespace.
 namespace DAC {
@@ -31,16 +33,19 @@ namespace DAC {
       // Base 2 is lowest supported base.
       class MinBase : public Base { public: virtual char const* what () const throw() { return "Minimum base is base 2."; }; };
       
+      // Base must fit numbers in 1/2 available bits.
+      class MaxBase : public Base { public: virtual char const* what () const throw() { return "Maximum base is 2^data type bit length."; }; };
+      
       // Overflow somewhere.
       class Overflow : public Base { public: virtual char const* what () const throw() { return "Overflow."; }; };
       
       // Digit overflows given base.
-      template <class T> class DigitOverflow : public Base {
+      template <class T> class DigitOverflow : public Overflow {
         public:
           ~DigitOverflow () throw() {};
           virtual char const* what () const throw() {
             try {
-              std::string tmpmsg("Digit " + to_string(_digit) + " overflows given base.");
+              std::string tmpmsg("Digit at offset " + to_string(_digit) + " overflows given base.");
               return buffer_message(tmpmsg);
             } catch (...) {
               return "Digit overflows given base. Error creating message string.";
@@ -51,6 +56,9 @@ namespace DAC {
         private:
           T _digit;
       };
+      
+      // Divisor overflows given base.
+      class DivisorOverflow : public Overflow { public: virtual char const* what () const throw() { return "Divisor overflows given base."; }; };
       
     }
   }
@@ -70,9 +78,9 @@ namespace DAC {
    */
   template <class T> typename T::value_type longDiv (T& quotient, T const& dividend, typename T::value_type const divisor, typename T::value_type const base) {
     
-    T                      newquotient;
-    typename T::value_type candidate  ;
-    typename T::value_type cquotient  ;
+    T                      newquotient    ;
+    typename T::value_type candidate   = 0;
+    typename T::value_type cquotient      ;
     
     if (divisor == 0) {
       throw LongDiv::Errors::DivideByZero();
@@ -80,11 +88,17 @@ namespace DAC {
     if (base < 2) {
       throw LongDiv::Errors::MinBase();
     }
+    if (base > 1 << (std::numeric_limits<typename T::value_type>::digits >> 1)) {
+      throw LongDiv::Errors::MaxBase();
+    }
+    if (divisor >= base || is_negative(divisor)) {
+      throw LongDiv::Errors::DivisorOverflow();
+    }
     
     for (typename T::const_reverse_iterator i = dividend.rbegin(); i != dividend.rend(); ++i) {
       
-      if (*i >= base) {
-        throw LongDiv::Errors::DigitOverflow<typename T::value_type>().Digit(i - dividend.rbegin() + 1);
+      if (*i >= base || is_negative(*i)) {
+        throw LongDiv::Errors::DigitOverflow<typename T::value_type>().Digit(dividend.rend() - 1 - i);
       }
       
       candidate += *i;
@@ -97,10 +111,13 @@ namespace DAC {
       
     }
     
+    // Trim insignificant zeros. The test for the end of the container is
+    // after the increment because we don't want to leave an empty container.
+    // Testing in the same statement is OK, && is a sequence point.
     {
-      typename T::size_type              noinsignificantzeros = newquotient.size()  ;
+      typename T::size_type              noinsignificantzeros = newquotient.size  ();
       typename T::const_reverse_iterator i                    = newquotient.rbegin();
-      while (*(i++) == 0) {
+      while (*(i++) == 0 && i != newquotient.rend()) {
         --noinsignificantzeros;
       }
       newquotient.resize(noinsignificantzeros);

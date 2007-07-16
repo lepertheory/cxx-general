@@ -13,7 +13,7 @@
 
 // Namespace wrapper.
 namespace DAC {
-
+  
   /***************************************************************************/
   // Types.
   
@@ -90,6 +90,24 @@ namespace DAC {
       NumType& operator = (NumType const&);
       
   };
+  
+  /***************************************************************************/
+  // Functions.
+  
+  // Returns true if a number is negative. Avoids compiler warnings, and
+  // should compile down to a no-op on unsigned types.
+  template <class T> bool is_negative (T const number);
+  
+  /***************************************************************************/
+  // Utilities.
+  namespace NumInfoUtil {
+    
+    // Decides if a number is negative, no-op for unsigned types.
+    template <class T, bool is_signed> class Is_Negative;
+    template <class T> class Is_Negative<T, false> { public: static bool op (T const number); };
+    template <class T> class Is_Negative<T, true > { public: static bool op (T const number); };
+    
+  }
   
   /***************************************************************************
    * Inline and template definitions.
@@ -178,6 +196,33 @@ namespace DAC {
       NumTypes::ERROR_UNKNOWN_TYPE
     )
   ;
+  
+  /*
+   * Check if a number is negative.
+   */
+  template <class T> inline bool is_negative (T const number) {
+    return NumInfoUtil::Is_Negative<T, std::numeric_limits<T>::is_signed>::op(number);
+  }
+  
+  /***************************************************************************
+   * NumInfoUtil::Is_Negative
+   ***************************************************************************/
+  
+  /*
+   * Check if an unsigned type is negative. No-op.
+   */
+  template <class T> inline bool NumInfoUtil::Is_Negative<T, false>::op (T const number) {
+    // Shut up compiler.
+    if (number) {}
+    return false;
+  }
+  
+  /*
+   * Check if a signed type is negative.
+   */
+  template <class T> inline bool NumInfoUtil::Is_Negative<T, true>::op (T const number) {
+    return number < static_cast<T>(0);
+  }
   
 }
 
