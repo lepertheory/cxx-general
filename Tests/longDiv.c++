@@ -78,8 +78,6 @@ template <class T> int test () {
           }
           longedges.push_back(0            );
           digitpos .push_back(edges.begin());
-          if (digits < 3)
-            continue;
           
           while (digitpos.back() != edges.end()) {
             
@@ -355,9 +353,9 @@ template <class T> void Build_Edges<T, true>::op (T& edges) {
  */
 int main () {
   
-  /*if (test<bool          >()) { return 1; }*/
+  if (test<bool          >()) { return 1; }
   if (test<char          >()) { return 1; }
-  /*if (test<signed char   >()) { return 1; }
+  if (test<signed char   >()) { return 1; }
   if (test<unsigned char >()) { return 1; }
   if (test<wchar_t       >()) { return 1; }
   if (test<short         >()) { return 1; }
@@ -365,7 +363,7 @@ int main () {
   if (test<int           >()) { return 1; }
   if (test<unsigned int  >()) { return 1; }
   if (test<long          >()) { return 1; }
-  if (test<unsigned long >()) { return 1; }*/
+  if (test<unsigned long >()) { return 1; }
   
   return 0;
   
