@@ -99,6 +99,10 @@ namespace DAC {
 			throw BaseConvert::Errors::Negative();
 		}
 		
+		// Work area.
+		U retval       ;
+		T work   = from;
+		
 		// Convert base by storing the remainder of repeated division by the base
 		// that we will be converting to. Least significant digits come out first.
 		while (work > 0) {
@@ -106,11 +110,7 @@ namespace DAC {
 			work /= tobase;
 		}
 		
-		// Work area.
-		U retval       ;
-		T work   = from;
-		
-		to.swap(work);
+		to.swap(retval);
 		return to;
 		
 	}
@@ -121,9 +121,6 @@ namespace DAC {
 	template <class T, class U> U& baseConvert (T const from, U& to) {
 		
 		// Check for overflow.
-		if (tobase < 2) {
-			throw BaseConvert::Errors::MinBaseTo();
-		}
 		if (is_negative(from)) {
 			throw BaseConvert::Errors::Negative();
 		}
@@ -138,7 +135,7 @@ namespace DAC {
 			work >>= std::numeric_limits<typename U::value_type>::digits;
 		}
 		
-		to.swap(work);
+		to.swap(retval);
 		return to;
 		
 	}
@@ -155,7 +152,7 @@ namespace DAC {
 		if (frombase < 2) {
 			throw BaseConvert::Errors::MinBaseFrom();
 		}
-		if (tobase >= 1 << (std::numeric_limits<typename U::value_type>>::digits >> 1)) {
+		if (tobase >= 1 << (std::numeric_limits<typename U::value_type>::digits >> 1)) {
 			throw BaseConvert::Errors::MaxBaseTo();
 		}
 		if (tobase < 2) {
