@@ -40,7 +40,7 @@ namespace DAC {
       class Overflow : public Base { public: virtual char const* what () const throw() { return "Overflow."; }; };
       
       // Digit overflows given base.
-      template <class T> class DigitOverflow : public Overflow {
+      class DigitOverflow : public Overflow {
         public:
           ~DigitOverflow () throw() {};
           virtual char const* what () const throw() {
@@ -51,10 +51,10 @@ namespace DAC {
               return "Digit overflows given base. Error creating message string.";
             }
           };
-          DigitOverflow& Digit (T const digit) { _digit = digit; return *this; };
-          T              Digit (             ) { return _digit;                };
+          DigitOverflow& Digit (size_t const digit) { _digit = digit; return *this; };
+          size_t         Digit (                  ) { return _digit;                };
         private:
-          T _digit;
+          size_t _digit;
       };
       
       // Divisor overflows given base.
@@ -98,7 +98,7 @@ namespace DAC {
     for (typename T::const_reverse_iterator i = dividend.rbegin(); i != dividend.rend(); ++i) {
       
       if (*i >= base || is_negative(*i)) {
-        throw LongDiv::Errors::DigitOverflow<typename T::value_type>().Digit(dividend.rend() - 1 - i);
+        throw LongDiv::Errors::DigitOverflow().Digit(dividend.rend() - 1 - i);
       }
       
       candidate += *i;
@@ -111,14 +111,13 @@ namespace DAC {
       
     }
     
-    // Trim insignificant zeros. The test for the end of the container is
-    // after the increment because we don't want to leave an empty container.
-    // Testing in the same statement is OK, && is a sequence point.
+    // Trim insignificant zeros.
     {
       typename T::size_type              noinsignificantzeros = newquotient.size  ();
       typename T::const_reverse_iterator i                    = newquotient.rbegin();
-      while (*(i++) == 0 && i != newquotient.rend()) {
+      while (i != newquotient.rend() && *i == 0) {
         --noinsignificantzeros;
+				++i;
       }
       newquotient.resize(noinsignificantzeros);
     }

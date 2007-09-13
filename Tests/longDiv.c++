@@ -101,7 +101,7 @@ template <class T> int test () {
             try {
               remainder = longDiv(quotient, dividend, *divisor, *base);
               
-            } catch (LongDiv::Errors::DigitOverflow<T>& e) {
+            } catch (LongDiv::Errors::DigitOverflow& e) {
               if (dividend[e.Digit()] < *base && !is_negative(dividend[e.Digit()])) {
                 cout << "Unexpected digit overflow, digit " << to_string(e.Digit()) << ", FAILED!" << endl;
                 errMsg("Unexpected digit overflow, digit " + to_string(e.Digit()) + ".", *base, *divisor, digits, longedges, remainder, quotient);
@@ -230,8 +230,9 @@ template <class T> int test () {
               {
                 typename vector<T>::size_type              noinsignificantzeros = dividend.size  ();
                 typename vector<T>::const_reverse_iterator i                    = dividend.rbegin();
-                while (*(i++) == 0 && i != dividend.rend()) {
+                while (i != dividend.rend() && *i == 0) {
                   --noinsignificantzeros;
+									++i;
                 }
                 dividend.resize(noinsignificantzeros);
               }

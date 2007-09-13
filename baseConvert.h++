@@ -16,6 +16,7 @@
 // Internal includes.
 #include <Exception.h++>
 #include <to_string.h++>
+#include <longDiv.h++>
 
 // Contain in namespace.
 namespace DAC {
@@ -45,7 +46,7 @@ namespace DAC {
 			class Overflow : public Base { public: virtual char const* what () const throw() { return "Overflow."; }; };
 			
 			// Digit overflows given base.
-			template <class T> class DigitOverflow : public Overflow {
+			class DigitOverflow : public Overflow {
 				public:
 					~DigitOverflow () throw() {};
 					virtual char const* what () const throw() {
@@ -56,11 +57,14 @@ namespace DAC {
 							return "Digit overflows given base. Error creating message string.";
 						}
 					};
-					DigitOverflow& Digit (T const digit) { _digit = digit; return *this; };
-					T              Digit (             ) { return _digit;                };
+					DigitOverflow& Digit (size_t const digit) { _digit = digit; return *this; };
+					size_t         Digit (                  ) { return _digit;                };
 				private:
-					T _digit;
+					size_t _digit;
 			};
+			
+			// Based numeber overflows native type.
+			class NativeOverflow : public Overflow { public: virtual char const* what () const throw() { return "Based number overflows given type."; }; };
 			
 			// Negative numbers are not supported, keep track of your own signs.
 			class Negative : public Base { public: virtual char const* what () const throw() { return "Negative numbers are not supported."; }; };
@@ -72,15 +76,15 @@ namespace DAC {
 	// Functions.
 	
 	// Convert a native type to another base.
-	template <class T, class U> U& baseConvert (T const from, U& to, typename U::value_type const tobase);
-	template <class T, class U> U& baseConvert (T const from, U& to                                     );
+	template <class T> T& baseConvert (T const from, T& to, typename T::value_type const tobase);
+	template <class T> T& baseConvert (T const from, T& to                                     );
 	
 	// Convert a based number to another base.
-	template <class T, class U> U& baseConvert (T const& from, typename T::value_type const frombase, U& to, typename U::value_type const tobase);
-	template <class T, class U> U& baseConvert (T const& from, typename T::value_type const frombase                                            );
+	template <class T> T& baseConvert (T const& from, typename T::value_type const frombase, T& to, typename T::value_type const tobase);
 	
 	// Convert a based number to native type.
-	template <class T, class U> U& baseConvert (T const& from, typename T::value_type const frombase);
+	template <class T> T& baseConvert (T const& from, typename T::value_type const frombase);
+	template <class T> T& baseConvert (T const& from                                       );
 	
 	/***************************************************************************
 	 * Inline and template definitions.
@@ -89,7 +93,7 @@ namespace DAC {
 	/*
 	 * Convert a native type to another base.
 	 */
-	template <class T, class U> U& baseConvert (T const from, U& to, typename U::value_type const tobase) {
+	template <class T> T& baseConvert (T const from, T& to, typename T::value_type const tobase) {
 		
 		// Check for overflow.
 		if (tobase < 2) {
@@ -100,7 +104,7 @@ namespace DAC {
 		}
 		
 		// Work area.
-		U retval       ;
+		T retval       ;
 		T work   = from;
 		
 		// Convert base by storing the remainder of repeated division by the base
@@ -118,7 +122,7 @@ namespace DAC {
 	/*
 	 * Convert a native type to another base, maximum size.
 	 */
-	template <class T, class U> U& baseConvert (T const from, U& to) {
+	template <class T> T& baseConvert (T const from, T& to) {
 		
 		// Check for overflow.
 		if (is_negative(from)) {
@@ -126,14 +130,11 @@ namespace DAC {
 		}
 		
 		// Work area.
-		U retval       ;
+		T retval       ;
 		T work   = from;
 		
-		// Convert base by shifting numbers into place.
-		while (work > 0) {
-			retval.push_back(work & std::numeric_limits<typename U::value_type>::max());
-			work >>= std::numeric_limits<typename U::value_type>::digits;
-		}
+		// Nothing to it.
+		retval.push_back(from);
 		
 		to.swap(retval);
 		return to;
@@ -143,7 +144,7 @@ namespace DAC {
 	/*
 	 * Convert a based number to another base.
 	 */
-	template <class T, class U> U& baseConvert (T const& from, typename T::value_type const frombase, U& to, typename U::value_type const tobase) {
+	template <class T> T& baseConvert (T const& from, typename T::value_type const frombase, T& to, typename T::value_type const tobase) {
 		
 		// Check for overflow.
 		if (frombase >= 1 << (std::numeric_limits<typename T::value_type>::digits >> 1)) {
@@ -152,7 +153,7 @@ namespace DAC {
 		if (frombase < 2) {
 			throw BaseConvert::Errors::MinBaseFrom();
 		}
-		if (tobase >= 1 << (std::numeric_limits<typename U::value_type>::digits >> 1)) {
+		if (tobase >= 1 << (std::numeric_limits<typename T::value_type>::digits >> 1)) {
 			throw BaseConvert::Errors::MaxBaseTo();
 		}
 		if (tobase < 2) {
@@ -160,16 +161,16 @@ namespace DAC {
 		}
 		
 		// Work area.
-		U retval      ;
+		T retval      ;
 		T work  (from);
 		
 		// Convert base by storing the remainder of repeated division by the base
 		// that we will be converting to. Least significant digits come out first.
 		try {
-			while (work.size() > 1 && work[0] != 0) {
+			while (work.size() > 0 && work[0] != 0) {
 				retval.push_back(londiv(work, work, tobase, frombase));
 			}
-		} catch (LongDiv::Errors::DigitOverflow<& e) {
+		} catch (LongDiv::Errors::DigitOverflow& e) {
 			throw BaseConvert::Errors::DigitOverflow().Digit(e.Digit());
 		}
 		
@@ -180,13 +181,38 @@ namespace DAC {
 	}
 	
 	/*
-	 * Convert a based number to another base, maximum size.
+	 * Convert a based number to a native type.
 	 */
-	template <class T, class U> U& baseConvert (T const& from, typename T::value_type const frombase, U& to) {
+	template <class T> T& baseConvert (T const& from, typename T::value_type const frombase) {
 		
+		// Check for overflow.
 		if (frombase >= 1 << (std::numeric_limits<typename T::value_type>::digits >> 1)) {
 			throw BaseConvert::Errors::MaxBaseFrom();
 		}
+		if (frombase < 2) {
+			throw BaseConvert::Errors::MinBaseFrom();
+		}
+		
+		// Work area.
+		typename T::value_type retval;
+		
+		// Convert base by multiplying out.
+		typename T::value_type magnitude = 1;
+		for (typename T::const_iterator i = from.begin(); i != from.end(); ++i) {
+			if (std::numeric_limits<typename T::value_type>::max() / magnitude > *i) {
+				throw BaseConvert::Errors::NativeOverflow();
+			}
+			if (std::numeric_limits<typename T::value_type>::max() - *i * magnitude) {
+				throw BaseConvert::Errors::NativeOverflow();
+			}
+			if (i + 1 != from.end() && std::numeric_limits<typename T::value_type>::max() / frombase > magnitude) {
+				throw BaseConvert::Errors::NativeOverflow();
+			}
+			retval    += *i * magnitude;
+			magnitude *= frombase;
+		}
+		
+		return retval;
 		
 	}
 	
