@@ -12,7 +12,8 @@ cArbInt.apply(env)
 cArb   .apply(env)
 
 # Create our module definition.
-cValReader = Module()
+cValReader            = Module()
+cValReader.own_module = 'ValReader'
 cValReader.take(cArbInt)
 cValReader.take(cArb   )
 

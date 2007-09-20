@@ -8,7 +8,8 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Create our module definiton.
-ctokenize = Module()
+ctokenize            = Module()
+ctokenize.own_module = 'tokenize'
 
 # Headers.
 ctokenize.own_include = 'tokenize'

@@ -8,7 +8,8 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Create our module definiton.
-ctrim = Module()
+ctrim            = Module()
+ctrim.own_module = 'trim'
 
 # Headers.
 ctrim.own_include = 'trim'

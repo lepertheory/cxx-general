@@ -8,7 +8,8 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Create our module definition.
-cArbInt = Module()
+cArbInt            = Module()
+cArbInt.own_module = 'ArbInt'
 
 # Headers.
 cArbInt.own_include = 'ArbInt'

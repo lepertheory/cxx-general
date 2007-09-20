@@ -11,8 +11,9 @@
 #include <vector>
 
 // Internal includes.
-#include <demangle.h++>
-#include <to_string.h++>
+#include "demangle.h++"
+#include "to_string.h++"
+#include "build_edges.h++"
 
 // Testing include.
 #include "baseConvert.h++"
@@ -28,9 +29,11 @@ using namespace DAC;
 template <class T> int test ();
 
 // Create edge cases.
+/*
 template <class T, bool issigned> class Build_Edges;
 template <class T> class Build_Edges<T, true > { public: static void op (vector<T>& edges); };
 template <class T> class Build_Edges<T, false> { public: static void op (vector<T>& edges); };
+*/
 
 /*****************************************************************************/
 // Definitions.
@@ -47,7 +50,11 @@ template <class T> int test () {
   
   vector<T> edges;
   
-  Build_Edges<T, numeric_limits<T>::is_signed>::op(edges);
+  build_edges(edges);
+	cout << "  edges:\n";
+	for (typename vector<T>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
+		cout << "    " << to_string(*i) << "\n";
+	}
   
   // All tests passed.
   return 0;
@@ -57,6 +64,7 @@ template <class T> int test () {
 /*
  * Create edge cases, signed type.
  */
+/*
 template <class T> void Build_Edges<T, true>::op (vector<T>& edges) {
   if (numeric_limits<T>::min() < -1) {
     edges.push_back(numeric_limits<T>::min());
@@ -86,10 +94,12 @@ template <class T> void Build_Edges<T, true>::op (vector<T>& edges) {
     edges.push_back(numeric_limits<T>::max());
   }
 }
+*/
 
 /*
  * Create edge cases, unsigned type.
  */
+/*
 template <class T> void Build_Edges<T, false>::op (vector<T>& edges) {
   edges.push_back(0);
   edges.push_back(1);
@@ -106,6 +116,7 @@ template <class T> void Build_Edges<T, false>::op (vector<T>& edges) {
     edges.push_back(numeric_limits<T>::max());
   }
 }
+*/
 
 /*
  * This is it.

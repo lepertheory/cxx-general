@@ -13,6 +13,7 @@
 // Internal includes.
 #include <demangle.h++>
 #include <to_string.h++>
+#include <build_edges.h++>
 
 // Testing include.
 #include "longDiv.h++"
@@ -33,11 +34,6 @@ template <class T> int test ();
 // Output an error message.
 template <class T> void errMsg (string const& message, T const base, T const divisor, size_t const digits, vector<T> const& dividend, T const remainder, vector<T> const& quotient);
 
-// Create edge cases.
-template <class T, bool is_signed> class Build_Edges;
-template <class T> class Build_Edges<T, false> { public: static void op (T& edges); };
-template <class T> class Build_Edges<T, true > { public: static void op (T& edges); };
-
 /*****************************************************************************/
 // Definitions.
 
@@ -53,7 +49,7 @@ template <class T> int test () {
   
   vector<T> edges;
   
-  Build_Edges<vector<T>, numeric_limits<T>::is_signed>::op(edges);
+  build_edges(edges);
   
   {
     
@@ -208,9 +204,8 @@ template <class T> int test () {
               }
               
               // Re-add the remainder.
-              *quotient.begin() = *quotient.begin() + remainder;
               {
-                T carry = 0;
+                T carry = remainder;
                 for (typename vector<T>::iterator adddigit = quotient.begin(); adddigit != quotient.end(); ++adddigit) {
                   *adddigit = *adddigit + carry;
                   carry = 0;
@@ -301,52 +296,6 @@ template <class T> void errMsg (string const& message, T const base, T const div
     cerr << " " << to_string(*i);
   }
   cerr << endl;
-}
-
-/*
- * Create edge cases, unsigned type.
- */
-template <class T> void Build_Edges<T, false>::op (T& edges) {
-  edges.push_back(0);
-  edges.push_back(1);
-  if (numeric_limits<typename T::value_type>::max() > 1) {
-    if (numeric_limits<typename T::value_type>::max() > 2) {
-      if (numeric_limits<typename T::value_type>::max() > 3) {
-        if (numeric_limits<typename T::value_type>::max() > 5) {
-          if (numeric_limits<typename T::value_type>::max() > 9) {
-            edges.push_back((1 << (numeric_limits<typename T::value_type>::digits >> 1)) - 2);
-          }
-          edges.push_back((1 << (numeric_limits<typename T::value_type>::digits >> 1)) - 1);
-        }
-        edges.push_back(1 << (numeric_limits<typename T::value_type>::digits >> 1));
-      }
-      edges.push_back(numeric_limits<typename T::value_type>::max() - 1);
-    }
-    edges.push_back(numeric_limits<typename T::value_type>::max());
-  }
-}
-
-/*
- * Create edge cases, signed type.
- */
-template <class T> void Build_Edges<T, true>::op (T& edges) {
-  if (numeric_limits<typename T::value_type>::min() < -1) {
-    edges.push_back(numeric_limits<typename T::value_type>::min());
-    if (numeric_limits<typename T::value_type>::min() < -2) {
-      edges.push_back(numeric_limits<typename T::value_type>::min() + 1);
-      if (numeric_limits<typename T::value_type>::min() < -3) {
-        edges.push_back(-(1 << (numeric_limits<typename T::value_type>::digits >> 1)));
-        if (numeric_limits<typename T::value_type>::min() < -5) {
-          edges.push_back(-(1 << (numeric_limits<typename T::value_type>::digits >> 1)) + 1);
-          if (numeric_limits<typename T::value_type>::min() < -9) {
-            edges.push_back(-(1 << (numeric_limits<typename T::value_type>::digits >> 1)) + 2);
-          }
-        }
-      }
-    }
-  }
-  edges.push_back(-1);
-  Build_Edges<T, false>::op(edges);
 }
 
 /*

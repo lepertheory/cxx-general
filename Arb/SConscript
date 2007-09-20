@@ -11,7 +11,8 @@ env.Append(CPPPATH = ['..'])
 cArbInt.apply(env)
 
 # Create our module definition.
-cArb = Module()
+cArb            = Module()
+cArb.own_module = 'Arb'
 cArb.take(cArbInt)
 
 # Headers.

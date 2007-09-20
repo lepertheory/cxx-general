@@ -13,7 +13,8 @@ ctokenize .apply(env)
 ctrim     .apply(env)
 
 # Create our module definition.
-cINIFile = Module()
+cINIFile            = Module()
+cINIFile.own_module = 'INIFile'
 cINIFile.take(cValReader)
 cINIFile.take(ctokenize )
 cINIFile.take(ctrim     )

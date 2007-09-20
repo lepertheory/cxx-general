@@ -8,7 +8,8 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Create our module definition.
-cwrapText = Module()
+cwrapText            = Module()
+cwrapText.own_module = 'wrapText'
 
 # Headers.
 cwrapText.own_include = 'wrapText'

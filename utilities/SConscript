@@ -1,0 +1,11 @@
+# Imports from caller.
+Import('*')
+
+# Include the parent directory.
+env.Append(CPPPATH = ['..'])
+
+# Object files.
+o_longDiv = env.Object(target = 'longDiv', source = ['longDiv.c++'])
+
+# Programs.
+env.Program(target = 'longDiv', source = [o_longDiv])

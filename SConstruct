@@ -88,9 +88,15 @@ ctrim          = SConscript(['trim/SConscript'         ], exports = 'env'       
 cValReader     = SConscript(['ValReader/SConscript'    ], exports = 'env cArbInt cArb'              ) ; env = tmpenv.Copy() ; modules.append(cValReader    )
 ctokenize      = SConscript(['tokenize/SConscript'     ], exports = 'env'                           ) ; env = tmpenv.Copy() ; modules.append(ctokenize     )
 cINIFile       = SConscript(['INIFile/SConscript'      ], exports = 'env cValReader ctokenize ctrim') ; env = tmpenv.Copy() ; modules.append(cINIFile      )
+allmodules = ''
+for module in modules :
+	if allmodules != '' :
+		allmodules = allmodules + ' '
+	allmodules = allmodules + 'c' + module.own_module
 
-# Tests.
-SConscript(['Tests/SConscript'], exports = 'env cArbInt cArb cTimestamp cINIFile cget_errorText cValReader ctokenize ctrim') ; env = tmpenv.Copy()
+# Programs.
+SConscript(['Tests/SConscript'    ], exports = 'env ' + allmodules) ; env = tmpenv.Copy()
+SConscript(['utilities/SConscript'], exports = 'env ' + allmodules) ; env = tmpenv.Copy()
 
 # Shared library filenames.
 cxxgeneral_name   = env['LIBPREFIX'] + env['project_name'] + env['SHLIBSUFFIX']

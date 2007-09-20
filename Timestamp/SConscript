@@ -12,7 +12,8 @@ cArb          .apply_includes(env)
 cget_errorText.apply_includes(env)
 
 # Create our module definition.
-cTimestamp = Module()
+cTimestamp            = Module()
+cTimestamp.own_module = 'Timestamp'
 cTimestamp.take(cArb          )
 cTimestamp.take(cget_errorText)
 

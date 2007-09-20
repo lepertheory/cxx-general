@@ -8,7 +8,8 @@ Import('*')
 env.Append(CPPPATH = ['..'])
 
 # Create our module definition.
-cget_errorText = Module()
+cget_errorText            = Module()
+cget_errorText.own_module = 'get_errorText'
 
 # Headers.
 cget_errorText.own_include = 'get_errorText'
