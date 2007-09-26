@@ -28,13 +28,6 @@ using namespace DAC;
 // Run test suite on a given type.
 template <class T> int test ();
 
-// Create edge cases.
-/*
-template <class T, bool issigned> class Build_Edges;
-template <class T> class Build_Edges<T, true > { public: static void op (vector<T>& edges); };
-template <class T> class Build_Edges<T, false> { public: static void op (vector<T>& edges); };
-*/
-
 /*****************************************************************************/
 // Definitions.
 
@@ -60,63 +53,6 @@ template <class T> int test () {
   return 0;
   
 }
-
-/*
- * Create edge cases, signed type.
- */
-/*
-template <class T> void Build_Edges<T, true>::op (vector<T>& edges) {
-  if (numeric_limits<T>::min() < -1) {
-    edges.push_back(numeric_limits<T>::min());
-    if (numeric_limits<T>::min() < -2) {
-      edges.push_back(numeric_limits<T>::min() + 1);
-      if (numeric_limits<T>::min() < -3) {
-        edges.push_back(numeric_limits<T>::min() >> 1);
-        if (numeric_limits<T>::min() >> 1 < -5) {
-          edges.push_back((numeric_limits<T>::min() >> 1) + 1);
-        }
-      }
-    }
-  }
-  edges.push_back(-1);
-  edges.push_back( 0);
-  edges.push_back( 1);
-  if (numeric_limits<T>::max() > 1) {
-    if (numeric_limits<T>::max() > 2) {
-      if (numeric_limits<T>::max() > 3) {
-        if (numeric_limits<T>::max() > 5) {
-          edges.push_back((numeric_limits<T>::max() >> 1) - 1);
-        }
-        edges.push_back(numeric_limits<T>::max() >> 1);
-      }
-      edges.push_back(numeric_limits<T>::max() - 1);
-    }
-    edges.push_back(numeric_limits<T>::max());
-  }
-}
-*/
-
-/*
- * Create edge cases, unsigned type.
- */
-/*
-template <class T> void Build_Edges<T, false>::op (vector<T>& edges) {
-  edges.push_back(0);
-  edges.push_back(1);
-  if (numeric_limits<T>::max() > 1) {
-    if (numeric_limits<T>::max() > 2) {
-      if (numeric_limits<T>::max() > 3) {
-        if (numeric_limits<T>::max() > 5) {
-          edges.push_back((numeric_limits<T>::max() >> 1) - 1);
-        }
-        edges.push_back(numeric_limits<T>::max() >> 1);
-      }
-      edges.push_back(numeric_limits<T>::max() - 1);
-    }
-    edges.push_back(numeric_limits<T>::max());
-  }
-}
-*/
 
 /*
  * This is it.

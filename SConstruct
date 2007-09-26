@@ -95,8 +95,9 @@ for module in modules :
 	allmodules = allmodules + 'c' + module.own_module
 
 # Programs.
-SConscript(['Tests/SConscript'    ], exports = 'env ' + allmodules) ; env = tmpenv.Copy()
-SConscript(['utilities/SConscript'], exports = 'env ' + allmodules) ; env = tmpenv.Copy()
+programs = []
+pTests     = SConscript(['Tests/SConscript'    ], exports = 'env ' + allmodules) ; env = tmpenv.Copy() ; programs.append(pTests    )
+putilities = SConscript(['utilities/SConscript'], exports = 'env ' + allmodules) ; env = tmpenv.Copy() ; programs.append(putilities)
 
 # Shared library filenames.
 cxxgeneral_name   = env['LIBPREFIX'] + env['project_name'] + env['SHLIBSUFFIX']
@@ -134,3 +135,14 @@ if env.GetOption('clean') :
   env.Default('.')
 else :
   env.Default(cxxgeneral, pcfile)
+
+# Specify additional clean targets.
+# FIXME: This isn't portable, executables at the very least have different
+#        extensions.
+for module in modules + programs :
+	for object in module.own_objects :
+		for subobj in object :
+			Clean(subobj, str(subobj)[0:str(subobj).rfind('.')] + '.gcno')
+	for prog in module.own_programs :
+		for subprog in prog :
+			Clean(subprog, str(subprog) + '.gcda')

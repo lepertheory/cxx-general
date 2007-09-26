@@ -14,9 +14,10 @@
 #include <string>
 
 // Internal includes.
-#include <Exception.h++>
-#include <to_string.h++>
-#include <longDiv.h++>
+#include "Exception.h++"
+#include "to_string.h++"
+#include "longDiv.h++"
+#include "rppower.h++"
 
 // Contain in namespace.
 namespace DAC {
@@ -94,6 +95,11 @@ namespace DAC {
 	 * Convert a native type to another base.
 	 */
 	template <class T> T& baseConvert (T const from, T& to, typename T::value_type const tobase) {
+		
+		// Shunt off to the proper algorithm for a max base conversion.
+		if (tobase == 0) {
+			return baseConvert(from, to);
+		}
 		
 		// Check for overflow.
 		if (tobase < 2) {
@@ -186,12 +192,15 @@ namespace DAC {
 	template <class T> T& baseConvert (T const& from, typename T::value_type const frombase) {
 		
 		// Check for overflow.
+		/*
 		if (frombase >= 1 << (std::numeric_limits<typename T::value_type>::digits >> 1)) {
 			throw BaseConvert::Errors::MaxBaseFrom();
 		}
+		*/
 		if (frombase < 2) {
 			throw BaseConvert::Errors::MinBaseFrom();
 		}
+		
 		
 		// Work area.
 		typename T::value_type retval;
@@ -213,6 +222,15 @@ namespace DAC {
 		}
 		
 		return retval;
+		
+	}
+	
+	/*
+	 * Convert a based number to a native type, maximum base.
+	 */
+	template <class T> T& baseConvert (T const& from) {
+		
+		
 		
 	}
 	
