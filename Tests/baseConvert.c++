@@ -42,12 +42,9 @@ template <class T> int test () {
   }
   
   vector<T> edges;
-  
   build_edges(edges);
-	cout << "  edges:\n";
-	for (typename vector<T>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
-		cout << "    " << to_string(*i) << "\n";
-	}
+	
+	for (vector<T>::const_iterator frombase
   
   // All tests passed.
   return 0;
