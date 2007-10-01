@@ -179,7 +179,7 @@ template <class T, class U> inline bool Build_EdgesUtil::Number_Fits<T, U, DAC::
  * Clean up after combining edges.
  */
 template <class T> void Build_EdgesUtil::clean_edges (T& edges) {
-	std::sort  (edges.begin(), edges.end());
-	std::unique(edges.begin(), edges.end());
+	std::sort(edges.begin(), edges.end());
+	edges.resize(std::unique(edges.begin(), edges.end()) - edges.begin());
 }
 

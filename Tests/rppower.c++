@@ -73,7 +73,7 @@ template <class T> int test () {
 	
 	{
 		string temp;
-		cout << "Testing " << demangle<T>(temp) << "...\n";
+		cout << "Testing " << demangle<T>(temp) << "..." << endl;
 	}
 	
 	if (test2<T, bool          >()) { return 1; }
@@ -99,7 +99,7 @@ template <class T, class U> int test2 () {
 	
 	{
 		string temp;
-		cout << "  With " << demangle<U>(temp) << "...\n";
+		cout << "  With " << demangle<U>(temp) << "..." << endl;
 	}
 	
 	vector<T> edges_t;
@@ -135,56 +135,59 @@ template <class T, class U> int Signed_Sensitive_Test<T, U, false, false>::op (T
 		try {
 			testval = rppower(base, exp);
 		} catch (RPPower::Errors::ZeroZeroth&) {
-			cout << "    Zero to the zeroth power.\n";
+			cout << "       Zero to the zeroth power." << endl;
 			return 0;
 		} catch (Exception& e) {
 			{
 				string temp;
-				cout << "    Unexpected exception of type " << demangle<Exception>(temp) << ": " << e.what() << "\n";
+				cout << "       Unexpected exception of type " << demangle<Exception>(temp) << ": " << e.what() << endl;
 			}
 			return 1;
 		} catch (...) {
-			cout << "    Unexpected exception of unknown type caught.\n";
+			cout << "       Unexpected exception of unknown type caught." << endl;
 			throw;
 		}
 		{
 			string temp;
-			cout << "    No " << demangle<RPPower::Errors::ZeroZeroth>(temp) << " error thrown!\n";
+			cout << "       No " << demangle<RPPower::Errors::ZeroZeroth>(temp) << " error thrown!" << endl;
 		}
 		return 1;
 	}
 	
-	for (U count = 0; count != exp; ++count) {
-		if (numeric_limits<T>::max() / controlval < base) {
-			cout << "    OVERFLOW\n";
-			return 0;
+	if (base == 0) {
+		controlval = 0;
+	} else {
+		for (U count = 0; count != exp; ++count) {
+			if (numeric_limits<T>::max() / controlval < base) {
+				cout << "       OVERFLOW" << endl;
+				return 0;
+			}
+			controlval *= base;
 		}
-		controlval *= base;
 	}
 	
-	cout.flush();
 	testval = rppower(base, exp);
 	if (testval != controlval) {
-		cout << " != " << to_string(testval) << "  FAILED!\n";
+		cout << " != " << to_string(testval) << "  FAILED!" << endl;
 		return 1;
 	}
-	cout << " == " << to_string(testval) << "  OK!\n";
+	cout << " == " << to_string(testval) << "  OK!" << endl;
 	return 0;
 	
 }
 template <class T, class U> int Signed_Sensitive_Test<T, U, false, true >::op (T const base, U const exp) {
 	if (base) {}
 	if (exp ) {}
-	cout << "\n"; return 0;
+	cout << endl; return 0;
 }
 template <class T, class U> int Signed_Sensitive_Test<T, U, true , false>::op (T const base, U const exp) {
 	if (base) {}
 	if (exp ) {}
-	cout << "\n"; return 0;
+	cout << endl; return 0;
 }
 template <class T, class U> int Signed_Sensitive_Test<T, U, true , true >::op (T const base, U const exp) {
 	if (base) {}
 	if (exp ) {}
-	cout << "\n"; return 0;
+	cout << endl; return 0;
 }
 
