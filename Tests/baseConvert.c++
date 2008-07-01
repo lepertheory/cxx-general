@@ -13,7 +13,7 @@
 // Internal includes.
 #include "demangle.h++"
 #include "to_string.h++"
-#include "build_edges.h++"
+#include "testcommon.h++"
 
 // Testing include.
 #include "baseConvert.h++"
