@@ -7,10 +7,16 @@
 // Standard includes.
 #include <string>
 #include <iostream>
+#include <vector>
+#include <limits>
+#include <cstdlib>
 
 // Internal includes.
 #include "demangle.h++"
 #include "NumInfo.h++"
+#include "testcommon.h++"
+#include "Exception.h++"
+#include "to_string.h++"
 
 // Testing includes.
 #include "abs.h++"
@@ -23,13 +29,43 @@ using namespace DAC;
 template <class T, NumTypes::Type> class Test;
 template <class T> class Test<T, NumTypes::SINT> { public: static int op (); };
 template <class T> class Test<T, NumTypes::UINT> { public: static int op (); };
-template <class T> class Test<T, NumTypes::FLPT> { public: static int op (); };
 
 /*
  * Test a signed integer.
  */
 template <class T> int Test<T, NumTypes::SINT>::op () {
   
+	// Types.
+	typedef vector<T> Edges;
+	
+	// Build edge cases.
+	Edges edges;
+	build_edges(edges);
+	
+	// Run tests.
+	for (typename Edges::iterator edge = edges.begin(); edge != edges.end(); ++edge) {
+		cout << "  " << to_string(*edge) << "... ";
+		
+		// Overflow is undefined.
+		if (*edge == numeric_limits<T>::min()) {
+			cout << "Undefined." << endl;
+			
+		// Should equal the built-in function.
+		} else {
+			if (*edge != numeric_limits<T>::min()) {
+				T testval    = DAC::abs(*edge);
+				T controlval = abs(*edge);
+				cout << to_string(testval);
+				if (testval != controlval) {
+					cout << " != " << to_string(controlval) << " Failed!" << endl;
+					return 1;
+				}
+				cout << " == " << to_string(controlval) << " OK!" <<  endl; 
+			}
+		}
+		
+	}
+	
   // All tests passed.
   return 0;
   
@@ -40,16 +76,27 @@ template <class T> int Test<T, NumTypes::SINT>::op () {
  */
 template <class T> int Test<T, NumTypes::UINT>::op () {
   
-  // All tests passed.
-  return 0;
-  
-}
-
-/*
- * Test a floating-point.
- */
-template <class T> int Test<T, NumTypes::FLPT>::op () {
-  
+	// Types.
+	typedef vector<T> Edges;
+	
+	// Build edge cases.
+	Edges edges;
+	build_edges(edges);
+	
+	// Run tests.
+	for (typename Edges::iterator edge = edges.begin(); edge != edges.end(); ++edge) {
+		cout << "  " << to_string(*edge) << "... ";
+		
+		// This should simply be a no-op.
+		T testval = DAC::abs(*edge);
+		if (testval != *edge) {
+			cout << to_string(*edge) << " != " << to_string(testval) << "... Failed!" << endl;
+			return 1;
+		}
+		cout << to_string(*edge) << " == " << to_string(testval) << "... OK!" << endl;
+		
+	}
+	
   // All tests passed.
   return 0;
   
@@ -86,9 +133,6 @@ int main () {
   if (test<unsigned int  >()) { return 1; }
   if (test<long          >()) { return 1; }
   if (test<unsigned long >()) { return 1; }
-  if (test<float         >()) { return 1; }
-  if (test<double        >()) { return 1; }
-  if (test<long double   >()) { return 1; }
   
   // All tests successful.
   return 0;

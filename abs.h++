@@ -48,7 +48,7 @@ namespace DAC {
 	namespace absUtils {
 		template <class T> inline T AbsSplit<T, false>::op (T const value) { return value; }
 		template <class T> inline T AbsSplit<T, true >::op (T const value) {
-			return (value > 0) ? value : ~value + 1;
+			return (value >= 0) ? value : ~value + 1;
 		}
 	}
 	
