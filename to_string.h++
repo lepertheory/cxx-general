@@ -38,6 +38,7 @@ namespace DAC {
   /***************************************************************************
    * Inline and template definitions.
    ***************************************************************************/
+	// FIXME: All of these go out of scope before returning.
   
   namespace To_String_Util {
     template <class T> inline std::ostringstream& CharCast<T, false>::op (T const& from, std::ostringstream& to) {
@@ -51,34 +52,44 @@ namespace DAC {
   }
   
   template <> inline std::string to_string<char> (char const& from) {
+		static std::string buffer;
     std::ostringstream os;
     To_String_Util::CharCast<char, std::numeric_limits<char>::is_signed>::op(from, os);
-    return os.str();
+		buffer = os.str();
+    return buffer;
   }
   
   template <> inline std::string to_string<signed char> (signed char const& from) {
+		static std::string buffer;
     std::ostringstream os;
     os << static_cast<int>(from);
-    return os.str();
+		buffer = os.str();
+    return buffer;
   }
   
   template <> inline std::string to_string<unsigned char> (unsigned char const& from) {
+		static std::string buffer;
     std::ostringstream os;
     os << static_cast<unsigned int>(from);
-    return os.str();
+		buffer = os.str();
+    return buffer;
   }
   
   template <class T> inline std::string to_string (T const& from) {
+		static std::string buffer;
     std::ostringstream os;
     os.precision(std::numeric_limits<T>::digits10 + 1);
     os << from;
-    return os.str();
+		buffer = os.str();
+    return buffer;
   }
   
   inline std::string to_stringChr (char const from) {
+		static std::string buffer;
     std::ostringstream os;
     os << from;
-    return os.str();
+		buffer = os.str();
+    return buffer;
   }
   
 }

@@ -7,15 +7,16 @@
 // Standard includes.
 #include <string>
 #include <iostream>
-#include <limits>
 #include <cstdlib>
+#include <vector>
 
 // Internal includes.
 #include "demangle.h++"
+#include "NumInfo.h++"
+#include "testcommon.h++"
 
 // Testing include.
 #include "to_string.h++"
-#include "NumInfo.h++"
 
 // Bring in namespaces.
 using namespace std;
@@ -41,9 +42,6 @@ template <class T> int FinTest<T, NumTypes::UINT>::op(T const number) {
   // Work area.
   T to;
   
-  // Show what we are testing.
-  cout << to_string(number);
-  
   // Do the conversion.
   to = strtoul(to_string(number).c_str(), 0, 10);
   
@@ -67,9 +65,6 @@ template <class T> int FinTest<T, NumTypes::SINT>::op(T const number) {
   
   // Work area.
   T to;
-  
-  // Show what we are testing.
-  cout << to_string(number);
   
   // Do the conversion.
   to = strtol(to_string(number).c_str(), 0, 10);
@@ -95,9 +90,6 @@ template <class T> int FinTest<T, NumTypes::FLPT>::op(T const number) {
   // Work area.
   T to;
   
-  // Show what we are testing.
-  cout << to_string(number);
-  
   // Do the conversion.
   to = strtold(to_string(number).c_str(), 0);
   
@@ -115,66 +107,6 @@ template <class T> int FinTest<T, NumTypes::FLPT>::op(T const number) {
 }
 
 /*
- * Test a particular type, unsigned integer.
- */
-template <class T> int Test<T, NumTypes::UINT>::op () {
-  
-  // Test edge cases.
-  cout << "    Testing edge cases..." << endl;
-  cout << "      Minimum... "    ; if (FinTest<T, NumTypes::UINT>::op(static_cast<T>(0)           )) { return 1; }
-  cout << "      Minimum + 1... "; if (FinTest<T, NumTypes::UINT>::op(static_cast<T>(1)           )) { return 1; }
-  cout << "      Maximum - 1... "; if (FinTest<T, NumTypes::UINT>::op(numeric_limits<T>::max() - 1)) { return 1; }
-  cout << "      Maximum... "    ; if (FinTest<T, NumTypes::UINT>::op(numeric_limits<T>::max()    )) { return 1; }
-  cout << "    OK!" << endl;
-  
-  // All tests passed.
-  return 0;
-  
-}
-
-/*
- * Test a particular type, signed integer.
- */
-template <class T> int Test<T, NumTypes::SINT>::op () {
-  
-  // Test edge cases.
-  cout << "    Testing edge cases..." << endl;
-  cout << "      Minimum... "    ; if (FinTest<T, NumTypes::SINT>::op(numeric_limits<T>::min()    )) { return 1; }
-  cout << "      Minimum + 1... "; if (FinTest<T, NumTypes::SINT>::op(numeric_limits<T>::min() + 1)) { return 1; }
-  cout << "      -1... "         ; if (FinTest<T, NumTypes::SINT>::op(-1                          )) { return 1; }
-  cout << "      0... "          ; if (FinTest<T, NumTypes::SINT>::op(0                           )) { return 1; }
-  cout << "      1... "          ; if (FinTest<T, NumTypes::SINT>::op(1                           )) { return 1; }
-  cout << "      Maximum - 1... "; if (FinTest<T, NumTypes::SINT>::op(numeric_limits<T>::max() - 1)) { return 1; }
-  cout << "      Maximum... "    ; if (FinTest<T, NumTypes::SINT>::op(numeric_limits<T>::max()    )) { return 1; }
-  cout << "    OK!" << endl;
-  
-  // All tests passed.
-  return 0;
-  
-}
-
-/*
- * Test a particular type, floating point.
- */
-template <class T> int Test<T, NumTypes::FLPT>::op () {
-  
-  // Test edge cases.
-  cout << "    Testing edge cases..." << endl;
-  cout << "      Minimum... "    ; if (FinTest<T, NumTypes::FLPT>::op(numeric_limits<T>::min()    )) { return 1; }
-  cout << "      Minimum + 1... "; if (FinTest<T, NumTypes::FLPT>::op(numeric_limits<T>::min() + 1)) { return 1; }
-  cout << "      -1... "         ; if (FinTest<T, NumTypes::FLPT>::op(-1                          )) { return 1; }
-  cout << "      0... "          ; if (FinTest<T, NumTypes::FLPT>::op(0                           )) { return 1; }
-  cout << "      1... "          ; if (FinTest<T, NumTypes::FLPT>::op(1                           )) { return 1; }
-  cout << "      Maximum - 1... "; if (FinTest<T, NumTypes::FLPT>::op(numeric_limits<T>::max() - 1)) { return 1; }
-  cout << "      Maximum... "    ; if (FinTest<T, NumTypes::FLPT>::op(numeric_limits<T>::max()    )) { return 1; }
-  cout << "    OK!" << endl;
-  
-  // All tests passed.
-  return 0;
-  
-}
-
-/*
  * Test a particular type.
  */
 template <class T> int test () {
@@ -185,11 +117,23 @@ template <class T> int test () {
     cout << "  Testing type " << demangle<T>(buffer) << "..." << endl;
   }
   
+	// Create edge cases.
+	vector<T> edges;
+	build_edges(edges);
+	
+	for (typename vector<T>::const_iterator edge = edges.begin(); edge != edges.end(); ++edge) {
+		cout << "    " << to_string(*edge);
+		if (FinTest<T, NumType<T>::type>::op(*edge)) {
+			return EXIT_FAILURE;
+		}
+	}
+	
   // Break out into specific tests.
+	/*
   if (Test<T, NumType<T>::type>::op()) {
     cout << "FAILED!" << endl;
     return 1;
-  }
+  }*/
   
   // All tests passed.
   cout << "  OK!" << endl;
