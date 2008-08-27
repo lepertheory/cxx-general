@@ -10,14 +10,17 @@ env.Append(CPPPATH = ['..'])
 # Define testing environment.
 env.Append(CPPDEFINES = ['TESTING'])
 
+# Test programs get access to privates.
+env.Append(CCFLAGS = '-fno-access-control')
+
 # Create program-specific environments.
-#env_ArbInt = env.Copy()
+#env_ArbInt = env.Clone()
 #cArbInt.apply(env_ArbInt)
-#env_Arb = env.Copy()
+#env_Arb = env.Clone()
 #cArb.apply(env_Arb)
-#env_Timestamp = env.Copy()
+#env_Timestamp = env.Clone()
 #cTimestamp.apply_includes(env_Timestamp)
-#env_INIFile = env.Copy()
+#env_INIFile = env.Clone()
 #cINIFile.apply(env_INIFile)
 
 # Module definition.
@@ -25,6 +28,7 @@ pTests            = Module()
 pTests.own_module = 'Tests'
 
 # Object files.
+o_AutoArray   = env          .Object(target = 'AutoArray'  , source = ['AutoArray.c++'  ]); pTests.own_objects.append(o_AutoArray  )
 o_NumInfo     = env          .Object(target = 'NumInfo'    , source = ['NumInfo.c++'    ]); pTests.own_objects.append(o_NumInfo    )
 o_demangle    = env          .Object(target = 'demangle'   , source = ['demangle.c++'   ]); pTests.own_objects.append(o_demangle   )
 o_Exception   = env          .Object(target = 'Exception'  , source = ['Exception.c++'  ]); pTests.own_objects.append(o_Exception  )
@@ -40,6 +44,7 @@ o_rppower     = env          .Object(target = 'rppower'    , source = ['rppower.
 #o_INIFile   = env_INIFile  .Object(target = 'INIFile'  , source = ['INIFile.c++'  ])
 
 # Programs.
+pTests.own_programs.append(env          .Program(target = 'AutoArray'  , source =                            [o_AutoArray  ]))
 pTests.own_programs.append(env          .Program(target = 'NumInfo'    , source =                            [o_NumInfo    ]))
 pTests.own_programs.append(env          .Program(target = 'demangle'   , source =                            [o_demangle   ]))
 pTests.own_programs.append(env          .Program(target = 'Exception'  , source =                            [o_Exception  ]))

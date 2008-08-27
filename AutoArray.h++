@@ -10,11 +10,16 @@
 
 // Namespace container.
 namespace DAC {
-
+	
+	/***************************************************************************/
+	// Types.
+	
 	/***************************************************************************
 	 * AutoArray
+	 ***************************************************************************
+	 * Implements RAII for arrays.
 	 ***************************************************************************/
-	template<class T> class AutoArray {
+	template <class T> class AutoArray {
 		
 		/*
 		 * Public members.
@@ -66,45 +71,45 @@ namespace DAC {
 			T* _p;
 			
 	};
-
+	
 	/***************************************************************************
 	 * Inline and template definitions.
 	 ***************************************************************************/
-
+	
 	/*
 	 * Default and conversion constructor.
 	 */
-	template<class T> inline AutoArray<T>::AutoArray (T* p) {
+	template <class T> inline AutoArray<T>::AutoArray (T* p) {
 		
 		// Set the pointer to the given pointer.
 		_p = p;
 		
 	}
-
+	
 	/*
 	 * Copy constructor. Will take pointer from source.
 	 */
-	template<class T> inline AutoArray<T>::AutoArray (AutoArray& p) {
+	template <class T> inline AutoArray<T>::AutoArray (AutoArray& p) {
 		
 		// Take the pointer, make other release.
 		_p = p.release();
 		
 	}
-
+	
 	/*
 	 * Destructor.
 	 */
-	template<class T> inline AutoArray<T>::~AutoArray () {
+	template <class T> inline AutoArray<T>::~AutoArray () {
 		
 		// Free pointed-to memory.
 		delete[] _p;
 		
 	}
-
+	
 	/*
 	 * Assignment operator, assigning pointer to this.
 	 */
-	template<class T> inline AutoArray<T>& AutoArray<T>::operator= (T* p) {
+	template <class T> inline AutoArray<T>& AutoArray<T>::operator= (T* p) {
 		
 		// Free current pointer, set new pointer.
 		reset(p);
@@ -113,12 +118,12 @@ namespace DAC {
 		return *this;
 		
 	}
-
+	
 	/*
 	 * Assignment operator, assigning another AutoArray to this. Will take
 	 * pointer from source.
 	 */
-	template<class T> inline AutoArray<T>& AutoArray<T>::operator= (AutoArray<T>& p) {
+	template <class T> inline AutoArray<T>& AutoArray<T>::operator= (AutoArray<T>& p) {
 		
 		// Make other release the pointer, free current pointer, set new pointer.
 		reset(p.release());
@@ -127,54 +132,54 @@ namespace DAC {
 		return *this;
 		
 	}
-
+	
 	/*
 	 * Subscript operator. Return the nth element of the array.
 	 */
-	template<class T> inline T& AutoArray<T>::operator[] (int index) const {
+	template <class T> inline T& AutoArray<T>::operator[] (int index) const {
 		return _p[index];
 	}
-
+	
 	/*
 	 * Dereference operator. Return a reference to the first item of the array.
 	 */
-	template<class T> inline T& AutoArray<T>::operator* () const {
+	template <class T> inline T& AutoArray<T>::operator* () const {
 		return *_p;
 	}
-
+	
 	/*
 	 * Dereference function call operator.
 	 */
-	template<class T> inline T* AutoArray<T>::operator-> () const {
+	template <class T> inline T* AutoArray<T>::operator-> () const {
 		return _p;
 	}
-
+	
 	/*
 	 * Get the pointer.
 	 */
-	template<class T> inline T* AutoArray<T>::get () const {
+	template <class T> inline T* AutoArray<T>::get () const {
 		return _p;
 	}
-
+	
 	/*
 	 * Release the pointer without freeing memory.
 	 */
-	template<class T> inline T* AutoArray<T>::release () {
+	template <class T> inline T* AutoArray<T>::release () {
 		T* tp = _p;
 		_p    = 0;
 		return tp;
 	}
-
+	
 	/*
 	 * Free memory used by pointer and set new pointer.
 	 */
-	template<class T> inline void AutoArray<T>::reset (T* p) {
+	template <class T> inline void AutoArray<T>::reset (T* p) {
 		if (_p != p) {
 			delete[] _p;
 			_p = p;
 		}
 	}
-
+	
 }
 
 #endif

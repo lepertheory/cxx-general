@@ -96,7 +96,7 @@ namespace DAC {
 	 * Create edge cases, two types, same length, both unsigned.
 	 */
 	template <class T, class U> void Build_Edges_Dual<T, U, RelTypes::UE_UE>::op(T& edges1, U& edges2) {
-		size_t origsize = edges1.end() - edges1.begin();
+		typename T::size_t origsize = edges1.end() - edges1.begin();
 		for (typename U::const_iterator edge = edges2.begin(); edge != edges2.end(); ++edge) {
 			push_unique(edges1, static_cast<typename T::value_type>(*edge));
 		}

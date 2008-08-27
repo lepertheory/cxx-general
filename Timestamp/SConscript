@@ -51,7 +51,7 @@ if not env.GetOption('clean') :
   env['CCFLAGS'] = tmpccflags
 
 # Create define file.
-define_env = env.Copy()
+define_env = env.Clone()
 cTimestamp.apply(define_env)
 test = define_env.Define('Timestamp_config')
 cTimestamp.own_headers.append(test)

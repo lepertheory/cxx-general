@@ -210,31 +210,74 @@
 // Namespace wrapper.
 namespace DAC {
   
+	/***************************************************************************/
+	// Functions definitions.
+	
+	// Get the stride of a type.
+	template <class T> size_t strideof ();
+	
+	// Get the stride of an instance.
+	template <class T> size_t strideof (T const& instance);
+	
+	/***************************************************************************
+	 * Inline and template definitions.
+	 ***************************************************************************/
+	
+	/***************************************************************************/
+	// Functions.
+	
+	/*
+	 * Get the stride of a type.
+	 */
+	template <class T> inline size_t strideof () {
+		struct T_plus_char {
+			T    type;
+			char byte;
+		};
+		return (sizeof(T_plus_char) > sizeof(T)) ? sizeof(T_plus_char) - sizeof(T) : sizeof(T);
+	}
+	
+	/*
+	 * Get the stride of an instance.
+	 */
+	template <class T> inline size_t strideof (T const& instance) {
+		struct T_plus_char {
+			T    type;
+			char byte;
+		};
+		// Shut up compiler warnings, should compile to no-op.
+		if (&instance == &instance) {}
+		return (sizeof(T_plus_char) > sizeof(T)) ? sizeof(T_plus_char) - sizeof(T) : sizeof(T);
+	}
+	
   /***************************************************************************
    * strideof
    ***************************************************************************
    * This is a class so that we can hide any ugly details from the user.
    ***************************************************************************/
-  template <class T> class strideof {
+  //template <class T> class strideof {
     
     /*
      * Public members.
      */
-    public:
+    //public:
       
       /***********************************************************************/
       // Static function members.
+			/*
       
       // Get the stride of T.
       static size_t get ();
-      
+			
+      */
     /*
      * Private members.
      */
-    private:
+    //private:
       
       /***********************************************************************/
       // Data types.
+			/*
       
       // Used to calculate the stride, see explanation above.
       struct Tchar {
@@ -242,15 +285,18 @@ namespace DAC {
         char c;
       };
       
+			*/
       /***********************************************************************/
       // Function members.
+			/*
       
       // Instantiation of this class is not allowed.
       strideof ();
       strideof (strideof const&);
       strideof& operator = (strideof const&);
-    
-  };
+			
+			*/
+  //};
   
   /***************************************************************************/
   // Functions.
@@ -265,9 +311,11 @@ namespace DAC {
   /*
    * Get the stride of a particular data type.
    */
+	/*
   template <class T> inline size_t strideof<T>::get () {
     return (sizeof(Tchar) > sizeof(T)) ? sizeof(Tchar) - sizeof(T) : sizeof(T);
   };
+	*/
   
 }
 
