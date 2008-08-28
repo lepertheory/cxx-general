@@ -127,6 +127,14 @@ int main () {
 	
 	cout << "Testing AutoArray<char>...\n";
 	
+	// Run the test battery on a null pointer.
+	test(0);
+	
+	// Run the test battery on 1,000 random pointers. These must all be valid,
+	// operation on invalid pointers is undefined.
+	for (size_t count = 0; count != 1000; ++count) {
+		test(
+	
 	// Test default constructor and zeroed operation.
 	{
 		
@@ -165,8 +173,12 @@ int main () {
 				return EXIT_FAILURE;
 			}
 		}
-		
+	
+	// Falling out of scope will cause destructor to run, custom delete will
+	// catch any extraneous deletions.
 	}
+	
+	
 	
 	// All tests were successful.
 	cout << "OK!\n";
