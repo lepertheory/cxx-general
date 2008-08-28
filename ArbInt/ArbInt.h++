@@ -434,10 +434,10 @@ namespace DAC {
       UArbInt& _trimZeros ();
       
       // Bit shift this number.
-      UArbInt& _shift       (UArbInt                    const& bits,                                     _Dir const dir);
-      UArbInt& _shift       (SafeInt<_DigsT::size_type> const  digits, SafeInt<unsigned int> const bits, _Dir const dir);
-      UArbInt& _shiftDigits (SafeInt<_DigsT::size_type> const  digits,                                   _Dir const dir);
-      UArbInt& _shiftBits   (                                          SafeInt<unsigned int> const bits, _Dir const dir);
+      UArbInt& _shift       (UArbInt                    const& bits,                               _Dir const dir);
+      UArbInt& _shift       (SafeInt<_DigsT::size_type> const  digits, SafeInt<size_t> const bits, _Dir const dir);
+      UArbInt& _shiftDigits (SafeInt<_DigsT::size_type> const  digits,                             _Dir const dir);
+      UArbInt& _shiftBits   (                                          SafeInt<size_t> const bits, _Dir const dir);
       
       /***********************************************************************/
       // Static function members.

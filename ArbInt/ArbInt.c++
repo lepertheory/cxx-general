@@ -784,7 +784,7 @@ namespace DAC {
       
       // Convert bits to digits if the number of bits requested meets or
       // exceeds the number of bits in a digit.
-      SafeInt<unsigned int>      tmp_bits;
+      SafeInt<size_t>            tmp_bits;
       SafeInt<_DigsT::size_type> tmp_digits;
       if (bits >= s_digitbits) {
         try {
@@ -811,14 +811,14 @@ namespace DAC {
   /*
    * Bitwise shift.
    */
-  UArbInt& UArbInt::_shift (SafeInt<_DigsT::size_type> const digits, SafeInt<unsigned int> const bits, _Dir const dir) {
+  UArbInt& UArbInt::_shift (SafeInt<_DigsT::size_type> const digits, SafeInt<size_t> const bits, _Dir const dir) {
     
     // Only shift if it is needed.
     if (*this && (digits || bits)) {
       
       // Convert bits to digits if the number of bits requested meets or
       // exceeds the number of bits in a digit.
-      SafeInt<unsigned int>      tmp_bits;
+      SafeInt<size_t>            tmp_bits;
       SafeInt<_DigsT::size_type> tmp_digits;
       if (bits >= s_digitbits) {
         tmp_digits = bits / s_digitbits;
@@ -879,14 +879,14 @@ namespace DAC {
   /*
    * Bitwise shift by bits.
    */
-  UArbInt& UArbInt::_shiftBits (SafeInt<unsigned int> const bits, _Dir const dir) {
+  UArbInt& UArbInt::_shiftBits (SafeInt<size_t> const bits, _Dir const dir) {
     
     // Only shift if it is needed.
     if (*this && bits) {
       
       // Pull out any whole digits and shift them.
       SafeInt<_DigsT::size_type> tmp_digits = bits / s_digitbits;
-      SafeInt<unsigned int>      tmp_bits   = bits - tmp_digits;
+      SafeInt<size_t>            tmp_bits   = bits - tmp_digits;
       if (tmp_digits) {
         _shiftDigits(tmp_digits, dir);
       }
