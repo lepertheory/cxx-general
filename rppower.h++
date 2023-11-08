@@ -102,7 +102,7 @@ namespace DAC {
 		for (;;) {
 			if (tmp_y & 1) {
 				if (RPPowerUtil::mul_overflows(result, tmp_x)) {
-					throw RPPower::Errors::Overflow();
+					throw DAC::RPPower::Errors::Overflow();
 				}
 				result *= tmp_x;
 			}
@@ -111,7 +111,7 @@ namespace DAC {
 				break;
 			}
 			if (RPPowerUtil::mul_overflows(tmp_x, tmp_x)) {
-				throw RPPower::Errors::Overflow();
+				throw DAC::RPPower::Errors::Overflow();
 			}
 			tmp_x *= tmp_x;
 		}
