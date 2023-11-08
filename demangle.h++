@@ -13,7 +13,7 @@
 
 // Compiler includes.
 	#include <typeinfo>
-	#if defined(CC_GCC)
+	#if defined(__GNUC__)
 		#include <cxxabi.h>
 	#endif
 
@@ -48,7 +48,7 @@ namespace DAC {
 		} catch (...) {
 			buffer = "Unable to demangle type name.";
 		}
-	#elif defined(CC_GCC)
+	#elif defined(__GNUC__)
 		// Work area.
 		int   status   (0);
 		char* demangled(0);

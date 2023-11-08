@@ -10,3 +10,5 @@ project(cxx-general VERSION "${ver_major}.${ver_minor}.${ver_patch}")
 #set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(ArbInt)
+
+add_subdirectory(Tests)
