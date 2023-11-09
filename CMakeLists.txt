@@ -6,9 +6,10 @@ file(READ config/VER_PATCH ver_patch)
 
 project(cxx-general VERSION "${ver_major}.${ver_minor}.${ver_patch}")
 
-#set(CMAKE_CXX_STANDARD 11)
-#set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(ArbInt)
 
+enable_testing()
 add_subdirectory(Tests)

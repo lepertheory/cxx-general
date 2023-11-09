@@ -1,2 +1,20 @@
 include_directories(..)
-add_executable(demangle demangle.c++)
+add_executable(Exception   Exception.c++)
+add_executable(NumInfo     NumInfo.c++)
+add_executable(SafeInt     SafeInt.c++)
+add_executable(abs         abs.c++)
+add_executable(demangle    demangle.c++)
+add_executable(longDiv     longDiv.c++)
+add_executable(to_string   to_string.c++)
+
+target_compile_options(longDiv   PRIVATE -Wno-shift-count-overflow)
+target_compile_options(to_string PRIVATE -Wno-narrowing)
+
+enable_testing()
+add_test(NAME Exception   COMMAND Exception)
+add_test(NAME NumInfo     COMMAND NumInfo)
+add_test(NAME SafeInt     COMMAND SafeInt)
+add_test(NAME abs         COMMAND abs)
+add_test(NAME demangle    COMMAND demangle)
+#add_test(NAME longDiv     COMMAND longDiv)  # Takes waaay too long, 4.5 hours on Raspberry Pi 4.
+add_test(NAME to_string   COMMAND to_string)
