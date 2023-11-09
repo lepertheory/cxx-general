@@ -1337,7 +1337,7 @@ namespace DAC {
     if (bit == reqdigit.bitsInNumber()) {
       return _sign;
     }
-    return reqdigit & 1 << bit - 1;
+    return reqdigit & 1 << (bit - 1);
     
   }
   

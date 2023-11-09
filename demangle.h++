@@ -39,7 +39,7 @@ namespace DAC {
 	template <class T> std::string& demangle (std::string& buffer, T const& thing) {
 		
 		// Shut up the compiler.
-		if (&thing) {};
+		//if (&thing) {};
 		
 	#if defined(CC_CL)
 		// typeid operator throws an exception if there is a failure.

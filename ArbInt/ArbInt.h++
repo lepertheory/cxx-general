@@ -1427,7 +1427,7 @@ namespace DAC {
     if (bit < 1) {
       return false;
     }
-    return get_digit(digit) & 1 << bit - 1;
+    return get_digit(digit) & 1 << (bit - 1);
   }
   
   /*

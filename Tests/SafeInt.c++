@@ -443,7 +443,7 @@ template <class T, class U> int test2 () {
 template <class T, class U> int Test2<T, U, RelTypes::UE_UE>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -456,7 +456,7 @@ template <class T, class U> int Test2<T, U, RelTypes::UE_UE>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::UL_US>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -469,7 +469,7 @@ template <class T, class U> int Test2<T, U, RelTypes::UL_US>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::US_UL>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -482,7 +482,7 @@ template <class T, class U> int Test2<T, U, RelTypes::US_UL>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::UE_SE>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -495,7 +495,7 @@ template <class T, class U> int Test2<T, U, RelTypes::UE_SE>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::UL_SS>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -508,7 +508,7 @@ template <class T, class U> int Test2<T, U, RelTypes::UL_SS>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::US_SL>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -521,7 +521,7 @@ template <class T, class U> int Test2<T, U, RelTypes::US_SL>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::SE_UE>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -534,7 +534,7 @@ template <class T, class U> int Test2<T, U, RelTypes::SE_UE>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::SL_US>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -547,7 +547,7 @@ template <class T, class U> int Test2<T, U, RelTypes::SL_US>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::SS_UL>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -560,7 +560,7 @@ template <class T, class U> int Test2<T, U, RelTypes::SS_UL>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::SE_SE>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -573,7 +573,7 @@ template <class T, class U> int Test2<T, U, RelTypes::SE_SE>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::SL_SS>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -586,7 +586,7 @@ template <class T, class U> int Test2<T, U, RelTypes::SL_SS>::op (vector<T> cons
 template <class T, class U> int Test2<T, U, RelTypes::SS_SL>::op (vector<T> const& edges1, vector<U> const& edges2) {
   
   // Shush compiler warnings.
-  if (&edges1 && &edges2) {}
+  //if (&edges1 && &edges2) {}
   
   // All tests passed.
   return 0;
@@ -883,7 +883,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::UE_UE>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::UL_US>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -896,7 +896,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::UL_US>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::US_UL>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -909,7 +909,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::US_UL>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::UE_SE>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -922,7 +922,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::UE_SE>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::UL_SS>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -935,7 +935,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::UL_SS>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::US_SL>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -948,7 +948,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::US_SL>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::SE_UE>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -961,7 +961,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::SE_UE>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::SL_US>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -974,7 +974,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::SL_US>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::SS_UL>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -987,7 +987,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::SS_UL>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::SE_SE>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -1000,7 +1000,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::SE_SE>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::SL_SS>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;
@@ -1013,7 +1013,7 @@ template <class T, class U> int Test_RawCast<T, U, RelTypes::SL_SS>::op (vector<
 template <class T, class U> int Test_RawCast<T, U, RelTypes::SS_SL>::op (vector<T> const& edges) {
   
   // Hush compiler warnings.
-  if (&edges) {}
+  //if (&edges) {}
   
   // All tests passed.
   return 0;

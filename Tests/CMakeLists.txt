@@ -7,7 +7,8 @@ add_executable(demangle    demangle.c++)
 add_executable(longDiv     longDiv.c++)
 add_executable(to_string   to_string.c++)
 
-target_compile_options(longDiv   PRIVATE -Wno-shift-count-overflow)
+target_compile_options(Exception PRIVATE -Wno-string-compare)
+target_compile_options(longDiv   PRIVATE -Wno-shift-count-overflow -Wno-shift-negative-value)
 target_compile_options(to_string PRIVATE -Wno-narrowing)
 
 enable_testing()
