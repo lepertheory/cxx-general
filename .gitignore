@@ -12,4 +12,5 @@ CTestTestfile.cmake
 _deps
 
 # Output
+*.dylib
 *.so

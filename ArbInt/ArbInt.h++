@@ -691,13 +691,13 @@ namespace DAC {
                          ArbInt& op_bit_cpm (                        );
       
       // Return information about this number.
-      bool   isEven       () const;
-      bool   isOdd        () const;
-      bool   isZero       () const;
-      bool   isPositive   () const;
-      bool   isNegative   () const;
-      size_t numDigits    () const;
-      size_t bitsInNumber () const;
+      bool    isEven       () const;
+      bool    isOdd        () const;
+      bool    isZero       () const;
+      bool    isPositive   () const;
+      bool    isNegative   () const;
+      size_t  numDigits    () const;
+      UArbInt bitsInNumber () const;
       
       // Convert.
       UArbInt const& toUArbInt () const;
@@ -2263,6 +2263,13 @@ namespace DAC {
   inline ArbInt::operator unsigned int   () const { return Value<unsigned int  >(); }
   inline ArbInt::operator long           () const { return Value<long          >(); }
   inline ArbInt::operator unsigned long  () const { return Value<unsigned long >(); }
+  // HACK: This was undefined, make it not a hack.
+  inline ArbInt::operator UArbInt        () const {
+    if (isNegative()) {
+      throw UArbInt::Errors::Negative();
+    }
+    return _digits;
+  }
   
   /*
    * Assignment operator.
@@ -2453,12 +2460,13 @@ namespace DAC {
   /*
    * Return information about this number.
    */
-  inline bool   ArbInt::isEven     () const { return _digits.isEven();    }
-  inline bool   ArbInt::isOdd      () const { return _digits.isOdd ();    }
-  inline bool   ArbInt::isZero     () const { return _digits.isZero();    }
-  inline bool   ArbInt::isPositive () const { return !_sign;              }
-  inline bool   ArbInt::isNegative () const { return _sign;               }
-  inline size_t ArbInt::numDigits  () const { return _digits.numDigits(); }
+  inline bool    ArbInt::isEven       () const { return _digits.isEven();       }
+  inline bool    ArbInt::isOdd        () const { return _digits.isOdd ();       }
+  inline bool    ArbInt::isZero       () const { return _digits.isZero();       }
+  inline bool    ArbInt::isPositive   () const { return !_sign;                 }
+  inline bool    ArbInt::isNegative   () const { return _sign;                  }
+  inline size_t  ArbInt::numDigits    () const { return _digits.numDigits();    }
+  inline UArbInt ArbInt::bitsInNumber () const { return _digits.bitsInNumber(); }
   
   /*
    * Convert to UArbInt.
