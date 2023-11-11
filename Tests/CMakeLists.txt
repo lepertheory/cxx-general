@@ -11,10 +11,10 @@ target_compile_options(Exception_test PRIVATE -Wno-string-compare)
 target_compile_options(longDiv_test   PRIVATE -Wno-shift-count-overflow -Wno-shift-negative-value)
 target_compile_options(to_string_test PRIVATE -Wno-narrowing)
 
-add_test(NAME Exception_test   COMMAND Exception)
-add_test(NAME NumInfo_test     COMMAND NumInfo)
-add_test(NAME SafeInt_test     COMMAND SafeInt)
-add_test(NAME abs_test         COMMAND abs)
-add_test(NAME demangle_test    COMMAND demangle)
-#add_test(NAME longDiv_test     COMMAND longDiv)  # Takes waaay too long, 4.5 hours on Raspberry Pi 4.
-add_test(NAME to_string_test   COMMAND to_string)
+add_test(NAME Exception   COMMAND Exception_test)
+add_test(NAME NumInfo     COMMAND NumInfo_test)
+add_test(NAME SafeInt     COMMAND SafeInt_test)
+add_test(NAME abs         COMMAND abs_test)
+add_test(NAME demangle    COMMAND demangle_test)
+#add_test(NAME longDiv     COMMAND longDiv_test)  # Takes waaay too long, 4.5 hours on Raspberry Pi 4.
+add_test(NAME to_string   COMMAND to_string_test)
