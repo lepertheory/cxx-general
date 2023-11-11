@@ -1,2 +1,2 @@
 include_directories(..)
-add_library(ArbInt ArbInt.c++)
+add_library(ArbInt OBJECT ArbInt.c++)

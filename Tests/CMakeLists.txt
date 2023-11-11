@@ -11,7 +11,6 @@ target_compile_options(Exception PRIVATE -Wno-string-compare)
 target_compile_options(longDiv   PRIVATE -Wno-shift-count-overflow -Wno-shift-negative-value)
 target_compile_options(to_string PRIVATE -Wno-narrowing)
 
-enable_testing()
 add_test(NAME Exception   COMMAND Exception)
 add_test(NAME NumInfo     COMMAND NumInfo)
 add_test(NAME SafeInt     COMMAND SafeInt)
