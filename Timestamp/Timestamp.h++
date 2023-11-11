@@ -21,7 +21,7 @@
   #include <get_errorText.h++>
 
 // Config includes.
-  #include "Timestamp_config.h++"
+//  #include "Timestamp_config.h++"
 
 // Namespace wrapping.
 namespace DAC {

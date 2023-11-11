@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 // Config include.
-#include "Timestamp_config.h++"
+//#include "Timestamp_config.h++"
 
 // OS includes.
 #if defined(TIMESTAMP_SYSTIME_GETSYSTEMTIME)

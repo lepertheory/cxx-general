@@ -13,14 +13,18 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(ArbInt)
 add_subdirectory(Arb)
 add_subdirectory(INIFile)
+add_subdirectory(Timestamp)
 add_subdirectory(ValReader)
+add_subdirectory(get_errorText)
 add_subdirectory(tokenize)
 add_subdirectory(trim)
 
 add_library(cxx-general SHARED $<TARGET_OBJECTS:Arb>
                                $<TARGET_OBJECTS:ArbInt>
                                $<TARGET_OBJECTS:INIFile>
+                               $<TARGET_OBJECTS:Timestamp>
                                $<TARGET_OBJECTS:ValReader>
+                               $<TARGET_OBJECTS:get_errorText>
                                $<TARGET_OBJECTS:tokenize>
                                $<TARGET_OBJECTS:trim>)
 
