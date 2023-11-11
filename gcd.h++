@@ -8,6 +8,8 @@
 #if !defined(GCD_23pbuk78ud34jdux9)
 	#define GCD_23pbuk78ud34jdux9
 
+#include <utility>
+
 // Contain in namespace.
 namespace DAC {
 	
@@ -36,7 +38,7 @@ namespace DAC {
 		T tmp_n1(abs(n1));
 		T tmp_n2(abs(n2));
 		if (tmp_n1 < tmp_n2) {
-			swap(tmp_n1, tmp_n2);
+			std::swap(tmp_n1, tmp_n2);
 		}
 		
 		// Euclid's algorithm.

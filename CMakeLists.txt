@@ -11,8 +11,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(ArbInt)
+add_subdirectory(Arb)
+add_subdirectory(INIFile)
+add_subdirectory(ValReader)
+add_subdirectory(tokenize)
+add_subdirectory(trim)
 
-add_library(cxx-general SHARED $<TARGET_OBJECTS:ArbInt>)
+add_library(cxx-general SHARED $<TARGET_OBJECTS:Arb>
+                               $<TARGET_OBJECTS:ArbInt>
+                               $<TARGET_OBJECTS:INIFile>
+                               $<TARGET_OBJECTS:ValReader>
+                               $<TARGET_OBJECTS:tokenize>
+                               $<TARGET_OBJECTS:trim>)
 
 enable_testing()
 add_subdirectory(Tests)
