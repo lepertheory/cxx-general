@@ -22,7 +22,7 @@ namespace DAC {
 #if defined(GET_ERRORTEXT_REENTRANT)
     // Work area.
     char  buf[1024];
-  #if _XOPEN_SOURCE >= 600
+  #if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
     int   retval;
   #else
     char* retval;
@@ -34,7 +34,7 @@ namespace DAC {
     // I don't trust this function for a second.
     buf[sizeof(buf) - 1] = '\0';
     
-  #if _XOPEN_SOURCE >= 600
+  #if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
     // SUSv3 version.
     if (!retval) {
       buffer = buf;
