@@ -22,7 +22,7 @@ namespace DAC {
 #if defined(GET_ERRORTEXT_REENTRANT)
     // Work area.
     char  buf[1024];
-  #if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+  #if __APPLE__ || ((_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE)
     int   retval;
   #else
     char* retval;
@@ -34,15 +34,15 @@ namespace DAC {
     // I don't trust this function for a second.
     buf[sizeof(buf) - 1] = '\0';
     
-  #if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+  #if __APPLE__ || ((_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE)
     // SUSv3 version.
     if (!retval) {
       buffer = buf;
     } else {
       switch (retval) {
-        case EINVAL: buffer = "Error number is invalid."                                         ; break;
-        case ERANGE: buffer = "Buffer too small for error text."                                 ; break;
-        default    : buffer = "Unexpected error " + to_string(retval) + " retrieving error text."; break;
+        case EINVAL: buffer = "Error number is invalid."                                              ; break;
+        case ERANGE: buffer = "Buffer too small for error text."                                      ; break;
+        default    : buffer = "Unexpected error " + std::to_string(retval) + " retrieving error text."; break;
       };
     }
   #else
