@@ -18,6 +18,7 @@ add_subdirectory(ValReader)
 add_subdirectory(get_errorText)
 add_subdirectory(tokenize)
 add_subdirectory(trim)
+add_subdirectory(utilities)
 
 add_library(cxx-general SHARED $<TARGET_OBJECTS:Arb>
                                $<TARGET_OBJECTS:ArbInt>
