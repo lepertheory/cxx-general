@@ -14,3 +14,7 @@ _deps
 # Output
 *.dylib
 *.so
+
+# CLion
+.cmake
+.idea
