@@ -303,7 +303,8 @@ template <class T> void errMsg (string const& message, T const base, T const div
  */
 int main () {
   
-  if (test<bool          >()) { return 1; }
+  // TODO: Why are unsigned types ~100x faster?
+  //if (test<bool          >()) { return 1; }  // Makes no sense, should be a compile-time error.
   if (test<char          >()) { return 1; }
   if (test<signed char   >()) { return 1; }
   if (test<unsigned char >()) { return 1; }

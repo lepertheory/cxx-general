@@ -20,9 +20,6 @@
   #include <ReferencePointer.h++>
   #include <get_errorText.h++>
 
-// Config includes.
-  #include "Timestamp_config.h++"
-
 // Namespace wrapping.
 namespace DAC {
   

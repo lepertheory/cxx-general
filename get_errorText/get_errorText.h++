@@ -11,9 +11,6 @@
 // Standard includes.
   #include <string>
 
-// Config includes.
-  #include <get_errorText_config.h++>
-
 // Namespace wrapping.
 namespace DAC {
   

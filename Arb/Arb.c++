@@ -1497,7 +1497,7 @@ namespace DAC {
     }
     
     // Fraction is always x over 2^one bit less than mantissa.
-    l._q = 1 << _FloatInfo<float>::mantissabits - 1;
+    l._q = 1 << (_FloatInfo<float>::mantissabits - 1);
     
     // Denormalized numbers.
     if (converter.bits.exponent == 0) {

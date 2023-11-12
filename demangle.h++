@@ -13,7 +13,7 @@
 
 // Compiler includes.
 	#include <typeinfo>
-	#if defined(CC_GCC)
+	#if defined(__GNUC__)
 		#include <cxxabi.h>
 	#endif
 
@@ -39,7 +39,7 @@ namespace DAC {
 	template <class T> std::string& demangle (std::string& buffer, T const& thing) {
 		
 		// Shut up the compiler.
-		if (&thing) {};
+		//if (&thing) {};
 		
 	#if defined(CC_CL)
 		// typeid operator throws an exception if there is a failure.
@@ -48,7 +48,7 @@ namespace DAC {
 		} catch (...) {
 			buffer = "Unable to demangle type name.";
 		}
-	#elif defined(CC_GCC)
+	#elif defined(__GNUC__)
 		// Work area.
 		int   status   (0);
 		char* demangled(0);

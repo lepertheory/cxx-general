@@ -1,0 +1,20 @@
+include_directories(..)
+add_executable(Exception_test   Exception.c++)
+add_executable(NumInfo_test     NumInfo.c++)
+add_executable(SafeInt_test     SafeInt.c++)
+add_executable(abs_test         abs.c++)
+add_executable(demangle_test    demangle.c++)
+add_executable(longDiv_test     longDiv.c++)
+add_executable(to_string_test   to_string.c++)
+
+target_compile_options(Exception_test PRIVATE -Wno-string-compare)
+target_compile_options(longDiv_test   PRIVATE -Wno-shift-count-overflow -Wno-shift-negative-value)
+target_compile_options(to_string_test PRIVATE -Wno-narrowing)
+
+add_test(NAME Exception   COMMAND Exception_test)
+add_test(NAME NumInfo     COMMAND NumInfo_test)
+add_test(NAME SafeInt     COMMAND SafeInt_test)
+add_test(NAME abs         COMMAND abs_test)
+add_test(NAME demangle    COMMAND demangle_test)
+#add_test(NAME longDiv     COMMAND longDiv_test)  # Takes waaay too long, 4.5 hours on Raspberry Pi 4.
+add_test(NAME to_string   COMMAND to_string_test)

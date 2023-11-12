@@ -890,6 +890,12 @@ namespace DAC {
   template <class T> inline Arb& Arb::op_shr (SafeInt<T> const  number) { _ShR<T, NumType<T>::type>::op(*this, number); return *this; }
   template <class T> inline Arb& Arb::op_shr (T          const  number) { _ShR<T, NumType<T>::type>::op(*this, number); return *this; }
   
+  // FIXME: Proper place.
+  // FIXME: Use raw converter as base.
+  // TODO: Don't upconvert.
+  template <class T> inline int Arb::op_compare (T const number) const { return op_compare(SafeInt<T>(number)); }
+  template <class T> inline int Arb::op_compare (SafeInt<T> const number) const { return op_compare(Arb(number)); }
+  
   /*
    * Comparison operator backends.
    */
