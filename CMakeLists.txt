@@ -6,7 +6,7 @@ file(READ config/VER_PATCH ver_patch)
 
 project(cxx-general VERSION "${ver_major}.${ver_minor}.${ver_patch}")
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
